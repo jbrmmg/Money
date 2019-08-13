@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "middle.tier.money.db.driver",
+      "type": "java.lang.String",
+      "description": "Description for middle.tier.money.db.driver."
+    },
+    {
+      "name": "middle.tier.money.db.url",
+      "type": "java.lang.String",
+      "description": "Description for middle.tier.money.db.url."
+    },
+    {
+      "name": "middle.tier.money.db.username",
+      "type": "java.lang.String",
+      "description": "Description for middle.tier.money.db.username."
+    },
+    {
+      "name": "middle.tier.service.name",
+      "type": "java.lang.String",
+      "description": "Description for middle.tier.service.name."
+    }
+  ]
+}
