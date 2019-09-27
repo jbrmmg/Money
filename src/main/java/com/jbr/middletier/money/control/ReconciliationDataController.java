@@ -85,15 +85,23 @@ public class ReconciliationDataController {
             }
 
             // Column 1 = date.
-            Date transactionDate = getRecocillationDateDate(columns[0],"dd MMM yyyy");
+            Date transactionDate = getRecocillationDateDate(columns[0],"dd-MMM-yyyy");
 
             if(transactionDate != null) {
-                // Column 3 = amount * -1
-                Double transactionAmount = new Double(columns[2].substring(1));
+                // Column 3 = amount * -1, remove £
+                String amountString = columns[2];
 
-                if (columns.length == 3 || !columns[3].equalsIgnoreCase("CR")) {
-                    transactionAmount *= -1;
+                amountString = amountString.replace("£","");
+                amountString = amountString.replace(" ","");
+
+                double multiplier = -1;
+                if(amountString.substring(0,1).equals("+"))
+                {
+                    multiplier = 1;
                 }
+
+                Double transactionAmount = Double.parseDouble(amountString);
+                transactionAmount *= multiplier;
 
                 // Column 4 = description.
                 String description = columns[1].length() > 40 ? columns[1].substring(0, 40) : columns[1];
