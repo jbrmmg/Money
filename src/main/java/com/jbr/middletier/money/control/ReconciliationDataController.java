@@ -38,7 +38,7 @@ public class ReconciliationDataController {
     private interface IReconcileFileProcessor {
         boolean skipLine(String line);
 
-        ReconciliationData getReconcileData(String line) throws Exception;
+        ReconciliationData getReconcileData(String[] columns) throws Exception;
     }
 
     private class AmexFileProcessor implements  IReconcileFileProcessor {
@@ -46,9 +46,7 @@ public class ReconciliationDataController {
             return false;
         }
 
-        public ReconciliationData getReconcileData(String line) throws Exception {
-            String[] columns = line.split(",");
-
+        public ReconciliationData getReconcileData(String[] columns) throws Exception {
             if(columns.length < 4) {
                 throw new Exception("Unexpected line");
             }
@@ -57,7 +55,7 @@ public class ReconciliationDataController {
             Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yy");
 
             // Column 3 = amount * -1
-            Double transactionAmount = new Double(columns[2]);
+            Double transactionAmount = Double.parseDouble(columns[2]);
             transactionAmount *= -1;
 
             // Column 4 = description.
@@ -73,9 +71,7 @@ public class ReconciliationDataController {
             return false;
         }
 
-        public ReconciliationData getReconcileData(String line) {
-            String[] columns = line.split(",");
-
+        public ReconciliationData getReconcileData(String[] columns) {
             if(columns.length < 3) {
                 return null;
             }
@@ -100,7 +96,7 @@ public class ReconciliationDataController {
                     multiplier = 1;
                 }
 
-                Double transactionAmount = Double.parseDouble(amountString);
+                Double transactionAmount = Double.parseDouble(amountString.replace(",",""));
                 transactionAmount *= multiplier;
 
                 // Column 4 = description.
@@ -119,9 +115,7 @@ public class ReconciliationDataController {
             return false;
         }
 
-        public ReconciliationData getReconcileData(String line) throws Exception {
-            String[] columns = line.split(",");
-
+        public ReconciliationData getReconcileData(String[] columns) throws Exception {
             if(columns.length < 4) {
                 return null;
             }
@@ -134,7 +128,7 @@ public class ReconciliationDataController {
             Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yyyy");
 
             // Column 3 = amount * -1
-            Double transactionAmount = new Double(columns[2]);
+            Double transactionAmount = Double.parseDouble(columns[2]);
 
             // Column 4 = description.
             String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
@@ -179,7 +173,7 @@ public class ReconciliationDataController {
     private Double getReconcilationDataAmount(String elementAmount) {
         try {
             // Attempt to parse the value.
-            return new Double(elementAmount);
+            return Double.parseDouble(elementAmount);
         } catch (Exception ignored) {
         }
 
@@ -280,6 +274,19 @@ public class ReconciliationDataController {
         }
     }
 
+    private String[] splitDataLine(String line) {
+        String[] intermediate = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
+
+        String[] result = new String[intermediate.length];
+
+        for(int i = 0; i < intermediate.length; i++) {
+            result[i] = intermediate[i].replace("\"","");
+        }
+
+        return result;
+    }
+
+
     private void loadReconcileFile(File recFile, IReconcileFileProcessor lineProcessor) throws Exception {
         // Clear existing data.
         LOG.info("Clear the reconciliation data.");
@@ -294,8 +301,6 @@ public class ReconciliationDataController {
         String line;
         while((line = reader.readLine()) != null) {
             // Clean the line.
-            line = line.replace("\"", "");
-
             while(line.contains("  ") || line.contains("\t")) {
                 line = line.replace("  ", " ");
                 line = line.replace("\t", " ");
@@ -305,7 +310,7 @@ public class ReconciliationDataController {
 
             // Get the reconciliation data.
             if(!lineProcessor.skipLine(line)) {
-                ReconciliationData recLine = lineProcessor.getReconcileData(line);
+                ReconciliationData recLine = lineProcessor.getReconcileData(splitDataLine(line));
 
                 if(recLine != null) {
                     reconciliationRepository.save(recLine);
