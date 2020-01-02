@@ -15,6 +15,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
@@ -694,6 +696,46 @@ public class MoneyTest {
                 .andExpect(jsonPath("$[0].date", startsWith(sdf.format(calendar.getTime()))))
                 .andExpect(jsonPath("$", hasSize(1)));
     }
+
+    @Test
+    public void testLoadReconcilationDataJLP() throws Exception {
+        String path = "src/test/resources";
+
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+
+        mockMvc.perform(post("/jbr/int/money/reconciliation/load")
+                .contentType(getContentType())
+                .content("{ \"path\":\"" + absolutePath + "/test.JLP.csv\", \"type\":\"JOHNLEWIS\" }"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testLoadReconcilationDataAMEX() throws Exception {
+        String path = "src/test/resources";
+
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+
+        mockMvc.perform(post("/jbr/int/money/reconciliation/load")
+                .contentType(getContentType())
+                .content("{ \"path\":\"" + absolutePath + "/test.AMEX.csv\", \"type\":\"AMEX\" }"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testLoadReconcilationDataBank() throws Exception {
+        String path = "src/test/resources";
+
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+
+        mockMvc.perform(post("/jbr/int/money/reconciliation/load")
+                .contentType(getContentType())
+                .content("{ \"path\":\"" + absolutePath + "/test.FirstDirect.csv\", \"type\":\"FIRSTDIRECT\" }"))
+                .andExpect(status().isOk());
+    }
+
 
      private String json(Object o) throws IOException {
         MockHttpOutputMessage mockHttpOutputMessage = new MockHttpOutputMessage();
