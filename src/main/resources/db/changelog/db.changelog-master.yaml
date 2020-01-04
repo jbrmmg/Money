@@ -59,6 +59,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: int(11)
+                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -84,12 +85,18 @@ databaseChangeLog:
               - column:
                   name: account
                   type: char(4)
+                  constraints:
+                    nullable: false
               - column:
                   name: month
                   type: int(11)
+                  constraints:
+                    nullable: false
               - column:
                   name: year
                   type: int(11)
+                  constraints:
+                    nullable: false
               - column:
                   name: open_balance
                   type: decimal(10,2)
@@ -107,7 +114,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: int(11)
-                  autoincrement: true
+                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -139,7 +146,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: int(11)
-                  autoincrement: true
+                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -165,50 +172,28 @@ databaseChangeLog:
                   name: last_created
                   type: datetime
               - column:
-                  name: oppositeid
-                  type: int(11)
-              - column:
                   name: description
                   type: varchar(40)
 
-  CREATE TABLE `regular` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `account` char(4) NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
-  `category` char(3) NOT NULL,
-  `frequency` char(2) NOT NULL,
-  `weekend_adj` char(2) NOT NULL,
-  `start` datetime NOT NULL,
-  `last_created` datetime DEFAULT NULL,
-  `description` varchar(40) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-  );
-
-
-
-  /*
-  CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER
-  */
-  /* all_transaction view */
-  CREATE
-  VIEW `all_transaction` AS
-  select `t`.`id` AS `id`,
-  `t`.`date` AS `date`,
-  `t`.`amount` AS `amount`,
-  `t`.`oppositeid` AS `opposite_id`,
-  ifnull(`t`.`statement`,'') AS `statement_id`,
-  ifnull(`s`.`locked`,'N') AS `locked`,
-  `t`.`account` AS `account_id`,
-  `t`.`category` AS `category_id`,
-  `c`.`name` AS `category_name`,
-  `c`.`colour` AS `colour`,
-  `c`.`groupid` AS `category_group`,
-  ifnull(`o`.`statement`,'') AS `opp_statement_id`,
-  `t`.`description` AS `description`
-  from (((`transaction` `t`
-  left join `statement` `s` on(((`t`.`account` = `s`.`account`) and (`t`.`statement` = ((`s`.`year` * 100) + `s`.`month`)))))
-  left join `category` `c` on((`t`.`category` = `c`.`id`)))
-  left join `transaction` `o` on((`t`.`id` = `o`.`oppositeid`)));
+        - createView:
+            viewName: all_transaction
+            selectQuery: select `t`.`id` AS `id`,
+              `t`.`date` AS `date`,
+              `t`.`amount` AS `amount`,
+              `t`.`oppositeid` AS `opposite_id`,
+              ifnull(`t`.`statement`,'') AS `statement_id`,
+              ifnull(`s`.`locked`,'N') AS `locked`,
+              `t`.`account` AS `account_id`,
+              `t`.`category` AS `category_id`,
+              `c`.`name` AS `category_name`,
+              `c`.`colour` AS `colour`,
+              `c`.`groupid` AS `category_group`,
+              ifnull(`o`.`statement`,'') AS `opp_statement_id`,
+              `t`.`description` AS `description`
+              from (((`transaction` `t`
+              left join `statement` `s` on(((`t`.`account` = `s`.`account`) and (`t`.`statement` = ((`s`.`year` * 100) + `s`.`month`)))))
+              left join `category` `c` on((`t`.`category` = `c`.`id`)))
+              left join `transaction` `o` on((`t`.`id` = `o`.`oppositeid`)));
 
 
         - insert:
@@ -947,3 +932,78 @@ databaseChangeLog:
                   name: system_use
                   value: N
 
+        - insert:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+                  value: AMEX
+              - column:
+                  name: month
+                  value: 1
+              - column:
+                  name: year
+                  value: 2010
+              - column:
+                  name: open_balance
+                  value: 0
+              - column:
+                  name: locked
+                  value: N
+
+        - insert:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+                  value: JLPC
+              - column:
+                  name: month
+                  value: 1
+              - column:
+                  name: year
+                  value: 2010
+              - column:
+                  name: open_balance
+                  value: 0
+              - column:
+                  name: locked
+                  value: N
+
+        - insert:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+                  value: BANK
+              - column:
+                  name: month
+                  value: 1
+              - column:
+                  name: year
+                  value: 2010
+              - column:
+                  name: open_balance
+                  value: 0
+              - column:
+                  name: locked
+                  value: N
+
+        - insert:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+                  value: NWDE
+              - column:
+                  name: month
+                  value: 1
+              - column:
+                  name: year
+                  value: 2010
+              - column:
+                  name: open_balance
+                  value: 0
+              - column:
+                  name: locked
+                  value: N
