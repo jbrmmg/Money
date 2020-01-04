@@ -10,27 +10,29 @@ public class NewTransaction {
     private double amount;
     private boolean accountTransfer;
     private String transferAccount;
-
+    private String description;
 
     public NewTransaction() {
     }
 
-    public NewTransaction(String account, String category, String date, double amount) {
+    public NewTransaction(String account, String category, String date, double amount, String description) {
         this.account = account;
         this.category = category;
         this.date = date;
         this.amount = amount;
         this.accountTransfer = false;
         this.transferAccount = "";
+        this.description = description;
     }
 
-    public NewTransaction(String account, String category, String date, double amount, String transferAccount) {
+    public NewTransaction(String account, String category, String date, double amount, String transferAccount, String description) {
         this.account = account;
         this.category = category;
         this.date = date;
         this.amount = amount;
         this.accountTransfer = true;
         this.transferAccount = transferAccount;
+        this.description = description;
     }
 
     public NewTransaction(MatchData matchData)
@@ -41,6 +43,7 @@ public class NewTransaction {
         this.amount = matchData.getAmount();
         this.accountTransfer = false;
         this.transferAccount = "";
+        this.description = matchData.getDescription();
     }
 
     public String getAccount() {
@@ -65,6 +68,8 @@ public class NewTransaction {
     public String getTransferAccount() {
         return this.transferAccount;
     }
+
+    public String getDescription() { return this.description; }
 
     public boolean isAccountTransfer() {
         return this.accountTransfer;

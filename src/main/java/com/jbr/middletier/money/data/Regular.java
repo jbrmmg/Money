@@ -37,6 +37,9 @@ public class Regular {
     @Column(name="last_created")
     private Date lastCreated;
 
+    @Column(name="description")
+    private String description;
+
     final static private Logger LOG = LoggerFactory.getLogger(Regular.class);
     private static SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
 
@@ -205,6 +208,10 @@ public class Regular {
     public void setAmount(double amount) {
         this.amount = amount;
     }
+
+    public String getDescription() { return this.description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     public String getWeekendAdj() {
         return this.weekendAdj;
