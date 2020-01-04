@@ -35,6 +35,9 @@ public class Transaction {
     @Column(name="oppositeid")
     private Integer oppositeiId;
 
+    @Column(name="description")
+    private String description;
+
     public Transaction() {
     }
 
@@ -54,6 +57,8 @@ public class Transaction {
         this.date = calendar.getTime();
 
         this.amount = newTransaction.getAmount();
+
+        this.description = newTransaction.getDescription();
     }
 
     public static final String TransactionDateFormat = "yyyy-MM-dd";
@@ -71,6 +76,10 @@ public class Transaction {
     public void setAmount(double amount) {
         this.amount = amount;
     }
+
+    public String getDescription() { return this.description; }
+
+    public void setDescription(String description) { this.description = description; }
 
     public void setStatement(Statement statement) {
         this.statement = statement.getYearMonthId();

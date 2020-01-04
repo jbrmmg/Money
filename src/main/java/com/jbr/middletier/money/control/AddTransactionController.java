@@ -53,6 +53,7 @@ public class AddTransactionController {
             transaction.setAccount(newTransaction.getTransferAccount());
             transaction.setCategory(newTransaction.getCategory());
             transaction.setOppositeId(savedTransaction.getId());
+            transaction.setDescription(newTransaction.getDescription());
 
             Transaction oppositeTransaction = transactionRepository.save(transaction);
             savedTransaction.setOppositeId(oppositeTransaction.getId());

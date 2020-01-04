@@ -139,10 +139,11 @@ public class MoneyTest {
         cleanUp();
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1280.32)))
+                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1280.32, "Test transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount",is(1280.32)));
+                .andExpect(jsonPath("$[0].amount",is(1280.32)))
+                .andExpect(jsonPath("$[0].description",is("Test transaction")));
 
         // Amend the transaction.
         Iterable<Transaction> transactions = transactionRepository.findAll();
@@ -174,11 +175,13 @@ public class MoneyTest {
 
         // Add transaction.
         mockMvc.perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1280.32, "AMEX")))
+                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1280.32, "AMEX", "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1280.32)))
-                .andExpect(jsonPath("$[1].amount", is(-1280.32)));
+                .andExpect(jsonPath("$[0].description", is("Test Transaction")))
+                .andExpect(jsonPath("$[1].amount", is(-1280.32)))
+                .andExpect(jsonPath("$[1].description", is("Test Transaction")));
 
         // Edit the transactions (by editing the first transaction).
         Iterable<Transaction> transactions = transactionRepository.findAll();
@@ -212,7 +215,7 @@ public class MoneyTest {
 
         // Setup a transaction.
         mockMvc.perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "TST2", "1968-05-25", 1281.32, "BANK")))
+                .content(this.json(new NewTransaction("AMEX", "TST2", "1968-05-25", 1281.32, "BANK", "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1281.32)))
@@ -262,7 +265,7 @@ public class MoneyTest {
 
         // Add transaction.
         mockMvc.perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1280.32, "AMEX")))
+                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1280.32, "AMEX", "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1280.32)))
@@ -367,12 +370,12 @@ public class MoneyTest {
 
         // Create transactions in each account.
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1.23)))
+                .content(this.json(new NewTransaction("BANK", "TST", "1968-05-24", 1.23, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("JLPC", "TST", "1968-05-25", 3.45)))
+                .content(this.json(new NewTransaction("JLPC", "TST", "1968-05-25", 3.45, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -390,7 +393,7 @@ public class MoneyTest {
 
         // Create another transaction
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "HSF", "1968-05-26", 1.53)))
+                .content(this.json(new NewTransaction("BANK", "HSF", "1968-05-26", 1.53, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -423,12 +426,12 @@ public class MoneyTest {
         cleanUp();
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "TST", "1968-05-24", 1.23)))
+                .content(this.json(new NewTransaction("AMEX", "TST", "1968-05-24", 1.23, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "TS2", "1968-05-24", 1.23)))
+                .content(this.json(new NewTransaction("AMEX", "TS2", "1968-05-24", 1.23, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -471,17 +474,17 @@ public class MoneyTest {
 
         // Load transactions.
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "TST", "1968-05-24", 1.23)))
+                .content(this.json(new NewTransaction("AMEX", "TST", "1968-05-24", 1.23,"Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "TS2", "1968-06-27", 1.23)))
+                .content(this.json(new NewTransaction("AMEX", "TS2", "1968-06-27", 1.23,"Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "TS2", "1968-06-26", 1.23)))
+                .content(this.json(new NewTransaction("AMEX", "TS2", "1968-06-26", 1.23,"Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -530,6 +533,7 @@ public class MoneyTest {
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(today);
         testRegularPayment.setWeekendAdj("NO");
+        testRegularPayment.setDescription("Regular 1");
 
         regularRepository.save(testRegularPayment);
 
@@ -608,6 +612,7 @@ public class MoneyTest {
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
+                .andExpect(jsonPath("$[0].description", is("Regular 1")))
                 .andExpect(jsonPath("$[1].amount", is(12.0)))
                 .andExpect(jsonPath("$", hasSize(2)));
 

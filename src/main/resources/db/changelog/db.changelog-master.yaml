@@ -1,0 +1,949 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: jason
+      changes:
+        - createTable:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  type: char(4)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(45)
+              - column:
+                  name: image_prefix
+                  type: varchar(45)
+              - column:
+                  name: colour
+                  type: char(6)
+
+        - createTable:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  type: char(3)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(45)
+              - column:
+                  name: sort
+                  type: int(11)
+              - column:
+                  name: restricted
+                  type: char(1)
+              - column:
+                  name: expense
+                  type: char(1)
+              - column:
+                  name: colour
+                  type: char(6)
+              - column:
+                  name: groupid
+                  type: varchar(45)
+              - column:
+                  name: system_use
+                  type: char(1)
+
+        - createTable:
+            tableName: reconciliation_data
+            columns:
+              - column:
+                  name: id
+                  type: int(11)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: category
+                  type: char(3)
+              - column:
+                  name: date
+                  type: datetime
+              - column:
+                  name: amount
+                  type: decimal(10,2)
+              - column:
+                  name: description
+                  type: varchar(40)
+              - column:
+                  name: colour
+                  type: char(6)
+
+        - createTable:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+                  type: char(4)
+              - column:
+                  name: month
+                  type: int(11)
+              - column:
+                  name: year
+                  type: int(11)
+              - column:
+                  name: open_balance
+                  type: decimal(10,2)
+              - column:
+                  name: locked
+                  type: char(1)
+
+        - addPrimaryKey:
+            tableName: statement
+            columnNames: account, month, year
+
+        - createTable:
+            tableName: transaction
+            columns:
+              - column:
+                  name: id
+                  type: int(11)
+                  autoincrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account
+                  type: char(4)
+              - column:
+                  name: category
+                  type: char(3)
+              - column:
+                  name: date
+                  type: datetime
+              - column:
+                  name: amount
+                  type: decimal(10,2)
+              - column:
+                  name: statement
+                  type: char(7)
+              - column:
+                  name: oppositeid
+                  type: int(11)
+              - column:
+                  name: description
+                  type: varchar(40)
+
+        - createTable:
+            tableName: regular
+            columns:
+              - column:
+                  name: id
+                  type: int(11)
+                  autoincrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account
+                  type: char(4)
+              - column:
+                  name: amount
+                  type: decimal(10,2)
+              - column:
+                  name: category
+                  type: char(3)
+              - column:
+                  name: frequency
+                  type: char(2)
+              - column:
+                  name: weekend_adj
+                  type: char(2)
+              - column:
+                  name: start
+                  type: datetime
+              - column:
+                  name: last_created
+                  type: datetime
+              - column:
+                  name: oppositeid
+                  type: int(11)
+              - column:
+                  name: description
+                  type: varchar(40)
+
+  CREATE TABLE `regular` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `account` char(4) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `category` char(3) NOT NULL,
+  `frequency` char(2) NOT NULL,
+  `weekend_adj` char(2) NOT NULL,
+  `start` datetime NOT NULL,
+  `last_created` datetime DEFAULT NULL,
+  `description` varchar(40) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+  );
+
+
+
+  /*
+  CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER
+  */
+  /* all_transaction view */
+  CREATE
+  VIEW `all_transaction` AS
+  select `t`.`id` AS `id`,
+  `t`.`date` AS `date`,
+  `t`.`amount` AS `amount`,
+  `t`.`oppositeid` AS `opposite_id`,
+  ifnull(`t`.`statement`,'') AS `statement_id`,
+  ifnull(`s`.`locked`,'N') AS `locked`,
+  `t`.`account` AS `account_id`,
+  `t`.`category` AS `category_id`,
+  `c`.`name` AS `category_name`,
+  `c`.`colour` AS `colour`,
+  `c`.`groupid` AS `category_group`,
+  ifnull(`o`.`statement`,'') AS `opp_statement_id`,
+  `t`.`description` AS `description`
+  from (((`transaction` `t`
+  left join `statement` `s` on(((`t`.`account` = `s`.`account`) and (`t`.`statement` = ((`s`.`year` * 100) + `s`.`month`)))))
+  left join `category` `c` on((`t`.`category` = `c`.`id`)))
+  left join `transaction` `o` on((`t`.`id` = `o`.`oppositeid`)));
+
+
+        - insert:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  value: BANK
+              - column:
+                  name: name
+                  value: Bank Account
+              - column:
+                  name: image_prefix
+                  value: firstDirect
+              - column:
+                  name: colour
+                  value: 000000
+
+        - insert:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  value: AMEX
+              - column:
+                  name: name
+                  value: American Express
+              - column:
+                  name: image_prefix
+                  value: amex
+              - column:
+                  name: colour
+                  value: 4BBAEA
+
+        - insert:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  value: JLPC
+              - column:
+                  name: name
+                  value: John Lewis Card
+              - column:
+                  name: image_prefix
+                  value: johnLewis
+              - column:
+                  name: colour
+                  value: 00461C
+
+        - insert:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  value: NWDE
+              - column:
+                  name: name
+                  value: Nationwide
+              - column:
+                  name: image_prefix
+                  value: nationwide
+              - column:
+                  name: colour
+                  value: 00326B
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: CAR
+              - column:
+                  name: name
+                  value: Car
+              - column:
+                  name: sort
+                  value: 902
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: OE470E
+              - column:
+                  name: groupid
+                  value: Travel
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: CIN
+              - column:
+                  name: name
+                  value: Cian
+              - column:
+                  name: sort
+                  value: 303
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: B8B825
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: DOG
+              - column:
+                  name: name
+                  value: Dog
+              - column:
+                  name: sort
+                  value: 304
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: B8B800
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: FDG
+              - column:
+                  name: name
+                  value: Grocery
+              - column:
+                  name: sort
+                  value: 100
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: FFFF00
+              - column:
+                  name: groupid
+                  value: Food
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: FDT
+              - column:
+                  name: name
+                  value: Take Away Food
+              - column:
+                  name: sort
+                  value: 102
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: FFFF99
+              - column:
+                  name: groupid
+                  value: Food
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: FDW
+              - column:
+                  name: name
+                  value: At Work
+              - column:
+                  name: sort
+                  value: 101
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: FFFFCC
+              - column:
+                  name: groupid
+                  value: Food
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: GIF
+              - column:
+                  name: name
+                  value: Gifts
+              - column:
+                  name: sort
+                  value: 500
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 6699FF
+              - column:
+                  name: groupid
+                  value: Gifts
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: GYM
+              - column:
+                  name: name
+                  value: Gym
+              - column:
+                  name: sort
+                  value: 220
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: FF66FA
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: HSE
+              - column:
+                  name: name
+                  value: House
+              - column:
+                  name: sort
+                  value: 200
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 9966FF
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: INS
+              - column:
+                  name: name
+                  value: Insurance
+              - column:
+                  name: sort
+                  value: 210
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: ED66FF
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: JBS
+              - column:
+                  name: name
+                  value: Jason
+              - column:
+                  name: sort
+                  value: 300
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: B8B825
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: MMS
+              - column:
+                  name: name
+                  value: Martina
+              - column:
+                  name: sort
+                  value: 300
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: B200B2
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: MMX
+              - column:
+                  name: name
+                  value: Martina XFer
+              - column:
+                  name: sort
+                  value: 302
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: B250B2
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: OTH
+              - column:
+                  name: name
+                  value: Other
+              - column:
+                  name: sort
+                  value: 9000
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 666666
+              - column:
+                  name: groupid
+                  value: Other
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: PTL
+              - column:
+                  name: name
+                  value: Petrol
+              - column:
+                  name: sort
+                  value: 901
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 007800
+              - column:
+                  name: groupid
+                  value: Travel
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: TOM
+              - column:
+                  name: name
+                  value: Thomas
+              - column:
+                  name: sort
+                  value: 302
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: B8B825
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: TRF
+              - column:
+                  name: name
+                  value: Transfer
+              - column:
+                  name: sort
+                  value: 9999
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: N
+              - column:
+                  name: colour
+                  value: FFFFFF
+              - column:
+                  name: groupid
+                  value: System
+              - column:
+                  name: system_use
+                  value: Y
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: TRV
+              - column:
+                  name: name
+                  value: Public Transport
+              - column:
+                  name: sort
+                  value: 900
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 009900
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: TVL
+              - column:
+                  name: name
+                  value: Holiday Travel
+              - column:
+                  name: sort
+                  value: 250
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 009999
+              - column:
+                  name: groupid
+                  value: Holiday
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: UTC
+              - column:
+                  name: name
+                  value: Utility - Council
+              - column:
+                  name: sort
+                  value: 204
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 33CCE6
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: UTL
+              - column:
+                  name: name
+                  value: Utility Bill
+              - column:
+                  name: sort
+                  value: 201
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 33CCFF
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: UTP
+              - column:
+                  name: name
+                  value: Utility - Phone
+              - column:
+                  name: sort
+                  value: 205
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 33CCE0
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: UTT
+              - column:
+                  name: name
+                  value: Utility - TV
+              - column:
+                  name: sort
+                  value: 202
+              - column:
+                  name: restricted
+                  value: N
+              - column:
+                  name: expense
+                  value: Y
+              - column:
+                  name: colour
+                  value: 33CCEE
+              - column:
+                  name: groupid
+                  value: House
+              - column:
+                  name: system_use
+                  value: N
+
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: id
+                  value: WGS
+              - column:
+                  name: name
+                  value: Wages
+              - column:
+                  name: sort
+                  value: 1000
+              - column:
+                  name: restricted
+                  value: Y
+              - column:
+                  name: expense
+                  value: N
+              - column:
+                  name: colour
+                  value: FF0000
+              - column:
+                  name: groupid
+                  value: Income
+              - column:
+                  name: system_use
+                  value: N
+

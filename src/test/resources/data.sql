@@ -1,8 +1,8 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
 -- Setup the test account data.
-INSERT INTO account(id, name, image_prefix, colour) VALUES ( 'BANK',  'Bank Account', 'bank', 'FFFFFF' );
-INSERT INTO account(id, name, image_prefix, colour) VALUES ( 'AMEX',  'Amex', 'amex', 'FFFFF1' );
+--INSERT INTO account(id, name, image_prefix, colour) VALUES ( 'BANK',  'Bank Account', 'bank', 'FFFFFF' );
+--INSERT INTO account(id, name, image_prefix, colour) VALUES ( 'AMEX',  'Amex', 'amex', 'FFFFF1' );
 
 -- Setup the test category data.
 INSERT INTO category(id, name, sort, restricted, expense, colour, groupid, system_use) VALUES ('TST', 'Test', 2, 'N', 'N', 'FFFFFF', 'TST', 'N');

@@ -69,7 +69,7 @@ public class RegularCtrl {
                 Date transactionDate = adjustDate(saveDate,nextRegular.getWeekendAdj());
 
                 LOG.info("Create new transaction");
-                NewTransaction newTransaction = new NewTransaction( nextRegular.getAccount(), nextRegular.getCategory(), sdfNewTran.format(transactionDate), nextRegular.getAmount() );
+                NewTransaction newTransaction = new NewTransaction( nextRegular.getAccount(), nextRegular.getCategory(), sdfNewTran.format(transactionDate), nextRegular.getAmount(), nextRegular.getDescription() );
 
                 Transaction regularPayment = new Transaction(newTransaction);
                 tranasactionRepository.save(regularPayment);
