@@ -48,6 +48,9 @@ public class AllTransaction {
     @Column(name="opp_statement_id")
     private String oppositeStatementId;
 
+    @Column(name="description")
+    private String description;
+
     public AllTransaction() {
     }
 
@@ -68,6 +71,8 @@ public class AllTransaction {
     private String getStatementId() { return this.statement; }
 
     public String getOppositeStatementId() { return this.oppositeStatementId; }
+
+    public String getDescription() { return this.description; }
 
     public int getOppositeId() { return (oppositeiId != null) ? oppositeiId : -1; }
 
