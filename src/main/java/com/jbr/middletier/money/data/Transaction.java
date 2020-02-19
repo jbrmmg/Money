@@ -117,7 +117,7 @@ public class Transaction {
         // Get the statement id.
         int year = 0;
         int month = 0;
-        if(this.statement.length() >= 6) {
+        if(this.statement != null && this.statement.length() >= 6) {
             year = Integer.parseInt(this.statement.substring(0,4));
             month = Integer.parseInt(this.statement.substring(4,6));
         } else {
