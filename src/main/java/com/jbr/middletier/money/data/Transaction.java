@@ -112,4 +112,18 @@ public class Transaction {
     public int getOppositeId() {
         return ( this.oppositeiId == null ) ? -1 : this.oppositeiId;
     }
+
+    public StatementId calculateStatementId() {
+        // Get the statement id.
+        int year = 0;
+        int month = 0;
+        if(this.statement.length() >= 6) {
+            year = Integer.parseInt(this.statement.substring(0,4));
+            month = Integer.parseInt(this.statement.substring(4,6));
+        } else {
+            return null;
+        }
+
+        return new StatementId(this.account,year,month);
+    }
 }
