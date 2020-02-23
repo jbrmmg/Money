@@ -1,6 +1,8 @@
 package com.jbr.middletier.money.data;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,15 +18,21 @@ public class AllTransaction {
     private int id;
 
     @Column(name="account_id")
+    @NotNull
+    @Size(max=4)
     private String account;
 
     @Column(name="category_id")
+    @NotNull
+    @Size(max=3)
     private String category;
 
     @Column(name="date")
+    @NotNull
     private Date date;
 
     @Column(name="amount")
+    @NotNull
     private double amount;
 
     @Column(name="statement_id")
@@ -34,7 +42,7 @@ public class AllTransaction {
     private Integer oppositeiId;
 
     @Column(name="locked")
-    private String locked;
+    private Boolean locked;
 
     @Column(name="category_name")
     private String categoryName;
@@ -96,7 +104,7 @@ public class AllTransaction {
         return calendar.get(Calendar.DAY_OF_MONTH);
     }
 
-    public boolean getLocked() { return this.locked.equalsIgnoreCase("Y"); }
+    public boolean getLocked() { return this.locked == null ? false : this.locked; }
 
     public boolean getReconciled() {
         if (getStatementId() != null) {
