@@ -403,7 +403,7 @@ databaseChangeLog:
                   value: Grocery
               - column:
                   name: sort
-                  valueBoolean: true00
+                  value: 100
               - column:
                   name: restricted
                   valueBoolean: false
@@ -431,7 +431,7 @@ databaseChangeLog:
                   value: Take Away Food
               - column:
                   name: sort
-                  valueBoolean: true02
+                  value: 102
               - column:
                   name: restricted
                   valueBoolean: false
@@ -459,7 +459,7 @@ databaseChangeLog:
                   value: At Work
               - column:
                   name: sort
-                  valueBoolean: true01
+                  value: 101
               - column:
                   name: restricted
                   valueBoolean: false
@@ -963,7 +963,7 @@ databaseChangeLog:
                   value: Wages
               - column:
                   name: sort
-                  valueBoolean: true000
+                  value: 1000
               - column:
                   name: restricted
                   valueBoolean: true
@@ -988,7 +988,7 @@ databaseChangeLog:
                   value: AMEX
               - column:
                   name: month
-                  value: 0
+                  value: 1
               - column:
                   name: year
                   value: 2010
@@ -1007,7 +1007,7 @@ databaseChangeLog:
                   value: JLPC
               - column:
                   name: month
-                  value: 0
+                  value: 1
               - column:
                   name: year
                   value: 2010
@@ -1026,7 +1026,7 @@ databaseChangeLog:
                   value: BANK
               - column:
                   name: month
-                  value: 0
+                  value: 1
               - column:
                   name: year
                   value: 2010
@@ -1045,7 +1045,7 @@ databaseChangeLog:
                   value: NWDE
               - column:
                   name: month
-                  value: 0
+                  value: 1
               - column:
                   name: year
                   value: 2010
