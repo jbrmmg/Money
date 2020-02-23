@@ -293,7 +293,7 @@ public class ReconciliationController {
         Collections.sort(result);
 
         // Update the opening balance information.
-        List<Statement> unlockedStatement = statementRepository.findByAccountAndLocked(account,"N");
+        List<Statement> unlockedStatement = statementRepository.findByAccountAndLocked(account,false);
         if(unlockedStatement.size() != 1) {
             LOG.info("Number of statements was not 1.");
         } else {
@@ -377,7 +377,7 @@ public class ReconciliationController {
             // Then set the reconciliation or remove the flag.
             if (reconcile) {
                 // Find the statement associated with the transaction.
-                List<Statement> statements = statementRepository.findByAccountAndLocked(transaction.get().getAccount(), "N");
+                List<Statement> statements = statementRepository.findByAccountAndLocked(transaction.get().getAccount(), false);
 
                 if (statements.size() == 1) {
                     // Set the statement.
@@ -431,7 +431,7 @@ public class ReconciliationController {
             String description = columns[3].length() > 40 ? columns[3].substring(0,40) : columns[3];
 
             LOG.info("Got a valid record - inserting.");
-            return new ReconciliationData(transactionDate, transactionAmount, "", "", description);
+            return new ReconciliationData(transactionDate, transactionAmount, null, null, description);
         }
     }
 
@@ -472,7 +472,7 @@ public class ReconciliationController {
                 String description = columns[1].length() > 40 ? columns[1].substring(0, 40) : columns[1];
 
                 LOG.info("Got a valid record - inserting.");
-                return new ReconciliationData(transactionDate, transactionAmount, "", "", description);
+                return new ReconciliationData(transactionDate, transactionAmount, null, null, description);
             }
 
             return null;
@@ -503,7 +503,7 @@ public class ReconciliationController {
             String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
 
             LOG.info("Got a valid record - inserting.");
-            return new ReconciliationData(transactionDate, transactionAmount, "", "", description);
+            return new ReconciliationData(transactionDate, transactionAmount, null, null, description);
         }
     }
 
@@ -562,8 +562,8 @@ public class ReconciliationController {
             // Process the elements.
             Date transactionDate = null;
             Double transactionAmount = null;
-            String categoryId = "";
-            String categoryColour = "";
+            String categoryId = null;
+            String categoryColour = null;
             String description = "";
 
             for(String nextElement : elements) {
@@ -596,7 +596,7 @@ public class ReconciliationController {
                 }
 
                 // Is it a category id?
-                if(categoryId.equals("")) {
+                if(categoryId == null) {
                     if (nextElement.length() == 3) {
                         Optional<Category> category = categoryRepository.findById(nextElement);
 
