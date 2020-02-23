@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.data;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -12,10 +13,12 @@ import java.util.Date;
 @IdClass(StatementId.class)
 public class Statement implements Comparable<Statement> {
     @Id
+    @NotNull
     @Column(name="account")
     private String account;
 
     @Id
+    @NotNull
     @Column(name="month")
     private Integer month;
 
@@ -27,13 +30,14 @@ public class Statement implements Comparable<Statement> {
     private double openBalance;
 
     @Column(name="locked")
-    private String locked;
+    @NotNull
+    private Boolean locked;
 
     private Statement(String account, int year, int month, double balance) {
         // Create next statement in sequence.
         this.account = account;
         this.openBalance = balance;
-        this.locked = "N";
+        this.locked = false;
 
         if(month == 12) {
             this.month = 1;
@@ -52,7 +56,7 @@ public class Statement implements Comparable<Statement> {
         this.month = month;
         this.year = year;
         this.openBalance = openBalance;
-        this.locked = ( locked ) ? "Y" : "N";
+        this.locked = locked;
     }
 
     public String getYearMonthId() {
@@ -64,28 +68,36 @@ public class Statement implements Comparable<Statement> {
         return this.year;
     }
 
+    public void setYear(int year) {this.year = year;}
+
     public int getMonth() {
         return this.month;
     }
+
+    public void setMonth(int month) { this.month = month;}
 
     public String getAccount() {
         return this.account;
     }
 
+    public void setAccount(String account) { this.account = account; }
+
     public double getOpenBalance() {
         return this.openBalance;
     }
 
-    public boolean getNotLocked() {
-        return !this.locked.equalsIgnoreCase("y");
-    }
+    public void setOpenBalance(double openBalance) { this.openBalance = openBalance; }
 
     public boolean getLocked() {
-        return !getNotLocked();
+        return this.locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     @Override
-    public int compareTo(@SuppressWarnings("NullableProblems") final Statement o) {
+    public int compareTo(final Statement o) {
         // First compare the account.
         if(!this.account.equalsIgnoreCase(o.account)) {
             return this.account.compareTo(o.account);
@@ -106,7 +118,7 @@ public class Statement implements Comparable<Statement> {
 
     public Statement lock(double balance) {
         // Lock this statement and create the next in sequence.
-        locked = "Y";
+        locked = true;
 
         return new Statement(this.account,this.year,this.month,balance);
     }

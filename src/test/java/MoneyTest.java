@@ -35,7 +35,6 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
  * Created by jason on 27/03/17.
  */
 
-@SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
@@ -304,14 +303,14 @@ public class MoneyTest {
             // Check the statements.
             if(nextStatement.getAccount().equalsIgnoreCase("AMEX")) {
                 // AMEX statement, should be unlocked.
-                if(nextStatement.getNotLocked()) {
+                if(!nextStatement.getLocked()) {
                     amexUnlocked++;
                 } else {
                     other++;
                 }
             } else if(nextStatement.getAccount().equalsIgnoreCase( "BANK")) {
                 // Should have one of each
-                if(nextStatement.getNotLocked()) {
+                if(!nextStatement.getLocked()) {
                     bankUnlocked++;
 
                     assertEquals(nextStatement.getOpenBalance(),1280.32,0.01);

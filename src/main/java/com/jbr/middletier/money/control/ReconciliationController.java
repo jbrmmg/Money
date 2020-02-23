@@ -167,7 +167,7 @@ public class ReconciliationController {
         }
     }
 
-    public List<MatchData> matchFromLastData()
+    private List<MatchData> matchFromLastData()
     {
         if (lastAccount.equalsIgnoreCase("UNKN") )
             return null;
@@ -714,7 +714,7 @@ public class ReconciliationController {
         }
     }
 
-    @RequestMapping(path="/ext/money/reconcile", method= RequestMethod.POST)
+    @RequestMapping(path="/ext/money/reconcile", method= RequestMethod.PUT)
     public @ResponseBody StatusResponse reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) {
         if(reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile())) {
             return new StatusResponse();
@@ -723,7 +723,7 @@ public class ReconciliationController {
         return new StatusResponse("Failed to reconcile transaction");
     }
 
-    @RequestMapping(path="/int/money/reconcile", method= RequestMethod.POST)
+    @RequestMapping(path="/int/money/reconcile", method= RequestMethod.PUT)
     public @ResponseBody StatusResponse  reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) {
         if(reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile())) {
             return new StatusResponse();
@@ -773,12 +773,12 @@ public class ReconciliationController {
         return result;
     }
 
-    @RequestMapping(path="/ext/money/reconciliation/update", method= RequestMethod.POST)
+    @RequestMapping(path="/ext/money/reconciliation/update", method= RequestMethod.PUT)
     public @ResponseBody StatusResponse reconcileCategoryExt(@RequestBody ReconcileUpdate reconciliationUpdate ) {
         return processReconcileUpdate(reconciliationUpdate);
     }
 
-    @RequestMapping(path="/int/money/reconciliation/update", method= RequestMethod.POST)
+    @RequestMapping(path="/int/money/reconciliation/update", method= RequestMethod.PUT)
     public @ResponseBody StatusResponse reconcileCategoryInt(@RequestBody ReconcileUpdate reconciliationUpdate) {
         return processReconcileUpdate(reconciliationUpdate);
     }
@@ -799,7 +799,7 @@ public class ReconciliationController {
         return matchData(account);
     }
 
-    @RequestMapping(path="/ext/money/reconciliation/auto", method= RequestMethod.POST)
+    @RequestMapping(path="/ext/money/reconciliation/auto", method= RequestMethod.PUT)
     public @ResponseBody StatusResponse reconcileDataExt() {
         LOG.info("Auto Reconcilation Data (ext) ");
         if(autoReconcileData()) {
@@ -809,7 +809,7 @@ public class ReconciliationController {
         }
     }
 
-    @RequestMapping(path="/int/money/reconciliation/auto", method= RequestMethod.POST)
+    @RequestMapping(path="/int/money/reconciliation/auto", method= RequestMethod.PUT)
     public @ResponseBody StatusResponse reconcileDataInt() {
         LOG.info("Auto Reconcilation Data ");
         if(autoReconcileData()) {

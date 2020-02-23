@@ -39,10 +39,14 @@ databaseChangeLog:
                   type: int(11)
               - column:
                   name: restricted
-                  type: char(1)
+                  type: boolean
+                  constraints:
+                    nullable: false;
               - column:
                   name: expense
-                  type: char(1)
+                  type: boolean
+                  constraints:
+                    nullable: false;
               - column:
                   name: colour
                   type: char(6)
@@ -51,7 +55,9 @@ databaseChangeLog:
                   type: varchar(45)
               - column:
                   name: system_use
-                  type: char(1)
+                  type: boolean
+                  constraints:
+                    nullable: false;
 
         - createTable:
             tableName: reconciliation_data
@@ -79,6 +85,13 @@ databaseChangeLog:
                   name: colour
                   type: char(6)
 
+        - addForeignKeyConstraint:
+            constraintName: fk_category_rec
+            baseTableName: reconciliation_data
+            baseColumnNames: category
+            referencedTableName: category
+            referencedColumnNames: id
+
         - createTable:
             tableName: statement
             columns:
@@ -102,11 +115,18 @@ databaseChangeLog:
                   type: decimal(10,2)
               - column:
                   name: locked
-                  type: char(1)
+                  type: boolean
 
         - addPrimaryKey:
             tableName: statement
             columnNames: account, month, year
+
+        - addForeignKeyConstraint:
+            constraintName: fk_account_statement
+            baseTableName: statement
+            baseColumnNames: account
+            referencedTableName: account
+            referencedColumnNames: id
 
         - createTable:
             tableName: transaction
@@ -139,6 +159,20 @@ databaseChangeLog:
               - column:
                   name: description
                   type: varchar(40)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_category_trn
+            baseTableName: transaction
+            baseColumnNames: category
+            referencedTableName: category
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            constraintName: fk_account_trn
+            baseTableName: transaction
+            baseColumnNames: account
+            referencedTableName: account
+            referencedColumnNames: id
 
         - createTable:
             tableName: regular
@@ -175,6 +209,20 @@ databaseChangeLog:
                   name: description
                   type: varchar(40)
 
+        - addForeignKeyConstraint:
+            constraintName: fk_category_reg
+            baseTableName: regular
+            baseColumnNames: category
+            referencedTableName: category
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            constraintName: fk_account_reg
+            baseTableName: regular
+            baseColumnNames: account
+            referencedTableName: account
+            referencedColumnNames: id
+
         - createView:
             viewName: all_transaction
             selectQuery: select `t`.`id` AS `id`,
@@ -201,64 +249,64 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  value: BANK
+                  value: "BANK"
               - column:
                   name: name
-                  value: Bank Account
+                  value: "Bank Account"
               - column:
                   name: image_prefix
-                  value: firstDirect
+                  value: "firstDirect"
               - column:
                   name: colour
-                  value: 000000
+                  value: "000000"
 
         - insert:
             tableName: account
             columns:
               - column:
                   name: id
-                  value: AMEX
+                  value: "AMEX"
               - column:
                   name: name
-                  value: American Express
+                  value: "American Express"
               - column:
                   name: image_prefix
-                  value: amex
+                  value: "amex"
               - column:
                   name: colour
-                  value: 4BBAEA
+                  value: "4BBAEA"
 
         - insert:
             tableName: account
             columns:
               - column:
                   name: id
-                  value: JLPC
+                  value: "JLPC"
               - column:
                   name: name
-                  value: John Lewis Card
+                  value: "John Lewis Card"
               - column:
                   name: image_prefix
-                  value: johnLewis
+                  value: "johnLewis"
               - column:
                   name: colour
-                  value: 00461C
+                  value: "00461C"
 
         - insert:
             tableName: account
             columns:
               - column:
                   name: id
-                  value: NWDE
+                  value: "NWDE"
               - column:
                   name: name
-                  value: Nationwide
+                  value: "Nationwide"
               - column:
                   name: image_prefix
-                  value: nationwide
+                  value: "nationwide"
               - column:
                   name: colour
-                  value: 00326B
+                  value: "00326B"
 
         - insert:
             tableName: category
@@ -274,19 +322,19 @@ databaseChangeLog:
                   value: 902
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: OE470E
+                  value: "OE470E"
               - column:
                   name: groupid
                   value: Travel
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -302,19 +350,19 @@ databaseChangeLog:
                   value: 303
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: B8B825
+                  value: "B8B825"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -330,19 +378,19 @@ databaseChangeLog:
                   value: 304
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: B8B800
+                  value: "B8B800"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -358,10 +406,10 @@ databaseChangeLog:
                   value: 100
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
                   value: FFFF00
@@ -370,7 +418,7 @@ databaseChangeLog:
                   value: Food
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -386,19 +434,19 @@ databaseChangeLog:
                   value: 102
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: FFFF99
+                  value: "FFFF99"
               - column:
                   name: groupid
                   value: Food
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -414,19 +462,19 @@ databaseChangeLog:
                   value: 101
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: FFFFCC
+                  value: "FFFFCC"
               - column:
                   name: groupid
                   value: Food
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -442,19 +490,19 @@ databaseChangeLog:
                   value: 500
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 6699FF
+                  value: "6699FF"
               - column:
                   name: groupid
                   value: Gifts
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -470,19 +518,19 @@ databaseChangeLog:
                   value: 220
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: FF66FA
+                  value: "FF66FA"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -498,19 +546,19 @@ databaseChangeLog:
                   value: 200
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 9966FF
+                  value: "9966FF"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -526,19 +574,19 @@ databaseChangeLog:
                   value: 210
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: ED66FF
+                  value: "ED66FF"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -554,19 +602,19 @@ databaseChangeLog:
                   value: 300
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: B8B825
+                  value: "B8B825"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -582,19 +630,19 @@ databaseChangeLog:
                   value: 300
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: B200B2
+                  value: "B200B2"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -610,19 +658,19 @@ databaseChangeLog:
                   value: 302
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: B250B2
+                  value: "B250B2"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -638,19 +686,19 @@ databaseChangeLog:
                   value: 9000
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 666666
+                  value: "666666"
               - column:
                   name: groupid
                   value: Other
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -666,19 +714,19 @@ databaseChangeLog:
                   value: 901
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 007800
+                  value: "007800"
               - column:
                   name: groupid
                   value: Travel
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -694,19 +742,19 @@ databaseChangeLog:
                   value: 302
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: B8B825
+                  value: "B8B825"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -722,19 +770,19 @@ databaseChangeLog:
                   value: 9999
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: N
+                  value: false
               - column:
                   name: colour
-                  value: FFFFFF
+                  value: "FFFFFF"
               - column:
                   name: groupid
                   value: System
               - column:
                   name: system_use
-                  value: Y
+                  value: true
 
         - insert:
             tableName: category
@@ -750,19 +798,19 @@ databaseChangeLog:
                   value: 900
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 009900
+                  value: "009900"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -778,19 +826,19 @@ databaseChangeLog:
                   value: 250
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 009999
+                  value: "009999"
               - column:
                   name: groupid
                   value: Holiday
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -806,19 +854,19 @@ databaseChangeLog:
                   value: 204
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 33CCE6
+                  value: "33CCE6"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -834,19 +882,19 @@ databaseChangeLog:
                   value: 201
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 33CCFF
+                  value: "33CCFF"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -862,19 +910,19 @@ databaseChangeLog:
                   value: 205
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 33CCE0
+                  value: "33CCE0"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -890,19 +938,19 @@ databaseChangeLog:
                   value: 202
               - column:
                   name: restricted
-                  value: N
+                  value: false
               - column:
                   name: expense
-                  value: Y
+                  value: true
               - column:
                   name: colour
-                  value: 33CCEE
+                  value: "33CCEE"
               - column:
                   name: groupid
                   value: House
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: category
@@ -918,19 +966,19 @@ databaseChangeLog:
                   value: 1000
               - column:
                   name: restricted
-                  value: Y
+                  value: true
               - column:
                   name: expense
-                  value: N
+                  value: false
               - column:
                   name: colour
-                  value: FF0000
+                  value: "FF0000"
               - column:
                   name: groupid
                   value: Income
               - column:
                   name: system_use
-                  value: N
+                  value: false
 
         - insert:
             tableName: statement
@@ -949,7 +997,7 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: N
+                  value: false
 
         - insert:
             tableName: statement
@@ -968,7 +1016,7 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: N
+                  value: false
 
         - insert:
             tableName: statement
@@ -987,7 +1035,7 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: N
+                  value: false
 
         - insert:
             tableName: statement
@@ -1006,4 +1054,4 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: N
+                  value: false
