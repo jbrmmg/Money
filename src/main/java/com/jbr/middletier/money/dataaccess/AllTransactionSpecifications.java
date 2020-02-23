@@ -31,7 +31,7 @@ public class AllTransactionSpecifications {
     }
     public static Specification<AllTransaction> statementIsNull() {
         // Statement is null
-        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("statement"),"");
+        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.isNull(root.get("statement"));
     }
     public static Specification<AllTransaction> datesBetween(Date from, Date to) {
         // Strings are dates - from to
@@ -43,6 +43,10 @@ public class AllTransactionSpecifications {
     }
     public static Specification<AllTransaction> notLocked() {
         // locked is true (Y)
-        return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("locked"),"N");
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            Predicate predicateForLocked = criteriaBuilder.isNull(root.get("locked"));
+            Predicate predicateForFalse = criteriaBuilder.equal(root.get("locked"),false);
+            return criteriaBuilder.or(predicateForLocked,predicateForFalse);
+        };
     }
 }
