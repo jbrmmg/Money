@@ -322,10 +322,10 @@ databaseChangeLog:
                   value: 902
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "OE470E"
@@ -334,7 +334,7 @@ databaseChangeLog:
                   value: Travel
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -350,10 +350,10 @@ databaseChangeLog:
                   value: 303
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "B8B825"
@@ -362,7 +362,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -378,10 +378,10 @@ databaseChangeLog:
                   value: 304
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "B8B800"
@@ -390,7 +390,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -403,13 +403,13 @@ databaseChangeLog:
                   value: Grocery
               - column:
                   name: sort
-                  value: 100
+                  valueBoolean: true00
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: FFFF00
@@ -418,7 +418,7 @@ databaseChangeLog:
                   value: Food
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -431,13 +431,13 @@ databaseChangeLog:
                   value: Take Away Food
               - column:
                   name: sort
-                  value: 102
+                  valueBoolean: true02
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "FFFF99"
@@ -446,7 +446,7 @@ databaseChangeLog:
                   value: Food
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -459,13 +459,13 @@ databaseChangeLog:
                   value: At Work
               - column:
                   name: sort
-                  value: 101
+                  valueBoolean: true01
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "FFFFCC"
@@ -474,7 +474,7 @@ databaseChangeLog:
                   value: Food
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -490,10 +490,10 @@ databaseChangeLog:
                   value: 500
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "6699FF"
@@ -502,7 +502,7 @@ databaseChangeLog:
                   value: Gifts
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -518,10 +518,10 @@ databaseChangeLog:
                   value: 220
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "FF66FA"
@@ -530,7 +530,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -546,10 +546,10 @@ databaseChangeLog:
                   value: 200
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "9966FF"
@@ -558,7 +558,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -574,10 +574,10 @@ databaseChangeLog:
                   value: 210
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "ED66FF"
@@ -586,7 +586,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -602,10 +602,10 @@ databaseChangeLog:
                   value: 300
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "B8B825"
@@ -614,7 +614,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -630,10 +630,10 @@ databaseChangeLog:
                   value: 300
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "B200B2"
@@ -642,7 +642,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -658,10 +658,10 @@ databaseChangeLog:
                   value: 302
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "B250B2"
@@ -670,7 +670,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -686,10 +686,10 @@ databaseChangeLog:
                   value: 9000
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "666666"
@@ -698,7 +698,7 @@ databaseChangeLog:
                   value: Other
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -714,10 +714,10 @@ databaseChangeLog:
                   value: 901
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "007800"
@@ -726,7 +726,7 @@ databaseChangeLog:
                   value: Travel
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -742,10 +742,10 @@ databaseChangeLog:
                   value: 302
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "B8B825"
@@ -754,7 +754,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -770,10 +770,10 @@ databaseChangeLog:
                   value: 9999
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: colour
                   value: "FFFFFF"
@@ -782,7 +782,7 @@ databaseChangeLog:
                   value: System
               - column:
                   name: system_use
-                  value: 1
+                  valueBoolean: true
 
         - insert:
             tableName: category
@@ -798,10 +798,10 @@ databaseChangeLog:
                   value: 900
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "009900"
@@ -810,7 +810,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -826,10 +826,10 @@ databaseChangeLog:
                   value: 250
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "009999"
@@ -838,7 +838,7 @@ databaseChangeLog:
                   value: Holiday
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -854,10 +854,10 @@ databaseChangeLog:
                   value: 204
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "33CCE6"
@@ -866,7 +866,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -882,10 +882,10 @@ databaseChangeLog:
                   value: 201
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "33CCFF"
@@ -894,7 +894,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -910,10 +910,10 @@ databaseChangeLog:
                   value: 205
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "33CCE0"
@@ -922,7 +922,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -938,10 +938,10 @@ databaseChangeLog:
                   value: 202
               - column:
                   name: restricted
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: expense
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: colour
                   value: "33CCEE"
@@ -950,7 +950,7 @@ databaseChangeLog:
                   value: House
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: category
@@ -963,13 +963,13 @@ databaseChangeLog:
                   value: Wages
               - column:
                   name: sort
-                  value: 1000
+                  valueBoolean: true000
               - column:
                   name: restricted
-                  value: 1
+                  valueBoolean: true
               - column:
                   name: expense
-                  value: 0
+                  valueBoolean: false
               - column:
                   name: colour
                   value: "FF0000"
@@ -978,7 +978,7 @@ databaseChangeLog:
                   value: Income
               - column:
                   name: system_use
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: statement
@@ -988,7 +988,7 @@ databaseChangeLog:
                   value: AMEX
               - column:
                   name: month
-                  value: 1
+                  value: 0
               - column:
                   name: year
                   value: 2010
@@ -997,7 +997,7 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: statement
@@ -1007,7 +1007,7 @@ databaseChangeLog:
                   value: JLPC
               - column:
                   name: month
-                  value: 1
+                  value: 0
               - column:
                   name: year
                   value: 2010
@@ -1016,7 +1016,7 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: statement
@@ -1026,7 +1026,7 @@ databaseChangeLog:
                   value: BANK
               - column:
                   name: month
-                  value: 1
+                  value: 0
               - column:
                   name: year
                   value: 2010
@@ -1035,7 +1035,7 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: 0
+                  valueBoolean: false
 
         - insert:
             tableName: statement
@@ -1045,7 +1045,7 @@ databaseChangeLog:
                   value: NWDE
               - column:
                   name: month
-                  value: 1
+                  value: 0
               - column:
                   name: year
                   value: 2010
@@ -1054,4 +1054,4 @@ databaseChangeLog:
                   value: 0
               - column:
                   name: locked
-                  value: 0
+                  valueBoolean: false
