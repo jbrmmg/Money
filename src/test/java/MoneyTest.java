@@ -35,7 +35,6 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
  * Created by jason on 27/03/17.
  */
 
-@SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
@@ -153,7 +152,7 @@ public class MoneyTest {
             updateRequest.setAmount(1283.21);
 
             assertEquals(nextTransaction.getAmount(),1280.32,0);
-            mockMvc.perform(post("/jbr/int/money/transaction/update")
+            mockMvc.perform(put("/jbr/int/money/transaction/update")
                     .content(this.json(updateRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -193,7 +192,7 @@ public class MoneyTest {
         updateRequest.setAmount(1283.21);
 
         assertEquals(nextTransaction.getAmount(),1280.32,0);
-        mockMvc.perform(post("/jbr/int/money/transaction/update")
+        mockMvc.perform(put("/jbr/int/money/transaction/update")
                 .content(this.json(updateRequest))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -228,7 +227,7 @@ public class MoneyTest {
             ReconcileTransaction reconcileRequest = new ReconcileTransaction();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
-            mockMvc.perform(post("/jbr/ext/money/reconcile")
+            mockMvc.perform(put("/jbr/ext/money/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -241,7 +240,7 @@ public class MoneyTest {
             ReconcileTransaction reconcileRequest = new ReconcileTransaction();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(false);
-            mockMvc.perform(post("/jbr/ext/money/reconcile")
+            mockMvc.perform(put("/jbr/ext/money/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -278,7 +277,7 @@ public class MoneyTest {
             ReconcileTransaction reconcileRequest = new ReconcileTransaction();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
-            mockMvc.perform(post("/jbr/ext/money/reconcile")
+            mockMvc.perform(put("/jbr/ext/money/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -304,14 +303,14 @@ public class MoneyTest {
             // Check the statements.
             if(nextStatement.getAccount().equalsIgnoreCase("AMEX")) {
                 // AMEX statement, should be unlocked.
-                if(nextStatement.getNotLocked()) {
+                if(!nextStatement.getLocked()) {
                     amexUnlocked++;
                 } else {
                     other++;
                 }
             } else if(nextStatement.getAccount().equalsIgnoreCase( "BANK")) {
                 // Should have one of each
-                if(nextStatement.getNotLocked()) {
+                if(!nextStatement.getLocked()) {
                     bankUnlocked++;
 
                     assertEquals(nextStatement.getOpenBalance(),1280.32,0.01);
@@ -389,7 +388,7 @@ public class MoneyTest {
 
         // Create another transaction
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "HSF", "1968-05-26", 1.53, "Test Transaction")))
+                .content(this.json(new NewTransaction("BANK", "UTT", "1968-05-26", 1.53, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -438,7 +437,7 @@ public class MoneyTest {
             ReconcileTransaction reconcileRequest = new ReconcileTransaction();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
-            mockMvc.perform(post("/jbr/ext/money/reconcile")
+            mockMvc.perform(put("/jbr/ext/money/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -446,7 +445,7 @@ public class MoneyTest {
 
         // Load recon data.
         mockMvc.perform(post("/jbr/int/money/reconciliation/add")
-                .content("24/05/1968,1.23,TST,What are we saying\n24/05/1968,1.23\n24/05/1968,1.23"))
+                .content("24/05/1968,1.23,FDG,What are we saying\n24/05/1968,1.23\n24/05/1968,1.23"))
                 .andExpect(status().isOk());
 
         // Match - should be 2 exact match and 1 not matched.
@@ -491,7 +490,7 @@ public class MoneyTest {
             ReconcileTransaction reconcileRequest = new ReconcileTransaction();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
-            mockMvc.perform(post("/jbr/ext/money/reconcile")
+            mockMvc.perform(put("/jbr/ext/money/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -524,7 +523,7 @@ public class MoneyTest {
         // Create a payment that starts today - should be created immediately.
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(today);
@@ -539,7 +538,7 @@ public class MoneyTest {
 
         testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(11.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
@@ -553,7 +552,7 @@ public class MoneyTest {
 
         testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(12.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
@@ -568,7 +567,7 @@ public class MoneyTest {
 
         testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(13.0);
         testRegularPayment.setFrequency("1X");
         testRegularPayment.setStart(calendar.getTime());
@@ -579,7 +578,7 @@ public class MoneyTest {
 
         testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(14.0);
         testRegularPayment.setFrequency("1M");
         testRegularPayment.setStart(calendar.getTime());
@@ -590,7 +589,7 @@ public class MoneyTest {
 
         testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(15.0);
         testRegularPayment.setFrequency("1Y");
         testRegularPayment.setStart(calendar.getTime());
@@ -604,7 +603,7 @@ public class MoneyTest {
         regularCtrl.generateRegularPayments();
 
         // Check that we have 1 transaction.
-        mockMvc.perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=RGL")
+        mockMvc.perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=FDG")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
@@ -635,7 +634,7 @@ public class MoneyTest {
         // Setup a rule that will move the date to after the weekend.
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
@@ -651,7 +650,7 @@ public class MoneyTest {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         // Check that we have 1 transaction.
-        mockMvc.perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=RGL")
+        mockMvc.perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=FDG")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
@@ -674,7 +673,7 @@ public class MoneyTest {
         // Setup a rule that will move the date to after the weekend.
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("RGL");
+        testRegularPayment.setCategory("FDG");
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
@@ -690,7 +689,7 @@ public class MoneyTest {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         // Check that we have 1 transaction.
-        mockMvc.perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=RGL")
+        mockMvc.perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=FDG")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))

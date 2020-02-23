@@ -338,14 +338,14 @@ public class TransactionController {
         return allTransactionRepository.findAll(getTransactionSearch(type,from,to,category,account), new Sort(Sort.Direction.ASC,"date", "account", "amount"));
     }
 
-    @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.POST)
+    @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.PUT)
     public @ResponseBody
     StatusResponse updateTransactionExt(@RequestBody UpdateTransaction transaction) {
         updateTransacation(transaction);
         return new StatusResponse();
     }
 
-    @RequestMapping(path="/int/money/transaction/update", method= RequestMethod.POST)
+    @RequestMapping(path="/int/money/transaction/update", method= RequestMethod.PUT)
     public @ResponseBody
     StatusResponse updateTransactionInt(@RequestBody UpdateTransaction transaction) {
         updateTransacation(transaction);

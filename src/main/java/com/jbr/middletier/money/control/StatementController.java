@@ -59,7 +59,7 @@ public class StatementController {
 
         if(statement.isPresent()) {
             // Is the statement already locked?
-            if(statement.get().getNotLocked()) {
+            if(!statement.get().getLocked()) {
                 DecimalFormat decimalFormat = new DecimalFormat("#.00");
 
                 // Calculate the balance of the next statement.
@@ -112,5 +112,58 @@ public class StatementController {
     public @ResponseBody StatusResponse statementLockInt( @RequestBody LockStatementRequest request) {
         statementLock(request);
         return new StatusResponse();
+    }
+
+    @RequestMapping(path="/int/money/statement",method=RequestMethod.POST)
+    public @ResponseBody Iterable<Statement> createStatement(@RequestBody Statement statement) throws Exception {
+        StatementId statementId = new StatementId(statement.getAccount(),statement.getYear(),statement.getMonth());
+        LOG.info("Create a new account - " + statementId.toString());
+
+        // Is there an account with this ID?
+        Optional<Statement> existingStatement = statementRepository.findById(statementId);
+        if(existingStatement.isPresent()) {
+            throw new Exception(statementId.toString() + " already exists");
+        }
+
+        statementRepository.save(statement);
+
+        return statements();
+    }
+
+    @RequestMapping(path="/int/money/statement",method=RequestMethod.PUT)
+    public @ResponseBody Iterable<Statement> updateStatement(@RequestBody Statement statement) throws Exception {
+        StatementId statementId = new StatementId(statement.getAccount(),statement.getYear(),statement.getMonth());
+        LOG.info("Update an account - " + statementId.toString());
+
+        // Is there a statement with this
+        Optional<Statement> existingStatement = statementRepository.findById(statementId);
+        if(existingStatement.isPresent()) {
+            existingStatement.get().setOpenBalance(statement.getOpenBalance());
+
+            LOG.warn("Statement balance updated.");
+
+            statementRepository.save(existingStatement.get());
+        } else {
+            throw new Exception(statementId.toString() + " cannot find statement.");
+        }
+
+        return statements();
+    }
+
+    @RequestMapping(path="/int/money/statement",method=RequestMethod.DELETE)
+    public @ResponseBody
+    StatusResponse deleteStatement(@RequestBody Statement statement) {
+        StatementId statementId = new StatementId(statement.getAccount(),statement.getYear(),statement.getMonth());
+        LOG.info("Delete an account - " + statementId.toString());
+
+        // Is there an account with this ID?
+        Optional<Statement> existingStatement = statementRepository.findById(statementId);
+        if(existingStatement.isPresent()) {
+
+            statementRepository.delete(existingStatement.get());
+            return new StatusResponse();
+        }
+
+        return new StatusResponse("Category does not exist " + statementId);
     }
 }
