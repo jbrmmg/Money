@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -17,27 +19,37 @@ public class Regular {
     private Integer id;
 
     @Column(name="account")
+    @NotNull
+    @Size(max=4)
     private String account;
 
     @Column(name="amount")
+    @NotNull
     private double amount;
 
     @Column(name="category")
+    @NotNull
+    @Size(max=3)
     private String category;
 
     @Column(name="frequency")
+    @NotNull
+    @Size(max=2)
     private String frequency;
 
     @Column(name="weekend_adj")
+    @Size(max=2)
     private String weekendAdj;
 
     @Column(name="start")
+    @NotNull
     private Date start;
 
     @Column(name="last_created")
     private Date lastCreated;
 
     @Column(name="description")
+    @Size(max=40)
     private String description;
 
     final static private Logger LOG = LoggerFactory.getLogger(Regular.class);

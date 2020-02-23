@@ -365,4 +365,51 @@ public class TransactionController {
         LOG.info("Get the regular payments.(int)");
         return regularRepository.findAll();
     }
+
+    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.POST)
+    public @ResponseBody
+    Iterable<Regular> getRegularPaymentsCreateInt(@RequestBody Regular regular) {
+        LOG.info("Create a regular payment");
+        regularRepository.save(regular);
+
+        return regularRepository.findAll();
+    }
+
+    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.PUT)
+    public @ResponseBody
+    Iterable<Regular> getRegularPaymentsUpdateInt(@RequestBody Regular regular) {
+        LOG.info("Update a regular payment");
+        Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
+
+        if(existingRegular.isPresent()) {
+            existingRegular.get().setDescription(regular.getDescription());
+            existingRegular.get().setWeekendAdj(regular.getWeekendAdj());
+            existingRegular.get().setFrequency(regular.getFrequency());
+            existingRegular.get().setCategory(regular.getCategory());
+            existingRegular.get().setAccount(regular.getAccount());
+            existingRegular.get().setAmount(regular.getAmount());
+            existingRegular.get().setStart(regular.getStart());
+
+            regularRepository.save(existingRegular.get());
+        } else {
+            throw new IllegalStateException(String.format("Regular payment does not exist %d", regular.getId()));
+        }
+
+        return regularRepository.findAll();
+    }
+
+    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.DELETE)
+    public @ResponseBody
+    Iterable<Regular> getRegularPaymentsDeleteInt(@RequestBody Regular regular) {
+        LOG.info("Delete a regular payment.");
+        Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
+
+        if(existingRegular.isPresent()) {
+            regularRepository.deleteById(existingRegular.get().getId());
+        } else {
+            throw new IllegalStateException(String.format("Regular payment does not exist %d", regular.getId()));
+        }
+
+        return regularRepository.findAll();
+    }
 }
