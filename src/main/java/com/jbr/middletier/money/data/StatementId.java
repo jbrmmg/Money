@@ -30,7 +30,7 @@ public class StatementId implements Serializable {
 
         StatementId statementId = (StatementId)o;
 
-        return statementId.account.equalsIgnoreCase(this.account) && Objects.equals(statementId.month, this.month) && Objects.equals(statementId.year, this.year);
+        return this.toString().equalsIgnoreCase(statementId.toString());
     }
 
     @Override
@@ -40,5 +40,10 @@ public class StatementId implements Serializable {
         result = 31 * result + year;
         result = 31 * result + account.hashCode();
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return this.account.toUpperCase() + String.format("%04d",this.year) + String.format("%02d",this.month);
     }
 }

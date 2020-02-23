@@ -3,6 +3,7 @@ package com.jbr.middletier.money.control;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AllTransactionRepository;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +37,17 @@ public class TransactionController {
     private final TransactionRepository transactionRepository;
     private final AllTransactionRepository allTransactionRepository;
     private final RegularRepository regularRepository;
+    private final StatementRepository statementRepository;
 
     @Autowired
     public TransactionController(TransactionRepository transactionRepository,
                                  AllTransactionRepository allTransactionRepository,
-                                 RegularRepository regularRepository) {
+                                 RegularRepository regularRepository,
+                                 StatementRepository statementRepository) {
         this.transactionRepository = transactionRepository;
         this.allTransactionRepository = allTransactionRepository;
         this.regularRepository = regularRepository;
+        this.statementRepository = statementRepository;
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -235,28 +239,47 @@ public class TransactionController {
         Optional<Transaction> transaction = transactionRepository.findById(transactionRequest.getId());
 
         if(transaction.isPresent()) {
-            transaction.get().setAmount(transactionRequest.getAmount());
+            // If the transaction is locked then the amount cannot be updated.
+            boolean locked = false;
+            StatementId statementId = transaction.get().calculateStatementId();
 
-            // If a category is specified, then update it.
-            if(transactionRequest.getCategory().length() > 0) {
-                transaction.get().setCategory(transactionRequest.getCategory());
+            if(statementId != null) {
+                Optional<Statement> statement = statementRepository.findById(statementId);
+
+                if(statement.isPresent()) {
+                    if(statement.get().getLocked()) {
+                        locked = true;
+                        LOG.info("Update request - locked transaction.");
+                    }
+                }
+            }
+
+            if(!locked) {
+                transaction.get().setAmount(transactionRequest.getAmount());
+            }
+
+            // If a category is specified, then update it (if not a transfer)
+            if(!transaction.get().hasOppositeId()) {
+                if (transactionRequest.getCategory().length() > 0) {
+                    transaction.get().setCategory(transactionRequest.getCategory());
+                }
             }
 
             // If a description is specified, then update it.
-            if(transactionRequest.getDescription().length() > 0) {
-                transaction.get().setDescription(transactionRequest.getDescription());
-            }
+            transaction.get().setDescription(transactionRequest.getDescription());
 
             transactionRepository.save(transaction.get());
             LOG.info("Request transction updated.");
 
-            if(transaction.get().hasOppositeId()) {
-                transaction = transactionRepository.findById(transaction.get().getOppositeId());
+            if(!locked) {
+                if (transaction.get().hasOppositeId()) {
+                    transaction = transactionRepository.findById(transaction.get().getOppositeId());
 
-                if(transaction != null) {
-                    transaction.get().setAmount(-1 * transactionRequest.getAmount());
-                    transactionRepository.save(transaction.get());
-                    LOG.info("Request transction updated (opposite).");
+                    if (transaction != null) {
+                        transaction.get().setAmount(-1 * transactionRequest.getAmount());
+                        transactionRepository.save(transaction.get());
+                        LOG.info("Request transction updated (opposite).");
+                    }
                 }
             }
             return;
@@ -315,14 +338,14 @@ public class TransactionController {
         return allTransactionRepository.findAll(getTransactionSearch(type,from,to,category,account), new Sort(Sort.Direction.ASC,"date", "account", "amount"));
     }
 
-    @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.POST)
+    @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.PUT)
     public @ResponseBody
     StatusResponse updateTransactionExt(@RequestBody UpdateTransaction transaction) {
         updateTransacation(transaction);
         return new StatusResponse();
     }
 
-    @RequestMapping(path="/int/money/transaction/update", method= RequestMethod.POST)
+    @RequestMapping(path="/int/money/transaction/update", method= RequestMethod.PUT)
     public @ResponseBody
     StatusResponse updateTransactionInt(@RequestBody UpdateTransaction transaction) {
         updateTransacation(transaction);
@@ -340,6 +363,53 @@ public class TransactionController {
     public @ResponseBody
     Iterable<Regular> getRegularPaymentsInt() {
         LOG.info("Get the regular payments.(int)");
+        return regularRepository.findAll();
+    }
+
+    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.POST)
+    public @ResponseBody
+    Iterable<Regular> getRegularPaymentsCreateInt(@RequestBody Regular regular) {
+        LOG.info("Create a regular payment");
+        regularRepository.save(regular);
+
+        return regularRepository.findAll();
+    }
+
+    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.PUT)
+    public @ResponseBody
+    Iterable<Regular> getRegularPaymentsUpdateInt(@RequestBody Regular regular) {
+        LOG.info("Update a regular payment");
+        Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
+
+        if(existingRegular.isPresent()) {
+            existingRegular.get().setDescription(regular.getDescription());
+            existingRegular.get().setWeekendAdj(regular.getWeekendAdj());
+            existingRegular.get().setFrequency(regular.getFrequency());
+            existingRegular.get().setCategory(regular.getCategory());
+            existingRegular.get().setAccount(regular.getAccount());
+            existingRegular.get().setAmount(regular.getAmount());
+            existingRegular.get().setStart(regular.getStart());
+
+            regularRepository.save(existingRegular.get());
+        } else {
+            throw new IllegalStateException(String.format("Regular payment does not exist %d", regular.getId()));
+        }
+
+        return regularRepository.findAll();
+    }
+
+    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.DELETE)
+    public @ResponseBody
+    Iterable<Regular> getRegularPaymentsDeleteInt(@RequestBody Regular regular) {
+        LOG.info("Delete a regular payment.");
+        Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
+
+        if(existingRegular.isPresent()) {
+            regularRepository.deleteById(existingRegular.get().getId());
+        } else {
+            throw new IllegalStateException(String.format("Regular payment does not exist %d", regular.getId()));
+        }
+
         return regularRepository.findAll();
     }
 }
