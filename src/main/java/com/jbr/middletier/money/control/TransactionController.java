@@ -5,6 +5,9 @@ import com.jbr.middletier.money.dataaccess.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -38,6 +41,7 @@ public class TransactionController {
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
+    private final ResourceLoader resourceLoader;
 
     @Autowired
     public TransactionController(TransactionRepository transactionRepository,
@@ -45,13 +49,15 @@ public class TransactionController {
                                  RegularRepository regularRepository,
                                  StatementRepository statementRepository,
                                  AccountRepository accountRepository,
-                                 CategoryRepository categoryRepository) {
+                                 CategoryRepository categoryRepository,
+                                 ResourceLoader resourceLoader) {
         this.transactionRepository = transactionRepository;
         this.allTransactionRepository = allTransactionRepository;
         this.regularRepository = regularRepository;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
+        this.resourceLoader = resourceLoader;
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -546,9 +552,8 @@ public class TransactionController {
             message.setSubject("Credit card bills");
 
             // Get the email template.
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-
-            InputStream is = classLoader.getResourceAsStream("html/email.html");
+            Resource resource = resourceLoader.getResource("classpath:html/email.html");
+            InputStream is = resource.getInputStream();
 
             if(is== null) {
                 throw new Exception("Cannot load resource");
