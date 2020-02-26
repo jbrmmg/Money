@@ -535,7 +535,7 @@ public class TransactionController {
         properties.put("mail.smtp.host",host);
         properties.put("mail.smtp.port","25");
 
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM");
 
         Session session = Session.getInstance(properties,
                 new javax.mail.Authenticator() {
