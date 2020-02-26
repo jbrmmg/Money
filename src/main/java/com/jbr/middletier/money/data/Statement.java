@@ -64,6 +64,14 @@ public class Statement implements Comparable<Statement> {
         return Integer.toString(yearMonth);
     }
 
+    public String getPreviousId() {
+        int yearMonth = this.year * 100 + (this.month - 1);
+        if(this.month == 1) {
+            yearMonth = (this.year - 1) * 100 + 11;
+        }
+        return Integer.toString(yearMonth);
+    }
+
     public int getYear() {
         return this.year;
     }

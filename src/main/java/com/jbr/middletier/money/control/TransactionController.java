@@ -1,10 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.AllTransactionRepository;
-import com.jbr.middletier.money.dataaccess.RegularRepository;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.dataaccess.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +11,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.jbr.middletier.money.dataaccess.AllTransactionSpecifications.*;
 import static com.jbr.middletier.money.dataaccess.AllTransactionSpecifications.categoryIn;
@@ -38,16 +36,22 @@ public class TransactionController {
     private final AllTransactionRepository allTransactionRepository;
     private final RegularRepository regularRepository;
     private final StatementRepository statementRepository;
+    private final AccountRepository accountRepository;
+    private final CategoryRepository categoryRepository;
 
     @Autowired
     public TransactionController(TransactionRepository transactionRepository,
                                  AllTransactionRepository allTransactionRepository,
                                  RegularRepository regularRepository,
-                                 StatementRepository statementRepository) {
+                                 StatementRepository statementRepository,
+                                 AccountRepository accountRepository,
+                                 CategoryRepository categoryRepository) {
         this.transactionRepository = transactionRepository;
         this.allTransactionRepository = allTransactionRepository;
         this.regularRepository = regularRepository;
         this.statementRepository = statementRepository;
+        this.accountRepository = accountRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -411,5 +415,191 @@ public class TransactionController {
         }
 
         return regularRepository.findAll();
+    }
+
+    @RequestMapping(path="/int/money/transaction/email",method=RequestMethod.POST)
+    public @ResponseBody StatusResponse sendEmail(  @RequestParam(value="to",defaultValue="jason@jbrmmg.me.uk") String to,
+                                                    @RequestParam(value="from",defaultValue="jason@jbrmmg.me.uk") String from,
+                                                    @RequestParam(value="username",defaultValue="jason@jbrmmg.me.uk") String username,
+                                                    @RequestParam(value="host",defaultValue="smtp.ionos.co.uk") String host,
+                                                    @RequestParam(value="password") String password) throws Exception {
+
+        LOG.info("sending email to " + to);
+
+        Iterable<Category> categories = categoryRepository.findAll();
+
+        class EmailTransaction {
+            Date date;
+            Double amount;
+            String description;
+            String category;
+            String account;
+
+            EmailTransaction(Transaction transaction, Iterable<Category> categories) {
+                this.date = transaction.getDate();
+                this.amount = transaction.getAmount();
+                this.description = transaction.getDescription() == null ? "" : transaction.getDescription().replace("WWW.","");
+                this.account = transaction.getAccount();
+
+                for(Category nextCategory : categories) {
+                    if(nextCategory.getId().equalsIgnoreCase(transaction.getCategory())) {
+                        this.category = nextCategory.getName();
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public String toString() {
+                return description;
+            }
+        }
+
+        List<EmailTransaction> emailData = new ArrayList<>();
+
+        // Get the data that we will contain in the email.
+        double startAmount = 0.0;
+        double endAmount = 0.0;
+        double transactionTotal1 = 0;
+        double transactionTotal2 = 0;
+
+        // Get the latest statement that is locked for each account.
+        Iterable<Account> accounts = accountRepository.findAll();
+
+        for(Account nextAccount : accounts) {
+            // Get the latest statement.
+            List<Statement> latestStatements = statementRepository.findByAccountAndLocked(nextAccount.getId(),false);
+            for(Statement nextStatement: latestStatements) {
+                endAmount += nextStatement.getOpenBalance();
+                startAmount += nextStatement.getOpenBalance();
+
+                // Get the transactions for this.
+                List<Transaction> transactions = transactionRepository.findByAccountAndStatement(nextAccount.getId(), nextStatement.getYearMonthId());
+                for(Transaction nextTransaction : transactions) {
+//                    LOG.info(">" + nextTransaction.getId());
+
+                    endAmount += nextTransaction.getAmount();
+                    transactionTotal1 += nextTransaction.getAmount();
+
+                    emailData.add(new EmailTransaction(nextTransaction,categories));
+                }
+
+                transactions = transactionRepository.findByAccountAndStatement(nextAccount.getId(), nextStatement.getPreviousId());
+                for(Transaction nextTransaction : transactions) {
+  //                  LOG.info("<" + nextTransaction.getId());
+                    transactionTotal2 += nextTransaction.getAmount();
+
+                    emailData.add(new EmailTransaction(nextTransaction,categories));
+                }
+            }
+        }
+
+        emailData.sort(new Comparator<EmailTransaction>() {
+            @Override
+            public int compare(EmailTransaction emailTransaction, EmailTransaction t1) {
+                if(emailTransaction.date.before(t1.date)) {
+                    return +1;
+                } else if (emailTransaction.date.after(t1.date)) {
+                    return -1;
+                }
+
+                if(emailTransaction.amount > t1.amount) {
+                    return +1;
+                } else if(emailTransaction.amount < t1.amount) {
+                    return -1;
+                }
+
+                return 0;
+            }
+        });
+
+        for(EmailTransaction nextTransaction: emailData) {
+            LOG.info(nextTransaction.toString());
+        }
+
+        startAmount -= transactionTotal1;
+
+        LOG.info(String.format("%02.2f",startAmount));
+        LOG.info(String.format("%02.2f",endAmount));
+        LOG.info(String.format("%02.2f",transactionTotal1 + transactionTotal2));
+
+        Properties properties = new Properties();
+        properties.put("mail.smtp.auth","true");
+        properties.put("mail.smtp.starttls.enable","true");
+        properties.put("mail.smtp.host",host);
+        properties.put("mail.smtp.port","25");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd");
+
+        Session session = Session.getInstance(properties,
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(username,password);
+                    }
+                });
+
+        try {
+            Message message = new MimeMessage(session);
+
+            message.setFrom(new InternetAddress(from));
+            message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            message.setSubject("Credit card bills");
+
+            // Get the email template.
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+            InputStream is = classLoader.getResourceAsStream("html/email.html");
+
+            if(is== null) {
+                throw new Exception("Cannot load resource");
+            }
+
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader reader = new BufferedReader(isr);
+
+            String template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("<tr>\n");
+            sb.append("<td class=\"date\"></td>\n");
+            sb.append("<td class=\"description\"></td>\n");
+            sb.append("<td class=\"description\"></td>\n");
+            sb.append("<td class=\"description-bal\">Current Balance</td>\n");
+            sb.append("<td class=\"amount amount-data db\">" + String.format("%02.2f",endAmount) + "</td>\n");
+            sb.append("</tr>\n");
+            sb.append("<tr>\n");
+            sb.append("<td class=\"date\"></td>\n");
+            sb.append("<td class=\"description\"></td>\n");
+            sb.append("<td class=\"description\"></td>\n");
+            sb.append("<td class=\"description-bal\"></td>\n");
+            sb.append("<td class=\"amount amount-data db\"></td>\n");
+            sb.append("</tr>\n");
+            for(EmailTransaction nextTransaction: emailData) {
+                sb.append("<tr>\n");
+                sb.append("<td class=\"date\">" + sdf.format(nextTransaction.date) + "</td>\n");
+                sb.append("<td class=\"description\">" + nextTransaction.category + "</td>\n");
+                sb.append("<td class=\"description\">" + nextTransaction.account + "</td>\n");
+                sb.append("<td class=\"description\">" + nextTransaction.description + "</td>\n");
+                if(nextTransaction.amount < 0) {
+                    sb.append("<td class=\"amount amount-data db\">" + String.format("%02.2f", nextTransaction.amount) + "</td>\n");
+                } else {
+                    sb.append("<td class=\"amount amount-data\">" + String.format("%02.2f", nextTransaction.amount) + "</td>\n");
+                }
+                sb.append("</tr>\n");
+                LOG.info(nextTransaction.toString());
+            }
+
+            message.setContent(template.replace("<!-- TABLEROWS -->", sb.toString()),"text/html");
+
+            Transport.send(message);
+
+            LOG.info("email sent.");
+        } catch(MessagingException e) {
+            LOG.error(e.getMessage());
+            return new StatusResponse("failed email - " + e.getMessage());
+        }
+
+        return new StatusResponse();
     }
 }
