@@ -99,6 +99,8 @@ public class Transaction {
 
     public void setCategory(String category) { this.category = category; }
 
+    public String getCategory() { return this.category; }
+
     public void setOppositeId(int oppositeId) {
         this.oppositeiId = oppositeId;
     }
