@@ -423,12 +423,29 @@ public class TransactionController {
         return regularRepository.findAll();
     }
 
+    private void AppendRow(StringBuilder sb, String date, String category, String account, String description, Double amount) {
+        sb.append("<tr>\n");
+        sb.append("<td class=\"date\">" + date + "</td>\n");
+        sb.append("<td class=\"description\">" + category + "</td>\n");
+        sb.append("<td class=\"description\">" + account + "</td>\n");
+        sb.append("<td class=\"description\">" + description + "</td>\n");
+        if(amount == null) {
+            sb.append("<td class=\"amount amount-data\"></td>\n");
+        } else  if(amount < 0) {
+            sb.append("<td class=\"amount amount-data db\">" + String.format("%02.2f", amount) + "</td>\n");
+        } else {
+            sb.append("<td class=\"amount amount-data\">" + String.format("%02.2f", amount) + "</td>\n");
+        }
+        sb.append("</tr>\n");
+    }
+
     @RequestMapping(path="/int/money/transaction/email",method=RequestMethod.POST)
-    public @ResponseBody StatusResponse sendEmail(  @RequestParam(value="to",defaultValue="jason@jbrmmg.me.uk") String to,
-                                                    @RequestParam(value="from",defaultValue="jason@jbrmmg.me.uk") String from,
-                                                    @RequestParam(value="username",defaultValue="jason@jbrmmg.me.uk") String username,
-                                                    @RequestParam(value="host",defaultValue="smtp.ionos.co.uk") String host,
-                                                    @RequestParam(value="password") String password) throws Exception {
+    public @ResponseBody StatusResponse sendEmail(  @RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
+                                                    @RequestParam(value="from", defaultValue="creditcards@jbrmmg.me.uk") String from,
+                                                    @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,
+                                                    @RequestParam(value="host", defaultValue="smtp.ionos.co.uk") String host,
+                                                    @RequestParam(value="password") String password,
+                                                    @RequestParam(value="weeks", defaultValue="6") int weeks ) throws Exception {
 
         LOG.info("sending email to " + to);
 
@@ -469,6 +486,9 @@ public class TransactionController {
         double transactionTotal1 = 0;
         double transactionTotal2 = 0;
 
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR,-weeks * 7);
+
         // Get the latest statement that is locked for each account.
         Iterable<Account> accounts = accountRepository.findAll();
 
@@ -482,8 +502,6 @@ public class TransactionController {
                 // Get the transactions for this.
                 List<Transaction> transactions = transactionRepository.findByAccountAndStatement(nextAccount.getId(), nextStatement.getYearMonthId());
                 for(Transaction nextTransaction : transactions) {
-//                    LOG.info(">" + nextTransaction.getId());
-
                     endAmount += nextTransaction.getAmount();
                     transactionTotal1 += nextTransaction.getAmount();
 
@@ -492,10 +510,11 @@ public class TransactionController {
 
                 transactions = transactionRepository.findByAccountAndStatement(nextAccount.getId(), nextStatement.getPreviousId());
                 for(Transaction nextTransaction : transactions) {
-  //                  LOG.info("<" + nextTransaction.getId());
-                    transactionTotal2 += nextTransaction.getAmount();
+                    if(nextTransaction.getDate().after(calendar.getTime())) {
+                        transactionTotal2 += nextTransaction.getAmount();
 
-                    emailData.add(new EmailTransaction(nextTransaction,categories));
+                        emailData.add(new EmailTransaction(nextTransaction, categories));
+                    }
                 }
             }
         }
@@ -519,11 +538,13 @@ public class TransactionController {
             }
         });
 
+        startAmount = endAmount;
+        startAmount -= transactionTotal1;
+        startAmount -= transactionTotal2;
+
         for(EmailTransaction nextTransaction: emailData) {
             LOG.info(nextTransaction.toString());
         }
-
-        startAmount -= transactionTotal1;
 
         LOG.info(String.format("%02.2f",startAmount));
         LOG.info(String.format("%02.2f",endAmount));
@@ -566,34 +587,14 @@ public class TransactionController {
 
             StringBuilder sb = new StringBuilder();
 
-            sb.append("<tr>\n");
-            sb.append("<td class=\"date\"></td>\n");
-            sb.append("<td class=\"description\"></td>\n");
-            sb.append("<td class=\"description\"></td>\n");
-            sb.append("<td class=\"description-bal\">Current Balance</td>\n");
-            sb.append("<td class=\"amount amount-data db\">" + String.format("%02.2f",endAmount) + "</td>\n");
-            sb.append("</tr>\n");
-            sb.append("<tr>\n");
-            sb.append("<td class=\"date\"></td>\n");
-            sb.append("<td class=\"description\"></td>\n");
-            sb.append("<td class=\"description\"></td>\n");
-            sb.append("<td class=\"description-bal\"></td>\n");
-            sb.append("<td class=\"amount amount-data db\"></td>\n");
-            sb.append("</tr>\n");
+            AppendRow(sb,"", "", "", "Current Balance", endAmount);
+            AppendRow(sb,"", "", "", "", null);
             for(EmailTransaction nextTransaction: emailData) {
-                sb.append("<tr>\n");
-                sb.append("<td class=\"date\">" + sdf.format(nextTransaction.date) + "</td>\n");
-                sb.append("<td class=\"description\">" + nextTransaction.category + "</td>\n");
-                sb.append("<td class=\"description\">" + nextTransaction.account + "</td>\n");
-                sb.append("<td class=\"description\">" + nextTransaction.description + "</td>\n");
-                if(nextTransaction.amount < 0) {
-                    sb.append("<td class=\"amount amount-data db\">" + String.format("%02.2f", nextTransaction.amount) + "</td>\n");
-                } else {
-                    sb.append("<td class=\"amount amount-data\">" + String.format("%02.2f", nextTransaction.amount) + "</td>\n");
-                }
-                sb.append("</tr>\n");
+                AppendRow(sb,sdf.format(nextTransaction.date), nextTransaction.category, nextTransaction.account, nextTransaction.description, nextTransaction.amount);
                 LOG.info(nextTransaction.toString());
             }
+            AppendRow(sb,"", "", "", "", null);
+            AppendRow(sb,"", "", "", "Bought forward", startAmount);
 
             message.setContent(template.replace("<!-- TABLEROWS -->", sb.toString()),"text/html");
 
