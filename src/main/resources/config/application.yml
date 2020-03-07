@@ -1,0 +1,43 @@
+spring:
+    datasource:
+        type: com.zaxxer.hikari.HikariDataSource
+        url: jdbc:h2:mem:test;INIT=CREATE SCHEMA IF NOT EXISTS TEST;DB_CLOSE_ON_EXIT=FALSE
+        username: sa
+        password:
+        hikari:
+            poolName: Hikari
+            auto-commit: false
+
+    h2:
+        console:
+            enabled: true
+            path: /h2
+            settings:
+                web-allow-others: true
+
+    liquibase:
+        default-schema:
+        change-log: classpath:/db/changelog/db.changelog-master.yaml
+        contexts: default
+
+money:
+    service-name: "Middle Tier Debug"
+
+management:
+    endpoint:
+        health:
+            show-details: always
+
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+
+    security:
+        enabled: false
+
+info:
+    app:
+        name: "Money DB"
+        description: "Used for managing transactions"
+

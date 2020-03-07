@@ -1,6 +1,0 @@
-server.port: 9000
-management.port: 9001
-management.address: 127.0.0.1
-middle.tier.backup.db.url:test
-middle.tier.backup.db.username:test
-middle.tier.backup.db.password:test

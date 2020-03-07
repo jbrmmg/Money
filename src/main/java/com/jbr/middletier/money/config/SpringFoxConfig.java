@@ -1,4 +1,4 @@
-package com.jbr.middletier;
+package com.jbr.middletier.money.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
