@@ -328,14 +328,28 @@ public class TransactionController {
         return new StatusResponse("Failed to delete transaction.");
     }
 
+    private Iterable<AllTransaction> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
+
+        Sort transactionSort = new Sort(Sort.Direction.ASC,"date", "account", "amount");
+
+        if(sortAscending != null) {
+            if(!sortAscending) {
+                transactionSort = new Sort(Sort.Direction.DESC,"date", "account", "amount");
+            }
+        }
+
+        return allTransactionRepository.findAll(getTransactionSearch(type,from,to,category,account), transactionSort);
+    }
+
     @RequestMapping(path="/ext/money/transaction/get",method= RequestMethod.GET)
     public @ResponseBody
     Iterable<AllTransaction> getExtTransactionsExt(@RequestParam(value="type", defaultValue="UNKN") String type,
                                                    @RequestParam(value="from", defaultValue="UNKN") String from,
                                                    @RequestParam(value="to", defaultValue="UNKN") String to,
                                                    @RequestParam(value="category", defaultValue="UNKN")  String category,
-                                                   @RequestParam(value="account", defaultValue="UNKN")  String account) throws ParseException {
-        return allTransactionRepository.findAll(getTransactionSearch(type,from,to,category,account), new Sort(Sort.Direction.ASC,"date", "account", "amount"));
+                                                   @RequestParam(value="account", defaultValue="UNKN")  String account,
+                                                   @RequestParam(value="sortAscending", defaultValue="true") Boolean sortAscending ) throws ParseException {
+        return getTransactionsImpl(type,from,to,category,account,sortAscending);
     }
 
     @RequestMapping(path="/int/money/transaction/get",method= RequestMethod.GET)
@@ -344,8 +358,9 @@ public class TransactionController {
                                                    @RequestParam(value="from", defaultValue="UNKN") String from,
                                                    @RequestParam(value="to", defaultValue="UNKN") String to,
                                                    @RequestParam(value="category", defaultValue="UNKN")  String category,
-                                                   @RequestParam(value="account", defaultValue="UNKN")  String account) throws ParseException {
-        return allTransactionRepository.findAll(getTransactionSearch(type,from,to,category,account), new Sort(Sort.Direction.ASC,"date", "account", "amount"));
+                                                   @RequestParam(value="account", defaultValue="UNKN") String account,
+                                                   @RequestParam(value="sortAscending", defaultValue="true") Boolean sortAscending) throws ParseException {
+        return getTransactionsImpl(type,from,to,category,account,sortAscending);
     }
 
     @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.PUT)

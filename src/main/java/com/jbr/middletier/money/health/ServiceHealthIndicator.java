@@ -1,7 +1,9 @@
 package com.jbr.middletier.money.health;
 
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import liquibase.pro.packaged.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +22,16 @@ import java.util.List;
 public class ServiceHealthIndicator implements HealthIndicator {
     final static private Logger LOG = LoggerFactory.getLogger(ServiceHealthIndicator.class);
 
-    @Value("${middle.tier.service.name}")
-    private String serviceName;
+    private final ApplicationProperties applicationProperties;
 
     private final
     CategoryRepository categoryRepository;
 
     @Autowired
-    public ServiceHealthIndicator(CategoryRepository categoryRepository) {
+    public ServiceHealthIndicator(CategoryRepository categoryRepository,
+                                  ApplicationProperties applicationProperties) {
         this.categoryRepository = categoryRepository;
+        this.applicationProperties = applicationProperties;
     }
 
     @Override
@@ -37,11 +40,11 @@ public class ServiceHealthIndicator implements HealthIndicator {
             List<Category> categoryList = (List<Category>) categoryRepository.findAll();
             LOG.info(String.format("Check Database %s.", categoryList.size()));
 
-            return Health.up().withDetail("service", serviceName).withDetail("Category Types",categoryList.size()).build();
+            return Health.up().withDetail("service", this.applicationProperties.getServiceName()).withDetail("Category Types",categoryList.size()).build();
         } catch (Exception ignored) {
 
         }
 
-        return Health.down().withDetail("service", serviceName).build();
+        return Health.down().withDetail("service", this.applicationProperties.getServiceName()).build();
     }
 }

@@ -6,7 +6,7 @@ Description=JBR MiddleTier MoneyDB Service (DEV)
 After=mysql.service
 
 [Service]
-ExecStart=/usr/bin/java -Xms768M -Xmx768M -Dspring.config.location=file:/usr/bin/jbr/dev/MiddleTier-Money-DEV.properties -Dlogging.config=file:/usr/bin/jbr/dev/MiddleTier-Money-DEV-log4j.xml -jar /usr/bin/jbr/dev/MiddleTier-Money-DEV-onejar.jar
+ExecStart=/usr/bin/java -Xms768M -Xmx768M -Dspring.profiles.active=dev -jar /usr/bin/jbr/dev/MiddleTier-Money-DEV-onejar.jar
 
 [Install]
 WantedBy=multi-user.target

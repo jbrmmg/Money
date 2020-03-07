@@ -1,0 +1,16 @@
+logging:
+    level:
+        ROOT: INFO
+        com.jbr.middletier: DEBUG
+
+
+spring:
+    liquibase:
+        contexts: dbg
+
+server:
+    port: 13017
+
+info:
+    app:
+        version: Debug

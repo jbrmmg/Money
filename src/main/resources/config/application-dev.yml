@@ -1,0 +1,25 @@
+spring:
+    datasource:
+        type: com.zaxxer.hikari.HikariDataSource
+        url: ${db.dev.money.server}?autoReconnect=true&useSSL=false
+        username: ${db.dev.money.user}
+        password: ${db.dev.money.password}
+        hikari:
+            poolName: Hikari
+            auto-commit: false
+
+        h2:
+            console:
+            enabled: false
+
+    boot:
+        admin:
+            client:
+                url: ${spring.admin.clienturl}
+
+server:
+  port: 10017
+
+info:
+  app:
+    version: Development

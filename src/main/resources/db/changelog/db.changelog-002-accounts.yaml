@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: jason
+      changes:
+
+          - insert:
+              tableName: account
+              columns:
+                - column:
+                    name: id
+                    value: "BANK"
+                - column:
+                    name: name
+                    value: "Bank Account"
+                - column:
+                    name: image_prefix
+                    value: "firstDirect"
+                - column:
+                    name: colour
+                    value: "000000"
+
+          - insert:
+              tableName: account
+              columns:
+                - column:
+                    name: id
+                    value: "AMEX"
+                - column:
+                    name: name
+                    value: "American Express"
+                - column:
+                    name: image_prefix
+                    value: "amex"
+                - column:
+                    name: colour
+                    value: "4BBAEA"
+
+          - insert:
+              tableName: account
+              columns:
+                - column:
+                    name: id
+                    value: "JLPC"
+                - column:
+                    name: name
+                    value: "John Lewis Card"
+                - column:
+                    name: image_prefix
+                    value: "johnLewis"
+                - column:
+                    name: colour
+                    value: "00461C"
+
+          - insert:
+              tableName: account
+              columns:
+                - column:
+                    name: id
+                    value: "NWDE"
+                - column:
+                    name: name
+                    value: "Nationwide"
+                - column:
+                    name: image_prefix
+                    value: "nationwide"
+                - column:
+                    name: colour
+                    value: "00326B"
+
