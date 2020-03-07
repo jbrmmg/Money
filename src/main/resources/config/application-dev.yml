@@ -1,25 +1,30 @@
 spring:
     datasource:
-        type: com.zaxxer.hikari.HikariDataSource
         url: ${db.dev.money.server}?autoReconnect=true&useSSL=false
         username: ${db.dev.money.user}
         password: ${db.dev.money.password}
-        hikari:
-            poolName: Hikari
-            auto-commit: false
-
-        h2:
-            console:
-            enabled: false
 
     boot:
         admin:
             client:
                 url: ${spring.admin.clienturl}
 
+    h2:
+        console:
+            enabled: false
+
+logging.file: /var/log/jbr/MiddleTier-MoneyDB-DEV.log
+logging:
+    file:
+        max-history: 3
+        max-size: 100MB
+
 server:
-  port: 10017
+      port: 10017
+
+money:
+    service-name: "Middle Tier Development"
 
 info:
-  app:
-    version: Development
+    app:
+        version: Development

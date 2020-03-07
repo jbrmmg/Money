@@ -1,25 +1,30 @@
 spring:
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    url: ${db.pdn.money.server}?autoReconnect=true&useSSL=false
-    username: ${db.pdn.money.user}
-    password: ${db.pdn.money.password}
-    hikari:
-      poolName: Hikari
-      auto-commit: false
+    datasource:
+        url: ${db.pdn.money.server}?autoReconnect=true&useSSL=false
+        username: ${db.pdn.money.user}
+        password: ${db.pdn.money.password}
+
+    boot:
+        admin:
+            client:
+                url: ${spring.admin.clienturl}
 
     h2:
       console:
-      enabled: false
+        enabled: false
 
-  boot:
-    admin:
-      client:
-        url: ${spring.admin.clienturl}
+logging.file: /var/log/jbr/MiddleTier-MoneyDB-PDN.log
+logging:
+    file:
+        max-history: 3
+        max-size: 100MB
 
 server:
-  port: 12017
+    port: 12017
+
+money:
+    service-name: "Middle Tier Production"
 
 info:
-  app:
-    version: Production
+    app:
+        version: Production
