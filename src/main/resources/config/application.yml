@@ -8,6 +8,9 @@ spring:
             poolName: Hikari
             auto-commit: false
 
+    application:
+        name: Middle Tier Money (Debug)
+
     h2:
         console:
             enabled: true
