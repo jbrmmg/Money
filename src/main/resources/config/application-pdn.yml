@@ -9,6 +9,10 @@ spring:
             client:
                 url: ${spring.admin.clienturl}
 
+
+    application:
+        name: Middle Tier Money
+
     h2:
       console:
         enabled: false
