@@ -30,11 +30,12 @@ public class ReconciliationController {
 
     private final ReconciliationRepository reconciliationRepository;
     private final CategoryRepository categoryRepository;
+    private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final AllTransactionRepository allTransactionRepository;
     private final TransactionController transactionController;
-    private String lastAccount = "UNKN";
+    private Account lastAccount = null;
 
     @Autowired
     public ReconciliationController(StatementRepository statementRepository,
@@ -42,6 +43,7 @@ public class ReconciliationController {
                                     AllTransactionRepository allTransactionRepository,
                                     ReconciliationRepository reconciliationRepository,
                                     CategoryRepository categoryRepository,
+                                    AccountRepository accountRepository,
                                     TransactionController transactionController) {
         this.statementRepository = statementRepository;
         this.transactionRepository = transactionRepository;
@@ -49,6 +51,7 @@ public class ReconciliationController {
         this.categoryRepository = categoryRepository;
         this.allTransactionRepository = allTransactionRepository;
         this.transactionController = transactionController;
+        this.accountRepository = accountRepository;
     }
 
     private class MatchInformation {
@@ -75,7 +78,7 @@ public class ReconciliationController {
         reconciliationRepository.deleteAll();
     }
 
-    private boolean autoReconcileData() {
+    private boolean autoReconcileData() throws Exception {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
 
@@ -167,19 +170,18 @@ public class ReconciliationController {
         }
     }
 
-    private List<MatchData> matchFromLastData()
-    {
-        if (lastAccount.equalsIgnoreCase("UNKN") )
+    private List<MatchData> matchFromLastData() throws Exception {
+        if (lastAccount == null)
             return null;
 
         return matchData(lastAccount);
     }
 
-    private List<MatchData> matchData(String account) {
+    private List<MatchData> matchData(Account account) throws Exception {
         // Attempt to match the reconciliation with the data in the account specified.
 
         // Get all transactions that are 'unlocked' on the account.
-        Iterable<AllTransaction> transactions = allTransactionRepository.findAll(Specification.where(notLocked()).and(accountIn(new String[] {account})), new Sort(Sort.Direction.ASC,"date", "amount"));
+        Iterable<AllTransaction> transactions = allTransactionRepository.findAll(Specification.where(notLocked()).and(accountIn(new String[] {account.getId()})), new Sort(Sort.Direction.ASC,"date", "amount"));
 
         // Get all the reconciliation data.
         List<ReconciliationData> reconciliationData = reconciliationRepository.findAllByOrderByDateAsc();
@@ -271,7 +273,7 @@ public class ReconciliationController {
                 MatchData matchData = result.get(matchDataIndex);
 
                 // Set the close match transaction.
-                matchData.closeMatchTransaction(nextMatchInfo.transaction);
+                matchData.matchTransaction(nextMatchInfo.transaction);
             }
         }
 
@@ -293,7 +295,7 @@ public class ReconciliationController {
         Collections.sort(result);
 
         // Update the opening balance information.
-        List<Statement> unlockedStatement = statementRepository.findByAccountAndLocked(account,false);
+        List<Statement> unlockedStatement = statementRepository.findByIdAccountAndLocked(account,false);
         if(unlockedStatement.size() != 1) {
             LOG.info("Number of statements was not 1.");
         } else {
@@ -323,7 +325,7 @@ public class ReconciliationController {
             if(category.isPresent()) {
                 if(!transaction.get().hasOppositeId()) {
                     LOG.info("Category updated for - " + Integer.toString(reconciliationUpdate.getId()));
-                    transaction.get().setCategory(reconciliationUpdate.getCategoryId());
+                    transaction.get().setCategory(category.get());
                     transactionRepository.save(transaction.get());
                 }
             } else {
@@ -345,7 +347,7 @@ public class ReconciliationController {
 
             if(category.isPresent()) {
                 LOG.info("Category updated for - " + Integer.toString(reconciliationUpdate.getId()));
-                reconciliationData.get().setCategory(category.get().getId(), category.get().getColour());
+                reconciliationData.get().setCategory(category.get(), category.get().getColour());
                 reconciliationRepository.save(reconciliationData.get());
             } else {
                 LOG.info("Invalid category.");
@@ -377,7 +379,7 @@ public class ReconciliationController {
             // Then set the reconciliation or remove the flag.
             if (reconcile) {
                 // Find the statement associated with the transaction.
-                List<Statement> statements = statementRepository.findByAccountAndLocked(transaction.get().getAccount(), false);
+                List<Statement> statements = statementRepository.findByIdAccountAndLocked(transaction.get().getAccount(), false);
 
                 if (statements.size() == 1) {
                     // Set the statement.
@@ -431,7 +433,7 @@ public class ReconciliationController {
             String description = columns[3].length() > 40 ? columns[3].substring(0,40) : columns[3];
 
             LOG.info("Got a valid record - inserting.");
-            return new ReconciliationData(transactionDate, transactionAmount, null, null, description);
+            return new ReconciliationData(transactionDate, transactionAmount, null, description);
         }
     }
 
@@ -472,7 +474,7 @@ public class ReconciliationController {
                 String description = columns[1].length() > 40 ? columns[1].substring(0, 40) : columns[1];
 
                 LOG.info("Got a valid record - inserting.");
-                return new ReconciliationData(transactionDate, transactionAmount, null, null, description);
+                return new ReconciliationData(transactionDate, transactionAmount, null, description);
             }
 
             return null;
@@ -503,7 +505,7 @@ public class ReconciliationController {
             String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
 
             LOG.info("Got a valid record - inserting.");
-            return new ReconciliationData(transactionDate, transactionAmount, null, null, description);
+            return new ReconciliationData(transactionDate, transactionAmount, null, description);
         }
     }
 
@@ -562,8 +564,7 @@ public class ReconciliationController {
             // Process the elements.
             Date transactionDate = null;
             Double transactionAmount = null;
-            String categoryId = null;
-            String categoryColour = null;
+            Category category = null;
             String description = "";
 
             for(String nextElement : elements) {
@@ -596,13 +597,12 @@ public class ReconciliationController {
                 }
 
                 // Is it a category id?
-                if(categoryId == null) {
+                if(category == null) {
                     if (nextElement.length() == 3) {
-                        Optional<Category> category = categoryRepository.findById(nextElement);
+                        Optional<Category> maybeCategory = categoryRepository.findById(nextElement);
 
-                        if (category.isPresent()) {
-                            categoryId = nextElement;
-                            categoryColour = category.get().getColour();
+                        if (maybeCategory.isPresent()) {
+                            category = maybeCategory.get();
                             continue;
                         }
                     }
@@ -621,7 +621,7 @@ public class ReconciliationController {
             // If we had a value date and amount.
             if((transactionDate != null) && (transactionAmount != null)) {
                 LOG.info("Got a valid record - inserting.");
-                ReconciliationData newReconciliationData = new ReconciliationData(transactionDate, transactionAmount, categoryId, categoryColour, description);
+                ReconciliationData newReconciliationData = new ReconciliationData(transactionDate, transactionAmount, category, description);
 
                 reconciliationRepository.save(newReconciliationData);
             }
@@ -783,24 +783,34 @@ public class ReconciliationController {
         return processReconcileUpdate(reconciliationUpdate);
     }
 
+    private List<MatchData> matchImpl(String accountId) throws Exception {
+
+        Optional<Account> account = accountRepository.findById(accountId);
+
+        if(!account.isPresent()) {
+            throw new Exception("Invalid account id.");
+        }
+
+        lastAccount = account.get();
+        return matchData(account.get());
+    }
+
     @RequestMapping(path="/ext/money/match", method= RequestMethod.GET)
     public @ResponseBody
-    List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String account) {
+    List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws Exception {
         LOG.info("External match data - reconciliation data with reconciled transactions");
-        lastAccount = account;
-        return matchData(account);
+        return matchImpl(accountId);
     }
 
     @RequestMapping(path="/int/money/match", method= RequestMethod.GET)
     public @ResponseBody
-    List<MatchData>  matchInt(@RequestParam(value="account", defaultValue="UNKN") String account) {
+    List<MatchData>  matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws Exception {
         LOG.info("Internal match data - reconciliation data with reconciled transactions");
-        lastAccount = account;
-        return matchData(account);
+        return matchImpl(accountId);
     }
 
     @RequestMapping(path="/ext/money/reconciliation/auto", method= RequestMethod.PUT)
-    public @ResponseBody StatusResponse reconcileDataExt() {
+    public @ResponseBody StatusResponse reconcileDataExt() throws Exception {
         LOG.info("Auto Reconcilation Data (ext) ");
         if(autoReconcileData()) {
             return new StatusResponse();
@@ -810,7 +820,7 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/int/money/reconciliation/auto", method= RequestMethod.PUT)
-    public @ResponseBody StatusResponse reconcileDataInt() {
+    public @ResponseBody StatusResponse reconcileDataInt() throws Exception {
         LOG.info("Auto Reconcilation Data ");
         if(autoReconcileData()) {
             return new StatusResponse();
