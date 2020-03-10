@@ -12,9 +12,8 @@ spring:
             console:
                 enabled: false
 
-        liquibase:
-            default-schema:
-              change-log: classpath:/db/changelog/db.changelog-master.xml
+    liquibase:
+        contexts: default
 
     jpa:
         properties:
