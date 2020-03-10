@@ -13,7 +13,7 @@ public class NewTransaction {
     private Date date;
     private double amount;
     private boolean accountTransfer;
-    private String transferAccount;
+    private String transferAccountId;
     private String description;
 
     public NewTransaction() {
@@ -25,7 +25,7 @@ public class NewTransaction {
         this.date = date;
         this.amount = amount;
         this.accountTransfer = false;
-        this.transferAccount = "";
+        this.transferAccountId = "";
         this.description = description;
     }
 
@@ -35,7 +35,7 @@ public class NewTransaction {
         this.date = date;
         this.amount = amount;
         this.accountTransfer = true;
-        this.transferAccount = transferAccount;
+        this.transferAccountId = transferAccount;
         this.description = description;
     }
 
@@ -48,7 +48,7 @@ public class NewTransaction {
 
         this.amount = matchData.getAmount();
         this.accountTransfer = false;
-        this.transferAccount = "";
+        this.transferAccountId = "";
         this.description = matchData.getDescription();
     }
 
@@ -71,8 +71,8 @@ public class NewTransaction {
         return this.amount;
     }
 
-    public String getTransferAccount() {
-        return this.transferAccount;
+    public String getTransferAccountId() {
+        return this.transferAccountId;
     }
 
     public String getDescription() { return this.description; }

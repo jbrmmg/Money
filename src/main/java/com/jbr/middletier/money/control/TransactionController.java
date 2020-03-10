@@ -235,7 +235,7 @@ public class TransactionController {
 
         // Was this a transfer?
         if(newTransaction.isAccountTransfer()) {
-            Optional<Account> transferAccount = accountRepository.findById(newTransaction.getTransferAccount());
+            Optional<Account> transferAccount = accountRepository.findById(newTransaction.getTransferAccountId());
             if(!account.isPresent()) {
                 throw new Exception("Invalid transfer account specified.");
             }
