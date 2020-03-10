@@ -40,8 +40,8 @@ public class StatementController {
         this.accountRepository = accountRepository;
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public void handleIllegalArgumentException(IllegalStateException e, HttpServletResponse response) throws IOException {
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -116,13 +116,17 @@ public class StatementController {
     }
 
     @RequestMapping(path="/ext/money/statement/lock", method= RequestMethod.POST)
-    public void statementLockExt(@RequestBody LockStatementRequest request) {
+    public @ResponseBody String statementLockExt(@RequestBody LockStatementRequest request) {
         statementLock(request);
+
+        return "OK";
     }
 
     @RequestMapping(path="/int/money/statement/lock", method= RequestMethod.POST)
-    public void statementLockInt( @RequestBody LockStatementRequest request) {
+    public @ResponseBody String statementLockInt(@RequestBody LockStatementRequest request) {
         statementLock(request);
+
+        return "OK";
     }
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.POST)
@@ -160,7 +164,7 @@ public class StatementController {
     }
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.DELETE)
-    public void deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
+    public @ResponseBody String deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
         LOG.info("Delete an account - " + statement.getId().toString());
 
         // Is there an account with this ID?
@@ -168,7 +172,7 @@ public class StatementController {
         if(existingStatement.isPresent()) {
 
             statementRepository.delete(existingStatement.get());
-            return;
+            return "OK";
         }
 
         throw new InvalidStatementIdException(statement);

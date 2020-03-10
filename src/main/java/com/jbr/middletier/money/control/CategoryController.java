@@ -31,8 +31,8 @@ public class CategoryController {
         this.categoryRepository = categoryRepository;
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public void handleIllegalArgumentException(IllegalStateException e, HttpServletResponse response) throws IOException {
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -91,7 +91,7 @@ public class CategoryController {
     }
 
     @RequestMapping(path="/int/money/categories",method=RequestMethod.DELETE)
-    public void deleteAccount(@RequestBody Category category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
+    public @ResponseBody String deleteAccount(@RequestBody Category category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account " + category.getId());
 
         // Is there an account with this ID?
@@ -102,7 +102,7 @@ public class CategoryController {
             }
 
             categoryRepository.delete(existingCategory.get());
-            return;
+            return "OK";
         }
 
         throw new InvalidCategoryIdException(category);

@@ -31,8 +31,8 @@ public class AccountController {
         this.accountRepository = accountRepository;
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public void handleIllegalArgumentException(IllegalStateException e, HttpServletResponse response) throws IOException {
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -81,14 +81,14 @@ public class AccountController {
     }
 
     @RequestMapping(path="/int/money/accounts",method=RequestMethod.DELETE)
-    public void deleteAccount(@RequestBody Account account) throws InvalidAccountIdException {
+    public @ResponseBody String deleteAccount(@RequestBody Account account) throws InvalidAccountIdException {
         LOG.info("Delete account " + account.getId());
 
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
         if(existingAccount.isPresent()) {
             accountRepository.delete(existingAccount.get());
-            return;
+            return "OK";
         }
 
         throw new InvalidAccountIdException(account);
