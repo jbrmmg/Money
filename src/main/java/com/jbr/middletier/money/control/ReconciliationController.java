@@ -11,12 +11,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -52,6 +55,11 @@ public class ReconciliationController {
         this.categoryRepository = categoryRepository;
         this.transactionController = transactionController;
         this.accountRepository = accountRepository;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception e, HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
     private class MatchInformation {
@@ -708,13 +716,15 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/ext/money/reconcile", method= RequestMethod.PUT)
-    public void reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
+    public @ResponseBody String reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
+        return "OK";
     }
 
     @RequestMapping(path="/int/money/reconcile", method= RequestMethod.PUT)
-    public void reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
+    public @ResponseBody String reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
+        return "OK";
     }
 
     @RequestMapping(path="/ext/money/reconciliation/add", method= RequestMethod.POST)
@@ -759,13 +769,15 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/ext/money/reconciliation/update", method= RequestMethod.PUT)
-    public void reconcileCategoryExt(@RequestBody ReconcileUpdate reconciliationUpdate ) {
+    public @ResponseBody String reconcileCategoryExt(@RequestBody ReconcileUpdate reconciliationUpdate ) {
         processReconcileUpdate(reconciliationUpdate);
+        return "OK";
     }
 
     @RequestMapping(path="/int/money/reconciliation/update", method= RequestMethod.PUT)
-    public void reconcileCategoryInt(@RequestBody ReconcileUpdate reconciliationUpdate) {
+    public @ResponseBody String reconcileCategoryInt(@RequestBody ReconcileUpdate reconciliationUpdate) {
         processReconcileUpdate(reconciliationUpdate);
+        return "OK";
     }
 
     private List<MatchData> matchImpl(String accountId) throws Exception {
@@ -795,26 +807,30 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/ext/money/reconciliation/auto", method= RequestMethod.PUT)
-    public void reconcileDataExt() throws Exception {
+    public @ResponseBody String reconcileDataExt() throws Exception {
         LOG.info("Auto Reconcilation Data (ext) ");
         autoReconcileData();
+        return "OK";
     }
 
     @RequestMapping(path="/int/money/reconciliation/auto", method= RequestMethod.PUT)
-    public void reconcileDataInt() throws Exception {
+    public @ResponseBody String reconcileDataInt() throws Exception {
         LOG.info("Auto Reconcilation Data ");
         autoReconcileData();
+        return "OK";
     }
 
     @RequestMapping(path="/ext/money/reconciliation/clear", method= RequestMethod.DELETE)
-    public void reconcileDataDeleteExt() {
+    public @ResponseBody String reconcileDataDeleteExt() {
         LOG.info("Clear Reconcilation Data (ext) ");
         clearRepositoryData();
+        return "OK";
     }
 
     @RequestMapping(path="/int/money/reconciliation/clear", method= RequestMethod.DELETE)
-    public void reconcileDataDeleteInt() {
+    public @ResponseBody String reconcileDataDeleteInt() {
         LOG.info("Clear Reconcilation Data ");
         clearRepositoryData();
+        return "OK";
     }
 }
