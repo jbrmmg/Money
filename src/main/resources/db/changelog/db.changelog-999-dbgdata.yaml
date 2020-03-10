@@ -6,23 +6,84 @@ databaseChangeLog:
       changes:
 
         - insert:
-            tableName: transaction
+            tableName: reconciliation_data
+            columns:
+              - column:
+                  name: date
+                  valueDate: 2010-02-01
+              - column:
+                  name: amount
+                  value: -38.2
+              - column:
+                  name: description
+                  value: This is a test
+
+        - insert:
+            tableName: reconciliation_data
+            columns:
+              - column:
+                  name: date
+                  valueDate: 2010-02-01
+              - column:
+                  name: amount
+                  value: -3.09
+              - column:
+                  name: description
+                  value: This is a test
+
+        - insert:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+                  value: AMEX
+              - column:
+                  name: month
+                  value: 2
+              - column:
+                  name: year
+                  value: 2010
+              - column:
+                  name: open_balance
+                  value: -31.03
+              - column:
+                  name: locked
+                  valueBoolean: false
+
+        - update:
+            columns:
+              - column:
+                    name: locked
+                    valueBoolean: true
+            tableName: statement
+            where: account = 'AMEX' and month = 1
+
+        - insert:
+            tableName: statement
             columns:
               - column:
                   name: account
                   value: BANK
               - column:
-                  name: category
-                  value: FDG
+                  name: month
+                  value: 2
               - column:
-                  name: date
-                  valueDate: 1968-05-24
+                  name: year
+                  value: 2010
               - column:
-                  name: amount
-                  value: 10.0
+                  name: open_balance
+                  value: -70.83
               - column:
-                  name: description
-                  value: "This is a test transaction"
+                  name: locked
+                  valueBoolean: false
+
+        - update:
+            columns:
+              - column:
+                  name: locked
+                  valueBoolean: true
+            tableName: statement
+            where: account = 'BANK' and month = 1
 
         - insert:
             tableName: regular
@@ -32,7 +93,7 @@ databaseChangeLog:
                   value: BANK
               - column:
                   name: amount
-                  value: 10.0
+                  value: -30.02
               - column:
                   name: category
                   value: FDG
@@ -44,7 +105,234 @@ databaseChangeLog:
                   value: FW
               - column:
                   name: start
-                  valueDate: 1968-05-24
+                  valueDate: 2010-03-01
               - column:
                   name: description
-                  value: "This is a test regular payment"
+                  value: TEST Reg
+
+        - insert:
+            tableName: regular
+            columns:
+              - column:
+                  name: account
+                  value: AMEX
+              - column:
+                  name: amount
+                  value: -21.2
+              - column:
+                  name: category
+                  value: HSE
+              - column:
+                  name: frequency
+                  value: 1M
+              - column:
+                  name: weekend_adj
+                  value: FW
+              - column:
+                  name: start
+                  valueDate: 2010-03-01
+              - column:
+                  name: description
+                  value: TEST Reg 2
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: AMEX
+              - column:
+                  name: category
+                  value: FDG
+              - column:
+                  name: date
+                  valueDate: 2010-01-01
+              - column:
+                  name: amount
+                  value: -10.0
+              - column:
+                  name: description
+                  value: Waitrose
+              - column:
+                  name: statement_year
+                  value: 2010
+              - column:
+                  name: statement_month
+                  value: 1
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: AMEX
+              - column:
+                  name: category
+                  value: HSE
+              - column:
+                  name: date
+                  valueDate: 2010-01-02
+              - column:
+                  name: amount
+                  value: -21.03
+              - column:
+                  name: description
+                  value: Boots
+              - column:
+                  name: statement_year
+                  value: 2010
+              - column:
+                  name: statement_month
+                  value: 1
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: AMEX
+              - column:
+                  name: category
+                  value: JBS
+              - column:
+                  name: date
+                  valueDate: 2010-02-01
+              - column:
+                  name: amount
+                  value: -38.82
+              - column:
+                  name: description
+                  value: Watford FC
+              - column:
+                  name: statement_year
+                  value: 2010
+              - column:
+                  name: statement_month
+                  value: 2
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: AMEX
+              - column:
+                  name: category
+                  value: FDT
+              - column:
+                  name: date
+                  valueDate: 2010-02-01
+              - column:
+                  name: amount
+                  value: 3.09
+              - column:
+                  name: description
+                  value: Pret
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: BANK
+              - column:
+                  name: category
+                  value: PTL
+              - column:
+                  name: date
+                  valueDate: 2010-01-03
+              - column:
+                  name: amount
+                  value: 3
+              - column:
+                  name: description
+                  value: Shell
+              - column:
+                  name: statement_year
+                  value: 2010
+              - column:
+                  name: statement_month
+                  value: 1
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: BANK
+              - column:
+                  name: category
+                  value: FDG
+              - column:
+                  name: date
+                  valueDate: 2010-01-06
+              - column:
+                  name: amount
+                  value: -73.83
+              - column:
+                  name: description
+                  value: John Lewis
+              - column:
+                  name: statement_year
+                  value: 2010
+              - column:
+                  name: statement_month
+                  value: 1
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: BANK
+              - column:
+                  name: category
+                  value: UTC
+              - column:
+                  name: date
+                  valueDate: 2010-02-04
+              - column:
+                  name: amount
+                  value: -94
+              - column:
+                  name: description
+                  value: Council
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: JLPC
+              - column:
+                  name: category
+                  value: FDG
+              - column:
+                  name: date
+                  valueDate: 2010-01-04
+              - column:
+                  name: amount
+                  value: -30.92
+              - column:
+                  name: description
+                  value: Tesco
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: NWDE
+              - column:
+                  name: category
+                  value: FDT
+              - column:
+                  name: date
+                  valueDate: 2010-01-06
+              - column:
+                  name: amount
+                  value: -31.2
+              - column:
+                  name: description
+                  value: Nero
+

@@ -285,10 +285,10 @@ public class TransactionController {
 
             // If a category is specified, then update it (if not a transfer)
             if(transaction.get().getOppositeTransactionId() == null) {
-                if (transactionRequest.getCategory().length() > 0) {
-                    Optional<Category> category = categoryRepository.findById(transactionRequest.getCategory());
+                if (transactionRequest.getCategoryId().length() > 0) {
+                    Optional<Category> category = categoryRepository.findById(transactionRequest.getCategoryId());
                     if(!category.isPresent()) {
-                        throw new InvalidCategoryIdException(transactionRequest.getCategory());
+                        throw new InvalidCategoryIdException(transactionRequest.getCategoryId());
                     }
 
                     transaction.get().setCategory(category.get());
