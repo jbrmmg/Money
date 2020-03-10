@@ -27,8 +27,11 @@ databaseChangeLog:
                   name: amount
                   type: decimal(10,2)
               - column:
-                  name: statement
-                  type: char(7)
+                  name: statement_month
+                  type: int(11)
+              - column:
+                  name: statement_year
+                  type: int(11)
               - column:
                   name: oppositeid
                   type: int(11)
@@ -49,4 +52,11 @@ databaseChangeLog:
             baseColumnNames: account
             referencedTableName: account
             referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            constraintName: fk_statement_trn
+            baseTableName: transaction
+            baseColumnNames: account, statement_month, statement_year
+            referencedTableName: statement
+            referencedColumnNames: account, month, year
 

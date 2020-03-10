@@ -63,15 +63,12 @@ public class RegularCtrl {
         try {
             // If the next date is today, then create a transaction.
             if (nextRegular.isNextDateToday(today)) {
-                SimpleDateFormat sdfNewTran = new SimpleDateFormat(Transaction.TransactionDateFormat);
 
                 Date saveDate = nextRegular.getNextDate(today);
                 Date transactionDate = adjustDate(saveDate,nextRegular.getWeekendAdj());
 
                 LOG.info("Create new transaction");
-                NewTransaction newTransaction = new NewTransaction( nextRegular.getAccount(), nextRegular.getCategory(), sdfNewTran.format(transactionDate), nextRegular.getAmount(), nextRegular.getDescription() );
-
-                Transaction regularPayment = new Transaction(newTransaction);
+                Transaction regularPayment = new Transaction(nextRegular.getAccount(), nextRegular.getCategory(), transactionDate, nextRegular.getAmount(), nextRegular.getDescription());
                 tranasactionRepository.save(regularPayment);
 
                 // Update the regular payment.

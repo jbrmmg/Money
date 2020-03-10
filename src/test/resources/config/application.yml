@@ -16,5 +16,17 @@ spring:
             default-schema:
               change-log: classpath:/db/changelog/db.changelog-master.xml
 
+    jpa:
+        properties:
+            hibernate:
+                format_sql: true
+        show-sql: true
+
 money:
     service-name: Middle Tier Test
+
+logging:
+    level:
+        ROOT: WARN
+        com.jbr.middletier: DEBUG
+        org.hibernate.type.descriptor.sql: TRACE
