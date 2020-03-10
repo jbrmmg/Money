@@ -122,6 +122,7 @@ public class StatementController {
 
     @RequestMapping(path="/int/money/statement/lock", method= RequestMethod.POST)
     public void statementLockInt( @RequestBody LockStatementRequest request) {
+        statementLock(request);
     }
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.POST)
