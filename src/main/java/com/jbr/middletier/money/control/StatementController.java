@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -116,17 +117,17 @@ public class StatementController {
     }
 
     @RequestMapping(path="/ext/money/statement/lock", method= RequestMethod.POST)
-    public @ResponseBody String statementLockExt(@RequestBody LockStatementRequest request) {
+    public @ResponseBody OkStatus statementLockExt(@RequestBody LockStatementRequest request) {
         statementLock(request);
 
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/statement/lock", method= RequestMethod.POST)
-    public @ResponseBody String statementLockInt(@RequestBody LockStatementRequest request) {
+    public @ResponseBody OkStatus statementLockInt(@RequestBody LockStatementRequest request) {
         statementLock(request);
 
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.POST)
@@ -164,7 +165,7 @@ public class StatementController {
     }
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.DELETE)
-    public @ResponseBody String deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
+    public @ResponseBody OkStatus deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
         LOG.info("Delete an account - " + statement.getId().toString());
 
         // Is there an account with this ID?
@@ -172,7 +173,7 @@ public class StatementController {
         if(existingStatement.isPresent()) {
 
             statementRepository.delete(existingStatement.get());
-            return "OK";
+            return OkStatus.getOkStatus();
         }
 
         throw new InvalidStatementIdException(statement);
