@@ -3,7 +3,6 @@ logging:
         ROOT: INFO
         com.jbr.middletier: DEBUG
 
-
 spring:
     liquibase:
         contexts: dbg

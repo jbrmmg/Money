@@ -1,10 +1,17 @@
 package com.jbr.middletier.money.data;
 
+import org.hibernate.annotations.*;
+
 import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.swing.plaf.nimbus.State;
+import javax.validation.constraints.NotNull;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Created by jason on 07/03/17.
@@ -17,11 +24,13 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name="account")
-    private String account;
+    @JoinColumn(name="account")
+    @ManyToOne(optional = false)
+    private Account account;
 
-    @Column(name="category")
-    private String category;
+    @JoinColumn(name="category")
+    @ManyToOne(optional = false)
+    private Category category;
 
     @Column(name="date")
     private Date date;
@@ -29,11 +38,16 @@ public class Transaction {
     @Column(name="amount")
     private double amount;
 
-    @Column(name="statement")
-    private String statement;
+    @ManyToOne()
+    @JoinColumnsOrFormulas(value = {
+            @JoinColumnOrFormula(formula = @JoinFormula(value="account", referencedColumnName = "account")),
+            @JoinColumnOrFormula(column = @JoinColumn(name="statement_month", referencedColumnName = "month")),
+            @JoinColumnOrFormula(column = @JoinColumn(name="statement_year", referencedColumnName = "year"))
+    })
+    private Statement statement;
 
     @Column(name="oppositeid")
-    private Integer oppositeiId;
+    private Integer oppositeId;
 
     @Column(name="description")
     private String description;
@@ -41,12 +55,11 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction (NewTransaction newTransaction) throws ParseException {
-        this.account = newTransaction.getAccount();
-        this.category = newTransaction.getCategory();
+    public Transaction (Account account, Category category, Date date, double amount, String description) throws Exception {
+        this.account = account;
+        this.category = category;
 
-        SimpleDateFormat formatter = new SimpleDateFormat(Transaction.TransactionDateFormat);
-        this.date = formatter.parse(newTransaction.getDate());
+        this.date = date;
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(this.date);
@@ -56,9 +69,9 @@ public class Transaction {
         calendar.set(Calendar.MILLISECOND,0);
         this.date = calendar.getTime();
 
-        this.amount = newTransaction.getAmount();
+        this.amount = amount;
 
-        this.description = newTransaction.getDescription();
+        this.description = description;
     }
 
     public static final String TransactionDateFormat = "yyyy-MM-dd";
@@ -67,7 +80,7 @@ public class Transaction {
         return id;
     }
 
-    public String getAccount() {
+    public Account getAccount() {
         return this.account;
     }
 
@@ -82,50 +95,33 @@ public class Transaction {
     public void setDescription(String description) { this.description = description; }
 
     public void setStatement(Statement statement) {
-        this.statement = statement.getYearMonthId();
+        this.statement = statement;
     }
+
+    public Statement getStatement() { return this.statement; }
 
     public void clearStatement() {
         this.statement = null;
     }
 
     public boolean reconciled() {
-        return (this.statement != null && this.statement.length() > 0);
+
+        return (this.statement != null);
     }
 
-    public void setAccount(String account) {
+    public void setAccount(Account account) {
         this.account = account;
     }
 
-    public void setCategory(String category) { this.category = category; }
+    public void setCategory(Category category) { this.category = category; }
 
-    public String getCategory() { return this.category; }
+    public Category getCategory() { return this.category; }
 
-    public void setOppositeId(int oppositeId) {
-        this.oppositeiId = oppositeId;
-    }
+    public void setOppositeTransactionId(Integer oppositeTransactionId) { this.oppositeId = oppositeTransactionId; }
 
-    public boolean hasOppositeId() {
-        return this.oppositeiId != null;
+    public Integer getOppositeTransactionId() {
+        return this.oppositeId;
     }
 
     public Date getDate() { return this.date; }
-
-    public int getOppositeId() {
-        return ( this.oppositeiId == null ) ? -1 : this.oppositeiId;
-    }
-
-    public StatementId calculateStatementId() {
-        // Get the statement id.
-        int year = 0;
-        int month = 0;
-        if(this.statement != null && this.statement.length() >= 6) {
-            year = Integer.parseInt(this.statement.substring(0,4));
-            month = Integer.parseInt(this.statement.substring(4,6));
-        } else {
-            return null;
-        }
-
-        return new StatementId(this.account,year,month);
-    }
 }

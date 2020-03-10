@@ -19,14 +19,11 @@ databaseChangeLog:
       file: /db/changelog/db.changelog-006-regular.yaml
 
   - include:
-      file: /db/changelog/db.changelog-007-allTransaction.yaml
+      file: /db/changelog/db.changelog-007-accounts.yaml
 
   - include:
-      file: /db/changelog/db.changelog-008-accounts.yaml
+      file: /db/changelog/db.changelog-008-categories.yaml
 
   - include:
-      file: /db/changelog/db.changelog-009-categories.yaml
-
-  - include:
-      file: /db/changelog/db.changelog-010-dbgdata.yaml
+      file: /db/changelog/db.changelog-999-dbgdata.yaml
 

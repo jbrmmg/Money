@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 999
+      author: jason
+      context: dbg
+      changes:
+
+        - insert:
+            tableName: transaction
+            columns:
+              - column:
+                  name: account
+                  value: BANK
+              - column:
+                  name: category
+                  value: FDG
+              - column:
+                  name: date
+                  valueDate: 1968-05-24
+              - column:
+                  name: amount
+                  value: 10.0
+              - column:
+                  name: description
+                  value: "This is a test transaction"
+
+        - insert:
+            tableName: regular
+            columns:
+              - column:
+                  name: account
+                  value: BANK
+              - column:
+                  name: amount
+                  value: 10.0
+              - column:
+                  name: category
+                  value: FDG
+              - column:
+                  name: frequency
+                  value: 1M
+              - column:
+                  name: weekend_adj
+                  value: FW
+              - column:
+                  name: start
+                  valueDate: 1968-05-24
+              - column:
+                  name: description
+                  value: "This is a test regular payment"

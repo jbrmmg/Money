@@ -2,6 +2,8 @@ package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
+import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
+import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +25,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.jbr.middletier.money.dataaccess.AllTransactionSpecifications.*;
-import static com.jbr.middletier.money.dataaccess.AllTransactionSpecifications.categoryIn;
+import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
+import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.categoryIn;
 
 /**
  * Created by jason on 08/03/17.
@@ -36,7 +39,6 @@ public class TransactionController {
     final static private Logger LOG = LoggerFactory.getLogger(TransactionController.class);
 
     private final TransactionRepository transactionRepository;
-    private final AllTransactionRepository allTransactionRepository;
     private final RegularRepository regularRepository;
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
@@ -45,14 +47,12 @@ public class TransactionController {
 
     @Autowired
     public TransactionController(TransactionRepository transactionRepository,
-                                 AllTransactionRepository allTransactionRepository,
                                  RegularRepository regularRepository,
                                  StatementRepository statementRepository,
                                  AccountRepository accountRepository,
                                  CategoryRepository categoryRepository,
                                  ResourceLoader resourceLoader) {
         this.transactionRepository = transactionRepository;
-        this.allTransactionRepository = allTransactionRepository;
         this.regularRepository = regularRepository;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
@@ -65,9 +65,9 @@ public class TransactionController {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
-    private Specification<AllTransaction> getReconciledTransactions(String[] accounts, Date statmentDate, String[] categories) {
+    private Specification<Transaction> getReconciledTransactions(Iterable<Account> accounts, Date statmentDate, Iterable<Category> categories) {
         // Validate data.
-        if((accounts == null) || (accounts.length != 1)) {
+        if((accounts == null)) {
             throw new IllegalStateException("Reconciled Transctions - must specify a single account");
         }
 
@@ -76,7 +76,7 @@ public class TransactionController {
         }
 
         // Reconciled transactions - for a particular month (statement), single account, list of categories.
-        Specification<AllTransaction> search = Specification.where(statement(statmentDate)).and(accountIn(accounts));
+        Specification<Transaction> search = Specification.where(statementDate(statmentDate)).and(accountIn(accounts));
 
         if(categories != null) {
             search = search.and(categoryIn(categories));
@@ -85,9 +85,9 @@ public class TransactionController {
         return search;
     }
 
-    private Specification<AllTransaction> getUnreconciledTransactions(String[] accounts, String[] categories) {
+    private Specification<Transaction> getUnreconciledTransactions(Iterable<Account> accounts, Iterable<Category> categories) {
         // Not locked transactions - no date, multiple accounts, list of categories
-        Specification<AllTransaction> search = Specification.where(statementIsNull());
+        Specification<Transaction> search = Specification.where(statementIsNull());
 
         if(accounts != null) {
             search = search.and(accountIn(accounts));
@@ -100,7 +100,7 @@ public class TransactionController {
         return search;
     }
 
-    private Specification<AllTransaction> getAllTransactions(Date from, Date to, String[] accounts, String[] categories) {
+    private Specification<Transaction> getAllTransactions(Date from, Date to, Iterable<Account> accounts, Iterable<Category> categories) {
         // Validate data.
         if(from == null){
             throw new IllegalStateException("All Transctions - must specify a from date");
@@ -111,7 +111,7 @@ public class TransactionController {
 
         // All transactions - between two dates, multiple accounts, list of categories
         // Not locked transactions - no date, multiple accounts, list of categories
-        Specification<AllTransaction> search = Specification.where(datesBetween(from,to));
+        Specification<Transaction> search = Specification.where(datesBetween(from,to));
 
         if(accounts != null) {
             search = search.and(accountIn(accounts));
@@ -124,9 +124,9 @@ public class TransactionController {
         return search;
     }
 
-    private Specification<AllTransaction> getUnlockedTransactions(String[] accounts, String[] categories) {
+    private Specification<Transaction> getUnlockedTransactions(Iterable<Account> accounts, Iterable<Category> categories) {
         // Not locked transactions - no date, multiple accounts, list of categories
-        Specification<AllTransaction> search = Specification.where(notLocked());
+        Specification<Transaction> search = Specification.where(notLocked());
 
         if(accounts != null) {
             search = search.and(accountIn(accounts));
@@ -139,7 +139,7 @@ public class TransactionController {
         return search;
     }
 
-    private Specification<AllTransaction> getTransactionSearch(String type,
+    private Specification<Transaction> getTransactionSearch(String type,
                                                                String from,
                                                                String to,
                                                                String category,
@@ -159,13 +159,13 @@ public class TransactionController {
         }
 
         // Check for unknown in category and account values.
-        String[] categories = null;
+        Iterable<Category> categories = null;
         if(!category.equalsIgnoreCase("UNKN")) {
-            categories = category.split(",");
+            categories = categoryRepository.findAllById(Arrays.asList(category.split(",")));
         }
-        String[] accounts = null;
+        Iterable<Account> accounts = null;
         if(!account.equalsIgnoreCase("UNKN")) {
-            accounts = account.split(",");
+            accounts = accountRepository.findAllById(Arrays.asList(account.split(",")));
         }
 
         // Process depending on type of transaction.
@@ -192,7 +192,7 @@ public class TransactionController {
         throw new IllegalStateException("Get Transactions invalid type value");
     }
 
-    private boolean deleteTransaction(int transactionId) {
+    private void deleteTransaction(int transactionId) throws InvalidTransactionIdException {
         LOG.info("Delete transaction.");
 
         // Get the transaction.
@@ -202,38 +202,58 @@ public class TransactionController {
             // If the transaction is not reconciled then it can be deleted.
             if(!transaction.get().reconciled()) {
                 transactionRepository.deleteById(transactionId);
-                return true;
+                return;
             }
         }
 
-        return false;
+        throw new InvalidTransactionIdException(transactionId);
     }
 
-    private List<Transaction> addTransaction(NewTransaction newTransaction) throws ParseException {
+    private List<Transaction> addTransaction(NewTransaction newTransaction) throws Exception {
         LOG.info("New Transaction.");
 
         List<Transaction> result = new ArrayList<>();
 
+        // Get the account and category
+        Optional<Account> account = accountRepository.findById(newTransaction.getAccountId());
+        if(!account.isPresent()) {
+            throw new Exception("Invalid account specified.");
+        }
+
+        Optional<Category> category = categoryRepository.findById(newTransaction.getCategoryId());
+        if(!category.isPresent()) {
+            throw new Exception("Invalid category specified.");
+        }
+
         // Create transactions.
-        Transaction transaction = new Transaction(newTransaction);
+        Transaction transaction = new Transaction ( account.get(),
+                                                    category.get(),
+                                                    newTransaction.getDate(),
+                                                    newTransaction.getAmount(),
+                                                    newTransaction.getDescription() );
         Transaction savedTransaction = transactionRepository.save(transaction);
 
         // Was this a transfer?
         if(newTransaction.isAccountTransfer()) {
-            transaction = new Transaction(newTransaction);
-            transaction.setAmount(newTransaction.getAmount() * -1.0);
-            transaction.setAccount(newTransaction.getTransferAccount());
-            transaction.setCategory(newTransaction.getCategory());
-            transaction.setOppositeId(savedTransaction.getId());
-            transaction.setDescription(newTransaction.getDescription());
+            Optional<Account> transferAccount = accountRepository.findById(newTransaction.getTransferAccount());
+            if(!account.isPresent()) {
+                throw new Exception("Invalid transfer account specified.");
+            }
+
+            transaction = new Transaction(  transferAccount.get(),
+                                            category.get(),
+                                            newTransaction.getDate(),
+                                            newTransaction.getAmount() * -1,
+                                            newTransaction.getDescription());
+            transaction.setOppositeTransactionId(savedTransaction.getId());
 
             Transaction oppositeTransaction = transactionRepository.save(transaction);
-            savedTransaction.setOppositeId(oppositeTransaction.getId());
+            savedTransaction.setOppositeTransactionId(oppositeTransaction.getId());
+
+            transactionRepository.save(savedTransaction);
 
             result.add(savedTransaction);
             result.add(oppositeTransaction);
-
-            transactionRepository.save(savedTransaction);
         } else{
             result.add(savedTransaction);
         }
@@ -242,7 +262,7 @@ public class TransactionController {
         return result;
     }
 
-    private void updateTransacation(UpdateTransaction transactionRequest) {
+    private void updateTransacation(UpdateTransaction transactionRequest) throws InvalidTransactionIdException, InvalidCategoryIdException {
         LOG.info("Request transction update.");
 
         // Get the transaction.
@@ -251,16 +271,11 @@ public class TransactionController {
         if(transaction.isPresent()) {
             // If the transaction is locked then the amount cannot be updated.
             boolean locked = false;
-            StatementId statementId = transaction.get().calculateStatementId();
 
-            if(statementId != null) {
-                Optional<Statement> statement = statementRepository.findById(statementId);
-
-                if(statement.isPresent()) {
-                    if(statement.get().getLocked()) {
-                        locked = true;
-                        LOG.info("Update request - locked transaction.");
-                    }
+            if(transaction.get().getStatement() != null) {
+                if(transaction.get().getStatement().getLocked()) {
+                    locked = true;
+                    LOG.info("Update request - locked transaction.");
                 }
             }
 
@@ -269,9 +284,14 @@ public class TransactionController {
             }
 
             // If a category is specified, then update it (if not a transfer)
-            if(!transaction.get().hasOppositeId()) {
+            if(transaction.get().getOppositeTransactionId() == null) {
                 if (transactionRequest.getCategory().length() > 0) {
-                    transaction.get().setCategory(transactionRequest.getCategory());
+                    Optional<Category> category = categoryRepository.findById(transactionRequest.getCategory());
+                    if(!category.isPresent()) {
+                        throw new InvalidCategoryIdException(transactionRequest.getCategory());
+                    }
+
+                    transaction.get().setCategory(category.get());
                 }
             }
 
@@ -281,54 +301,51 @@ public class TransactionController {
             transactionRepository.save(transaction.get());
             LOG.info("Request transction updated.");
 
-            if(!locked) {
-                if (transaction.get().hasOppositeId()) {
-                    transaction = transactionRepository.findById(transaction.get().getOppositeId());
+            // Is there an opposite transaction?
+            if (transaction.get().getOppositeTransactionId() != null) {
+                Optional<Transaction> oppositeTransaction = transactionRepository.findById(transaction.get().getOppositeTransactionId());
 
-                    if (transaction != null) {
-                        transaction.get().setAmount(-1 * transactionRequest.getAmount());
-                        transactionRepository.save(transaction.get());
-                        LOG.info("Request transction updated (opposite).");
+                if (oppositeTransaction.isPresent()) {
+                    oppositeTransaction.get().setDescription(transactionRequest.getDescription());
+
+                    if (!locked) {
+                        oppositeTransaction.get().setAmount(transaction.get().getAmount() * -1);
                     }
+
+                    transactionRepository.save(oppositeTransaction.get());
+                    LOG.info("Request transction updated (opposite).");
                 }
             }
+
+
             return;
         }
 
-        throw new IllegalStateException(String.format("Transaction does not exist %d", transactionRequest.getId()));
+        throw new InvalidTransactionIdException(transactionRequest.getId());
     }
 
     @RequestMapping(path="/ext/money/transaction/add", method= RequestMethod.POST)
-    public @ResponseBody Iterable<Transaction>  addTransactionExt(@RequestBody NewTransaction newTransaction) throws ParseException {
+    public @ResponseBody Iterable<Transaction>  addTransactionExt(@RequestBody NewTransaction newTransaction) throws Exception {
         return addTransaction(newTransaction);
     }
 
 
     @RequestMapping(path="/int/money/transaction/add", method= RequestMethod.POST)
-    public @ResponseBody Iterable<Transaction>  addTransactionInt(@RequestBody NewTransaction newTransaction) throws ParseException {
+    public @ResponseBody Iterable<Transaction>  addTransactionInt(@RequestBody NewTransaction newTransaction) throws Exception {
         return addTransaction(newTransaction);
     }
 
     @RequestMapping(path="/ext/money/delete", method= RequestMethod.DELETE)
-    public @ResponseBody
-    StatusResponse deleteExternal(@RequestParam(value="transactionId", defaultValue="0") int transactionId) {
-        if(deleteTransaction(transactionId)) {
-            return new StatusResponse();
-        }
-
-        return new StatusResponse("Failed to delete transaction.");
+    public void deleteExternal(@RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
+        deleteTransaction(transactionId);
     }
 
     @RequestMapping(path="/int/money/delete", method= RequestMethod.DELETE)
-    public @ResponseBody StatusResponse deleteInternal( @RequestParam(value="transactionId", defaultValue="0") int transactionId) {
-        if(deleteTransaction(transactionId)) {
-            return new StatusResponse();
-        }
-
-        return new StatusResponse("Failed to delete transaction.");
+    public void deleteInternal( @RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
+        deleteTransaction(transactionId);
     }
 
-    private Iterable<AllTransaction> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
+    private Iterable<Transaction> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
 
         Sort transactionSort = new Sort(Sort.Direction.ASC,"date", "account", "amount");
 
@@ -338,12 +355,12 @@ public class TransactionController {
             }
         }
 
-        return allTransactionRepository.findAll(getTransactionSearch(type,from,to,category,account), transactionSort);
+        return transactionRepository.findAll(getTransactionSearch(type,from,to,category,account), transactionSort);
     }
 
     @RequestMapping(path="/ext/money/transaction/get",method= RequestMethod.GET)
     public @ResponseBody
-    Iterable<AllTransaction> getExtTransactionsExt(@RequestParam(value="type", defaultValue="UNKN") String type,
+    Iterable<Transaction> getExtTransactionsExt(@RequestParam(value="type", defaultValue="UNKN") String type,
                                                    @RequestParam(value="from", defaultValue="UNKN") String from,
                                                    @RequestParam(value="to", defaultValue="UNKN") String to,
                                                    @RequestParam(value="category", defaultValue="UNKN")  String category,
@@ -354,7 +371,7 @@ public class TransactionController {
 
     @RequestMapping(path="/int/money/transaction/get",method= RequestMethod.GET)
     public @ResponseBody
-    Iterable<AllTransaction> getExtTransactionsInt(@RequestParam(value="type", defaultValue="UNKN") String type,
+    Iterable<Transaction> getExtTransactionsInt(@RequestParam(value="type", defaultValue="UNKN") String type,
                                                    @RequestParam(value="from", defaultValue="UNKN") String from,
                                                    @RequestParam(value="to", defaultValue="UNKN") String to,
                                                    @RequestParam(value="category", defaultValue="UNKN")  String category,
@@ -364,17 +381,13 @@ public class TransactionController {
     }
 
     @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.PUT)
-    public @ResponseBody
-    StatusResponse updateTransactionExt(@RequestBody UpdateTransaction transaction) {
+    public void updateTransactionExt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
         updateTransacation(transaction);
-        return new StatusResponse();
     }
 
     @RequestMapping(path="/int/money/transaction/update", method= RequestMethod.PUT)
-    public @ResponseBody
-    StatusResponse updateTransactionInt(@RequestBody UpdateTransaction transaction) {
+    public void updateTransactionInt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
         updateTransacation(transaction);
-        return new StatusResponse();
     }
 
     @RequestMapping(path="/ext/money/transaction/regulars",method= RequestMethod.GET)
@@ -455,7 +468,7 @@ public class TransactionController {
     }
 
     @RequestMapping(path="/int/money/transaction/email",method=RequestMethod.POST)
-    public @ResponseBody StatusResponse sendEmail(  @RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
+    public void sendEmail(  @RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
                                                     @RequestParam(value="from", defaultValue="creditcards@jbrmmg.me.uk") String from,
                                                     @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,
                                                     @RequestParam(value="host", defaultValue="smtp.ionos.co.uk") String host,
@@ -477,10 +490,10 @@ public class TransactionController {
                 this.date = transaction.getDate();
                 this.amount = transaction.getAmount();
                 this.description = transaction.getDescription() == null ? "" : transaction.getDescription().replace("WWW.","");
-                this.account = transaction.getAccount();
+                this.account = transaction.getAccount().getId();
 
                 for(Category nextCategory : categories) {
-                    if(nextCategory.getId().equalsIgnoreCase(transaction.getCategory())) {
+                    if(nextCategory.getId().equalsIgnoreCase(transaction.getCategory().getId())) {
                         this.category = nextCategory.getName();
                         break;
                     }
@@ -509,13 +522,16 @@ public class TransactionController {
 
         for(Account nextAccount : accounts) {
             // Get the latest statement.
-            List<Statement> latestStatements = statementRepository.findByAccountAndLocked(nextAccount.getId(),false);
+            List<Statement> latestStatements = statementRepository.findByIdAccountAndLocked(nextAccount,false);
             for(Statement nextStatement: latestStatements) {
                 endAmount += nextStatement.getOpenBalance();
                 startAmount += nextStatement.getOpenBalance();
 
                 // Get the transactions for this.
-                List<Transaction> transactions = transactionRepository.findByAccountAndStatement(nextAccount.getId(), nextStatement.getYearMonthId());
+                List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
+                        nextAccount,
+                        nextStatement.getId().getYear(),
+                        nextStatement.getId().getMonth());
                 for(Transaction nextTransaction : transactions) {
                     endAmount += nextTransaction.getAmount();
                     transactionTotal1 += nextTransaction.getAmount();
@@ -523,7 +539,10 @@ public class TransactionController {
                     emailData.add(new EmailTransaction(nextTransaction,categories));
                 }
 
-                transactions = transactionRepository.findByAccountAndStatement(nextAccount.getId(), nextStatement.getPreviousId());
+                transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
+                        nextAccount,
+                        StatementId.getPreviousId(nextStatement.getId()).getYear(),
+                        StatementId.getPreviousId(nextStatement.getId()).getMonth());
                 for(Transaction nextTransaction : transactions) {
                     if(nextTransaction.getDate().after(calendar.getTime())) {
                         transactionTotal2 += nextTransaction.getAmount();
@@ -618,9 +637,7 @@ public class TransactionController {
             LOG.info("email sent.");
         } catch(MessagingException e) {
             LOG.error(e.getMessage());
-            return new StatusResponse("failed email - " + e.getMessage());
+            throw e;
         }
-
-        return new StatusResponse();
     }
 }

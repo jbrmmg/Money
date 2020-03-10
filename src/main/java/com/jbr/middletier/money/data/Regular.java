@@ -18,19 +18,19 @@ public class Regular {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name="account")
+    @JoinColumn(name="account")
     @NotNull
-    @Size(max=4)
-    private String account;
+    @ManyToOne
+    private Account account;
 
     @Column(name="amount")
     @NotNull
     private double amount;
 
-    @Column(name="category")
+    @JoinColumn(name="category")
     @NotNull
-    @Size(max=3)
-    private String category;
+    @ManyToOne
+    private Category category;
 
     @Column(name="frequency")
     @NotNull
@@ -197,19 +197,19 @@ public class Regular {
         return this.id;
     }
 
-    public String getAccount() {
+    public Account getAccount() {
         return this.account;
     }
 
-    public void setAccount(String account) {
+    public void setAccount(Account account) {
         this.account = account;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return this.category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 

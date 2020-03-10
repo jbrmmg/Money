@@ -26,9 +26,6 @@ databaseChangeLog:
               - column:
                   name: description
                   type: varchar(40)
-              - column:
-                  name: colour
-                  type: char(6)
 
         - addForeignKeyConstraint:
             constraintName: fk_category_rec

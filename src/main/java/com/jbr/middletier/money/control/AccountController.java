@@ -1,8 +1,8 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.StatusResponse;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
+import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,16 +81,16 @@ public class AccountController {
     }
 
     @RequestMapping(path="/int/money/accounts",method=RequestMethod.DELETE)
-    public @ResponseBody StatusResponse deleteAccount(@RequestBody Account account) {
+    public void deleteAccount(@RequestBody Account account) throws InvalidAccountIdException {
         LOG.info("Delete account " + account.getId());
 
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
         if(existingAccount.isPresent()) {
             accountRepository.delete(existingAccount.get());
-            return new StatusResponse();
+            return;
         }
 
-        return new StatusResponse("Account does not exist " + account.getId());
+        throw new InvalidAccountIdException(account);
     }
 }

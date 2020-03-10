@@ -1,8 +1,10 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +29,15 @@ public class StatementController {
 
     private final StatementRepository statementRepository;
     private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
 
     @Autowired
     public StatementController(StatementRepository statementRepository,
-                               TransactionRepository transactionRepository) {
+                               TransactionRepository transactionRepository,
+                               AccountRepository accountRepository) {
         this.statementRepository = statementRepository;
         this.transactionRepository = transactionRepository;
+        this.accountRepository = accountRepository;
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -43,7 +48,7 @@ public class StatementController {
     private Iterable<Statement> statements() {
         LOG.info("Get statements.");
 
-        List<Statement> statementList = statementRepository.findAllByOrderByAccountAsc();
+        List<Statement> statementList = statementRepository.findAllByOrderByIdAccountAsc();
 
         // Sort the list by the backup time.
         Collections.sort(statementList);
@@ -54,8 +59,14 @@ public class StatementController {
     private void statementLock(LockStatementRequest request) {
         LOG.info("Request statement lock.");
 
+        // Get the account.
+        Optional<Account> account = accountRepository.findById(request.getAccountId());
+        if(!account.isPresent()) {
+            throw new IllegalStateException("Request statement lock - invalid account");
+        }
+
         // Load the statement to be locked.
-        Optional<Statement> statement = statementRepository.findById(new StatementId(request.getAccountId(),request.getYear(),request.getMonth()));
+        Optional<Statement> statement = statementRepository.findById(new StatementId(account.get(),request.getYear(),request.getMonth()));
 
         if(statement.isPresent()) {
             // Is the statement already locked?
@@ -63,7 +74,10 @@ public class StatementController {
                 DecimalFormat decimalFormat = new DecimalFormat("#.00");
 
                 // Calculate the balance of the next statement.
-                List<Transaction> transactions = transactionRepository.findByAccountAndStatement(statement.get().getAccount(),statement.get().getYearMonthId());
+                List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
+                        statement.get().getId().getAccount(),
+                        statement.get().getId().getYear(),
+                        statement.get().getId().getMonth());
 
                 double balance = statement.get().getOpenBalance();
 
@@ -102,27 +116,22 @@ public class StatementController {
     }
 
     @RequestMapping(path="/ext/money/statement/lock", method= RequestMethod.POST)
-    public @ResponseBody
-    StatusResponse statementLockExt(@RequestBody LockStatementRequest request) {
+    public void statementLockExt(@RequestBody LockStatementRequest request) {
         statementLock(request);
-        return new StatusResponse();
     }
 
     @RequestMapping(path="/int/money/statement/lock", method= RequestMethod.POST)
-    public @ResponseBody StatusResponse statementLockInt( @RequestBody LockStatementRequest request) {
-        statementLock(request);
-        return new StatusResponse();
+    public void statementLockInt( @RequestBody LockStatementRequest request) {
     }
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.POST)
     public @ResponseBody Iterable<Statement> createStatement(@RequestBody Statement statement) throws Exception {
-        StatementId statementId = new StatementId(statement.getAccount(),statement.getYear(),statement.getMonth());
-        LOG.info("Create a new account - " + statementId.toString());
+        LOG.info("Create a new statement - " + statement.toString());
 
         // Is there an account with this ID?
-        Optional<Statement> existingStatement = statementRepository.findById(statementId);
+        Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
         if(existingStatement.isPresent()) {
-            throw new Exception(statementId.toString() + " already exists");
+            throw new Exception(statement.getId().toString() + " already exists");
         }
 
         statementRepository.save(statement);
@@ -132,11 +141,10 @@ public class StatementController {
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.PUT)
     public @ResponseBody Iterable<Statement> updateStatement(@RequestBody Statement statement) throws Exception {
-        StatementId statementId = new StatementId(statement.getAccount(),statement.getYear(),statement.getMonth());
-        LOG.info("Update an account - " + statementId.toString());
+        LOG.info("Update a statement - " + statement.toString());
 
         // Is there a statement with this
-        Optional<Statement> existingStatement = statementRepository.findById(statementId);
+        Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
         if(existingStatement.isPresent()) {
             existingStatement.get().setOpenBalance(statement.getOpenBalance());
 
@@ -144,26 +152,24 @@ public class StatementController {
 
             statementRepository.save(existingStatement.get());
         } else {
-            throw new Exception(statementId.toString() + " cannot find statement.");
+            throw new Exception(statement.getId().toString() + " cannot find statement.");
         }
 
         return statements();
     }
 
     @RequestMapping(path="/int/money/statement",method=RequestMethod.DELETE)
-    public @ResponseBody
-    StatusResponse deleteStatement(@RequestBody Statement statement) {
-        StatementId statementId = new StatementId(statement.getAccount(),statement.getYear(),statement.getMonth());
-        LOG.info("Delete an account - " + statementId.toString());
+    public void deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
+        LOG.info("Delete an account - " + statement.getId().toString());
 
         // Is there an account with this ID?
-        Optional<Statement> existingStatement = statementRepository.findById(statementId);
+        Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
         if(existingStatement.isPresent()) {
 
             statementRepository.delete(existingStatement.get());
-            return new StatusResponse();
+            return;
         }
 
-        return new StatusResponse("Category does not exist " + statementId);
+        throw new InvalidStatementIdException(statement);
     }
 }

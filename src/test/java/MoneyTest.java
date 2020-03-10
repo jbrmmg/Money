@@ -2,6 +2,7 @@ import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.schedule.RegularCtrl;
+import liquibase.pro.packaged.S;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 
 import static java.lang.Math.abs;
 import static org.hamcrest.Matchers.*;
@@ -59,6 +61,12 @@ public class MoneyTest {
 
     @Autowired
     RegularRepository regularRepository;
+
+    @Autowired
+    CategoryRepository categoryRepository;
+
+    @Autowired
+    AccountRepository accountRepository;
 
     @Autowired
     private
@@ -137,8 +145,10 @@ public class MoneyTest {
     public void internalTransactionTest() throws Exception {
         cleanUp();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDW", "1968-05-24", 1280.32, "Test transaction")))
+                .content(this.json(new NewTransaction("BANK", "FDW", sdf.parse("1968-05-24"), 1280.32, "Test transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount",is(1280.32)))
@@ -172,9 +182,11 @@ public class MoneyTest {
     public void externalTranasactionTest() throws Exception {
         cleanUp();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         // Add transaction.
         mockMvc.perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDG", "1968-05-24", 1280.32, "AMEX", "Test Transaction")))
+                .content(this.json(new NewTransaction("BANK", "FDG", sdf.parse("1968-05-24"), 1280.32, "AMEX", "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1280.32)))
@@ -212,9 +224,11 @@ public class MoneyTest {
     public void reconcileTransaction() throws Exception {
         cleanUp();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         // Setup a transaction.
         mockMvc.perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", "1968-05-25", 1281.32, "BANK", "Test Transaction")))
+                .content(this.json(new NewTransaction("AMEX", "FDG", sdf.parse("1968-05-25"), 1281.32, "BANK", "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1281.32)))
@@ -260,11 +274,13 @@ public class MoneyTest {
     public void testLockStatement() throws Exception {
         cleanUp();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         // Do more and check reconciled.
 
         // Add transaction.
         mockMvc.perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDG", "1968-05-24", 1280.32, "AMEX", "Test Transaction")))
+                .content(this.json(new NewTransaction("BANK", "FDG", sdf.parse("1968-05-24"), 1280.32, "AMEX", "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1280.32)))
@@ -298,17 +314,17 @@ public class MoneyTest {
         int bankUnlocked = 0;
         int bankLocked = 0;
         int other = 0;
-        Iterable<Statement> statements = statementRepository.findAllByOrderByAccountAsc();
+        Iterable<Statement> statements = statementRepository.findAllByOrderByIdAccountAsc();
         for(Statement nextStatement : statements) {
             // Check the statements.
-            if(nextStatement.getAccount().equalsIgnoreCase("AMEX")) {
+            if(nextStatement.getId().getAccount().getId().equalsIgnoreCase("AMEX")) {
                 // AMEX statement, should be unlocked.
                 if(!nextStatement.getLocked()) {
                     amexUnlocked++;
                 } else {
                     other++;
                 }
-            } else if(nextStatement.getAccount().equalsIgnoreCase( "BANK")) {
+            } else if(nextStatement.getId().getAccount().getId().equalsIgnoreCase( "BANK")) {
                 // Should have one of each
                 if(!nextStatement.getLocked()) {
                     bankUnlocked++;
@@ -339,8 +355,8 @@ public class MoneyTest {
         mockMvc.perform(get("/jbr/ext/money/statement")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].account", is("AMEX")))
-                .andExpect(jsonPath("$[1].account", is("BANK")))
+                .andExpect(jsonPath("$[0].id.account.id", is("AMEX")))
+                .andExpect(jsonPath("$[1].id.account.id", is("BANK")))
                 .andExpect(jsonPath("$[0].openBalance", is(0.0)))
                 .andExpect(jsonPath("$[1].openBalance", is(0.0)));
 
@@ -363,14 +379,16 @@ public class MoneyTest {
     public void testGetTransaction() throws Exception {
         cleanUp();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         // Create transactions in each account.
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDG", "1968-05-24", 1.23, "Test Transaction")))
+                .content(this.json(new NewTransaction("BANK", "FDG", sdf.parse("1968-05-24"), 1.23, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("JLPC", "FDG", "1968-05-25", 3.45, "Test Transaction")))
+                .content(this.json(new NewTransaction("JLPC", "FDG", sdf.parse("1968-05-25"), 3.45, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -388,7 +406,7 @@ public class MoneyTest {
 
         // Create another transaction
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "UTT", "1968-05-26", 1.53, "Test Transaction")))
+                .content(this.json(new NewTransaction("BANK", "UTT", sdf.parse("1968-05-26"), 1.53, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -420,13 +438,15 @@ public class MoneyTest {
     public void testMatch1() throws Exception {
         cleanUp();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", "1968-05-24", 1.23, "Test Transaction")))
+                .content(this.json(new NewTransaction("AMEX", "FDG", sdf.parse("1968-05-24"), 1.23, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", "1968-05-24", 1.23, "Test Transaction")))
+                .content(this.json(new NewTransaction("AMEX", "FDG", sdf.parse("1968-05-24"), 1.23, "Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -454,7 +474,7 @@ public class MoneyTest {
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[2].amount", is(1.23)))
                 .andExpect(jsonPath("$[2].forwardAction", is("NONE")))
-                .andExpect(jsonPath("$[2].category", is("FDG")))
+                .andExpect(jsonPath("$[2].category.id", is("FDG")))
                 .andExpect(jsonPath("$[1].amount", is(1.23)))
                 .andExpect(jsonPath("$[1].description", is("What are we saying")))
                 .andExpect(jsonPath("$[1].forwardAction", is("NONE")))
@@ -467,19 +487,21 @@ public class MoneyTest {
     public void testMatch2() throws Exception {
         cleanUp();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         // Load transactions.
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", "1968-05-24", 1.23,"Test Transaction")))
+                .content(this.json(new NewTransaction("AMEX", "FDG", sdf.parse("1968-05-24"), 1.23,"Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", "1968-06-27", 1.23,"Test Transaction")))
+                .content(this.json(new NewTransaction("AMEX", "FDG", sdf.parse("1968-06-27"), 1.23,"Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", "1968-06-26", 1.23,"Test Transaction")))
+                .content(this.json(new NewTransaction("AMEX", "FDG", sdf.parse("1968-06-26"), 1.23,"Test Transaction")))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -520,10 +542,20 @@ public class MoneyTest {
         Calendar calendar = Calendar.getInstance();
         Date today = new Date();
 
+        Optional<Category> category = categoryRepository.findById("FDG");
+        if(!category.isPresent()) {
+            throw new Exception("Cannot find the category FDG");
+        }
+
+        Optional<Account> account = accountRepository.findById("BANK");
+        if(!account.isPresent()) {
+            throw new Exception("Cannot find the account BANK");
+        }
+
         // Create a payment that starts today - should be created immediately.
         Regular testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(today);
@@ -537,8 +569,8 @@ public class MoneyTest {
         calendar.add(Calendar.DATE, -1);
 
         testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(11.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
@@ -551,8 +583,8 @@ public class MoneyTest {
         calendar.add(Calendar.DATE, -7);
 
         testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(12.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
@@ -566,8 +598,8 @@ public class MoneyTest {
         calendar.add(Calendar.DATE, -7);
 
         testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(13.0);
         testRegularPayment.setFrequency("1X");
         testRegularPayment.setStart(calendar.getTime());
@@ -577,8 +609,8 @@ public class MoneyTest {
         regularRepository.save(testRegularPayment);
 
         testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(14.0);
         testRegularPayment.setFrequency("1M");
         testRegularPayment.setStart(calendar.getTime());
@@ -588,8 +620,8 @@ public class MoneyTest {
         regularRepository.save(testRegularPayment);
 
         testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(15.0);
         testRegularPayment.setFrequency("1Y");
         testRegularPayment.setStart(calendar.getTime());
@@ -631,10 +663,20 @@ public class MoneyTest {
             calendar.add(Calendar.DATE,1);
         }
 
+        Optional<Category> category = categoryRepository.findById("FDG");
+        if(!category.isPresent()) {
+            throw new Exception("Cannot find the category FDG");
+        }
+
+        Optional<Account> account = accountRepository.findById("BANK");
+        if(!account.isPresent()) {
+            throw new Exception("Cannot find the account BANK");
+        }
+
         // Setup a rule that will move the date to after the weekend.
         Regular testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
@@ -670,10 +712,20 @@ public class MoneyTest {
             calendar.add(Calendar.DATE,1);
         }
 
+        Optional<Category> category = categoryRepository.findById("FDG");
+        if(!category.isPresent()) {
+            throw new Exception("Cannot find the category FDG");
+        }
+
+        Optional<Account> account = accountRepository.findById("BANK");
+        if(!account.isPresent()) {
+            throw new Exception("Cannot find the account BANK");
+        }
+
         // Setup a rule that will move the date to after the weekend.
         Regular testRegularPayment = new Regular();
-        testRegularPayment.setAccount("BANK");
-        testRegularPayment.setCategory("FDG");
+        testRegularPayment.setAccount(account.get());
+        testRegularPayment.setCategory(category.get());
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(calendar.getTime());
