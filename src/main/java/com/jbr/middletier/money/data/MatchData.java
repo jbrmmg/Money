@@ -62,7 +62,6 @@ public class MatchData implements Comparable {
     private double afterAmount;
     private Category category;
     private String description;
-    private String colour;
     private final Account account;
     private ForwardActionType forwardActionType;
     private BackwordActionType backwordActionType;
@@ -93,7 +92,6 @@ public class MatchData implements Comparable {
         this.beforeAmount = 0.0;
         this.afterAmount = 0.0;
         this.category = transaction.getCategory();
-        this.colour = transaction.getCategory().getColour();
         this.account = transaction.getAccount();
 
         this.forwardActionType = ForwardActionType.UNRECONCILE;
@@ -103,7 +101,6 @@ public class MatchData implements Comparable {
     public void matchTransaction(Transaction transaction) {
         this.transactionId = transaction.getId();
         this.category = transaction.getCategory();
-        this.colour = transaction.getCategory().getColour();
 
         if(transaction.getStatement() != null) {
             this.forwardActionType = ForwardActionType.NONE;
@@ -143,8 +140,6 @@ public class MatchData implements Comparable {
     }
 
     public Category getCategory() { return this.category; }
-
-    public String getColour() { return this.colour; }
 
     public String getDescription() { return this.description; }
 

@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 9
+      id: 8
       author: jason
       changes:
 
@@ -676,78 +676,3 @@ databaseChangeLog:
                     name: system_use
                     valueBoolean: false
 
-          - insert:
-              tableName: statement
-              columns:
-                - column:
-                    name: account
-                    value: AMEX
-                - column:
-                    name: month
-                    value: 1
-                - column:
-                    name: year
-                    value: 2010
-                - column:
-                    name: open_balance
-                    value: 0
-                - column:
-                    name: locked
-                    valueBoolean: false
-
-          - insert:
-              tableName: statement
-              columns:
-                - column:
-                    name: account
-                    value: JLPC
-                - column:
-                    name: month
-                    value: 1
-                - column:
-                    name: year
-                    value: 2010
-                - column:
-                    name: open_balance
-                    value: 0
-                - column:
-                    name: locked
-                    valueBoolean: false
-
-          - insert:
-              tableName: statement
-              columns:
-                - column:
-                    name: account
-                    value: BANK
-                - column:
-                    name: month
-                    value: 1
-                - column:
-                    name: year
-                    value: 2010
-                - column:
-                    name: open_balance
-                    value: 0
-                - column:
-                    name: locked
-                    valueBoolean: false
-
-          - insert:
-              tableName: statement
-              columns:
-                - column:
-                    name: account
-                    value: NWDE
-                - column:
-                    name: month
-                    value: 1
-                - column:
-                    name: year
-                    value: 2010
-                - column:
-                    name: open_balance
-                    value: 0
-                - column:
-                    name: locked
-                    valueBoolean: false

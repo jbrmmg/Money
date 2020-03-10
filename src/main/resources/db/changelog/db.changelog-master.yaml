@@ -25,5 +25,8 @@ databaseChangeLog:
       file: /db/changelog/db.changelog-008-categories.yaml
 
   - include:
+      file: /db/changelog/db.changelog-009-statements.yaml
+
+  - include:
       file: /db/changelog/db.changelog-999-dbgdata.yaml
 

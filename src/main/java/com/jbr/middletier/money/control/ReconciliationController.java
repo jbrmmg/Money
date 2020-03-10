@@ -385,13 +385,9 @@ public class ReconciliationController {
                     LOG.error("Reconcile transaction - ignored (statement count not 1).");
                     throw new MultipleUnlockedStatementException(transaction.get().getAccount());
                 }
-            } else if (!reconcile) {
+            } else {
                 // Remove the statement
                 transaction.get().clearStatement();
-            } else {
-                // Do nothing.
-                LOG.error("Reconcile transaction - ignored (invalid reconcile).");
-                throw new ReconciliationException(transactionId);
             }
 
             // Save the transaction.
