@@ -7,7 +7,6 @@ import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Sort;
@@ -336,15 +335,15 @@ public class TransactionController {
     }
 
     @RequestMapping(path="/ext/money/delete", method= RequestMethod.DELETE)
-    public @ResponseBody String deleteExternal(@RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
+    public @ResponseBody OkStatus deleteExternal(@RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
         deleteTransaction(transactionId);
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/delete", method= RequestMethod.DELETE)
-    public @ResponseBody String deleteInternal( @RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
+    public @ResponseBody OkStatus deleteInternal( @RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
         deleteTransaction(transactionId);
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     private Iterable<Transaction> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
@@ -383,15 +382,15 @@ public class TransactionController {
     }
 
     @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.PUT)
-    public @ResponseBody String updateTransactionExt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public @ResponseBody OkStatus updateTransactionExt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
         updateTransacation(transaction);
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/transaction/update", method= RequestMethod.PUT)
-    public @ResponseBody String updateTransactionInt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public @ResponseBody OkStatus updateTransactionInt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
         updateTransacation(transaction);
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/ext/money/transaction/regulars",method= RequestMethod.GET)
@@ -472,7 +471,7 @@ public class TransactionController {
     }
 
     @RequestMapping(path="/int/money/transaction/email",method=RequestMethod.POST)
-    public @ResponseBody String sendEmail(  @RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
+    public @ResponseBody OkStatus sendEmail(  @RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
                                                     @RequestParam(value="from", defaultValue="creditcards@jbrmmg.me.uk") String from,
                                                     @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,
                                                     @RequestParam(value="host", defaultValue="smtp.ionos.co.uk") String host,
@@ -644,6 +643,6 @@ public class TransactionController {
             throw e;
         }
 
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 }

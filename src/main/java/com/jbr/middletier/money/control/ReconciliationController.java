@@ -716,36 +716,39 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/ext/money/reconcile", method= RequestMethod.PUT)
-    public @ResponseBody String reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
+    public @ResponseBody OkStatus reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconcile", method= RequestMethod.PUT)
-    public @ResponseBody String reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
+    public @ResponseBody OkStatus reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/ext/money/reconciliation/add", method= RequestMethod.POST)
     public @ResponseBody
-    void  reconcileDataExt( @RequestBody String reconciliationData) {
+    OkStatus  reconcileDataExt( @RequestBody String reconciliationData) {
         LOG.info("Adding Reconcilation Data (ext) - " + reconciliationData.length());
         addReconcilationData(reconciliationData);
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconciliation/add", method= RequestMethod.POST)
     public @ResponseBody
-    void  reconcileDataInt( @RequestBody String reconciliationData) {
+    OkStatus  reconcileDataInt( @RequestBody String reconciliationData) {
         LOG.info("Adding Reconcilation Data - " + reconciliationData.length());
         addReconcilationData(reconciliationData);
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="int/money/reconciliation/load", method= RequestMethod.POST)
     public @ResponseBody
-    void reconcileDataLoadInt(@RequestBody LoadFileRequest loadFileRequest) throws Exception {
+    OkStatus reconcileDataLoadInt(@RequestBody LoadFileRequest loadFileRequest) throws Exception {
         LOG.info("Request to load file - " + loadFileRequest.getPath() + " " + loadFileRequest.getType());
         loadFile(loadFileRequest);
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="int/money/reconciliation/files", method= RequestMethod.GET)
@@ -769,15 +772,15 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/ext/money/reconciliation/update", method= RequestMethod.PUT)
-    public @ResponseBody String reconcileCategoryExt(@RequestBody ReconcileUpdate reconciliationUpdate ) {
+    public @ResponseBody OkStatus reconcileCategoryExt(@RequestBody ReconcileUpdate reconciliationUpdate ) {
         processReconcileUpdate(reconciliationUpdate);
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconciliation/update", method= RequestMethod.PUT)
-    public @ResponseBody String reconcileCategoryInt(@RequestBody ReconcileUpdate reconciliationUpdate) {
+    public @ResponseBody OkStatus reconcileCategoryInt(@RequestBody ReconcileUpdate reconciliationUpdate) {
         processReconcileUpdate(reconciliationUpdate);
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     private List<MatchData> matchImpl(String accountId) throws Exception {
@@ -807,30 +810,30 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/ext/money/reconciliation/auto", method= RequestMethod.PUT)
-    public @ResponseBody String reconcileDataExt() throws Exception {
+    public @ResponseBody OkStatus reconcileDataExt() throws Exception {
         LOG.info("Auto Reconcilation Data (ext) ");
         autoReconcileData();
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconciliation/auto", method= RequestMethod.PUT)
-    public @ResponseBody String reconcileDataInt() throws Exception {
+    public @ResponseBody OkStatus reconcileDataInt() throws Exception {
         LOG.info("Auto Reconcilation Data ");
         autoReconcileData();
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/ext/money/reconciliation/clear", method= RequestMethod.DELETE)
-    public @ResponseBody String reconcileDataDeleteExt() {
+    public @ResponseBody OkStatus reconcileDataDeleteExt() {
         LOG.info("Clear Reconcilation Data (ext) ");
         clearRepositoryData();
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconciliation/clear", method= RequestMethod.DELETE)
-    public @ResponseBody String reconcileDataDeleteInt() {
+    public @ResponseBody OkStatus reconcileDataDeleteInt() {
         LOG.info("Clear Reconcilation Data ");
         clearRepositoryData();
-        return "OK";
+        return OkStatus.getOkStatus();
     }
 }

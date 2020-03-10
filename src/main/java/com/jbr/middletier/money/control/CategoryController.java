@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.Category;
+import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
@@ -91,7 +92,7 @@ public class CategoryController {
     }
 
     @RequestMapping(path="/int/money/categories",method=RequestMethod.DELETE)
-    public @ResponseBody String deleteAccount(@RequestBody Category category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
+    public @ResponseBody OkStatus deleteAccount(@RequestBody Category category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account " + category.getId());
 
         // Is there an account with this ID?
@@ -102,7 +103,7 @@ public class CategoryController {
             }
 
             categoryRepository.delete(existingCategory.get());
-            return "OK";
+            return OkStatus.getOkStatus();
         }
 
         throw new InvalidCategoryIdException(category);
