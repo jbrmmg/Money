@@ -7,6 +7,10 @@ public class OkStatus {
         status = "OK";
     }
 
+    public String getStatus() { return this.status; }
+
+    public void setStatus(String status) { this.status = status; }
+
     public static OkStatus getOkStatus() {
         return new OkStatus();
     }
