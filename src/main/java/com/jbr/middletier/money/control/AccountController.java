@@ -1,8 +1,9 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.StatusResponse;
+import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
+import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,8 @@ public class AccountController {
         this.accountRepository = accountRepository;
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public void handleIllegalArgumentException(IllegalStateException e, HttpServletResponse response) throws IOException {
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -81,16 +82,16 @@ public class AccountController {
     }
 
     @RequestMapping(path="/int/money/accounts",method=RequestMethod.DELETE)
-    public @ResponseBody StatusResponse deleteAccount(@RequestBody Account account) {
+    public @ResponseBody OkStatus deleteAccount(@RequestBody Account account) throws InvalidAccountIdException {
         LOG.info("Delete account " + account.getId());
 
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
         if(existingAccount.isPresent()) {
             accountRepository.delete(existingAccount.get());
-            return new StatusResponse();
+            return OkStatus.getOkStatus();
         }
 
-        return new StatusResponse("Account does not exist " + account.getId());
+        throw new InvalidAccountIdException(account);
     }
 }

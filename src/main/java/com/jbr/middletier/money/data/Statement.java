@@ -10,21 +10,9 @@ import java.util.Date;
  */
 @Entity
 @Table(name="Statement")
-@IdClass(StatementId.class)
 public class Statement implements Comparable<Statement> {
-    @Id
-    @NotNull
-    @Column(name="account")
-    private String account;
-
-    @Id
-    @NotNull
-    @Column(name="month")
-    private Integer month;
-
-    @Id
-    @Column(name="year")
-    private Integer year;
+    @EmbeddedId
+    private StatementId id;
 
     @Column(name="open_balance")
     private double openBalance;
@@ -33,62 +21,25 @@ public class Statement implements Comparable<Statement> {
     @NotNull
     private Boolean locked;
 
-    private Statement(String account, int year, int month, double balance) {
+    private Statement(StatementId previousId, double balance) {
         // Create next statement in sequence.
-        this.account = account;
+        this.id = StatementId.getNextId(previousId);
         this.openBalance = balance;
         this.locked = false;
-
-        if(month == 12) {
-            this.month = 1;
-            this.year = year + 1;
-        } else {
-            this.month = month + 1;
-            this.year = year;
-        }
     }
 
     public Statement() {
     }
 
-    public Statement(String account, int month, int year, double openBalance, boolean locked) {
-        this.account = account;
-        this.month = month;
-        this.year = year;
+    public Statement(Account account, int month, int year, double openBalance, boolean locked) {
+        this.id = new StatementId(account,year,month);
         this.openBalance = openBalance;
         this.locked = locked;
     }
 
-    public String getYearMonthId() {
-        int yearMonth = this.year * 100 + this.month;
-        return Integer.toString(yearMonth);
+    public StatementId getId() {
+        return this.id;
     }
-
-    public String getPreviousId() {
-        int yearMonth = this.year * 100 + (this.month - 1);
-        if(this.month == 1) {
-            yearMonth = (this.year - 1) * 100 + 11;
-        }
-        return Integer.toString(yearMonth);
-    }
-
-    public int getYear() {
-        return this.year;
-    }
-
-    public void setYear(int year) {this.year = year;}
-
-    public int getMonth() {
-        return this.month;
-    }
-
-    public void setMonth(int month) { this.month = month;}
-
-    public String getAccount() {
-        return this.account;
-    }
-
-    public void setAccount(String account) { this.account = account; }
 
     public double getOpenBalance() {
         return this.openBalance;
@@ -107,18 +58,18 @@ public class Statement implements Comparable<Statement> {
     @Override
     public int compareTo(final Statement o) {
         // First compare the account.
-        if(!this.account.equalsIgnoreCase(o.account)) {
-            return this.account.compareTo(o.account);
+        if(!this.id.getAccount().getId().equalsIgnoreCase(o.id.getAccount().getId())) {
+            return this.id.getAccount().getId().compareTo(o.id.getAccount().getId());
         }
 
         // Then compare the year
-        if(!this.year.equals(o.year)) {
-            return this.year.compareTo(o.year);
+        if(!this.id.getYear().equals(o.id.getYear())) {
+            return this.id.getYear().compareTo(o.id.getYear());
         }
 
         // Finally the month
-        if(!this.month.equals(o.month)) {
-            return this.month.compareTo(o.month);
+        if(!this.id.getMonth().equals(o.id.getMonth())) {
+            return this.id.getMonth().compareTo(o.id.getMonth());
         }
 
         return 0;
@@ -128,11 +79,6 @@ public class Statement implements Comparable<Statement> {
         // Lock this statement and create the next in sequence.
         locked = true;
 
-        return new Statement(this.account,this.year,this.month,balance);
-    }
-
-    public static String getIdFromDateString(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMM");
-        return formatter.format(date);
+        return new Statement(this.id,balance);
     }
 }

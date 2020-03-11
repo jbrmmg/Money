@@ -2,11 +2,17 @@ logging:
     level:
         ROOT: INFO
         com.jbr.middletier: DEBUG
-
+        org.hibernate.type.descriptor.sql: TRACE
 
 spring:
     liquibase:
         contexts: dbg
+
+    jpa:
+      properties:
+        hibernate:
+          format_sql: true
+      show-sql: true
 
 server:
     port: 13017

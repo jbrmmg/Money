@@ -1,9 +1,10 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.StatusResponse;
+import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
+import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,8 @@ public class CategoryController {
         this.categoryRepository = categoryRepository;
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public void handleIllegalArgumentException(IllegalStateException e, HttpServletResponse response) throws IOException {
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -91,21 +92,20 @@ public class CategoryController {
     }
 
     @RequestMapping(path="/int/money/categories",method=RequestMethod.DELETE)
-    public @ResponseBody
-    StatusResponse deleteAccount(@RequestBody Category category) throws Exception {
+    public @ResponseBody OkStatus deleteAccount(@RequestBody Category category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account " + category.getId());
 
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());
         if(existingCategory.isPresent()) {
             if(existingCategory.get().getSystemUse()) {
-                throw new Exception(category.getId() + " cannot delete system use category.");
+                throw new DeleteSystemCategoryException(category);
             }
 
             categoryRepository.delete(existingCategory.get());
-            return new StatusResponse();
+            return OkStatus.getOkStatus();
         }
 
-        return new StatusResponse("Category does not exist " + category.getId());
+        throw new InvalidCategoryIdException(category);
     }
 }
