@@ -106,7 +106,7 @@ public class ReconciliationController {
                 } else if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.RECONCILE.toString())) {
                     // Reconcile the transaction
                     ReconcileTransaction reconcileRequest = new ReconcileTransaction();
-                    reconcileRequest.setId(next.getTransactionId());
+                    reconcileRequest.setId(next.getTransaction().getId());
                     reconcileRequest.setReconcile(true);
                     reconcileExt(reconcileRequest);
                 }

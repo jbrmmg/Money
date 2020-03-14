@@ -14,7 +14,7 @@ public class MatchData implements Comparable {
 
         MatchData anotherMatch = (MatchData)object;
 
-        if((this.reconciliationId == anotherMatch.reconciliationId) && (this.transactionId == anotherMatch.transactionId)) {
+        if((this.reconciliationId == anotherMatch.reconciliationId) && (this.transaction.getId() == anotherMatch.transaction.getId())) {
             return 0;
         }
 
@@ -57,7 +57,7 @@ public class MatchData implements Comparable {
     private final int reconciliationId;
     private final Date reconcilationDate;
     private final double reconciliationAmount;
-    private int transactionId;
+    private Transaction transaction;
     private double beforeAmount;
     private double afterAmount;
     private Category category;
@@ -70,7 +70,7 @@ public class MatchData implements Comparable {
         this.reconciliationId = source.getId();
         this.reconcilationDate = source.getDate();
         this.reconciliationAmount = source.getAmount();
-        this.transactionId = -1;
+        this.transaction = null;
         this.category = source.getCategory();
         this.description = source.getDescription();
         this.account = account;
@@ -85,7 +85,7 @@ public class MatchData implements Comparable {
     }
 
     public MatchData(Transaction transaction) {
-        this.transactionId = transaction.getId();
+        this.transaction = transaction;
         this.reconciliationId = -1;
         this.reconcilationDate = transaction.getDate();
         this.reconciliationAmount = transaction.getAmount();
@@ -99,7 +99,7 @@ public class MatchData implements Comparable {
     }
 
     public void matchTransaction(Transaction transaction) {
-        this.transactionId = transaction.getId();
+        this.transaction = transaction;
         this.category = transaction.getCategory();
 
         if(transaction.getStatement() != null) {
@@ -119,8 +119,8 @@ public class MatchData implements Comparable {
         return this.reconciliationAmount;
     }
 
-    public int getTransactionId() {
-        return this.transactionId;
+    public Transaction getTransaction() {
+        return this.transaction;
     }
 
     public double getBeforeAmount() {
