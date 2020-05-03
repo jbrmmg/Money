@@ -64,12 +64,12 @@ public class WebLogManager {
             requestJson.append(message);
             requestJson.append("\",");
 
-            requestJson.append("\"callerFilename\": \"BackupManager.java\",");
+            requestJson.append("\"callerFilename\": \"WebLogManager.java\",");
             requestJson.append("\"callerLine\": \"0\",");
             requestJson.append("\"callerMethod\": \"postWebLog\",");
-            requestJson.append("\"loggerName\": \"Backup Logger\",");
+            requestJson.append("\"loggerName\": \"Money Logger\",");
 
-            requestJson.append("\"callerClass\": \"com.jbr.middletier.backup.manager\"");
+            requestJson.append("\"callerClass\": \"com.jbr.middletier.money.manager\"");
             requestJson.append("}");
 
             HttpEntity<String> request = new HttpEntity<>(requestJson.toString(), headers);
