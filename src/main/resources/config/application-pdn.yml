@@ -28,6 +28,7 @@ server:
 
 money:
     service-name: "Middle Tier Production"
+    web-log-url: http://localhost:12001/jbr/int/log/data
 
 info:
     app:

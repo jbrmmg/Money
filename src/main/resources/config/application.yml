@@ -29,6 +29,7 @@ spring:
 
 money:
     service-name: "Middle Tier Debug"
+    web-log-url: http://localhost:10001/jbr/int/log/data
 
 management:
     endpoint:

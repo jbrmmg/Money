@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
+import com.jbr.middletier.money.manage.WebLogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,7 @@ public class TransactionController {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     private final ResourceLoader resourceLoader;
+    private final WebLogManager webLogManager;
 
     @Autowired
     public TransactionController(TransactionRepository transactionRepository,
@@ -50,13 +52,15 @@ public class TransactionController {
                                  StatementRepository statementRepository,
                                  AccountRepository accountRepository,
                                  CategoryRepository categoryRepository,
-                                 ResourceLoader resourceLoader) {
+                                 ResourceLoader resourceLoader,
+                                 WebLogManager webLogManager) {
         this.transactionRepository = transactionRepository;
         this.regularRepository = regularRepository;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.resourceLoader = resourceLoader;
+        this.webLogManager = webLogManager;
     }
 
     @ExceptionHandler(Exception.class)
@@ -257,7 +261,7 @@ public class TransactionController {
             result.add(savedTransaction);
         }
 
-
+        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"New transaction has been created.");
         return result;
     }
 
