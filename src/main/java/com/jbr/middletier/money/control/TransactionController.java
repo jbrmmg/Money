@@ -205,6 +205,7 @@ public class TransactionController {
             // If the transaction is not reconciled then it can be deleted.
             if(!transaction.get().reconciled()) {
                 transactionRepository.deleteById(transactionId);
+                webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Delete transaction.");
                 return;
             }
         }
