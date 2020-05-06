@@ -27,7 +27,7 @@ server:
     port: 12017
 
 money:
-    service-name: "Middle Tier Production"
+    service-name: middletier-money
     web-log-url: http://localhost:12001/jbr/int/log/data
 
 info:
