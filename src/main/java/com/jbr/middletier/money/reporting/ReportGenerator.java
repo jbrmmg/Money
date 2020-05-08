@@ -34,20 +34,11 @@ public class ReportGenerator {
         this.resourceLoader = resourceLoader;
     }
 
-    public void generateReport() throws IOException, DocumentException {
+    public void generateReport(int year, int month) throws IOException, DocumentException {
         LOG.info("Generate report");
 
         // Archive the oldest year in the database.
 
-        // Find the oldest year in the database.
-        long oldestYear = 100000;
-
-        Iterable<Statement> years = statementRepository.findAll();
-        for(Statement nextStatement: years) {
-            if(nextStatement.getId().getYear() < oldestYear) {
-                oldestYear = nextStatement.getId().getYear();
-            }
-        }
 
         // The year must be at least x years ago.
 

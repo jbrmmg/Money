@@ -1,0 +1,28 @@
+logging:
+  level:
+    ROOT: INFO
+    com.jbr.middletier: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+
+spring:
+  datasource:
+    url: ${db.pdn.money.server}?autoReconnect=true&useSSL=false
+    username: ${db.pdn.money.user}
+    password: ${db.pdn.money.password}
+
+  liquibase:
+    contexts:
+    enabled: false
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+server:
+  port: 13017
+
+info:
+  app:
+    version: Debug

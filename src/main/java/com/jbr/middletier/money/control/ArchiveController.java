@@ -1,6 +1,8 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.ArchiveRequest;
+import com.jbr.middletier.money.data.Statement;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.manage.WebLogManager;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import org.slf4j.Logger;
@@ -19,12 +21,15 @@ public class ArchiveController {
 
     private final WebLogManager webLogManager;
     private final ReportGenerator reportGenerator;
+    private final StatementRepository statementRepository;
 
     @Autowired
     public ArchiveController(WebLogManager webLogManager,
-                             ReportGenerator reportGenerator) {
+                             ReportGenerator reportGenerator,
+                             StatementRepository statementRepository) {
         this.webLogManager = webLogManager;
         this.reportGenerator = reportGenerator;
+        this.statementRepository = statementRepository;
     }
 
     @RequestMapping(path="/int/money/transaction/archive", method= RequestMethod.POST)
@@ -33,7 +38,17 @@ public class ArchiveController {
         try {
             LOG.info("Archive Controller - request archive.");
 
-            reportGenerator.generateReport();
+            // Find the oldest year in the database.
+            long oldestYear = 100000;
+
+            Iterable<Statement> years = statementRepository.findAll();
+            for(Statement nextStatement: years) {
+                if(nextStatement.getId().getYear() < oldestYear) {
+                    oldestYear = nextStatement.getId().getYear();
+                }
+            }
+
+            reportGenerator.generateReport(2018,5);
 
             archiveRequest.setStatus("OK");
         } catch (Exception ex) {
