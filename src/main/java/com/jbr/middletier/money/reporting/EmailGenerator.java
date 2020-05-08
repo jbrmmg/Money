@@ -34,16 +34,16 @@ public class EmailGenerator {
 
     private void AppendRow(StringBuilder sb, String date, String category, String account, String description, Double amount) {
         sb.append("<tr>\n");
-        sb.append("<td class=\"date\">" + date + "</td>\n");
-        sb.append("<td class=\"description\">" + category + "</td>\n");
-        sb.append("<td class=\"description\">" + account + "</td>\n");
-        sb.append("<td class=\"description\">" + description + "</td>\n");
+        sb.append("<td class=\"date\">").append(date).append("</td>\n");
+        sb.append("<td class=\"description\">").append(category).append("</td>\n");
+        sb.append("<td class=\"description\">").append(account).append("</td>\n");
+        sb.append("<td class=\"description\">").append(description).append("</td>\n");
         if(amount == null) {
             sb.append("<td class=\"amount amount-data\"></td>\n");
         } else  if(amount < 0) {
-            sb.append("<td class=\"amount amount-data db\">" + String.format("%02.2f", amount) + "</td>\n");
+            sb.append("<td class=\"amount amount-data db\">").append(String.format("%02.2f", amount)).append("</td>\n");
         } else {
-            sb.append("<td class=\"amount amount-data\">" + String.format("%02.2f", amount) + "</td>\n");
+            sb.append("<td class=\"amount amount-data\">").append(String.format("%02.2f", amount)).append("</td>\n");
         }
         sb.append("</tr>\n");
     }
@@ -70,13 +70,13 @@ public class EmailGenerator {
         Iterable<Category> categories = categoryRepository.findAll();
 
         class EmailTransaction {
-            Date date;
-            Double amount;
-            String description;
-            String category;
-            String account;
+            private Date date;
+            private Double amount;
+            private String description;
+            private String category;
+            private String account;
 
-            EmailTransaction(Transaction transaction, Iterable<Category> categories) {
+            private EmailTransaction(Transaction transaction, Iterable<Category> categories) {
                 this.date = transaction.getDate();
                 this.amount = transaction.getAmount();
                 this.description = transaction.getDescription() == null ? "" : transaction.getDescription().replace("WWW.","");
@@ -143,23 +143,20 @@ public class EmailGenerator {
             }
         }
 
-        emailData.sort(new Comparator<EmailTransaction>() {
-            @Override
-            public int compare(EmailTransaction emailTransaction, EmailTransaction t1) {
-                if(emailTransaction.date.before(t1.date)) {
-                    return +1;
-                } else if (emailTransaction.date.after(t1.date)) {
-                    return -1;
-                }
-
-                if(emailTransaction.amount > t1.amount) {
-                    return +1;
-                } else if(emailTransaction.amount < t1.amount) {
-                    return -1;
-                }
-
-                return 0;
+        emailData.sort((emailTransaction, t1) -> {
+            if(emailTransaction.date.before(t1.date)) {
+                return +1;
+            } else if (emailTransaction.date.after(t1.date)) {
+                return -1;
             }
+
+            if(emailTransaction.amount > t1.amount) {
+                return +1;
+            } else if(emailTransaction.amount < t1.amount) {
+                return -1;
+            }
+
+            return 0;
         });
 
         startAmount = endAmount;
@@ -198,10 +195,6 @@ public class EmailGenerator {
         // Get the email template.
         Resource resource = resourceLoader.getResource("classpath:html/email.html");
         InputStream is = resource.getInputStream();
-
-        if(is== null) {
-            throw new Exception("Cannot load resource");
-        }
 
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader reader = new BufferedReader(isr);

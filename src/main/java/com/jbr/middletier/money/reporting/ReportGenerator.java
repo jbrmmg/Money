@@ -10,9 +10,12 @@ import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Controller;
 
 import java.io.*;
+import java.util.stream.Collectors;
 
 @Controller
 public class ReportGenerator {
@@ -20,12 +23,15 @@ public class ReportGenerator {
 
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
+    private final ResourceLoader resourceLoader;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
-                             StatementRepository statementRepository ) {
+                           StatementRepository statementRepository,
+                           ResourceLoader resourceLoader ) {
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
+        this.resourceLoader = resourceLoader;
     }
 
     public void generateReport() throws IOException, DocumentException {
@@ -54,14 +60,16 @@ public class ReportGenerator {
 
         File htmlFile = new File(htmlFilename);
         PrintWriter writer2 = new PrintWriter(htmlFile);
-        writer2.println("<html>");
-        writer2.println("<head>");
-        writer2.println("<title>This is a test file.</title>");
-        writer2.println("</head>");
-        writer2.println("<body>");
-        writer2.println("<p>This is a test.</p>");
-        writer2.println("</body>");
-        writer2.println("</html>");
+
+        // Get the email template.
+        Resource resource = resourceLoader.getResource("classpath:html/report.html");
+        InputStream is = resource.getInputStream();
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader reader = new BufferedReader(isr);
+
+        String template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+
+        writer2.println(template);
         writer2.close();
 
         // Generate a pie chart of spending for that year.
