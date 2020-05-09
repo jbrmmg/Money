@@ -1,14 +1,16 @@
 package com.jbr.middletier.money.data;
 
+import javax.validation.constraints.NotNull;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Created by jason on 11/04/17.
  */
+@SuppressWarnings({"unused", "NullableProblems"})
 public class MatchData implements Comparable {
     @Override
-    public int compareTo(final Object object) {
+    public int compareTo(@NotNull Object object) {
         if (!(object instanceof MatchData))
             throw new ClassCastException("A MatchData object expected.");
 
@@ -40,14 +42,8 @@ public class MatchData implements Comparable {
         }
 
         // Check the amount.
-        if(this.reconciliationAmount > anotherMatch.reconciliationAmount) {
-            return 1;
-        }
-        if(this.reconciliationAmount < anotherMatch.reconciliationAmount) {
-            return -1;
-        }
+        return Double.compare(this.reconciliationAmount, anotherMatch.reconciliationAmount);
 
-        return 0;
     }
 
     public enum ForwardActionType { SETCATEGORY, CREATE, RECONCILE, UNRECONCILE, NONE }

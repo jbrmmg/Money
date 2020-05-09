@@ -1,15 +1,14 @@
 package com.jbr.middletier.money.data;
 
-import javax.mail.internet.InternetAddress;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Created by jason on 07/03/17.
  */
 
+@SuppressWarnings("WeakerAccess")
 @Embeddable
 public class StatementId implements Serializable {
     @NotNull
@@ -31,7 +30,7 @@ public class StatementId implements Serializable {
         this.year = year;
     }
 
-    public static StatementId getNextId(StatementId sourceId) {
+    static StatementId getNextId(StatementId sourceId) {
         StatementId result = new StatementId();
 
         result.account = sourceId.account;

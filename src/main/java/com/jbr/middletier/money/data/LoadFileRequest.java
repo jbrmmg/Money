@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.data;
 
+@SuppressWarnings("unused")
 public class LoadFileRequest {
     private String path;
     private String type;

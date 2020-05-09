@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.schedule;
 
-import com.jbr.middletier.money.data.NewTransaction;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.RegularRepository;

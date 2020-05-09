@@ -68,7 +68,7 @@ public class Regular {
     }
 
     public class CannotDetermineNextDateException extends Exception {
-        public CannotDetermineNextDateException(String message)  {
+        CannotDetermineNextDateException(String message)  {
             super(message);
         }
     }
@@ -133,7 +133,7 @@ public class Regular {
         this.start = start;
     }
 
-    public Date getLastDate() {
+    private Date getLastDate() {
         if(this.lastCreated == null) {
             return null;
         }
@@ -148,11 +148,8 @@ public class Regular {
     public boolean isNextDateToday(Date useToday) throws CannotDetermineNextDateException {
         // Is the next date today?
         Date today = removeTime(useToday);
-        if(today.equals(getNextDate(today))) {
-            return true;
-        }
+        return today.equals(getNextDate(today));
 
-        return false;
     }
 
     private boolean isDateTodayOrFuture(Date today, Date fromDate) {
@@ -161,11 +158,7 @@ public class Regular {
             return true;
         }
 
-        if(today.before(fromDate)) {
-            return true;
-        }
-
-        return false;
+        return today.before(fromDate);
     }
 
     private Date internalNextDate(Date today, Date fromDate) throws CannotDetermineNextDateException {

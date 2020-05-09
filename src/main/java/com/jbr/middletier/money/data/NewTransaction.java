@@ -7,6 +7,7 @@ import java.util.Date;
 /**
  * Created by jason on 11/03/17.
  */
+@SuppressWarnings("unused")
 public class NewTransaction {
     private String accountId;
     private String categoryId;

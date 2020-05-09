@@ -1,9 +1,10 @@
 package com.jbr.middletier.money.data;
 
+@SuppressWarnings("unused")
 public class OkStatus {
     private String status;
 
-    public OkStatus() {
+    private OkStatus() {
         status = "OK";
     }
 

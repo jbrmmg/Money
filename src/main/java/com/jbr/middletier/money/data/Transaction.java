@@ -5,13 +5,8 @@ import org.hibernate.annotations.*;
 import javax.persistence.*;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import javax.swing.plaf.nimbus.State;
-import javax.validation.constraints.NotNull;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Optional;
 
 /**
  * Created by jason on 07/03/17.
@@ -55,7 +50,7 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction (Account account, Category category, Date date, double amount, String description) throws Exception {
+    public Transaction (Account account, Category category, Date date, double amount, String description) {
         this.account = account;
         this.category = category;
 

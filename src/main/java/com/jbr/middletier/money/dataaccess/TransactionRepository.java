@@ -2,7 +2,6 @@ package com.jbr.middletier.money.dataaccess;
 
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Transaction;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 

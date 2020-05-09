@@ -1,15 +1,13 @@
 package com.jbr.middletier.money.data;
 
-import liquibase.pro.packaged.C;
-
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by jason on 11/04/17.
  */
+@SuppressWarnings("unused")
 @Entity
 @Table(name="ReconciliationData")
 public class ReconciliationData {
@@ -78,7 +76,7 @@ public class ReconciliationData {
 
     public Category getCategory() { return this.category; }
 
-    public void setCategory(Category category, String colour) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 
