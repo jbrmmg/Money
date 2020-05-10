@@ -12,4 +12,6 @@ import java.util.List;
  */
 public interface TransactionRepository extends CrudRepository<Transaction, Integer>, JpaSpecificationExecutor<Transaction> {
     List<Transaction> findByAccountAndStatementIdYearAndStatementIdMonth(Account account, Integer statementYear, Integer statementMonth);
+
+    List<Transaction> findByStatementIdYearAndStatementIdMonth(Integer statementYear, Integer statementMonth);
 }
