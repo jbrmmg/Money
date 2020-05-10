@@ -44,19 +44,30 @@ public class ReportGenerator {
     class CategoryPercentage implements Comparable<CategoryPercentage> {
         public Category category;
         public double amount;
-        public double percentage;
+        double percentage;
+        boolean ignore;
 
         @Override
         public int compareTo(CategoryPercentage anotherPercentage) {
-//            return this.category.getGroup().compareTo(anotherPercentage.category.getGroup());
             return Double.compare(this.percentage,anotherPercentage.percentage);
         }
+    }
+
+    private String getTextColour(String colour) {
+        return getBrightness(colour) > 130 ? "000000" : "FFFFFF";
+    }
+
+    private double getBrightness(String colour) {
+        int red = Integer.parseInt(colour.substring(0,2),16);
+        int green = Integer.parseInt(colour.substring(2,4),16);
+        int blue = Integer.parseInt(colour.substring(4,6),16);
+
+        return Math.sqrt(red * red * .241 + green * green * .691 + blue * blue * .068);
     }
 
     private Map<String,CategoryPercentage> getCategoryPercentages(List<Transaction> transactions) {
         Map<String,CategoryPercentage> result = new HashMap<>();
 
-        double totalAmount = 0;
         for(Transaction nextTransaction: transactions) {
             if(nextTransaction.getCategory().getExpense()) {
                 CategoryPercentage associatedCategory = result.get(nextTransaction.getCategory().getId());
@@ -64,18 +75,30 @@ public class ReportGenerator {
                 if (associatedCategory == null) {
                     associatedCategory = new CategoryPercentage();
                     associatedCategory.category = nextTransaction.getCategory();
-                    associatedCategory.amount = 0;
-                    associatedCategory.percentage = 0;
+                    associatedCategory.amount = 0.0;
+                    associatedCategory.percentage = 0.0;
+                    associatedCategory.ignore = false;
                     result.put(nextTransaction.getCategory().getId(), associatedCategory);
                 }
 
                 associatedCategory.amount += nextTransaction.getAmount();
-                totalAmount += nextTransaction.getAmount();
+            }
+        }
+
+        double totalAmount = 0.0;
+        for(CategoryPercentage nextCategory: result.values()) {
+            if(nextCategory.amount < 0.0) {
+                totalAmount += nextCategory.amount;
+            } else {
+                nextCategory.ignore = true;
+                nextCategory.amount = 0.0;
             }
         }
 
         for(CategoryPercentage nextCategory: result.values()) {
-            nextCategory.percentage = nextCategory.amount / totalAmount * 100;
+            if(!nextCategory.ignore) {
+                nextCategory.percentage = nextCategory.amount / totalAmount * 100;
+            }
         }
 
         return result.entrySet()
@@ -85,6 +108,7 @@ public class ReportGenerator {
                                 Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
+    @SuppressWarnings("SameParameterValue")
     private String getPieChartSlice(int x, int y, int radius, double percentage, String colour) {
         return String.format("<circle r=\"%d\" cx=\"%d\" cy=\"%d\" fill=\"none\" stroke=\"#%s\" stroke-width=\"%d\" stroke-dasharray=\"%f %f\" transform=\"rotate(-90) translate(%d)\"></circle>\n",
                 radius,
@@ -97,13 +121,27 @@ public class ReportGenerator {
                 -4 * radius);
     }
 
-    private String textAtRingAndAngle(int xCentre, int yCentre, int ring, double angle, String text) {
+    @SuppressWarnings("SameParameterValue")
+    private String textAtRingAndAngle(int xCentre, int yCentre, int ring, double angle, double percentage, String colour, String text) {
         // Convert the ring and angle to co-ordinates.
         double x = xCentre + Math.sin(Math.toRadians((angle + 180) * -1)) * ring;
         double y = yCentre + Math.cos(Math.toRadians((angle + 180) * -1)) * ring;
 
+        double rotateAngle = angle + 90;
 
-        return "<text x=\"" + x + "\" y=\"" + y + "\" font-size=\"120px\">" + text + "</text>\n";
+        int textSize = 120;
+
+        if(percentage > 50) {
+            textSize = 1200;
+        } else if (percentage > 20) {
+            textSize = 600;
+        } else if (percentage > 5) {
+            textSize = 300;
+        }
+
+        String textColour = getTextColour(colour);
+
+        return "<text x=\"" + x + "\" y=\"" + y + "\" fill=\"#" + textColour + "\" font-size=\"" + textSize + "px\" transform=\"rotate(" + rotateAngle + " " + x + "," + y + ")\">" + text + "</text>\n";
     }
 
     private void createPieChart(List<Transaction> transactions) throws IOException, TranscoderException {
@@ -120,6 +158,10 @@ public class ReportGenerator {
         Map<String,CategoryPercentage> categoryPercentageMap = getCategoryPercentages(transactions);
         for(String nextCategoryId: categoryPercentageMap.keySet()) {
             CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
+            if(nextCategoryPercentage.ignore) {
+                continue;
+            }
+
             pie.write(getPieChartSlice(5000,5000, 2500, percent, nextCategoryPercentage.category.getColour()));
 
             percent -= nextCategoryPercentage.percentage;
@@ -129,18 +171,30 @@ public class ReportGenerator {
         }
 
         percent = 100;
-        int ring = 4000;
         for(String nextCategoryId: categoryPercentageMap.keySet()) {
             CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
+            if(nextCategoryPercentage.ignore) {
+                continue;
+            }
+
             double halfWay = (100 - (percent - nextCategoryPercentage.percentage / 2)) * 3.6;
-            pie.write(textAtRingAndAngle(5000, 5000, ring, halfWay * -1.0, nextCategoryPercentage.category.getName() + " (" + Integer.toString((int)halfWay) + ")" ));
+            pie.write(textAtRingAndAngle(
+                    5000,
+                    5000,
+                    4800,
+                    halfWay * -1.0,
+                    nextCategoryPercentage.percentage,
+                    nextCategoryPercentage.category.getColour(),
+                    nextCategoryPercentage.category.getName()));
+
+            LOG.debug("-----------------------------------------------------------------");
+            LOG.debug("Category:    " + nextCategoryPercentage.category.getName());
+            LOG.debug("Percentagge: " + percent);
+            LOG.debug("Angle:       " + halfWay);
+            LOG.debug("Amount:      " + nextCategoryPercentage.amount);
+            LOG.debug("-----------------------------------------------------------------");
 
             percent -= nextCategoryPercentage.percentage;
-
-            ring -= 200;
-            if(ring < 1001) {
-                ring = 4000;
-            }
         }
 
         pie.write("<circle r=\"5000\" cx=\"5000\" cy=\"5000\" stroke=\"black\" stroke-width=\"20\" fill=\"none\"></circle>\n");
