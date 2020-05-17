@@ -2,12 +2,11 @@ package com.jbr.middletier.money.data;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by jason on 07/03/17.
  */
+@SuppressWarnings("unused")
 @Entity
 @Table(name="Statement")
 public class Statement implements Comparable<Statement> {

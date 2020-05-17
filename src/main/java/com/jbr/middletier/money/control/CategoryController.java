@@ -33,7 +33,7 @@ public class CategoryController {
     }
 
     @ExceptionHandler(Exception.class)
-    public void handleException(Exception e, HttpServletResponse response) throws IOException {
+    public void handleException(HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
