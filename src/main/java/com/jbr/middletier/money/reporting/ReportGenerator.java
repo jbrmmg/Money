@@ -458,8 +458,121 @@ public class ReportGenerator {
         }
     }
 
+    class CategoryComparison {
+        public Category category;
+        double thisMonth;
+        double previousMonth;
+
+        public CategoryComparison(Category category) {
+            this.category = category;
+            this.thisMonth = 0;
+            this.previousMonth = 0;
+        }
+
+        public double getPercentageChange() {
+            return ( ( this.thisMonth - this.previousMonth ) / this.previousMonth ) * 100.0;
+        }
+    }
+
+    private String getAmountClass(double amount) {
+        return amount >= 0 ? "amount" : "amount amount-debit";
+    }
+
     private String createComparisonTable(List<Transaction> transactions, List<Transaction> previousTransactions) {
         StringBuilder result = new StringBuilder();
+
+        Map<String,CategoryComparison> comparisons = new HashMap<>();
+
+        for(Transaction nextTransaction: transactions) {
+            // Has this category already been seen?
+            CategoryComparison categoryComparison;
+            if(comparisons.keySet().contains(nextTransaction.getCategory().getId())) {
+                categoryComparison = comparisons.get(nextTransaction.getCategory().getId());
+            } else {
+                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
+                comparisons.put(nextTransaction.getCategory().getId(),categoryComparison);
+            }
+
+            // Update the details on the category.
+            categoryComparison.thisMonth += nextTransaction.getAmount();
+        }
+
+        for(Transaction nextTransaction: previousTransactions) {
+            // Has this category already been seen?
+            CategoryComparison categoryComparison;
+            if(comparisons.keySet().contains(nextTransaction.getCategory().getId())) {
+                categoryComparison = comparisons.get(nextTransaction.getCategory().getId());
+            } else {
+                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
+                comparisons.put(nextTransaction.getCategory().getId(),categoryComparison);
+            }
+
+            // Update the details on the category.
+            categoryComparison.previousMonth += nextTransaction.getAmount();
+        }
+
+        result.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
+        result.append("<h1>Total Spending</h1>\n");
+        result.append("<table>\n");
+        result.append("<tr>\n");
+        result.append("<th/>\n");
+        result.append("<th/>\n");
+        result.append("<th class=\"total-column\">Current Spend</th>\n");
+        result.append("<th class=\"total-column\">Previous Spend</th>\n");
+        result.append("<th class=\"total-column\">Change in Spend</th>\n");
+        result.append("</tr>\n");
+
+        double totalSpending = 0.0;
+        double previousTotalSpending = 0.0;
+        DecimalFormat df = new DecimalFormat("#,###.00");
+
+        for(CategoryComparison nextComparison: comparisons.values()) {
+            if(!nextComparison.category.getExpense()) {
+                continue;
+            }
+
+            result.append("<tr>");
+            LOG.info("-----------------------------------------------------------------------------");
+            LOG.info(nextComparison.category.getId());
+            LOG.info(Double.toString(nextComparison.thisMonth));
+            LOG.info(Double.toString(nextComparison.previousMonth));
+            LOG.info(Double.toString(nextComparison.getPercentageChange()));
+
+            result.append("<td>\n");
+            result.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/").append(nextComparison.category.getId()).append(".png\"/>\n");
+            result.append("</td>\n");
+            result.append("<td>").append(nextComparison.category.getName()).append("</td>\n");
+            result.append("<td class=\"").append(getAmountClass(nextComparison.thisMonth)).append("\">").append(df.format(nextComparison.thisMonth)).append("</td>\n");
+            result.append("<td class=\"").append(getAmountClass(nextComparison.previousMonth)).append("\">").append(df.format(nextComparison.previousMonth)).append("</td>\n");
+
+            if(nextComparison.previousMonth != 0.0 && nextComparison.getPercentageChange() != 0.0) {
+                result.append("<td class=\"").append(getAmountClass(nextComparison.getPercentageChange())).append("\">").append(df.format(nextComparison.getPercentageChange())).append("%</td>\n");
+            } else {
+                result.append("<td/>\n");
+            }
+
+            result.append("</tr>\n");
+            totalSpending += nextComparison.thisMonth;
+            previousTotalSpending += nextComparison.previousMonth;
+        }
+
+        result.append("<tr>\n");
+        result.append("<td>\n");
+        result.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/TRF.png\"/>\n");
+        result.append("</td>\n");
+        result.append("<td>Total</td>\n");
+        result.append("<td class=\"").append(getAmountClass(totalSpending)).append("\">").append(df.format(totalSpending)).append("</td>\n");
+        result.append("<td class=\"").append(getAmountClass(previousTotalSpending)).append("\">").append(df.format(previousTotalSpending)).append("</td>\n");
+
+        double totalPercentageChange = ( ( totalSpending - previousTotalSpending ) / previousTotalSpending ) * 100.0;
+        if(previousTotalSpending != 0.0 && totalPercentageChange != 0.0) {
+            result.append("<td class=\"").append(getAmountClass(totalPercentageChange)).append("\">").append(df.format(totalPercentageChange)).append("%</td>\n");
+        } else {
+            result.append("</td>\n");
+        }
+        result.append("</tr>\n");
+
+        result.append("</table>\n");
 
         return result.toString();
     }
@@ -524,7 +637,6 @@ public class ReportGenerator {
         writer2.close();
 
         // Generate a PDF?
-/*
         Document document = new Document();
         PdfWriter writer = PdfWriter.getInstance(document,
                 new FileOutputStream(pdfFilename));
@@ -532,7 +644,5 @@ public class ReportGenerator {
         XMLWorkerHelper.getInstance().parseXHtml(writer, document,
                 new FileInputStream(htmlFilename));
         document.close();
-
- */
     }
 }
