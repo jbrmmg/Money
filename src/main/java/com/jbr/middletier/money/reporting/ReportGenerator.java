@@ -4,11 +4,10 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
-//import com.jbr.middletier.money.config.ApplicationProperties;
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.control.AccountController;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Transaction;
-//import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
@@ -22,7 +21,9 @@ import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -33,21 +34,18 @@ public class ReportGenerator {
     final static private Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
 
     private final TransactionRepository transactionRepository;
-//    private final StatementRepository statementRepository;
     private final ResourceLoader resourceLoader;
-//    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
     private final AccountController accountController;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
-//                           StatementRepository statementRepository,
                            ResourceLoader resourceLoader,
-//                           ApplicationProperties applicationProperties,
+                           ApplicationProperties applicationProperties,
                            AccountController accountController ) {
         this.transactionRepository = transactionRepository;
-//        this.statementRepository = statementRepository;
         this.resourceLoader = resourceLoader;
-//        this.applicationProperties = applicationProperties;
+        this.applicationProperties = applicationProperties;
         this.accountController = accountController;
     }
 
@@ -179,7 +177,7 @@ public class ReportGenerator {
     }
 
     private void createPieChart(List<Transaction> transactions) throws IOException, TranscoderException {
-        String pieChartFile = "/home/jason/Working/pie.svg";
+        String pieChartFile = applicationProperties.getReportWorking() + "/pie.svg";
         PrintWriter pie = new PrintWriter(pieChartFile);
 
         pie.write("<svg viewBox=\"0 0 10000 10000\" xmlns=\"http://www.w3.org/2000/svg\">\n");
@@ -236,7 +234,7 @@ public class ReportGenerator {
 
         pie.close();
 
-        createPngFromSvg("/home/jason/Working/pie.svg","/home/jason/Working/pie.png", 1000, 1000);
+        createPngFromSvg(pieChartFile,applicationProperties.getReportWorking() + "/pie.png", 1000, 1000);
     }
 
     private void createPngFromSvg(String svgFilename, String pngFilename, float height, float width) throws IOException, TranscoderException {
@@ -301,12 +299,12 @@ public class ReportGenerator {
 
         // Account
         table.append("<td>");
-        table.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/").append(nextTransaction.getAccount().getId()).append(".png\"/>");
+        table.append("<img height=\"25px\" width=\"25px\" src=\"").append(applicationProperties.getReportWorking()).append(nextTransaction.getAccount().getId()).append(".png\"/>");
         table.append("</td>\n");
 
         // Category
         table.append("<td>");
-        table.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/").append(nextTransaction.getCategory().getId()).append(".png\"/>");
+        table.append("<img height=\"25px\" width=\"25px\" src=\"").append(applicationProperties.getReportWorking()).append(nextTransaction.getCategory().getId()).append(".png\"/>");
         table.append("</td>\n");
 
         // Description, split into 2 (if greater than 20 chars).
@@ -366,7 +364,6 @@ public class ReportGenerator {
     private String createTransactionTable(List<Transaction> transactions) {
         // Split into pages, first page can hold 19, then following pages can hold 36
         int pageRow = 0;
-        int pageNumber = 0;
 
 
         int transactionSize = transactions.size();
@@ -375,6 +372,7 @@ public class ReportGenerator {
 
         StringBuilder table = new StringBuilder();
 
+        table.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
         outputTableHeader(table);
 
         for(int i = 0; i < Math.max(column1.size(), column2.size()); i++) {
@@ -387,9 +385,8 @@ public class ReportGenerator {
             pageRow++;
 
             // Do we need a page break?
-            if(((pageNumber == 0) && (pageRow == 18)) || pageRow == 35 ) {
+            if( pageRow == 35 ) {
                 pageRow = 0;
-                pageNumber++;
                 table.append("</table>\n");
                 table.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
                 outputTableHeader(table);
@@ -463,13 +460,13 @@ public class ReportGenerator {
         double thisMonth;
         double previousMonth;
 
-        public CategoryComparison(Category category) {
+        CategoryComparison(Category category) {
             this.category = category;
             this.thisMonth = 0;
             this.previousMonth = 0;
         }
 
-        public double getPercentageChange() {
+        double getPercentageChange() {
             return ( ( this.thisMonth - this.previousMonth ) / this.previousMonth ) * 100.0;
         }
     }
@@ -511,14 +508,12 @@ public class ReportGenerator {
             categoryComparison.previousMonth += nextTransaction.getAmount();
         }
 
-        result.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
-        result.append("<h1>Total Spending</h1>\n");
         result.append("<table>\n");
         result.append("<tr>\n");
         result.append("<th/>\n");
         result.append("<th/>\n");
         result.append("<th class=\"total-column\">Current Spend</th>\n");
-        result.append("<th class=\"total-column\">Previous Spend</th>\n");
+        result.append("<th class=\"total-column\">Previous Month</th>\n");
         result.append("<th class=\"total-column\">Change in Spend</th>\n");
         result.append("</tr>\n");
 
@@ -539,7 +534,7 @@ public class ReportGenerator {
             LOG.info(Double.toString(nextComparison.getPercentageChange()));
 
             result.append("<td>\n");
-            result.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/").append(nextComparison.category.getId()).append(".png\"/>\n");
+            result.append("<img height=\"25px\" width=\"25px\" src=\"").append(applicationProperties.getReportWorking()).append(nextComparison.category.getId()).append(".png\"/>\n");
             result.append("</td>\n");
             result.append("<td>").append(nextComparison.category.getName()).append("</td>\n");
             result.append("<td class=\"").append(getAmountClass(nextComparison.thisMonth)).append("\">").append(df.format(nextComparison.thisMonth)).append("</td>\n");
@@ -557,16 +552,14 @@ public class ReportGenerator {
         }
 
         result.append("<tr>\n");
-        result.append("<td>\n");
-        result.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/TRF.png\"/>\n");
-        result.append("</td>\n");
-        result.append("<td>Total</td>\n");
-        result.append("<td class=\"").append(getAmountClass(totalSpending)).append("\">").append(df.format(totalSpending)).append("</td>\n");
-        result.append("<td class=\"").append(getAmountClass(previousTotalSpending)).append("\">").append(df.format(previousTotalSpending)).append("</td>\n");
+        result.append("<td/>\n");
+        result.append("<td class=\"total-row\">Total</td>\n");
+        result.append("<td class=\"total-row ").append(getAmountClass(totalSpending)).append("\">").append(df.format(totalSpending)).append("</td>\n");
+        result.append("<td class=\"total-row ").append(getAmountClass(previousTotalSpending)).append("\">").append(df.format(previousTotalSpending)).append("</td>\n");
 
         double totalPercentageChange = ( ( totalSpending - previousTotalSpending ) / previousTotalSpending ) * 100.0;
         if(previousTotalSpending != 0.0 && totalPercentageChange != 0.0) {
-            result.append("<td class=\"").append(getAmountClass(totalPercentageChange)).append("\">").append(df.format(totalPercentageChange)).append("%</td>\n");
+            result.append("<td class=\"total-row ").append(getAmountClass(totalPercentageChange)).append("\">").append(df.format(totalPercentageChange)).append("%</td>\n");
         } else {
             result.append("</td>\n");
         }
@@ -584,9 +577,20 @@ public class ReportGenerator {
         // Get all the transactions for the specified statement.
         List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(year,month);
 
-        String htmlFilename = "/home/jason/Working/test.html";
-        String pdfFilename = "/home/jason/Working/test.pdf";
-        String workingDirectory = "/home/jason/Working";
+        // Does the working directory exist?
+        if(!Files.exists(Paths.get(applicationProperties.getReportWorking()))) {
+            //noinspection ResultOfMethodCallIgnored
+            new File(applicationProperties.getReportWorking()).mkdirs();
+        }
+
+        if(!Files.exists(Paths.get(applicationProperties.getReportShare()))) {
+            //noinspection ResultOfMethodCallIgnored
+            new File(applicationProperties.getReportShare()).mkdirs();
+        }
+
+        String htmlFilename = applicationProperties.getReportWorking() + "/Report.html";
+        String pdfFilename = applicationProperties.getReportWorking() + "/Report.pdf";
+        String workingDirectory = applicationProperties.getReportWorking();
 
         File htmlFile = new File(htmlFilename);
         PrintWriter writer2 = new PrintWriter(htmlFile);
@@ -608,7 +612,7 @@ public class ReportGenerator {
 
         LOG.info("Create pie chart.");
         createPieChart(transactionList);
-        template = template.replace("<!-- PIE -->", "<img height=\"400px\" width=\"400px\" src=\"/home/jason/Working/pie.png\"/>");
+        template = template.replace("<!-- PIE -->", "<img height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie.png" + "\"/>");
 
         LOG.info("Create the images for accounts.");
         createAccountImages(workingDirectory,transactionList);
@@ -644,5 +648,8 @@ public class ReportGenerator {
         XMLWorkerHelper.getInstance().parseXHtml(writer, document,
                 new FileInputStream(htmlFilename));
         document.close();
+
+        // Copy the report to the share.
+        Files.copy( Paths.get(pdfFilename), Paths.get(applicationProperties.getReportShare() + "Report-" + month + "-" + year + ".pdf"), StandardCopyOption.REPLACE_EXISTING );
     }
 }

@@ -23,6 +23,10 @@ spring:
 server:
   port: 13017
 
+money:
+  report-working: /home/jason/Working/DbgReport/
+  report-share: /home/jason/Working/DbgReportShare/
+
 info:
   app:
     version: Debug

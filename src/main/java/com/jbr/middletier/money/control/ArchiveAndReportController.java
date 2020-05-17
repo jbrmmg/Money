@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.ArchiveRequest;
+import com.jbr.middletier.money.data.ArchiveOrReportRequest;
 import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.manage.WebLogManager;
@@ -16,17 +16,17 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("/jbr")
-public class ArchiveController {
-    final static private Logger LOG = LoggerFactory.getLogger(ArchiveController.class);
+public class ArchiveAndReportController {
+    final static private Logger LOG = LoggerFactory.getLogger(ArchiveAndReportController.class);
 
     private final WebLogManager webLogManager;
     private final ReportGenerator reportGenerator;
     private final StatementRepository statementRepository;
 
     @Autowired
-    public ArchiveController(WebLogManager webLogManager,
-                             ReportGenerator reportGenerator,
-                             StatementRepository statementRepository) {
+    public ArchiveAndReportController(WebLogManager webLogManager,
+                                      ReportGenerator reportGenerator,
+                                      StatementRepository statementRepository) {
         this.webLogManager = webLogManager;
         this.reportGenerator = reportGenerator;
         this.statementRepository = statementRepository;
@@ -34,7 +34,7 @@ public class ArchiveController {
 
     @RequestMapping(path="/int/money/transaction/archive", method= RequestMethod.POST)
     public @ResponseBody
-    ArchiveRequest  archive(@RequestBody ArchiveRequest archiveRequest) {
+    ArchiveOrReportRequest archive(@RequestBody ArchiveOrReportRequest archiveRequest) {
         try {
             LOG.info("Archive Controller - request archive.");
 
@@ -48,8 +48,6 @@ public class ArchiveController {
                 }
             }
 
-            reportGenerator.generateReport(2020,3);
-
             archiveRequest.setStatus("OK");
         } catch (Exception ex) {
             this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive " + ex);
@@ -57,5 +55,21 @@ public class ArchiveController {
         }
 
         return archiveRequest;
+    }
+
+    @RequestMapping(path="/int/money/transaction/report", method= RequestMethod.POST)
+    public @ResponseBody
+    ArchiveOrReportRequest report(@RequestBody ArchiveOrReportRequest report) {
+        try {
+            LOG.info("Report Controller - request report.");
+            reportGenerator.generateReport(2020,3);
+
+            report.setStatus("OK");
+        } catch (Exception ex) {
+            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive " + ex);
+            report.setStatus("FAILED");
+        }
+
+        return report;
     }
 }

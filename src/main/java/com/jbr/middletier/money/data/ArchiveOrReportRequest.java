@@ -1,16 +1,16 @@
 package com.jbr.middletier.money.data;
 
 @SuppressWarnings("unused")
-public class ArchiveRequest {
+public class ArchiveOrReportRequest {
     private long year;
     private String status;
 
-    ArchiveRequest() {
+    ArchiveOrReportRequest() {
         this.year = 1900;
         this.status = "";
     }
 
-    ArchiveRequest(long year) {
+    ArchiveOrReportRequest(long year) {
         this.year = year;
         this.status = "";
     }
