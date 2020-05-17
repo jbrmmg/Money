@@ -62,11 +62,11 @@ public class ArchiveAndReportController {
     ArchiveOrReportRequest report(@RequestBody ArchiveOrReportRequest report) {
         try {
             LOG.info("Report Controller - request report.");
-            reportGenerator.generateReport(2020,3);
+            reportGenerator.generateReport(report.getYear(),report.getMonth());
 
             report.setStatus("OK");
         } catch (Exception ex) {
-            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive " + ex);
+            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to generate report " + ex);
             report.setStatus("FAILED");
         }
 

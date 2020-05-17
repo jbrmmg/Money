@@ -571,11 +571,11 @@ public class ReportGenerator {
     }
 
 
-    public void generateReport(int year, int month) throws IOException, DocumentException, TranscoderException {
+    public void generateReport(long year, long month) throws IOException, DocumentException, TranscoderException {
         LOG.info("Generate report");
 
         // Get all the transactions for the specified statement.
-        List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(year,month);
+        List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth((int)year,(int)month);
 
         // Does the working directory exist?
         if(!Files.exists(Paths.get(applicationProperties.getReportWorking()))) {
@@ -604,9 +604,10 @@ public class ReportGenerator {
         String template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
 
         SimpleDateFormat sdf = new SimpleDateFormat("MMMM YYYY");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR,year);
-        calendar.set(Calendar.MONTH,month - 1);
+        calendar.set(Calendar.YEAR, (int)year);
+        calendar.set(Calendar.MONTH, (int)month - 1);
 
         template = template.replace("<!-- TITLE -->", "<h1>" + sdf.format(calendar.getTime()) + "</h1>");
 
@@ -627,8 +628,8 @@ public class ReportGenerator {
         template = template.replace("<!-- TABLE -->", createTransactionTable(transactionList));
 
         // Get the previous month
-        int previousMonth = month - 1;
-        int previousYear = year;
+        int previousMonth = (int)month - 1;
+        int previousYear = (int)year;
 
         if(month <= 0) {
             previousMonth = 12;
@@ -650,6 +651,6 @@ public class ReportGenerator {
         document.close();
 
         // Copy the report to the share.
-        Files.copy( Paths.get(pdfFilename), Paths.get(applicationProperties.getReportShare() + "Report-" + month + "-" + year + ".pdf"), StandardCopyOption.REPLACE_EXISTING );
+        Files.copy( Paths.get(pdfFilename), Paths.get(applicationProperties.getReportShare() + "Report-" + sdf2.format(calendar.getTime()) + ".pdf"), StandardCopyOption.REPLACE_EXISTING );
     }
 }
