@@ -48,7 +48,7 @@ public class ArchiveController {
                 }
             }
 
-            reportGenerator.generateReport(2018,5);
+            reportGenerator.generateReport(2020,3);
 
             archiveRequest.setStatus("OK");
         } catch (Exception ex) {

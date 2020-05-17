@@ -4,9 +4,11 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
+//import com.jbr.middletier.money.config.ApplicationProperties;
+import com.jbr.middletier.money.control.AccountController;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
+//import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
@@ -21,6 +23,8 @@ import org.apache.batik.transcoder.TranscoderOutput;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,16 +33,22 @@ public class ReportGenerator {
     final static private Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
 
     private final TransactionRepository transactionRepository;
-    private final StatementRepository statementRepository;
+//    private final StatementRepository statementRepository;
     private final ResourceLoader resourceLoader;
+//    private final ApplicationProperties applicationProperties;
+    private final AccountController accountController;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
-                           StatementRepository statementRepository,
-                           ResourceLoader resourceLoader ) {
+//                           StatementRepository statementRepository,
+                           ResourceLoader resourceLoader,
+//                           ApplicationProperties applicationProperties,
+                           AccountController accountController ) {
         this.transactionRepository = transactionRepository;
-        this.statementRepository = statementRepository;
+//        this.statementRepository = statementRepository;
         this.resourceLoader = resourceLoader;
+//        this.applicationProperties = applicationProperties;
+        this.accountController = accountController;
     }
 
     class CategoryPercentage implements Comparable<CategoryPercentage> {
@@ -109,8 +119,9 @@ public class ReportGenerator {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private String getPieChartSlice(int x, int y, int radius, double percentage, String colour) {
-        return String.format("<circle r=\"%d\" cx=\"%d\" cy=\"%d\" fill=\"none\" stroke=\"#%s\" stroke-width=\"%d\" stroke-dasharray=\"%f %f\" transform=\"rotate(-90) translate(%d)\"></circle>\n",
+    private String getPieChartSlice(String id, int x, int y, int radius, double percentage, String colour) {
+        return String.format("<circle id=\"%s\" r=\"%d\" cx=\"%d\" cy=\"%d\" fill=\"none\" stroke=\"#%s\" stroke-width=\"%d\" stroke-dasharray=\"%f %f\" transform=\"rotate(-90) translate(%d)\"></circle>\n",
+                id,
                 radius,
                 x,
                 y,
@@ -122,12 +133,20 @@ public class ReportGenerator {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private String textAtRingAndAngle(int xCentre, int yCentre, int ring, double angle, double percentage, String colour, String text) {
+    private String textAtRingAndAngle(String id, int xCentre, int yCentre, int ring, double angle, double percentage, String colour, String text) {
         // Convert the ring and angle to co-ordinates.
         double x = xCentre + Math.sin(Math.toRadians((angle + 180) * -1)) * ring;
         double y = yCentre + Math.cos(Math.toRadians((angle + 180) * -1)) * ring;
 
         double rotateAngle = angle + 90;
+
+        boolean textAnchorEnd = false;
+
+        // If the rotate angle is in the range -90 to -180, then add 180 and anchor text to the end.
+        if( (rotateAngle >= -270) && (rotateAngle < -90) ){
+            textAnchorEnd = true;
+            rotateAngle += 180;
+        }
 
         int textSize = 120;
 
@@ -141,16 +160,30 @@ public class ReportGenerator {
 
         String textColour = getTextColour(colour);
 
-        return "<text x=\"" + x + "\" y=\"" + y + "\" fill=\"#" + textColour + "\" font-size=\"" + textSize + "px\" transform=\"rotate(" + rotateAngle + " " + x + "," + y + ")\">" + text + "</text>\n";
+        StringBuilder textBuilder = new StringBuilder();
+
+        textBuilder.append("<text id=\"").append(id).append("\" ");
+        textBuilder.append("x=\"").append(x).append("\" ");
+        textBuilder.append("y=\"").append(y).append("\" ");
+
+        if(textAnchorEnd) {
+            textBuilder.append("text-anchor=\"end\" ");
+        }
+
+        textBuilder.append("fill=\"#").append(textColour).append("\" ");
+        textBuilder.append("font-size=\"").append(textSize).append("px\" ");
+        textBuilder.append("transform=\"rotate(").append(rotateAngle).append(" ").append(x).append(",").append(y).append(")\">");
+        textBuilder.append(text);
+        textBuilder.append("</text>\n");
+        return textBuilder.toString();
     }
 
     private void createPieChart(List<Transaction> transactions) throws IOException, TranscoderException {
         String pieChartFile = "/home/jason/Working/pie.svg";
         PrintWriter pie = new PrintWriter(pieChartFile);
 
-        pie.write("<svg viewBox=\"0 0 10000 10000\" xmlns=\"http://www.w3.org/2000/svg\"\n>");
-        pie.write("<circle r=\"5000\" cx=\"5000\" cy=\"5000\" fill=\"white\"></circle>\n");
-        pie.write("\n");
+        pie.write("<svg viewBox=\"0 0 10000 10000\" xmlns=\"http://www.w3.org/2000/svg\">\n");
+        pie.write("<circle id=\"BCKG\" r=\"5000\" cx=\"5000\" cy=\"5000\" fill=\"white\"></circle>\n");
 
         // Circumference = 2 * r * pi = 10000 * pi = 31416
 
@@ -162,7 +195,7 @@ public class ReportGenerator {
                 continue;
             }
 
-            pie.write(getPieChartSlice(5000,5000, 2500, percent, nextCategoryPercentage.category.getColour()));
+            pie.write(getPieChartSlice(nextCategoryPercentage.category.getId(), 5000,5000, 2500, percent, nextCategoryPercentage.category.getColour()));
 
             percent -= nextCategoryPercentage.percentage;
             if(percent < 0) {
@@ -179,6 +212,7 @@ public class ReportGenerator {
 
             double halfWay = (100 - (percent - nextCategoryPercentage.percentage / 2)) * 3.6;
             pie.write(textAtRingAndAngle(
+                    nextCategoryPercentage.category.getId() + "-txt",
                     5000,
                     5000,
                     4800,
@@ -197,24 +231,239 @@ public class ReportGenerator {
             percent -= nextCategoryPercentage.percentage;
         }
 
-        pie.write("<circle r=\"5000\" cx=\"5000\" cy=\"5000\" stroke=\"black\" stroke-width=\"20\" fill=\"none\"></circle>\n");
+        pie.write("<circle id=\"OUTL\" r=\"5000\" cx=\"5000\" cy=\"5000\" stroke=\"black\" stroke-width=\"20\" fill=\"none\"></circle>\n");
         pie.write("</svg>");
 
         pie.close();
 
-        String svg_URI_input = Paths.get("/home/jason/Working/pie.svg").toUri().toURL().toString();
+        createPngFromSvg("/home/jason/Working/pie.svg","/home/jason/Working/pie.png", 1000, 1000);
+    }
+
+    private void createPngFromSvg(String svgFilename, String pngFilename, float height, float width) throws IOException, TranscoderException {
+        String svg_URI_input = Paths.get(svgFilename).toUri().toURL().toString();
         TranscoderInput input_svg_image = new TranscoderInput(svg_URI_input);
         //Step-2: Define OutputStream to PNG Image and attach to TranscoderOutput
-        OutputStream png_ostream = new FileOutputStream("/home/jason/Working/pie.png");
+        OutputStream png_ostream = new FileOutputStream(pngFilename);
         TranscoderOutput output_png_image = new TranscoderOutput(png_ostream);
         // Step-3: Create PNGTranscoder and define hints if required
         PNGTranscoder my_converter = new PNGTranscoder();
+        my_converter.addTranscodingHint(PNGTranscoder.KEY_WIDTH,width);
+        my_converter.addTranscodingHint(PNGTranscoder.KEY_HEIGHT,height);
         // Step-4: Convert and Write output
         my_converter.transcode(input_svg_image, output_png_image);
         // Step 5- close / flush Output Stream
         png_ostream.flush();
         png_ostream.close();
     }
+
+    private int getSplitIndex(String description) {
+        // Split the description, have a maximum of 30 chars on the first line.
+
+        // If less that 20 characters then leave as is.
+        if(description.length() <= 20) {
+            return 0;
+        }
+
+        // Is there a space that is after 15 and before 30 then use it as the split.
+        String middleOfString = description.substring(15,Math.min(description.length(),30));
+        if(middleOfString.contains(" ")) {
+            return 15 + middleOfString.indexOf(" ");
+        }
+
+        // If we are still here, and the description is less than 30 then do not split.
+        if(description.length() <= 30) {
+            return 0;
+        }
+
+        // Split after 29 (negative so that a dash is added).
+        return -29;
+    }
+
+    private void getRowForTransaction(StringBuilder table, Transaction nextTransaction) {
+        if(nextTransaction == null) {
+            table.append("<td/>");
+            table.append("<td/>");
+            table.append("<td/>");
+            table.append("<td/>");
+            table.append("<td/>");
+            return;
+        }
+
+        SimpleDateFormat sdfDM = new SimpleDateFormat("dd-MMM");
+        SimpleDateFormat sdfYR = new SimpleDateFormat("yyyy");
+        DecimalFormat df = new DecimalFormat("#,###.00");
+
+        // Date
+        table.append("<td class=\"date\">");
+        table.append(sdfDM.format(nextTransaction.getDate())).append("<br/>");
+        table.append(sdfYR.format(nextTransaction.getDate()));
+        table.append("</td>\n");
+
+        // Account
+        table.append("<td>");
+        table.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/").append(nextTransaction.getAccount().getId()).append(".png\"/>");
+        table.append("</td>\n");
+
+        // Category
+        table.append("<td>");
+        table.append("<img height=\"25px\" width=\"25px\" src=\"/home/jason/Working/").append(nextTransaction.getCategory().getId()).append(".png\"/>");
+        table.append("</td>\n");
+
+        // Description, split into 2 (if greater than 20 chars).
+        String description1 = nextTransaction.getDescription();
+        String description2 = "";
+        int splitIndex = getSplitIndex(description1);
+        boolean addDash = false;
+
+        if(splitIndex < 0) {
+            addDash = true;
+            splitIndex *= -1;
+        }
+
+        // Situations
+        if(splitIndex > 0) {
+            description2 = description1.substring(splitIndex).trim();
+            description1 = description1.substring(0,splitIndex);
+
+            if(addDash) {
+                description1 = description1 + "-";
+            }
+        }
+
+        table.append("<td class=\"description\">");
+        table.append(description1).append("<br/>");
+        table.append(description2);
+        table.append("</td>\n");
+
+        // Amount
+        if(nextTransaction.getAmount() < 0) {
+            table.append("<td class=\"amount amount-debit\">");
+        } else {
+            table.append("<td class=\"amount\">");
+        }
+        table.append(df.format(nextTransaction.getAmount()));
+        table.append("</td>\n");
+    }
+
+    private void outputTableHeader(StringBuilder table) {
+        table.append("<table>\n");
+
+        table.append("<tr>\n");
+        table.append("<th>Date</th>\n");
+        table.append("<th></th>\n");
+        table.append("<th></th>\n");
+        table.append("<th>Description</th>\n");
+        table.append("<th>Amount</th>\n");
+        table.append("<th/>");
+        table.append("<th>Date</th>\n");
+        table.append("<th></th>\n");
+        table.append("<th></th>\n");
+        table.append("<th>Description</th>\n");
+        table.append("<th>Amount</th>\n");
+        table.append("</tr>\n");
+    }
+
+    private String createTransactionTable(List<Transaction> transactions) {
+        // Split into pages, first page can hold 19, then following pages can hold 36
+        int pageRow = 0;
+        int pageNumber = 0;
+
+
+        int transactionSize = transactions.size();
+        List<Transaction> column1 = new ArrayList<>(transactions.subList(0, (transactionSize) / 2));
+        List<Transaction> column2 = new ArrayList<>(transactions.subList((transactionSize) / 2, transactionSize));
+
+        StringBuilder table = new StringBuilder();
+
+        outputTableHeader(table);
+
+        for(int i = 0; i < Math.max(column1.size(), column2.size()); i++) {
+            table.append("<tr>\n");
+            getRowForTransaction(table,i < column1.size() ? column1.get(i) : null);
+            table.append("<td class=\"center-column\"/>");
+            getRowForTransaction(table,i < column2.size() ? column2.get(i) : null);
+            table.append("</tr>\n");
+
+            pageRow++;
+
+            // Do we need a page break?
+            if(((pageNumber == 0) && (pageRow == 18)) || pageRow == 35 ) {
+                pageRow = 0;
+                pageNumber++;
+                table.append("</table>\n");
+                table.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
+                outputTableHeader(table);
+            }
+        }
+
+        table.append("</table>\n");
+
+        return table.toString();
+    }
+
+    private void createAccountImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
+        for(Transaction nextTransactions: transactions) {
+            // Is there already a png for this account?
+            String pngFilename = workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png";
+            File pngFile = new File(pngFilename);
+
+            if(!pngFile.exists()) {
+                // Create a SVG for the account.
+                File svgFile = new File(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg");
+                PrintWriter svgWriter = new PrintWriter(svgFile);
+
+                svgWriter.write(accountController.getAccountLogo(nextTransactions.getAccount().getId(), false));
+                svgWriter.close();
+
+                // Create a PNG from SVG
+                createPngFromSvg(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg",
+                        workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png",
+                        100,
+                        100);
+            }
+        }
+    }
+
+    private String createCategoryLog(Category category) {
+
+        return "<svg\n" +
+                "     width   = \"100%\"\n" +
+                "     height  = \"100%\"\n" +
+                "     viewBox = \"0 0 120 120\"\n" +
+                "     xmlns   = \"http://www.w3.org/2000/svg\">\n" +
+                "    <circle cx='60' cy='52' r='44' style=\"stroke:#006600; fill:#" + category.getColour() + ";\"></circle>\";\n" +
+                "</svg>";
+    }
+
+    private void crateCategoryImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
+        for(Transaction nextTransactions: transactions) {
+            // Is there already a png for this account?
+            String pngFilename = workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png";
+            File pngFile = new File(pngFilename);
+
+            if(!pngFile.exists()) {
+                // Create a SVG for the account.
+                File svgFile = new File(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg");
+                PrintWriter svgWriter = new PrintWriter(svgFile);
+
+                svgWriter.write(createCategoryLog(nextTransactions.getCategory()));
+                svgWriter.close();
+
+                // Create a PNG from SVG
+                createPngFromSvg(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg",
+                        workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png",
+                        100,
+                        100);
+            }
+        }
+    }
+
+    private String createComparisonTable(List<Transaction> transactions, List<Transaction> previousTransactions) {
+        StringBuilder result = new StringBuilder();
+
+        return result.toString();
+    }
+
 
     public void generateReport(int year, int month) throws IOException, DocumentException, TranscoderException {
         LOG.info("Generate report");
@@ -224,6 +473,7 @@ public class ReportGenerator {
 
         String htmlFilename = "/home/jason/Working/test.html";
         String pdfFilename = "/home/jason/Working/test.pdf";
+        String workingDirectory = "/home/jason/Working";
 
         File htmlFile = new File(htmlFilename);
         PrintWriter writer2 = new PrintWriter(htmlFile);
@@ -236,21 +486,45 @@ public class ReportGenerator {
 
         String template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
 
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM YYYY");
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR,year);
+        calendar.set(Calendar.MONTH,month - 1);
+
+        template = template.replace("<!-- TITLE -->", "<h1>" + sdf.format(calendar.getTime()) + "</h1>");
+
+        LOG.info("Create pie chart.");
         createPieChart(transactionList);
-        template = template.replace("<!-- PIE -->", "<img src=\"/home/jason/Working/pie.png\"/>");
+        template = template.replace("<!-- PIE -->", "<img height=\"400px\" width=\"400px\" src=\"/home/jason/Working/pie.png\"/>");
+
+        LOG.info("Create the images for accounts.");
+        createAccountImages(workingDirectory,transactionList);
+
+        LOG.info("Create the images for categories.");
+        crateCategoryImages(workingDirectory,transactionList);
+
+        LOG.info("Create table.");
+        transactionList.sort(
+                Comparator.comparing(Transaction::getDate)
+        );
+        template = template.replace("<!-- TABLE -->", createTransactionTable(transactionList));
+
+        // Get the previous month
+        int previousMonth = month - 1;
+        int previousYear = year;
+
+        if(month <= 0) {
+            previousMonth = 12;
+            previousYear--;
+        }
+        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear,previousMonth);
+        template = template.replace("<!-- TOTALS -->", createComparisonTable(transactionList,previousTransactionList));
 
         writer2.println(template);
         writer2.close();
 
-        // Generate a pie chart of spending for that year.
-
-        // Generate a pie chart of spending per month.
-
-        // Generate a month on month chart.
-
-        // Generate a list of transactions.
-
         // Generate a PDF?
+/*
         Document document = new Document();
         PdfWriter writer = PdfWriter.getInstance(document,
                 new FileOutputStream(pdfFilename));
@@ -258,5 +532,7 @@ public class ReportGenerator {
         XMLWorkerHelper.getInstance().parseXHtml(writer, document,
                 new FileInputStream(htmlFilename));
         document.close();
+
+ */
     }
 }
