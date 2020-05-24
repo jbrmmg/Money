@@ -23,6 +23,8 @@ spring:
 
 money:
     service-name: Middle Tier Test
+    regular-schedule: 0 30 2 * * ?
+    regular-enabled: true
 
 logging:
     level:
