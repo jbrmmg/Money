@@ -7,14 +7,18 @@ import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.control.AccountController;
 import com.jbr.middletier.money.data.Category;
+import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.manage.WebLogManager;
 import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.batik.transcoder.TranscoderInput;
@@ -22,7 +26,6 @@ import org.apache.batik.transcoder.TranscoderOutput;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
@@ -38,16 +41,22 @@ public class ReportGenerator {
     private final ResourceLoader resourceLoader;
     private final ApplicationProperties applicationProperties;
     private final AccountController accountController;
+    private final StatementRepository statementRepository;
+    private final WebLogManager webLogManager;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
                            ResourceLoader resourceLoader,
                            ApplicationProperties applicationProperties,
-                           AccountController accountController ) {
+                           AccountController accountController,
+                           StatementRepository statementRepository,
+                           WebLogManager webLogManager) {
         this.transactionRepository = transactionRepository;
         this.resourceLoader = resourceLoader;
         this.applicationProperties = applicationProperties;
         this.accountController = accountController;
+        this.statementRepository = statementRepository;
+        this.webLogManager = webLogManager;
     }
 
     class CategoryPercentage implements Comparable<CategoryPercentage> {
@@ -700,6 +709,8 @@ public class ReportGenerator {
     public void generateReport(long year, long month) throws IOException, DocumentException, TranscoderException {
         LOG.info("Generate report");
 
+        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generate Report " + year + " " + month);
+
         createWorkingDirectories();
 
         File htmlFile = new File(applicationProperties.getHtmlFilename());
@@ -726,6 +737,8 @@ public class ReportGenerator {
 
     public void generateAnnualReport(long year) throws IOException, TranscoderException, DocumentException {
         LOG.info("Generate annual report");
+
+        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generate Annual Report " + year);
 
         // Get all the transactions for the specified statement.
         List<Transaction> transactionList = transactionRepository.findByStatementIdYear((int)year);
@@ -765,5 +778,75 @@ public class ReportGenerator {
         copyFile(applicationProperties.getPDFFilename(),
                 applicationProperties.getReportShare() + "/" + year,
                 "Report-" + year + ".pdf");
+    }
+
+    class MonthStatus {
+        int year;
+        int month;
+
+        int lockedStatementCount;
+        int statementsFound;
+    }
+
+    @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
+    public void regularReport() throws DocumentException, IOException, TranscoderException {
+        // If this is enabled, then generate reports.
+        if(!applicationProperties.getReportEnabled()) {
+            return;
+        }
+
+        Map<Long,MonthStatus> monthStatusMap = new HashMap<>();
+
+        // Make sure reports have been generated where all statements are locked.
+        Iterable<Statement> allStatements = statementRepository.findAll();
+        for(Statement nextStatement: allStatements) {
+            if(nextStatement.getLocked()) {
+                // What is the ID?
+                long statementId = nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth();
+                MonthStatus nextMonthStatus;
+
+                if(monthStatusMap.containsKey(statementId)) {
+                    nextMonthStatus = monthStatusMap.get(statementId);
+                } else {
+                    nextMonthStatus = new MonthStatus();
+                    nextMonthStatus.month = nextStatement.getId().getMonth();
+                    nextMonthStatus.year = nextStatement.getId().getYear();
+                    nextMonthStatus.lockedStatementCount = 0;
+                    nextMonthStatus.statementsFound = 0;
+
+                    monthStatusMap.put(statementId,nextMonthStatus);
+                }
+
+                nextMonthStatus.lockedStatementCount++;
+                nextMonthStatus.statementsFound++;
+            }
+        }
+
+        // Check that all the statements have a report.
+        for(MonthStatus nextMonthStatus: monthStatusMap.values()) {
+            // Is this a complete month?
+            if(nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) {
+                SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.YEAR, nextMonthStatus.year);
+                calendar.set(Calendar.MONTH, nextMonthStatus.month - 1);
+
+                // All statements are locked, is there a report??
+                String monthFilename = applicationProperties.getReportShare() + "/" + nextMonthStatus.year + "/Report-" + sdf2.format(calendar.getTime()) + ".pdf";
+                String yearFilename  = applicationProperties.getReportShare() + "/" + nextMonthStatus.year + "/Report-" + nextMonthStatus.year + ".pdf";
+
+                if(!Files.exists(Paths.get(monthFilename))) {
+                    // Generate the month report.
+                    generateReport(nextMonthStatus.year,nextMonthStatus.month);
+                }
+
+                if(nextMonthStatus.month == 12) {
+                    if (!Files.exists(Paths.get(yearFilename))) {
+                        // Generate the month report.
+                        generateAnnualReport(nextMonthStatus.year);
+                    }
+                }
+            }
+        }
     }
 }

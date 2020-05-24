@@ -32,6 +32,8 @@ money:
     web-log-url: http://localhost:10001/jbr/int/log/data
     regular-schedule: 0 30 2 * * ?
     regular-enabled: false
+    report-schedule: 0 0 4 20-31 * ?
+    report-enabled: false
 
 management:
     endpoint:
