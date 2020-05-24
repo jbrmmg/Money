@@ -12,6 +12,8 @@ public class ApplicationProperties {
     private String reportShare;
     private String regularSchedule;
     private boolean regularEnabled;
+    private String reportSchedule;
+    private boolean reportEnabled;
 
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
 
@@ -25,6 +27,10 @@ public class ApplicationProperties {
 
     public void setRegularEnabled(Boolean regularEnabled) { this.regularEnabled = regularEnabled; }
 
+    public void setReportSchedule(String reportSchedule) { this.reportSchedule = reportSchedule; }
+
+    public void setReportEnabled(Boolean reportEnabled) { this.reportEnabled = reportEnabled; }
+
     public String getServiceName() { return this.serviceName; }
 
     public String getWebLogUrl() { return this.webLogUrl; }
@@ -36,6 +42,10 @@ public class ApplicationProperties {
     public String getRegularSchedule() { return this.regularSchedule; }
 
     public boolean getRegularEnabled() { return this.regularEnabled; }
+
+    public String getReportSchedule() { return this.reportSchedule; }
+
+    public boolean getReportEnabled() { return this.reportEnabled; }
 
     public String getPDFFilename() { return getReportWorking() + "/Report.pdf"; }
 

@@ -32,6 +32,7 @@ money:
     report-share: /media/Shared/Documents/PDF/MoneyReports
     report-working: /home/jason/Working/PdnReport/
     regular-enabled: true
+    report-enabled: true
 
 info:
     app:
