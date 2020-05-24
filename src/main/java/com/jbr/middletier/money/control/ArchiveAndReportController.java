@@ -72,4 +72,20 @@ public class ArchiveAndReportController {
 
         return report;
     }
+
+    @RequestMapping(path="/int/money/transaction/annualreport", method= RequestMethod.POST)
+    public @ResponseBody
+    ArchiveOrReportRequest annualReport(@RequestBody ArchiveOrReportRequest report) {
+        try {
+            LOG.info("Report Controller - request report (Annual).");
+            reportGenerator.generateAnnualReport(report.getYear());
+
+            report.setStatus("OK");
+        } catch (Exception ex) {
+            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to generate report " + ex);
+            report.setStatus("FAILED");
+        }
+
+        return report;
+    }
 }

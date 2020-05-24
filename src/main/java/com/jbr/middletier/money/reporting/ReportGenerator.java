@@ -22,6 +22,7 @@ import org.apache.batik.transcoder.TranscoderOutput;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
@@ -176,7 +177,7 @@ public class ReportGenerator {
         return textBuilder.toString();
     }
 
-    private void createPieChart(List<Transaction> transactions) throws IOException, TranscoderException {
+    private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
         String pieChartFile = applicationProperties.getReportWorking() + "/pie.svg";
         PrintWriter pie = new PrintWriter(pieChartFile);
 
@@ -234,7 +235,7 @@ public class ReportGenerator {
 
         pie.close();
 
-        createPngFromSvg(pieChartFile,applicationProperties.getReportWorking() + "/pie.png", 1000, 1000);
+        createPngFromSvg(pieChartFile,applicationProperties.getReportWorking() + "/pie-" + type +".png", 1000, 1000);
     }
 
     private void createPngFromSvg(String svgFilename, String pngFilename, float height, float width) throws IOException, TranscoderException {
@@ -455,7 +456,7 @@ public class ReportGenerator {
         }
     }
 
-    class CategoryComparison {
+    class CategoryComparison implements Comparable<CategoryComparison> {
         public Category category;
         double thisMonth;
         double previousMonth;
@@ -469,13 +470,18 @@ public class ReportGenerator {
         double getPercentageChange() {
             return ( ( this.thisMonth - this.previousMonth ) / this.previousMonth ) * 100.0;
         }
+
+        @Override
+        public int compareTo(CategoryComparison categoryComparison) {
+            return Double.compare(this.thisMonth,categoryComparison.thisMonth);
+        }
     }
 
     private String getAmountClass(double amount) {
         return amount >= 0 ? "amount" : "amount amount-debit";
     }
 
-    private String createComparisonTable(List<Transaction> transactions, List<Transaction> previousTransactions) {
+    private String createComparisonTable(List<Transaction> transactions, List<Transaction> previousTransactions, boolean year) {
         StringBuilder result = new StringBuilder();
 
         Map<String,CategoryComparison> comparisons = new HashMap<>();
@@ -513,15 +519,18 @@ public class ReportGenerator {
         result.append("<th/>\n");
         result.append("<th/>\n");
         result.append("<th class=\"total-column\">Current Spend</th>\n");
-        result.append("<th class=\"total-column\">Previous Month</th>\n");
+        result.append("<th class=\"total-column\">Previous ").append(year ? "Year" : "Month").append("</th>\n");
         result.append("<th class=\"total-column\">Change in Spend</th>\n");
         result.append("</tr>\n");
 
         double totalSpending = 0.0;
         double previousTotalSpending = 0.0;
-        DecimalFormat df = new DecimalFormat("#,###.00");
+        DecimalFormat df = new DecimalFormat("#,##0.00");
 
-        for(CategoryComparison nextComparison: comparisons.values()) {
+        List<CategoryComparison> categories = new ArrayList<>(comparisons.values());
+        Collections.sort(categories);
+
+        for(CategoryComparison nextComparison: categories) {
             if(!nextComparison.category.getExpense()) {
                 continue;
             }
@@ -561,7 +570,7 @@ public class ReportGenerator {
         if(previousTotalSpending != 0.0 && totalPercentageChange != 0.0) {
             result.append("<td class=\"total-row ").append(getAmountClass(totalPercentageChange)).append("\">").append(df.format(totalPercentageChange)).append("%</td>\n");
         } else {
-            result.append("</td>\n");
+            result.append("<td/>\n");
         }
         result.append("</tr>\n");
 
@@ -570,13 +579,7 @@ public class ReportGenerator {
         return result.toString();
     }
 
-
-    public void generateReport(long year, long month) throws IOException, DocumentException, TranscoderException {
-        LOG.info("Generate report");
-
-        // Get all the transactions for the specified statement.
-        List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth((int)year,(int)month);
-
+    private void createWorkingDirectories() {
         // Does the working directory exist?
         if(!Files.exists(Paths.get(applicationProperties.getReportWorking()))) {
             //noinspection ResultOfMethodCallIgnored
@@ -587,15 +590,9 @@ public class ReportGenerator {
             //noinspection ResultOfMethodCallIgnored
             new File(applicationProperties.getReportShare()).mkdirs();
         }
+    }
 
-        String htmlFilename = applicationProperties.getReportWorking() + "/Report.html";
-        String pdfFilename = applicationProperties.getReportWorking() + "/Report.pdf";
-        String workingDirectory = applicationProperties.getReportWorking();
-
-        File htmlFile = new File(htmlFilename);
-        PrintWriter writer2 = new PrintWriter(htmlFile);
-
-        // Get the email template.
+    private String getTemplate(boolean year) throws IOException {
         Resource resource = resourceLoader.getResource("classpath:html/report.html");
         InputStream is = resource.getInputStream();
         InputStreamReader isr = new InputStreamReader(is);
@@ -603,54 +600,170 @@ public class ReportGenerator {
 
         String template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
 
+        StringBuilder body = new StringBuilder();
+
+        if(year) {
+            body.append("<!-- TITLE -->");
+            body.append("<!-- PIE -->");
+            body.append("<!-- TOTALS -->");
+
+            for(int i = 0; i < 12; i++) {
+                body.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
+                body.append("<!-- TITLE ").append(i).append(" -->");
+                body.append("<!-- PIE ").append(i).append(" -->");
+                body.append("<!-- TOTALS ").append(i).append(" -->");
+            }
+        } else {
+            body.append("<!-- TITLE -->");
+            body.append("<!-- PIE -->");
+            body.append("<!-- TOTALS -->");
+            body.append("<!-- TABLE -->");
+        }
+
+        return template.replace("<!--BODY-->", body.toString());
+    }
+
+    private void generatePDF() throws IOException, DocumentException {
+        // Generate a PDF?
+        Document document = new Document();
+        PdfWriter writer = PdfWriter.getInstance(document,
+                new FileOutputStream(applicationProperties.getPDFFilename()));
+        document.open();
+        XMLWorkerHelper.getInstance().parseXHtml(writer, document,
+                new FileInputStream(applicationProperties.getHtmlFilename()));
+        document.close();
+    }
+
+    private void createImages(List<Transaction> transactions) throws IOException, TranscoderException {
+        LOG.info("Create the images for accounts.");
+        createAccountImages(applicationProperties.getReportWorking(),transactions);
+
+        LOG.info("Create the images for categories.");
+        crateCategoryImages(applicationProperties.getReportWorking(),transactions);
+    }
+
+    private String addReportToTemplate(String template, String specific, long year, long month) throws IOException, TranscoderException {
+        // Get all the transactions for the specified statement.
+        List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth((int)year,(int)month);
+
         SimpleDateFormat sdf = new SimpleDateFormat("MMMM YYYY");
-        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, (int)year);
         calendar.set(Calendar.MONTH, (int)month - 1);
 
-        template = template.replace("<!-- TITLE -->", "<h1>" + sdf.format(calendar.getTime()) + "</h1>");
+        String titleMarker =  specific.length() > 0 ? "<!-- TITLE " + specific + " -->" : "<!-- TITLE -->";
+        String pieMarker = specific.length() > 0 ? "<!-- PIE " + specific + " -->" : "<!-- PIE -->";
+        String tableMarker = specific.length() > 0 ? "<!-- TABLE " + specific + " -->" : "<!-- TABLE -->";
+        String totalsMarker = specific.length() > 0 ? "<!-- TOTALS " + specific + " -->" : "<!-- TOTALS -->";
+
+        template = template.replace(titleMarker, "<h1>" + sdf.format(calendar.getTime()) + "</h1>");
 
         LOG.info("Create pie chart.");
-        createPieChart(transactionList);
-        template = template.replace("<!-- PIE -->", "<img height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie.png" + "\"/>");
-
-        LOG.info("Create the images for accounts.");
-        createAccountImages(workingDirectory,transactionList);
-
-        LOG.info("Create the images for categories.");
-        crateCategoryImages(workingDirectory,transactionList);
+        createPieChart(transactionList,specific);
+        template = template.replace(pieMarker, "<img class=\"pie\" height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie-" + specific + ".png" + "\"/>");
 
         LOG.info("Create table.");
         transactionList.sort(
                 Comparator.comparing(Transaction::getDate)
         );
-        template = template.replace("<!-- TABLE -->", createTransactionTable(transactionList));
+        template = template.replace(tableMarker, createTransactionTable(transactionList));
 
         // Get the previous month
         int previousMonth = (int)month - 1;
         int previousYear = (int)year;
 
-        if(month <= 0) {
+        if(month <= 1) {
             previousMonth = 12;
             previousYear--;
         }
         List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear,previousMonth);
-        template = template.replace("<!-- TOTALS -->", createComparisonTable(transactionList,previousTransactionList));
+        template = template.replace(totalsMarker, createComparisonTable(transactionList,previousTransactionList,false));
+
+        createImages(transactionList);
+        createImages(previousTransactionList);
+
+        return template;
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void copyFile(String source,
+                          String destinationPath,
+                          String destination) throws IOException {
+        // Does the destination path exist?
+        if(!Files.exists(Paths.get(destinationPath))) {
+            new File(destinationPath).mkdirs();
+        }
+
+        Files.copy( Paths.get(source), Paths.get(destinationPath + "/" + destination), StandardCopyOption.REPLACE_EXISTING );
+    }
+
+    public void generateReport(long year, long month) throws IOException, DocumentException, TranscoderException {
+        LOG.info("Generate report");
+
+        createWorkingDirectories();
+
+        File htmlFile = new File(applicationProperties.getHtmlFilename());
+        PrintWriter writer2 = new PrintWriter(htmlFile);
+
+        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, (int)year);
+        calendar.set(Calendar.MONTH, (int)month - 1);
+
+        String template = getTemplate(false);
+        template = addReportToTemplate(template, "", year, month );
 
         writer2.println(template);
         writer2.close();
 
-        // Generate a PDF?
-        Document document = new Document();
-        PdfWriter writer = PdfWriter.getInstance(document,
-                new FileOutputStream(pdfFilename));
-        document.open();
-        XMLWorkerHelper.getInstance().parseXHtml(writer, document,
-                new FileInputStream(htmlFilename));
-        document.close();
+        generatePDF();
 
         // Copy the report to the share.
-        Files.copy( Paths.get(pdfFilename), Paths.get(applicationProperties.getReportShare() + "Report-" + sdf2.format(calendar.getTime()) + ".pdf"), StandardCopyOption.REPLACE_EXISTING );
+        copyFile(applicationProperties.getPDFFilename(),
+                applicationProperties.getReportShare() + "/" + year,
+                "Report-" + sdf2.format(calendar.getTime()) + ".pdf");
+    }
+
+    public void generateAnnualReport(long year) throws IOException, TranscoderException, DocumentException {
+        LOG.info("Generate annual report");
+
+        // Get all the transactions for the specified statement.
+        List<Transaction> transactionList = transactionRepository.findByStatementIdYear((int)year);
+
+        createWorkingDirectories();
+
+        File htmlFile = new File(applicationProperties.getHtmlFilename());
+        PrintWriter writer2 = new PrintWriter(htmlFile);
+
+        // Get the file template.
+        String template = getTemplate(true);
+
+        template = template.replace("<!-- TITLE -->", "<h1>" + year + " Summary</h1>");
+
+        LOG.info("Create pie chart.");
+        createPieChart(transactionList,"yr");
+        template = template.replace("<!-- PIE -->", "<img class=\"pie\" height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie-yr.png" + "\"/>");
+
+        LOG.info("Insert totals");
+        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYear((int)year-1);
+        template = template.replace("<!-- TOTALS -->", createComparisonTable(transactionList,previousTransactionList, true));
+
+        for(int i = 0; i < 12; i++) {
+            template = addReportToTemplate(template, Integer.toString(i),year,i + 1);
+        }
+
+        writer2.println(template);
+        writer2.close();
+
+        createImages(transactionList);
+        createImages(previousTransactionList);
+
+        // Generate a PDF?
+        generatePDF();
+
+        // Copy the report to the share.
+        copyFile(applicationProperties.getPDFFilename(),
+                applicationProperties.getReportShare() + "/" + year,
+                "Report-" + year + ".pdf");
     }
 }
