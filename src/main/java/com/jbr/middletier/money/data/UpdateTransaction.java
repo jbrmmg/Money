@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.data;
 
+@SuppressWarnings("unused")
 public class UpdateTransaction {
     private int id;
     private double amount;

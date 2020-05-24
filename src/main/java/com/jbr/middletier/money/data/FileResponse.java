@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.data;
 
+@SuppressWarnings("unused")
 public class FileResponse {
     private String file;
 

@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.schedule;
 
-import com.jbr.middletier.money.data.NewTransaction;
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
@@ -17,11 +17,11 @@ import java.util.Date;
 
 @Component
 public class RegularCtrl {
-    private final
-    RegularRepository regularRepository;
+    private final RegularRepository regularRepository;
 
-    private final
-    TransactionRepository tranasactionRepository;
+    private final TransactionRepository tranasactionRepository;
+
+    private final ApplicationProperties applicationProperties;
 
     private final WebLogManager webLogManager;
 
@@ -32,10 +32,12 @@ public class RegularCtrl {
     @Autowired
     public RegularCtrl(RegularRepository regularRepository,
                        TransactionRepository tranasactionRepository,
-                       WebLogManager webLogManager) {
+                       WebLogManager webLogManager,
+                       ApplicationProperties applicationProperties ) {
         this.regularRepository = regularRepository;
         this.tranasactionRepository = tranasactionRepository;
         this.webLogManager = webLogManager;
+        this.applicationProperties = applicationProperties;
     }
 
     private Date adjustDate(Date transactionDate, String adjustment) {
@@ -105,8 +107,13 @@ public class RegularCtrl {
         }
     }
 
-    @Scheduled(cron = "${middle.tier.regular.schedule:0 30 2 * * ?}")
+    @Scheduled(cron = "#{@applicationProperties.regularSchedule}")
     public void generateRegularPayments() {
+        if(!applicationProperties.getRegularEnabled()) {
+            LOG.info("Skipping regular payments.");
+            return;
+        }
+
         // Generate for today.
         Date today = new Date();
 

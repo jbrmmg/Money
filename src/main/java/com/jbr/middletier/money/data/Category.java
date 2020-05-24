@@ -10,6 +10,7 @@ import javax.validation.constraints.Size;
 /**
  * Created by jason on 04/03/17.
  */
+@SuppressWarnings("unused")
 @Entity
 @Table(name="Category")
 public class Category {

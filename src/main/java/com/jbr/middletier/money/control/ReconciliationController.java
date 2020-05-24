@@ -5,7 +5,6 @@ import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.exceptions.EmptyMatchDataException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.exceptions.MultipleUnlockedStatementException;
-import com.jbr.middletier.money.exceptions.ReconciliationException;
 import com.jbr.middletier.money.manage.WebLogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +61,7 @@ public class ReconciliationController {
     }
 
     @ExceptionHandler(Exception.class)
-    public void handleException(Exception e, HttpServletResponse response) throws IOException {
+    public void handleException(HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -131,8 +130,6 @@ public class ReconciliationController {
 
         // Do any existing transactions match? Or close match (amount)
         for(Transaction nextTransaction : transactions) {
-            Integer transactionId = nextTransaction.getId();
-
             // Create match information.
             if(!trnMatches.containsKey(nextTransaction.getId())) {
                 trnMatches.put(nextTransaction.getId(),new ReconciliationController.MatchInformation());
@@ -181,14 +178,29 @@ public class ReconciliationController {
         }
     }
 
-    private List<MatchData> matchFromLastData() throws Exception {
+    private List<MatchData> matchFromLastData() {
         if (lastAccount == null)
             return null;
 
         return matchData(lastAccount);
     }
 
-    private List<MatchData> matchData(Account account) throws Exception {
+    private void logTransactionData(String type, int id, Date date, Category category, double amount) {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
+
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+
+        String logData = type + " - " +
+                id + " " +
+                sdf.format(date) + " " +
+                category + " " +
+                df.format(amount);
+
+        LOG.debug(logData);
+    }
+
+    private List<MatchData> matchData(Account account) {
         // Attempt to match the reconciliation with the data in the account specified.
 
         // Get all transactions that are 'unlocked' on the account.
@@ -200,45 +212,19 @@ public class ReconciliationController {
         // Log the data.
         if(LOG.isDebugEnabled()) {
             for (ReconciliationData nextReconciliationData : reconciliationData) {
-                StringBuilder logData = new StringBuilder();
-
-                logData.append("Reconcile Data - ");
-
-                logData.append(nextReconciliationData.getId());
-                logData.append(" ");
-
-                SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-                logData.append(sdf.format(nextReconciliationData.getDate()));
-                logData.append(" ");
-
-                logData.append(nextReconciliationData.getCategory());
-                logData.append(" ");
-
-                DecimalFormat df = new DecimalFormat("#,##0.00");
-                logData.append(df.format(nextReconciliationData.getAmount()));
-
-                LOG.debug(logData.toString());
+                logTransactionData("Reconcile Data",
+                        nextReconciliationData.getId(),
+                        nextReconciliationData.getDate(),
+                        nextReconciliationData.getCategory(),
+                        nextReconciliationData.getAmount() );
             }
 
             for (Transaction nextTransaction : transactions) {
-                StringBuilder logData = new StringBuilder();
-
-                logData.append("Transaction - ");
-
-                logData.append(nextTransaction.getId());
-                logData.append(" ");
-
-                SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-                logData.append(sdf.format(nextTransaction.getDate()));
-                logData.append(" ");
-
-                logData.append(nextTransaction.getCategory());
-                logData.append(" ");
-
-                DecimalFormat df = new DecimalFormat("#,##0.00");
-                logData.append(df.format(nextTransaction.getAmount()));
-
-                LOG.debug(logData.toString());
+                logTransactionData("Transaction",
+                        nextTransaction.getId(),
+                        nextTransaction.getDate(),
+                        nextTransaction.getCategory(),
+                        nextTransaction.getAmount() );
             }
         }
 
@@ -303,6 +289,7 @@ public class ReconciliationController {
             }
         }
 
+        //noinspection unchecked
         Collections.sort(result);
 
         // Update the opening balance information.
@@ -335,7 +322,7 @@ public class ReconciliationController {
 
             if(category.isPresent()) {
                 if(transaction.get().getOppositeTransactionId() == null) {
-                    LOG.info("Category updated for - " + Integer.toString(reconciliationUpdate.getId()));
+                    LOG.info("Category updated for - " + reconciliationUpdate.getId());
                     transaction.get().setCategory(category.get());
                     transactionRepository.save(transaction.get());
                 }
@@ -357,8 +344,8 @@ public class ReconciliationController {
             Optional<Category> category =  categoryRepository.findById(reconciliationUpdate.getCategoryId());
 
             if(category.isPresent()) {
-                LOG.info("Category updated for - " + Integer.toString(reconciliationUpdate.getId()));
-                reconciliationData.get().setCategory(category.get(), category.get().getColour());
+                LOG.info("Category updated for - " + reconciliationUpdate.getId());
+                reconciliationData.get().setCategory(category.get());
                 reconciliationRepository.save(reconciliationData.get());
             } else {
                 LOG.info("Invalid category.");
@@ -369,7 +356,7 @@ public class ReconciliationController {
     }
 
     private void processReconcileUpdate(ReconcileUpdate reconciliationUpdate) {
-        LOG.info("Update category (ext) - " + Integer.toString(reconciliationUpdate.getId()) + " - " + reconciliationUpdate.getCategoryId() + " - " + reconciliationUpdate.getType());
+        LOG.info("Update category (ext) - " + reconciliationUpdate.getId() + " - " + reconciliationUpdate.getCategoryId() + " - " + reconciliationUpdate.getType());
 
         if(reconciliationUpdate.getType().equalsIgnoreCase("trn")) {
             transactionCategoryUpdate(reconciliationUpdate);
@@ -377,10 +364,9 @@ public class ReconciliationController {
         }
 
         reconciliationCategoryUpdate(reconciliationUpdate);
-        return;
     }
 
-    private void reconcile (int transactionId, boolean reconcile) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
+    private void reconcile (int transactionId, boolean reconcile) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         LOG.info("Reconcile transaction.");
 
         // Get the transaction.
@@ -433,7 +419,7 @@ public class ReconciliationController {
             Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yy");
 
             // Column 3 = amount * -1
-            Double transactionAmount = Double.parseDouble(columns[2]);
+            double transactionAmount = Double.parseDouble(columns[2]);
             transactionAmount *= -1;
 
             // Column 4 = description.
@@ -474,7 +460,7 @@ public class ReconciliationController {
                     multiplier = 1;
                 }
 
-                Double transactionAmount = Double.parseDouble(amountString.replace(",",""));
+                double transactionAmount = Double.parseDouble(amountString.replace(",",""));
                 transactionAmount *= multiplier;
 
                 // Column 4 = description.
@@ -493,7 +479,7 @@ public class ReconciliationController {
             return false;
         }
 
-        public ReconciliationData getReconcileData(String[] columns) throws Exception {
+        public ReconciliationData getReconcileData(String[] columns) {
             if(columns.length < 4) {
                 return null;
             }
@@ -506,7 +492,7 @@ public class ReconciliationController {
             Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yyyy");
 
             // Column 3 = amount * -1
-            Double transactionAmount = Double.parseDouble(columns[2]);
+            double transactionAmount = Double.parseDouble(columns[2]);
 
             // Column 4 = description.
             String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
@@ -561,7 +547,7 @@ public class ReconciliationController {
     private void addReconcilationDataRecord(String record) {
         try {
             // Process the elements (CSV)
-            String[] elements = record.split("\t|,");
+            String[] elements = record.split("[\t,]");
 
             // Minimum of 2 (date and amount).
             if(elements.length < 2) {
@@ -722,13 +708,13 @@ public class ReconciliationController {
     }
 
     @RequestMapping(path="/ext/money/reconcile", method= RequestMethod.PUT)
-    public @ResponseBody OkStatus reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
+    public @ResponseBody OkStatus reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
         return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconcile", method= RequestMethod.PUT)
-    public @ResponseBody OkStatus reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException, ReconciliationException {
+    public @ResponseBody OkStatus reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
         return OkStatus.getOkStatus();
     }
@@ -766,7 +752,7 @@ public class ReconciliationController {
 
         List<FileResponse> result = new ArrayList<>();
 
-        for(final File fileEntry : folder.listFiles()) {
+        for(final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if(!fileEntry.isDirectory()) {
                 if(fileEntry.getPath().endsWith(".csv")) {
                     result.add(new FileResponse(fileEntry.getPath()));
