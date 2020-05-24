@@ -14,4 +14,6 @@ public interface TransactionRepository extends CrudRepository<Transaction, Integ
     List<Transaction> findByAccountAndStatementIdYearAndStatementIdMonth(Account account, Integer statementYear, Integer statementMonth);
 
     List<Transaction> findByStatementIdYearAndStatementIdMonth(Integer statementYear, Integer statementMonth);
+
+    List<Transaction> findByStatementIdYear(Integer statementYear);
 }
