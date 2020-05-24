@@ -3,3 +3,11 @@ databaseChangeLog:
       id: 10
       author: jason
       changes:
+
+        - addColumn:
+            tableName: statement
+            columns:
+              - column:
+                  name: deleted
+                  type: boolean
+                  valueBoolean: false
