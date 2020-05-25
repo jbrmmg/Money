@@ -35,7 +35,7 @@ public class ApplicationProperties {
 
     public void setArchiveSchedule(String archiveSchedule) { this.archiveSchedule = archiveSchedule; }
 
-    public void setArchiveEnabledEnabled(Boolean archiveEnabled) { this.archiveEnabled = archiveEnabled; }
+    public void setArchiveEnabled(Boolean archiveEnabled) { this.archiveEnabled = archiveEnabled; }
 
     public String getServiceName() { return this.serviceName; }
 
