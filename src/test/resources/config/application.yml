@@ -27,6 +27,8 @@ money:
     regular-enabled: true
     report-schedule: 0 0 4 20-31 * ?
     report-enabled: false
+    archive-schedule: 0 0 4 20-31 1 ?
+    archive-enabled: false
 
 logging:
     level:
