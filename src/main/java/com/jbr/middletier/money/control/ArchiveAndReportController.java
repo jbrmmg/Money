@@ -6,6 +6,7 @@ import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.manage.WebLogManager;
 import com.jbr.middletier.money.reporting.ReportGenerator;
+import jdk.internal.jline.internal.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,8 @@ public class ArchiveAndReportController {
                 }
             }
 
+            Log.info("Oldest year - " + oldestYear);
+
             // Must keep at least 3 years.
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
             if(oldestYear >= currentYear - 3) {
@@ -63,12 +66,17 @@ public class ArchiveAndReportController {
                 return archiveRequest;
             }
 
+            Log.info("Oldest year can be archived - " + oldestYear);
+
+
             // Do reports exist for this year?
             if(!reportGenerator.reportsGeneratedForYear(oldestYear)) {
                 this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive - reports missing");
                 archiveRequest.setStatus("FAILED");
                 return archiveRequest;
             }
+
+            Log.info("About to archive - " + oldestYear);
 
             // Delete all transactions that are in the oldest year.
             this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Archive for this year - " + oldestYear);
