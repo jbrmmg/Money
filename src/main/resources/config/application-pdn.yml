@@ -33,6 +33,7 @@ money:
     report-working: /home/jason/Working/PdnReport/
     regular-enabled: true
     report-enabled: true
+    archive-enabled: false
 
 info:
     app:
