@@ -716,11 +716,6 @@ public class ReportGenerator {
         File htmlFile = new File(applicationProperties.getHtmlFilename());
         PrintWriter writer2 = new PrintWriter(htmlFile);
 
-        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, (int)year);
-        calendar.set(Calendar.MONTH, (int)month - 1);
-
         String template = getTemplate(false);
         template = addReportToTemplate(template, "", year, month );
 
@@ -732,7 +727,7 @@ public class ReportGenerator {
         // Copy the report to the share.
         copyFile(applicationProperties.getPDFFilename(),
                 applicationProperties.getReportShare() + "/" + year,
-                "Report-" + sdf2.format(calendar.getTime()) + ".pdf");
+                getMonthFilename(false,year,month));
     }
 
     public void generateAnnualReport(long year) throws IOException, TranscoderException, DocumentException {
@@ -777,7 +772,28 @@ public class ReportGenerator {
         // Copy the report to the share.
         copyFile(applicationProperties.getPDFFilename(),
                 applicationProperties.getReportShare() + "/" + year,
-                "Report-" + year + ".pdf");
+                getYearFilename(false, year));
+    }
+
+    private String getYearFilename(boolean fullPath, long year) {
+        if(!fullPath) {
+            return "Report-" + year + ".pdf";
+        }
+
+        return applicationProperties.getReportShare() + "/" + year + "/Report-" + year + ".pdf";
+    }
+
+    private String getMonthFilename(boolean fullPath, long year, long month) {
+        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, (int)year);
+        calendar.set(Calendar.MONTH, (int)month - 1);
+
+        if(!fullPath) {
+            return "Report-" + sdf2.format(calendar.getTime()) + ".pdf";
+        }
+
+        return applicationProperties.getReportShare() + "/" + year + "/Report-" + sdf2.format(calendar.getTime()) + ".pdf";
     }
 
     class MonthStatus {
@@ -826,27 +842,40 @@ public class ReportGenerator {
         for(MonthStatus nextMonthStatus: monthStatusMap.values()) {
             // Is this a complete month?
             if(nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) {
-                SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(Calendar.YEAR, nextMonthStatus.year);
-                calendar.set(Calendar.MONTH, nextMonthStatus.month - 1);
-
                 // All statements are locked, is there a report??
-                String monthFilename = applicationProperties.getReportShare() + "/" + nextMonthStatus.year + "/Report-" + sdf2.format(calendar.getTime()) + ".pdf";
-                String yearFilename  = applicationProperties.getReportShare() + "/" + nextMonthStatus.year + "/Report-" + nextMonthStatus.year + ".pdf";
-
-                if(!Files.exists(Paths.get(monthFilename))) {
+                if(!Files.exists(Paths.get(getMonthFilename(true, nextMonthStatus.year,nextMonthStatus.month)))) {
                     // Generate the month report.
                     generateReport(nextMonthStatus.year,nextMonthStatus.month);
                 }
 
                 if(nextMonthStatus.month == 12) {
-                    if (!Files.exists(Paths.get(yearFilename))) {
+                    if (!Files.exists(Paths.get(getYearFilename(true,nextMonthStatus.year)))) {
                         // Generate the month report.
                         generateAnnualReport(nextMonthStatus.year);
                     }
                 }
             }
         }
+    }
+
+    public boolean reportsGeneratedForYear(long year) {
+        // Check that the reports have been generated for the year specified.
+
+        // Does the year directory exist?
+        if(!Files.exists(Paths.get(applicationProperties.getReportShare() + "/" + year))) {
+            return false;
+        }
+
+        if(!Files.exists(Paths.get(getYearFilename(true,year)))) {
+            return false;
+        }
+
+        for(int month = 0; month < 12; month++) {
+            if(!Files.exists(Paths.get(getMonthFilename(true, year, month)))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

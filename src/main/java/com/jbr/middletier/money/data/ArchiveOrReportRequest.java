@@ -6,7 +6,7 @@ public class ArchiveOrReportRequest {
     private long month;
     private String status;
 
-    ArchiveOrReportRequest() {
+    public ArchiveOrReportRequest() {
         this.year = 1900;
         this.month = 1;
         this.status = "";
