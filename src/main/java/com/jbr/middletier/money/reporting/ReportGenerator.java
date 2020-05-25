@@ -875,9 +875,9 @@ public class ReportGenerator {
         }
 
         for(int month = 0; month < 12; month++) {
-            LOG.info("Checking - " + getMonthFilename(true,year, month));
+            LOG.info("Checking - " + getMonthFilename(true,year, month + 1));
 
-            if(!Files.exists(Paths.get(getMonthFilename(true, year, month)))) {
+            if(!Files.exists(Paths.get(getMonthFilename(true, year, month + 1)))) {
                 return false;
             }
         }
