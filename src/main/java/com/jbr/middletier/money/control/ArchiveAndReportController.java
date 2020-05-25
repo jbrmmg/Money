@@ -3,7 +3,9 @@ package com.jbr.middletier.money.control;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.ArchiveOrReportRequest;
 import com.jbr.middletier.money.data.Statement;
+import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
+import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.manage.WebLogManager;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import org.slf4j.Logger;
@@ -15,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 import java.util.Calendar;
 
 @Controller
@@ -27,16 +28,19 @@ public class ArchiveAndReportController {
     private final ReportGenerator reportGenerator;
     private final StatementRepository statementRepository;
     private final ApplicationProperties applicationProperties;
+    private final TransactionRepository transactionRepository;
 
     @Autowired
     public ArchiveAndReportController(WebLogManager webLogManager,
                                       ReportGenerator reportGenerator,
                                       StatementRepository statementRepository,
-                                      ApplicationProperties applicationProperties) {
+                                      ApplicationProperties applicationProperties,
+                                      TransactionRepository transactionRepository ) {
         this.webLogManager = webLogManager;
         this.reportGenerator = reportGenerator;
         this.statementRepository = statementRepository;
         this.applicationProperties = applicationProperties;
+        this.transactionRepository = transactionRepository;
     }
 
     @RequestMapping(path="/int/money/transaction/archive", method= RequestMethod.POST)
@@ -67,7 +71,6 @@ public class ArchiveAndReportController {
 
             LOG.info("Oldest year can be archived - " + oldestYear);
 
-
             // Do reports exist for this year?
             if(!reportGenerator.reportsGeneratedForYear(oldestYear)) {
                 this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive - reports missing");
@@ -78,7 +81,22 @@ public class ArchiveAndReportController {
             LOG.info("About to archive - " + oldestYear);
 
             // Delete all transactions that are in the oldest year.
-            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Archive for this year - " + oldestYear);
+            this.webLogManager.postWebLog(WebLogManager.webLogLevel.INFO, "Archive for this year - " + oldestYear);
+
+            // Delete the transactions that are in this year.
+            Iterable<Transaction> transactionsToDelete = transactionRepository.findByStatementIdYear((int)oldestYear);
+
+            for (Transaction nextTransaction: transactionsToDelete) {
+                transactionRepository.delete(nextTransaction);
+                LOG.info("Delete transaction  - " + nextTransaction.getId());
+            }
+
+            // Delete the Statements.
+            Iterable<Statement> statementsToDelete = statementRepository.findByIdYear((int)oldestYear);
+            for(Statement nextStatement: statementsToDelete) {
+                statementRepository.delete(nextStatement);
+                LOG.info("Delete statement - " + nextStatement.getId().getYear() + " " + nextStatement.getId().getMonth());
+            }
 
             archiveRequest.setStatus("OK");
         } catch (Exception ex) {

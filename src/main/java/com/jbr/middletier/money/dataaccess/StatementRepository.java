@@ -15,4 +15,6 @@ public interface StatementRepository  extends CrudRepository<Statement, Statemen
     List<Statement> findByIdAccountAndLocked(Account account, @SuppressWarnings("SameParameterValue") boolean locked);
 
     List<Statement> findAllByOrderByIdAccountAsc();
+
+    List<Statement> findByIdYear(Integer year);
 }
