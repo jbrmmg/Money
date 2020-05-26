@@ -6,9 +6,11 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.control.AccountController;
+import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.manage.WebLogManager;
@@ -43,6 +45,7 @@ public class ReportGenerator {
     private final AccountController accountController;
     private final StatementRepository statementRepository;
     private final WebLogManager webLogManager;
+    private final AccountRepository accountRepository;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
@@ -50,13 +53,15 @@ public class ReportGenerator {
                            ApplicationProperties applicationProperties,
                            AccountController accountController,
                            StatementRepository statementRepository,
-                           WebLogManager webLogManager) {
+                           WebLogManager webLogManager,
+                           AccountRepository accountRepository ) {
         this.transactionRepository = transactionRepository;
         this.resourceLoader = resourceLoader;
         this.applicationProperties = applicationProperties;
         this.accountController = accountController;
         this.statementRepository = statementRepository;
         this.webLogManager = webLogManager;
+        this.accountRepository = accountRepository;
     }
 
     class CategoryPercentage implements Comparable<CategoryPercentage> {
@@ -802,6 +807,7 @@ public class ReportGenerator {
 
         int lockedStatementCount;
         int statementsFound;
+        int activeAccounts;
     }
 
     @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
@@ -810,6 +816,11 @@ public class ReportGenerator {
         if(!applicationProperties.getReportEnabled()) {
             return;
         }
+
+        Iterable<Account> accounts = accountRepository.findAll();
+        int activeAccounts = 0;
+        // TODO - Add active dates to account so it can be tracked for period.
+        for(Account ignored : accounts) activeAccounts++;
 
         Map<Long,MonthStatus> monthStatusMap = new HashMap<>();
 
@@ -829,6 +840,7 @@ public class ReportGenerator {
                     nextMonthStatus.year = nextStatement.getId().getYear();
                     nextMonthStatus.lockedStatementCount = 0;
                     nextMonthStatus.statementsFound = 0;
+                    nextMonthStatus.activeAccounts = activeAccounts;
 
                     monthStatusMap.put(statementId,nextMonthStatus);
                 }
@@ -841,19 +853,24 @@ public class ReportGenerator {
         // Check that all the statements have a report.
         for(MonthStatus nextMonthStatus: monthStatusMap.values()) {
             // Is this a complete month?
-            if(nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) {
+            if((nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) &&
+                    (nextMonthStatus.lockedStatementCount == nextMonthStatus.activeAccounts) ){
                 // All statements are locked, is there a report??
                 if(!Files.exists(Paths.get(getMonthFilename(true, nextMonthStatus.year,nextMonthStatus.month)))) {
                     // Generate the month report.
                     generateReport(nextMonthStatus.year,nextMonthStatus.month);
+                    webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generated report for " + nextMonthStatus.month + " " + nextMonthStatus.year);
                 }
 
                 if(nextMonthStatus.month == 12) {
                     if (!Files.exists(Paths.get(getYearFilename(true,nextMonthStatus.year)))) {
                         // Generate the month report.
                         generateAnnualReport(nextMonthStatus.year);
+                        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generate report for year  " + nextMonthStatus.year);
                     }
                 }
+            } else {
+                webLogManager.postWebLog(WebLogManager.webLogLevel.WARN,"Cannot generate report for " + nextMonthStatus.month + " " + nextMonthStatus.year);
             }
         }
     }
