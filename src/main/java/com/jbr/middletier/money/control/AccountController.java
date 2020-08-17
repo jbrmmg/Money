@@ -7,7 +7,10 @@ import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -150,17 +153,21 @@ public class AccountController {
     }
 
     @RequestMapping(path="/int/money/account/logo", method= RequestMethod.GET)
-    public @ResponseBody String getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
-                                                  @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
+    public @ResponseBody ResponseEntity<String> getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
+                                                                  @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (int)");
-        return getAccountLogo(id,disabled);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("image/svg+xml"));
+        return new ResponseEntity<>(getAccountLogo(id, disabled), headers, HttpStatus.OK);
     }
 
     @RequestMapping(path="/ext/money/account/logo", method= RequestMethod.GET)
-    public @ResponseBody String getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
+    public @ResponseBody ResponseEntity<String> getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (ext)");
-        return getAccountLogo(id,disabled);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("image/svg+xml"));
+        return new ResponseEntity<>(getAccountLogo(id, disabled), headers, HttpStatus.OK);
     }
 
     @RequestMapping(path="/int/money/accounts",method=RequestMethod.POST)
