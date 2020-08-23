@@ -65,7 +65,7 @@ public class ReconciliationController {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
-    private class MatchInformation {
+    private static class MatchInformation {
         ReconciliationData recociliationData;
         public Transaction transaction;
         long daysAway;
@@ -132,7 +132,7 @@ public class ReconciliationController {
         for(Transaction nextTransaction : transactions) {
             // Create match information.
             if(!trnMatches.containsKey(nextTransaction.getId())) {
-                trnMatches.put(nextTransaction.getId(),new ReconciliationController.MatchInformation());
+                trnMatches.put(nextTransaction.getId(), new MatchInformation());
             }
             ReconciliationController.MatchInformation trnMatch = trnMatches.get(nextTransaction.getId());
             trnMatch.transaction = nextTransaction;
@@ -407,11 +407,11 @@ public class ReconciliationController {
 
     private class AmexFileProcessor implements  IReconcileFileProcessor {
         public boolean skipLine(String line) {
-            return false;
+            return line.startsWith("Date,");
         }
 
         public ReconciliationData getReconcileData(String[] columns) throws Exception {
-            if(columns.length < 4) {
+            if(columns.length < 5) {
                 throw new Exception("Unexpected line");
             }
 
@@ -419,11 +419,11 @@ public class ReconciliationController {
             Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yy");
 
             // Column 3 = amount * -1
-            double transactionAmount = Double.parseDouble(columns[2]);
+            double transactionAmount = Double.parseDouble(columns[4]);
             transactionAmount *= -1;
 
             // Column 4 = description.
-            String description = columns[3].length() > 40 ? columns[3].substring(0,40) : columns[3];
+            String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
 
             LOG.info("Got a valid record - inserting.");
             return new ReconciliationData(transactionDate, transactionAmount, null, description);
@@ -455,7 +455,7 @@ public class ReconciliationController {
                 amountString = amountString.replace(" ","");
 
                 double multiplier = -1;
-                if(amountString.substring(0,1).equals("+"))
+                if(amountString.charAt(0) == '+')
                 {
                     multiplier = 1;
                 }
