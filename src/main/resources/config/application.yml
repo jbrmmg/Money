@@ -32,9 +32,9 @@ money:
     web-log-url: http://localhost:10001/jbr/int/log/data
     regular-schedule: 0 30 2 * * ?
     regular-enabled: false
-    report-schedule: 0 0 4 20-31 * ?
+    report-schedule: 0 0 4 1-10 * ?
     report-enabled: false
-    archive-schedule: 0 0 4 20-31 1 ?
+    archive-schedule: 0 0 4 1-10 2 ?
     archive-enabled: false
 
 management:
