@@ -864,7 +864,7 @@ public class ReportGenerator {
 
                 if(nextMonthStatus.month == 12) {
                     if (!Files.exists(Paths.get(getYearFilename(true,nextMonthStatus.year)))) {
-                        // Generate the month report.
+                        // Generate the annual report.
                         generateAnnualReport(nextMonthStatus.year);
                         webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generate report for year  " + nextMonthStatus.year);
                     }
