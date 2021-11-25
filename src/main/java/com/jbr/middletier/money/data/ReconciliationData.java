@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.data;
 
 import javax.persistence.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +40,31 @@ public class ReconciliationData {
         this.description = description;
     }
 
+    private boolean compareDateWithoutTime(Date leftSide, Date rightSide) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        String leftDateString = sdf.format(leftSide);
+        String rightDateString = sdf.format(rightSide);
+
+        return leftDateString.equalsIgnoreCase(rightDateString);
+    }
+
+    private long dateDifferenceWithoutTime(Date leftSide, Date rightSide) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+            String leftDateString = sdf.format(leftSide);
+            String rightDateString = sdf.format(rightSide);
+
+            Date newLeftSide = sdf.parse(leftDateString);
+            Date newRightSide = sdf.parse(rightDateString);
+
+            return Math.abs(newLeftSide.getTime() - newRightSide.getTime());
+        } catch(Exception e) {
+            return 0;
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
@@ -49,7 +75,7 @@ public class ReconciliationData {
 
         Transaction transaction = (Transaction) o;
 
-        return transaction.getAmount() == this.amount && transaction.getDate().equals(this.date);
+        return transaction.getAmount() == this.amount && compareDateWithoutTime(transaction.getDate(),this.date);
     }
 
     public long closeMatch(Transaction transaction) {
@@ -58,8 +84,7 @@ public class ReconciliationData {
         }
 
         // Subtract one date from the other.
-        long difference = Math.abs(this.date.getTime() - transaction.getDate().getTime());
-        return TimeUnit.DAYS.convert(difference,TimeUnit.MILLISECONDS);
+        return TimeUnit.DAYS.convert(dateDifferenceWithoutTime(this.date,transaction.getDate()),TimeUnit.MILLISECONDS);
     }
 
     public int getId() {
