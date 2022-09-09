@@ -6,7 +6,6 @@ import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.manage.WebLogManager;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,19 +23,16 @@ import java.util.Calendar;
 public class ArchiveAndReportController {
     final static private Logger LOG = LoggerFactory.getLogger(ArchiveAndReportController.class);
 
-    private final WebLogManager webLogManager;
     private final ReportGenerator reportGenerator;
     private final StatementRepository statementRepository;
     private final ApplicationProperties applicationProperties;
     private final TransactionRepository transactionRepository;
 
     @Autowired
-    public ArchiveAndReportController(WebLogManager webLogManager,
-                                      ReportGenerator reportGenerator,
+    public ArchiveAndReportController(ReportGenerator reportGenerator,
                                       StatementRepository statementRepository,
                                       ApplicationProperties applicationProperties,
                                       TransactionRepository transactionRepository ) {
-        this.webLogManager = webLogManager;
         this.reportGenerator = reportGenerator;
         this.statementRepository = statementRepository;
         this.applicationProperties = applicationProperties;
@@ -64,7 +60,6 @@ public class ArchiveAndReportController {
             // Must keep at least 3 years.
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
             if(oldestYear >= currentYear - 3) {
-                this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive - too soon");
                 archiveRequest.setStatus("FAILED");
                 return archiveRequest;
             }
@@ -73,15 +68,11 @@ public class ArchiveAndReportController {
 
             // Do reports exist for this year?
             if(!reportGenerator.reportsGeneratedForYear(oldestYear)) {
-                this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive - reports missing");
                 archiveRequest.setStatus("FAILED");
                 return archiveRequest;
             }
 
             LOG.info("About to archive - " + oldestYear);
-
-            // Delete all transactions that are in the oldest year.
-            this.webLogManager.postWebLog(WebLogManager.webLogLevel.INFO, "Archive for this year - " + oldestYear);
 
             // Delete the transactions that are in this year.
             Iterable<Transaction> transactionsToDelete = transactionRepository.findByStatementIdYear((int)oldestYear);
@@ -100,7 +91,6 @@ public class ArchiveAndReportController {
 
             archiveRequest.setStatus("OK");
         } catch (Exception ex) {
-            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to archive " + ex);
             archiveRequest.setStatus("FAILED");
         }
 
@@ -125,7 +115,6 @@ public class ArchiveAndReportController {
 
             report.setStatus("OK");
         } catch (Exception ex) {
-            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to generate report " + ex);
             report.setStatus("FAILED");
         }
 
@@ -141,7 +130,6 @@ public class ArchiveAndReportController {
 
             report.setStatus("OK");
         } catch (Exception ex) {
-            this.webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Failed to generate report " + ex);
             report.setStatus("FAILED");
         }
 

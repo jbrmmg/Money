@@ -5,7 +5,6 @@ import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.exceptions.EmptyMatchDataException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.exceptions.MultipleUnlockedStatementException;
-import com.jbr.middletier.money.manage.WebLogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +39,6 @@ public class ReconciliationController {
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final TransactionController transactionController;
-    private final WebLogManager webLogManager;
     private Account lastAccount = null;
 
     @Autowired
@@ -49,15 +47,13 @@ public class ReconciliationController {
                                     ReconciliationRepository reconciliationRepository,
                                     CategoryRepository categoryRepository,
                                     AccountRepository accountRepository,
-                                    TransactionController transactionController,
-                                    WebLogManager webLogManager) {
+                                    TransactionController transactionController) {
         this.statementRepository = statementRepository;
         this.transactionRepository = transactionRepository;
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
         this.transactionController = transactionController;
         this.accountRepository = accountRepository;
-        this.webLogManager = webLogManager;
     }
 
     @ExceptionHandler(Exception.class)
@@ -106,8 +102,6 @@ public class ReconciliationController {
                 if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.CREATE.toString())) {
                     // Create the transaction.
                     transactionController.addTransactionExt(new NewTransaction(next));
-
-                    webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"New transaction has been created.");
                 } else if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.RECONCILE.toString())) {
                     // Reconcile the transaction
                     ReconcileTransaction reconcileRequest = new ReconcileTransaction();
@@ -204,7 +198,7 @@ public class ReconciliationController {
         // Attempt to match the reconciliation with the data in the account specified.
 
         // Get all transactions that are 'unlocked' on the account.
-        Iterable<Transaction> transactions = transactionRepository.findAll(Specification.where(notLocked()).and(accountIs(account)), new Sort(Sort.Direction.ASC,"date", "amount"));
+        Iterable<Transaction> transactions = transactionRepository.findAll(Specification.where(notLocked()).and(accountIs(account)), Sort.by(Sort.Direction.ASC, "date", "amount"));
 
         // Get all the reconciliation data.
         List<ReconciliationData> reconciliationData = reconciliationRepository.findAllByOrderByDateAsc();

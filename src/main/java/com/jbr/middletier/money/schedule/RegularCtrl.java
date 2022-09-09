@@ -5,7 +5,6 @@ import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.manage.WebLogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +22,6 @@ public class RegularCtrl {
 
     private final ApplicationProperties applicationProperties;
 
-    private final WebLogManager webLogManager;
-
     final static private Logger LOG = LoggerFactory.getLogger(RegularCtrl.class);
 
     private static SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
@@ -32,11 +29,9 @@ public class RegularCtrl {
     @Autowired
     public RegularCtrl(RegularRepository regularRepository,
                        TransactionRepository tranasactionRepository,
-                       WebLogManager webLogManager,
                        ApplicationProperties applicationProperties ) {
         this.regularRepository = regularRepository;
         this.tranasactionRepository = tranasactionRepository;
-        this.webLogManager = webLogManager;
         this.applicationProperties = applicationProperties;
     }
 
@@ -81,15 +76,11 @@ public class RegularCtrl {
                 // Update the regular payment.
                 nextRegular.setLastDate(saveDate);
                 regularRepository.save(nextRegular);
-
-                webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Regular payment - " + nextRegular.getDescription() );
             }
         } catch( Regular.CannotDetermineNextDateException ex) {
             LOG.error("Cannot determine the next payemnt." + ex.getMessage());
-            webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR,"Process Regular - " + ex);
         } catch ( Exception ex) {
             LOG.error("Failed to process regular payment.",ex);
-            webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR,"Process Regular - " + ex);
         }
     }
 
@@ -118,7 +109,6 @@ public class RegularCtrl {
         Date today = new Date();
 
         LOG.info("TODAY: " + loggingSDF.format(today));
-        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Checking Regular - " + loggingSDF.format(today));
         generateRegularPayments(new Date());
     }
 }

@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: jason
+      changes:
+
+        - createTable:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+                  type: char(4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: month
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: year
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: open_balance
+                  type: decimal(10,2)
+              - column:
+                  name: locked
+                  type: boolean
+
+        - addPrimaryKey:
+            tableName: statement
+            columnNames: account, month, year
+
+        - addForeignKeyConstraint:
+            constraintName: fk_account_statement
+            baseTableName: statement
+            baseColumnNames: account
+            referencedTableName: account
+            referencedColumnNames: id

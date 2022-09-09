@@ -5,7 +5,6 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
-import com.jbr.middletier.money.manage.WebLogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,17 +30,14 @@ public class StatementController {
     private final StatementRepository statementRepository;
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
-    private final WebLogManager webLogManager;
 
     @Autowired
     public StatementController(StatementRepository statementRepository,
                                TransactionRepository transactionRepository,
-                               AccountRepository accountRepository,
-                               WebLogManager webLogManager) {
+                               AccountRepository accountRepository) {
         this.statementRepository = statementRepository;
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
-        this.webLogManager = webLogManager;
     }
 
     @ExceptionHandler(Exception.class)
@@ -68,8 +64,6 @@ public class StatementController {
         if(!account.isPresent()) {
             throw new IllegalStateException("Request statement lock - invalid account");
         }
-
-        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO, "Statement Lock - " + request.getAccountId());
 
         // Load the statement to be locked.
         Optional<Statement> statement = statementRepository.findById(new StatementId(account.get(),request.getYear(),request.getMonth()));
@@ -102,11 +96,9 @@ public class StatementController {
                 statementRepository.save(newStatement);
                 LOG.info("Request statement lock - locked.");
             } else {
-                webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Request statement lock - statement already locked");
                 throw new IllegalStateException("Request statement lock - statement already locked");
             }
         } else {
-            webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR, "Request statement lock - invalid statement id");
             throw new IllegalStateException("Request statement lock - invalid statement id");
         }
     }

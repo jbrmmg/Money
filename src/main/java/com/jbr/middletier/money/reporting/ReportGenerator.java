@@ -13,7 +13,6 @@ import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.manage.WebLogManager;
 import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,6 @@ public class ReportGenerator {
     private final ApplicationProperties applicationProperties;
     private final AccountController accountController;
     private final StatementRepository statementRepository;
-    private final WebLogManager webLogManager;
     private final AccountRepository accountRepository;
 
     @Autowired
@@ -53,14 +51,12 @@ public class ReportGenerator {
                            ApplicationProperties applicationProperties,
                            AccountController accountController,
                            StatementRepository statementRepository,
-                           WebLogManager webLogManager,
                            AccountRepository accountRepository ) {
         this.transactionRepository = transactionRepository;
         this.resourceLoader = resourceLoader;
         this.applicationProperties = applicationProperties;
         this.accountController = accountController;
         this.statementRepository = statementRepository;
-        this.webLogManager = webLogManager;
         this.accountRepository = accountRepository;
     }
 
@@ -714,8 +710,6 @@ public class ReportGenerator {
     public void generateReport(long year, long month) throws IOException, DocumentException, TranscoderException {
         LOG.info("Generate report");
 
-        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generate Report " + year + " " + month);
-
         createWorkingDirectories();
 
         File htmlFile = new File(applicationProperties.getHtmlFilename());
@@ -737,8 +731,6 @@ public class ReportGenerator {
 
     public void generateAnnualReport(long year) throws IOException, TranscoderException, DocumentException {
         LOG.info("Generate annual report");
-
-        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generate Annual Report " + year);
 
         // Get all the transactions for the specified statement.
         List<Transaction> transactionList = transactionRepository.findByStatementIdYear((int)year);
@@ -859,18 +851,14 @@ public class ReportGenerator {
                 if(!Files.exists(Paths.get(getMonthFilename(true, nextMonthStatus.year,nextMonthStatus.month)))) {
                     // Generate the month report.
                     generateReport(nextMonthStatus.year,nextMonthStatus.month);
-                    webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generated report for " + nextMonthStatus.month + " " + nextMonthStatus.year);
                 }
 
                 if(nextMonthStatus.month == 12) {
                     if (!Files.exists(Paths.get(getYearFilename(true,nextMonthStatus.year)))) {
                         // Generate the annual report.
                         generateAnnualReport(nextMonthStatus.year);
-                        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Generate report for year  " + nextMonthStatus.year);
                     }
                 }
-            } else {
-                webLogManager.postWebLog(WebLogManager.webLogLevel.WARN,"Cannot generate report for " + nextMonthStatus.month + " " + nextMonthStatus.year);
             }
         }
     }

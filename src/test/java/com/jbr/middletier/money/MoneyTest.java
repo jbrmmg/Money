@@ -1,3 +1,5 @@
+package com.jbr.middletier.money;
+
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
@@ -108,14 +110,12 @@ public class MoneyTest {
         // Get accounts (external), check that both categories are returned and in the correct order..
         mockMvc.perform(get("/jbr/ext/money/accounts/"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(getContentType()))
                 .andExpect(jsonPath("$[0].id", is("BANK")))
                 .andExpect(jsonPath("$[1].id", is ("AMEX")));
 
         // Get accounts (internal), check that both categories are returned and in the correct order..
         mockMvc.perform(get("/jbr/int/money/accounts/"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(getContentType()))
                 .andExpect(jsonPath("$[0].id", is("BANK")))
                 .andExpect(jsonPath("$[1].id", is ("AMEX")));
     }
@@ -125,7 +125,6 @@ public class MoneyTest {
         // Get categories (external), check that all three categories are returned and in the correct order..
         mockMvc.perform(get("/jbr/ext/money/categories/"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(getContentType()))
                 .andExpect(jsonPath("$[0].id", is("FDG")))
                 .andExpect(jsonPath("$[1].id", is ("FDW")))
                 .andExpect(jsonPath("$[2].id", is ("FDT")));
@@ -134,7 +133,6 @@ public class MoneyTest {
         // Get categories (internal), check that all three categories are returned and in the correct order..
         mockMvc.perform(get("/jbr/int/money/categories/"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(getContentType()))
                 .andExpect(jsonPath("$[0].id", is("FDG")))
                 .andExpect(jsonPath("$[1].id", is ("FDW")))
                 .andExpect(jsonPath("$[2].id", is ("FDT")));

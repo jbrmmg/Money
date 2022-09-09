@@ -4,7 +4,6 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
-import com.jbr.middletier.money.manage.WebLogManager;
 import com.jbr.middletier.money.reporting.EmailGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,6 @@ public class TransactionController {
     private final RegularRepository regularRepository;
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
-    private final WebLogManager webLogManager;
     private final EmailGenerator emailGenerator;
 
     @Autowired
@@ -45,13 +43,11 @@ public class TransactionController {
                                  RegularRepository regularRepository,
                                  AccountRepository accountRepository,
                                  CategoryRepository categoryRepository,
-                                 WebLogManager webLogManager,
                                  EmailGenerator emailGenerator) {
         this.transactionRepository = transactionRepository;
         this.regularRepository = regularRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
-        this.webLogManager = webLogManager;
         this.emailGenerator = emailGenerator;
     }
 
@@ -197,7 +193,6 @@ public class TransactionController {
             // If the transaction is not reconciled then it can be deleted.
             if(!transaction.get().reconciled()) {
                 transactionRepository.deleteById(transactionId);
-                webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Delete transaction.");
                 return;
             }
         }
@@ -254,7 +249,6 @@ public class TransactionController {
             result.add(savedTransaction);
         }
 
-        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"New transaction has been created.");
         return result;
     }
 
@@ -345,11 +339,11 @@ public class TransactionController {
 
     private Iterable<Transaction> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
 
-        Sort transactionSort = new Sort(Sort.Direction.ASC,"date", "account", "amount");
+        Sort transactionSort = Sort.by(Sort.Direction.ASC,"date", "account", "amount");
 
         if(sortAscending != null) {
             if(!sortAscending) {
-                transactionSort = new Sort(Sort.Direction.DESC,"date", "account", "amount");
+                transactionSort = Sort.by(Sort.Direction.DESC,"date", "account", "amount");
             }
         }
 

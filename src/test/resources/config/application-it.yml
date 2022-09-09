@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    hikari:
+      poolName: Hikari
+      auto-commit: false
+
+    h2:
+      console:
+        enabled: false
+
+  liquibase:
+    contexts: default
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+money:
+  service-name: Middle Tier Test
+  regular-schedule: 0 30 2 * * ?
+  regular-enabled: true
+  report-schedule: 0 0 4 20-31 * ?
+  report-enabled: false
+  archive-schedule: 0 0 4 20-31 1 ?
+  archive-enabled: false
+
+logging:
+  level:
+    ROOT: WARN
+    com.jbr.middletier: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
