@@ -62,22 +62,22 @@ public class ReconciliationController {
     }
 
     private static class MatchInformation {
-        ReconciliationData recociliationData;
+        ReconciliationData reconciliationData;
         public Transaction transaction;
         long daysAway;
 
         MatchInformation() {
-            this.recociliationData = null;
+            this.reconciliationData = null;
             this.transaction = null;
             this.daysAway = 0;
         }
 
         boolean exactMatch() {
-            return this.recociliationData != null && this.daysAway == 0;
+            return this.reconciliationData != null && this.daysAway == 0;
         }
 
         boolean closeMatch() {
-            return this.recociliationData != null && this.daysAway != 0;
+            return this.reconciliationData != null && this.daysAway != 0;
         }
     }
 
@@ -118,7 +118,7 @@ public class ReconciliationController {
     }
 
     private void checkReconciliationData(ReconciliationData nextReconciliationData, Iterable<Transaction> transactions, Map<Integer, ReconciliationController.MatchInformation> trnMatches, MatchData matchData, List<ReconciliationData> repeats) {
-        // Remember best potential match.
+        // Remember the best potential match.
         long bestDaysAway = -1;
         ReconciliationController.MatchInformation bestTrnMatch = null;
 
@@ -139,7 +139,7 @@ public class ReconciliationController {
             // Is this an exact match?
             //noinspection EqualsBetweenInconvertibleTypes
             if(nextReconciliationData.equals(nextTransaction)) {
-                trnMatch.recociliationData = nextReconciliationData;
+                trnMatch.reconciliationData = nextReconciliationData;
                 trnMatch.daysAway = 0;
                 matchData.matchTransaction(nextTransaction);
                 return;
@@ -163,12 +163,12 @@ public class ReconciliationController {
         // If there was a good match, the use it.
         if(bestTrnMatch != null) {
             // If the transaction was already matched, then need to repeat the search.
-            if (bestTrnMatch.recociliationData != null) {
-                repeats.add(bestTrnMatch.recociliationData);
+            if (bestTrnMatch.reconciliationData != null) {
+                repeats.add(bestTrnMatch.reconciliationData);
             }
 
             bestTrnMatch.daysAway = bestDaysAway;
-            bestTrnMatch.recociliationData = nextReconciliationData;
+            bestTrnMatch.reconciliationData = nextReconciliationData;
         }
     }
 
@@ -258,7 +258,7 @@ public class ReconciliationController {
         for(ReconciliationController.MatchInformation nextMatchInfo : trnMatches.values()) {
             if(nextMatchInfo.closeMatch()) {
                 // Get the match data index.
-                int matchDataIndex = matchDataMap.get(nextMatchInfo.recociliationData.getId());
+                int matchDataIndex = matchDataMap.get(nextMatchInfo.reconciliationData.getId());
 
                 // Get the Match Data.
                 MatchData matchData = result.get(matchDataIndex);
@@ -274,7 +274,7 @@ public class ReconciliationController {
             if(nextTransaction.getStatement() != null)  {
                 if(trnMatches.containsKey(nextTransaction.getId())){
                     ReconciliationController.MatchInformation matchInformation = trnMatches.get(nextTransaction.getId());
-                    if(matchInformation.recociliationData == null) {
+                    if(matchInformation.reconciliationData == null) {
                         result.add(new MatchData(nextTransaction));
                     }
                 } else {
@@ -410,7 +410,7 @@ public class ReconciliationController {
             }
 
             // Column 1 = date.
-            Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yy");
+            Date transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yy");
 
             // Column 3 = amount * -1
             double transactionAmount = Double.parseDouble(columns[4]);
@@ -439,7 +439,7 @@ public class ReconciliationController {
             }
 
             // Column 1 = date.
-            Date transactionDate = getRecocillationDateDate(columns[0],"dd-MMM-yyyy");
+            Date transactionDate = getReconciliationDateDate(columns[0],"dd-MMM-yyyy");
 
             if(transactionDate != null) {
                 // Column 3 = amount * -1, remove £
@@ -483,7 +483,7 @@ public class ReconciliationController {
             }
 
             // Column 1 = date.
-            Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yyyy");
+            Date transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yyyy");
 
             // Column 3 = amount * -1
             double transactionAmount = Double.parseDouble(columns[2]);
@@ -496,7 +496,7 @@ public class ReconciliationController {
         }
     }
 
-    private Date getRecocillationDateDate(String elementDate, String format) {
+    private Date getReconciliationDateDate(String elementDate, String format) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(format);
 
@@ -514,11 +514,11 @@ public class ReconciliationController {
         return null;
     }
 
-    private Date getReconcilationDataDate(String elementDate) {
+    private Date getReconciliationDataDate(String elementDate) {
         String[] dateFormats = new String[] {"dd-MM-yyyy","dd-MMM-yyyy","yyyy-MM-dd","dd/MM/yyyy", "dd/MMM/yyyy"};
 
         for(String nextDateFormat : dateFormats) {
-            Date nextDate = getRecocillationDateDate(elementDate, nextDateFormat);
+            Date nextDate = getReconciliationDateDate(elementDate, nextDateFormat);
 
             if(nextDate != null) {
                 return nextDate;
@@ -528,7 +528,7 @@ public class ReconciliationController {
         return null;
     }
 
-    private Double getReconcilationDataAmount(String elementAmount) {
+    private Double getReconciliationDataAmount(String elementAmount) {
         try {
             // Attempt to parse the value.
             return Double.parseDouble(elementAmount);
@@ -538,7 +538,7 @@ public class ReconciliationController {
         return null;
     }
 
-    private void addReconcilationDataRecord(String record) {
+    private void addReconciliationDataRecord(String record) {
         try {
             // Process the elements (CSV)
             String[] elements = record.split("[\t,]");
@@ -557,7 +557,7 @@ public class ReconciliationController {
             for(String nextElement : elements) {
                 // If we don't have a date, try to get one.
                 if(transactionDate == null) {
-                    transactionDate = getReconcilationDataDate(nextElement);
+                    transactionDate = getReconciliationDataDate(nextElement);
 
                     if(transactionDate != null) {
                         // Check, if the year is less than 100
@@ -576,7 +576,7 @@ public class ReconciliationController {
                 }
 
                 if(transactionAmount == null) {
-                    transactionAmount = getReconcilationDataAmount(nextElement);
+                    transactionAmount = getReconciliationDataAmount(nextElement);
 
                     if(transactionAmount != null) {
                         continue;
@@ -618,7 +618,7 @@ public class ReconciliationController {
         }
     }
 
-    private void addReconcilationData(String data) {
+    private void addReconciliationData(String data) {
         // Each line is a record - split by CR/LF
         String[] records = data.split("\n");
 
@@ -626,7 +626,7 @@ public class ReconciliationController {
 
         // Insert data into the table.
         for(String nextRecord : records) {
-            addReconcilationDataRecord(nextRecord);
+            addReconciliationDataRecord(nextRecord);
         }
     }
 
@@ -653,27 +653,27 @@ public class ReconciliationController {
 
         // AMEX File is a CSV
         // Date (dd/mm/yy), Reference, Amount *-1, Description, additional
-        BufferedReader reader = new BufferedReader(new FileReader(recFile.getPath()));
-        String line;
-        while((line = reader.readLine()) != null) {
-            // Clean the line.
-            while(line.contains("  ") || line.contains("\t")) {
-                line = line.replace("  ", " ");
-                line = line.replace("\t", " ");
-            }
+        try(BufferedReader reader = new BufferedReader(new FileReader(recFile.getPath()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Clean the line.
+                while (line.contains("  ") || line.contains("\t")) {
+                    line = line.replace("  ", " ");
+                    line = line.replace("\t", " ");
+                }
 
-            line = line.trim();
+                line = line.trim();
 
-            // Get the reconciliation data.
-            if(!lineProcessor.skipLine(line)) {
-                ReconciliationData recLine = lineProcessor.getReconcileData(splitDataLine(line));
+                // Get the reconciliation data.
+                if (!lineProcessor.skipLine(line)) {
+                    ReconciliationData recLine = lineProcessor.getReconcileData(splitDataLine(line));
 
-                if(recLine != null) {
-                    reconciliationRepository.save(recLine);
+                    if (recLine != null) {
+                        reconciliationRepository.save(recLine);
+                    }
                 }
             }
         }
-        reader.close();
     }
 
     private void loadFile(LoadFileRequest loadFileRequest) throws Exception {
@@ -716,16 +716,16 @@ public class ReconciliationController {
     @RequestMapping(path="/ext/money/reconciliation/add", method= RequestMethod.POST)
     public @ResponseBody
     OkStatus  reconcileDataExt( @RequestBody String reconciliationData) {
-        LOG.info("Adding Reconcilation Data (ext) - " + reconciliationData.length());
-        addReconcilationData(reconciliationData);
+        LOG.info("Adding Reconciliation Data (ext) - " + reconciliationData.length());
+        addReconciliationData(reconciliationData);
         return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconciliation/add", method= RequestMethod.POST)
     public @ResponseBody
     OkStatus  reconcileDataInt( @RequestBody String reconciliationData) {
-        LOG.info("Adding Reconcilation Data - " + reconciliationData.length());
-        addReconcilationData(reconciliationData);
+        LOG.info("Adding Reconciliation Data - " + reconciliationData.length());
+        addReconciliationData(reconciliationData);
         return OkStatus.getOkStatus();
     }
 
@@ -797,28 +797,28 @@ public class ReconciliationController {
 
     @RequestMapping(path="/ext/money/reconciliation/auto", method= RequestMethod.PUT)
     public @ResponseBody OkStatus reconcileDataExt() throws Exception {
-        LOG.info("Auto Reconcilation Data (ext) ");
+        LOG.info("Auto Reconciliation Data (ext) ");
         autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconciliation/auto", method= RequestMethod.PUT)
     public @ResponseBody OkStatus reconcileDataInt() throws Exception {
-        LOG.info("Auto Reconcilation Data ");
+        LOG.info("Auto Reconciliation Data ");
         autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/ext/money/reconciliation/clear", method= RequestMethod.DELETE)
     public @ResponseBody OkStatus reconcileDataDeleteExt() {
-        LOG.info("Clear Reconcilation Data (ext) ");
+        LOG.info("Clear Reconciliation Data (ext) ");
         clearRepositoryData();
         return OkStatus.getOkStatus();
     }
 
     @RequestMapping(path="/int/money/reconciliation/clear", method= RequestMethod.DELETE)
     public @ResponseBody OkStatus reconcileDataDeleteInt() {
-        LOG.info("Clear Reconcilation Data ");
+        LOG.info("Clear Reconciliation Data ");
         clearRepositoryData();
         return OkStatus.getOkStatus();
     }

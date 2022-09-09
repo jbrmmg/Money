@@ -1,5 +1,7 @@
 package com.jbr.middletier.money.data;
 
+import com.jbr.middletier.money.util.TransactionString;
+
 import javax.persistence.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -75,7 +77,17 @@ public class ReconciliationData {
 
         Transaction transaction = (Transaction) o;
 
-        return transaction.getAmount() == this.amount && compareDateWithoutTime(transaction.getDate(),this.date);
+        return this.toString().equals(transaction.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return TransactionString.formattedTransactionString(this.date,this.amount);
     }
 
     public long closeMatch(Transaction transaction) {

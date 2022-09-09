@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.data;
 
+import com.jbr.middletier.money.util.TransactionString;
 import org.hibernate.annotations.*;
 
 import javax.persistence.*;
@@ -119,4 +120,14 @@ public class Transaction {
     }
 
     public Date getDate() { return this.date; }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return TransactionString.formattedTransactionString(this.date,this.amount);
+    }
 }
