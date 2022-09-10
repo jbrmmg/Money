@@ -30,7 +30,7 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/jbr")
 public class AccountController {
-    final static private Logger LOG = LoggerFactory.getLogger(AccountController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
 
     private final AccountRepository accountRepository;
     private final LogoManager logoManager;
@@ -53,7 +53,7 @@ public class AccountController {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
-    @RequestMapping(path="/ext/money/accounts", method= RequestMethod.GET)
+    @GetMapping(path="/ext/money/accounts")
     public @ResponseBody List<AccountDTO> getExtAccounts() {
         LOG.info("Request Accounts (ext).");
 
@@ -65,7 +65,7 @@ public class AccountController {
         return result;
     }
 
-    @RequestMapping(path="/int/money/accounts", method= RequestMethod.GET)
+    @GetMapping(path="/int/money/accounts")
     public @ResponseBody List<AccountDTO>  getIntAccounts() {
         LOG.info("Request Accounts (int).");
 
@@ -77,7 +77,7 @@ public class AccountController {
         return result;
     }
 
-    @RequestMapping(path="/int/money/account/logo", method= RequestMethod.GET)
+    @GetMapping(path="/int/money/account/logo")
     public @ResponseBody ResponseEntity<String> getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
                                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (int)");
@@ -86,7 +86,7 @@ public class AccountController {
         return new ResponseEntity<>(getAccountLogo(id, disabled), headers, HttpStatus.OK);
     }
 
-    @RequestMapping(path="/ext/money/account/logo", method= RequestMethod.GET)
+    @GetMapping(path="/ext/money/account/logo")
     public @ResponseBody ResponseEntity<String> getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (ext)");
@@ -95,7 +95,7 @@ public class AccountController {
         return new ResponseEntity<>(getAccountLogo(id, disabled), headers, HttpStatus.OK);
     }
 
-    @RequestMapping(path="/int/money/accounts",method=RequestMethod.POST)
+    @PostMapping(path="/int/money/accounts")
     public @ResponseBody List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws Exception {
         LOG.info("Create a new account - " + account.getId());
 
@@ -110,7 +110,7 @@ public class AccountController {
         return this.getIntAccounts();
     }
 
-    @RequestMapping(path="/int/money/accounts",method=RequestMethod.PUT)
+    @PutMapping(path="/int/money/accounts")
     public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) {
         LOG.info("Update an account - " + account.getId());
 
@@ -127,7 +127,7 @@ public class AccountController {
         return this.getIntAccounts();
     }
 
-    @RequestMapping(path="/int/money/accounts",method=RequestMethod.DELETE)
+    @DeleteMapping(path="/int/money/accounts")
     public @ResponseBody OkStatus deleteAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
         LOG.info("Delete account " + account.getId());
 

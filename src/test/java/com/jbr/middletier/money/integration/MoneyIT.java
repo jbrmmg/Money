@@ -44,6 +44,6 @@ public class MoneyIT {
 
     @Test
     public void test() {
-
+        Assert.assertTrue(true);
     }
 }
