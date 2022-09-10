@@ -92,8 +92,8 @@ public class LogoDefinition {
         this.logoText = logoText;
     }
 
-    public Boolean getSecondBorder() {
-        return secondBorder;
+    public boolean getSecondBorder() {
+        return secondBorder != null && secondBorder;
     }
 
     public void setSecondBorder(Boolean secondBorder) {

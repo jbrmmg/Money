@@ -5,21 +5,31 @@ import com.jbr.middletier.money.dataaccess.LogoDefinitionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Controller;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 public class LogoManager {
-    final static private Logger LOG = LoggerFactory.getLogger(LogoManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LogoManager.class);
 
     private final LogoDefinitionRepository logoDefinitionRepository;
-    @SuppressWarnings("FieldCanBeLocal")
-    private final String DEFAULT_LOGO_ID = "DFLTI";
+
+    private final ResourceLoader resourceLoader;
+
+    @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
+    private static final String defaultLogoId = "DFLTI";
 
     @Autowired
-    public LogoManager(LogoDefinitionRepository logoDefinitionRepository) {
+    public LogoManager(LogoDefinitionRepository logoDefinitionRepository, ResourceLoader resourceLoader) {
         this.logoDefinitionRepository = logoDefinitionRepository;
+        this.resourceLoader = resourceLoader;
     }
 
     public static class ScalableVectorGraphics {
@@ -43,7 +53,7 @@ public class LogoManager {
         // Get the logo definition
         Optional<LogoDefinition> logoDefinition = logoDefinitionRepository.findById(logoId);
         if(!logoDefinition.isPresent()) {
-            logoDefinition = logoDefinitionRepository.findById(DEFAULT_LOGO_ID);
+            logoDefinition = logoDefinitionRepository.findById(defaultLogoId);
 
             if(!logoDefinition.isPresent()) {
                 throw new IllegalStateException("Cannot find the default logo definition.");
@@ -51,51 +61,27 @@ public class LogoManager {
         }
 
         // Generate a logo, SVG
-        StringBuilder stringBuilder = new StringBuilder();
+        String template;
+        try {
+            Resource resource = resourceLoader.getResource(logoDefinition.get().getSecondBorder() ? "classpath:html/logo-template-2.svg" : "classpath:html/logo-template.svg");
+            InputStream is = resource.getInputStream();
 
-        stringBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
-        stringBuilder.append("<svg\n");
-        stringBuilder.append("        width   = \"100\"\n");
-        stringBuilder.append("        height  = \"100\"\n");
-        stringBuilder.append("        viewBox = \"0 0 100 100\"\n");
-        stringBuilder.append("        xmlns   = \"http://www.w3.org/2000/svg\">\n");
-        stringBuilder.append("    <style type=\"text/css\">\n");
-        stringBuilder.append("        <![CDATA[\n");
-        stringBuilder.append("         tspan.am {\n");
-        stringBuilder.append("            font-weight: bold;\n");
-        stringBuilder.append("            font-size:   ").append(logoDefinition.get().getFontSize()).append("px;\n");
-        stringBuilder.append("            line-height: 125%;\n");
-        stringBuilder.append("            font-family: Arial;\n");
-        stringBuilder.append("            text-align:  center;\n");
-        stringBuilder.append("            text-anchor: middle;\n");
-        stringBuilder.append("            fill:        #").append(logoDefinition.get().getTextColour()).append(";\n");
-        stringBuilder.append("         }\n");
-        stringBuilder.append("\n");
-        stringBuilder.append("         rect.am {\n");
-        stringBuilder.append("            fill: #").append(logoDefinition.get().getFillColour()).append(";\n");
-        stringBuilder.append("         }\n");
-        stringBuilder.append("\n");
-        stringBuilder.append("         rect.amborder {\n");
-        stringBuilder.append("            fill: #").append(logoDefinition.get().getBorderColour()).append(";\n");
-        stringBuilder.append("         }\n");
-        stringBuilder.append("\n");
-        stringBuilder.append("         rect.amborder2 {\n");
-        stringBuilder.append("            fill: #").append(logoDefinition.get().getBorderTwoColour().trim()).append(";\n");
-        stringBuilder.append("         }\n");
-        stringBuilder.append("      ]]>\n");
-        stringBuilder.append("    </style>\n");
-        stringBuilder.append("    <rect class=\"amborder\" width=\"100\" height=\"100\" x=\"0\" y=\"0\"/>\n");
-        if(logoDefinition.get().getSecondBorder()) {
-            stringBuilder.append("    <rect class=\"amborder2\" width=\"90\" height=\"90\" x=\"5\" y=\"5\"/>\n");
-            stringBuilder.append("    <rect class=\"am\" width=\"80\" height=\"80\" x=\"10\" y=\"10\"/>\n");
-        } else {
-            stringBuilder.append("    <rect class=\"am\" width=\"90\" height=\"90\" x=\"5\" y=\"5\"/>\n");
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader reader = new BufferedReader(isr);
+
+            template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        } catch (Exception exception) {
+            throw new IllegalStateException("Unable to get the SVG template from the resources");
         }
-        stringBuilder.append("    <text>\n");
-        stringBuilder.append("        <tspan class=\"am\" x=\"50\" y=\"").append(logoDefinition.get().getY()).append("\">").append(logoDefinition.get().getLogoText()).append("</tspan>\n");
-        stringBuilder.append("    </text>\n");
-        stringBuilder.append("</svg>");
 
-        return new ScalableVectorGraphics(stringBuilder.toString());
+        template = template.replace("%%FONT_SIZE%%", logoDefinition.get().getFontSize().toString());
+        template = template.replace("%%TEXT_COLOUR%%", logoDefinition.get().getTextColour());
+        template = template.replace("%%FILL_COLOUR%%", logoDefinition.get().getFillColour());
+        template = template.replace("%%BORDER_COLOUR%%", logoDefinition.get().getBorderColour());
+        template = template.replace("%%BORDER_TWO_COLOUR%%", logoDefinition.get().getBorderTwoColour());
+        template = template.replace("%%Y%%", logoDefinition.get().getY().toString());
+        template = template.replace("%%LOGO_TEXT%%", logoDefinition.get().getLogoText());
+
+        return new ScalableVectorGraphics(template);
     }
 }
