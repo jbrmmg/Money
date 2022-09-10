@@ -189,61 +189,59 @@ public class ReportGenerator {
 
     private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
         String pieChartFile = applicationProperties.getReportWorking() + "/pie.svg";
-        PrintWriter pie = new PrintWriter(pieChartFile);
+        try(PrintWriter pie = new PrintWriter(pieChartFile)) {
+            pie.write("<svg viewBox=\"0 0 10000 10000\" xmlns=\"http://www.w3.org/2000/svg\">\n");
+            pie.write("<circle id=\"BCKG\" r=\"5000\" cx=\"5000\" cy=\"5000\" fill=\"white\"></circle>\n");
 
-        pie.write("<svg viewBox=\"0 0 10000 10000\" xmlns=\"http://www.w3.org/2000/svg\">\n");
-        pie.write("<circle id=\"BCKG\" r=\"5000\" cx=\"5000\" cy=\"5000\" fill=\"white\"></circle>\n");
+            // Circumference = 2 * r * pi = 10000 * pi = 31416
 
-        // Circumference = 2 * r * pi = 10000 * pi = 31416
+            double percent = 100;
+            Map<String, CategoryPercentage> categoryPercentageMap = getCategoryPercentages(transactions);
+            for (String nextCategoryId : categoryPercentageMap.keySet()) {
+                CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
+                if (nextCategoryPercentage.ignore) {
+                    continue;
+                }
 
-        double percent = 100;
-        Map<String,CategoryPercentage> categoryPercentageMap = getCategoryPercentages(transactions);
-        for(String nextCategoryId: categoryPercentageMap.keySet()) {
-            CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
-            if(nextCategoryPercentage.ignore) {
-                continue;
+                pie.write(getPieChartSlice(nextCategoryPercentage.category.getId(), 5000, 5000, 2500, percent, nextCategoryPercentage.category.getColour()));
+
+                percent -= nextCategoryPercentage.percentage;
+                if (percent < 0) {
+                    percent = 0;
+                }
             }
 
-            pie.write(getPieChartSlice(nextCategoryPercentage.category.getId(), 5000,5000, 2500, percent, nextCategoryPercentage.category.getColour()));
+            percent = 100;
+            for (String nextCategoryId : categoryPercentageMap.keySet()) {
+                CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
+                if (nextCategoryPercentage.ignore) {
+                    continue;
+                }
 
-            percent -= nextCategoryPercentage.percentage;
-            if(percent < 0) {
-                percent = 0;
+                double halfWay = (100 - (percent - nextCategoryPercentage.percentage / 2)) * 3.6;
+                pie.write(textAtRingAndAngle(
+                        nextCategoryPercentage.category.getId() + "-txt",
+                        5000,
+                        5000,
+                        4800,
+                        halfWay * -1.0,
+                        nextCategoryPercentage.percentage,
+                        nextCategoryPercentage.category.getColour(),
+                        nextCategoryPercentage.category.getName()));
+
+                LOG.debug("-----------------------------------------------------------------");
+                LOG.debug("Category:    " + nextCategoryPercentage.category.getName());
+                LOG.debug("Percentage:  " + percent);
+                LOG.debug("Angle:       " + halfWay);
+                LOG.debug("Amount:      " + nextCategoryPercentage.amount);
+                LOG.debug("-----------------------------------------------------------------");
+
+                percent -= nextCategoryPercentage.percentage;
             }
+
+            pie.write("<circle id=\"OUTL\" r=\"5000\" cx=\"5000\" cy=\"5000\" stroke=\"black\" stroke-width=\"20\" fill=\"none\"></circle>\n");
+            pie.write("</svg>");
         }
-
-        percent = 100;
-        for(String nextCategoryId: categoryPercentageMap.keySet()) {
-            CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
-            if(nextCategoryPercentage.ignore) {
-                continue;
-            }
-
-            double halfWay = (100 - (percent - nextCategoryPercentage.percentage / 2)) * 3.6;
-            pie.write(textAtRingAndAngle(
-                    nextCategoryPercentage.category.getId() + "-txt",
-                    5000,
-                    5000,
-                    4800,
-                    halfWay * -1.0,
-                    nextCategoryPercentage.percentage,
-                    nextCategoryPercentage.category.getColour(),
-                    nextCategoryPercentage.category.getName()));
-
-            LOG.debug("-----------------------------------------------------------------");
-            LOG.debug("Category:    " + nextCategoryPercentage.category.getName());
-            LOG.debug("Percentage:  " + percent);
-            LOG.debug("Angle:       " + halfWay);
-            LOG.debug("Amount:      " + nextCategoryPercentage.amount);
-            LOG.debug("-----------------------------------------------------------------");
-
-            percent -= nextCategoryPercentage.percentage;
-        }
-
-        pie.write("<circle id=\"OUTL\" r=\"5000\" cx=\"5000\" cy=\"5000\" stroke=\"black\" stroke-width=\"20\" fill=\"none\"></circle>\n");
-        pie.write("</svg>");
-
-        pie.close();
 
         createPngFromSvg(pieChartFile,applicationProperties.getReportWorking() + "/pie-" + type +".png", 1000, 1000);
     }
@@ -421,14 +419,13 @@ public class ReportGenerator {
                 try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
 
                     svgWriter.write(accountController.getAccountLogo(nextTransactions.getAccount().getId(), false));
-                    svgWriter.close();
-
-                    // Create a PNG from SVG
-                    createPngFromSvg(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg",
-                            workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png",
-                            100,
-                            100);
                 }
+
+                // Create a PNG from SVG
+                createPngFromSvg(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg",
+                        workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png",
+                        100,
+                        100);
             }
         }
     }
@@ -715,13 +712,13 @@ public class ReportGenerator {
         createWorkingDirectories();
 
         File htmlFile = new File(applicationProperties.getHtmlFilename());
-        PrintWriter writer2 = new PrintWriter(htmlFile);
+        try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
 
-        String template = getTemplate(false);
-        template = addReportToTemplate(template, "", year, month );
+            String template = getTemplate(false);
+            template = addReportToTemplate(template, "", year, month);
 
-        writer2.println(template);
-        writer2.close();
+            writer2.println(template);
+        }
 
         generatePDF();
 

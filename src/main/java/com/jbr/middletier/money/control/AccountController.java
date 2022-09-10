@@ -3,8 +3,10 @@ package com.jbr.middletier.money.control;
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
+import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import com.jbr.middletier.money.manager.LogoManager;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,10 +35,13 @@ public class AccountController {
     private final AccountRepository accountRepository;
     private final LogoManager logoManager;
 
+    private final ModelMapper modelMapper;
+
     @Autowired
-    public AccountController(AccountRepository accountRepository, LogoManager logoManager) {
+    public AccountController(AccountRepository accountRepository, LogoManager logoManager, ModelMapper modelMapper) {
         this.accountRepository = accountRepository;
         this.logoManager = logoManager;
+        this.modelMapper = modelMapper;
     }
 
     public String getAccountLogo(String id, Boolean disabled) {
@@ -47,15 +54,27 @@ public class AccountController {
     }
 
     @RequestMapping(path="/ext/money/accounts", method= RequestMethod.GET)
-    public @ResponseBody Iterable<Account>  getExtAccounts() {
+    public @ResponseBody List<AccountDTO> getExtAccounts() {
         LOG.info("Request Accounts (ext).");
-        return accountRepository.findAll();
+
+        List<AccountDTO> result = new ArrayList<>();
+        for(Account nextAccount: accountRepository.findAll()) {
+            result.add(this.modelMapper.map(nextAccount, AccountDTO.class));
+        }
+
+        return result;
     }
 
     @RequestMapping(path="/int/money/accounts", method= RequestMethod.GET)
-    public @ResponseBody Iterable<Account>  getIntAccounts() {
+    public @ResponseBody List<AccountDTO>  getIntAccounts() {
         LOG.info("Request Accounts (int).");
-        return accountRepository.findAll();
+
+        List<AccountDTO> result = new ArrayList<>();
+        for(Account nextAccount: accountRepository.findAll()) {
+            result.add(this.modelMapper.map(nextAccount, AccountDTO.class));
+        }
+
+        return result;
     }
 
     @RequestMapping(path="/int/money/account/logo", method= RequestMethod.GET)
@@ -77,7 +96,7 @@ public class AccountController {
     }
 
     @RequestMapping(path="/int/money/accounts",method=RequestMethod.POST)
-    public @ResponseBody Iterable<Account> createAccount(@RequestBody Account account) throws Exception {
+    public @ResponseBody List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws Exception {
         LOG.info("Create a new account - " + account.getId());
 
         // Is there an account with this ID?
@@ -86,13 +105,13 @@ public class AccountController {
             throw new Exception(account.getId() + " already exists");
         }
 
-        accountRepository.save(account);
+        accountRepository.save(this.modelMapper.map(account,Account.class));
 
-        return accountRepository.findAll();
+        return this.getIntAccounts();
     }
 
     @RequestMapping(path="/int/money/accounts",method=RequestMethod.PUT)
-    public @ResponseBody Iterable<Account> updateAccount(@RequestBody Account account) {
+    public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) {
         LOG.info("Update an account - " + account.getId());
 
         // Is there an account with this ID?
@@ -105,11 +124,11 @@ public class AccountController {
             accountRepository.save(existingAccount.get());
         }
 
-        return accountRepository.findAll();
+        return this.getIntAccounts();
     }
 
     @RequestMapping(path="/int/money/accounts",method=RequestMethod.DELETE)
-    public @ResponseBody OkStatus deleteAccount(@RequestBody Account account) throws InvalidAccountIdException {
+    public @ResponseBody OkStatus deleteAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
         LOG.info("Delete account " + account.getId());
 
         // Is there an account with this ID?

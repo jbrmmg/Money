@@ -1,7 +1,11 @@
 package com.jbr.middletier.money.config;
 
+import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.dto.AccountDTO;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.modelmapper.*;
 
 @Configuration
 @ConfigurationProperties(prefix="money")
@@ -60,4 +64,13 @@ public class ApplicationProperties {
     public String getPDFFilename() { return getReportWorking() + "/Report.pdf"; }
 
     public String getHtmlFilename() { return getReportWorking() + "/Report.html"; }
+
+    @Bean
+    public ModelMapper modelMapper() {
+        ModelMapper modelMapper = new ModelMapper();
+
+        modelMapper.createTypeMap(Account.class, AccountDTO.class);
+
+        return modelMapper;
+    }
 }
