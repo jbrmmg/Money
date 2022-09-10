@@ -3,8 +3,10 @@ package com.jbr.middletier.money.control;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -24,12 +28,13 @@ import java.util.Optional;
 public class CategoryController {
     final static private Logger LOG = LoggerFactory.getLogger(CategoryController.class);
 
-    private final
-    CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public CategoryController(CategoryRepository categoryRepository) {
+    public CategoryController(CategoryRepository categoryRepository, ModelMapper modelMapper) {
         this.categoryRepository = categoryRepository;
+        this.modelMapper = modelMapper;
     }
 
     @ExceptionHandler(Exception.class)
@@ -39,20 +44,26 @@ public class CategoryController {
 
     @RequestMapping(path="/ext/money/categories", method= RequestMethod.GET)
     public @ResponseBody
-    Iterable<Category>  getExtCategories() {
+    List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
-        return categoryRepository.findAllByOrderBySortAsc();
+
+        List<CategoryDTO> result = new ArrayList<>();
+        for(Category nextCategory: categoryRepository.findAllByOrderBySortAsc()) {
+            result.add(this.modelMapper.map(nextCategory, CategoryDTO.class));
+        }
+
+        return result;
     }
 
     @RequestMapping(path="/int/money/categories", method= RequestMethod.GET)
     public @ResponseBody
-    Iterable<Category>  getIntCategories() {
+    List<CategoryDTO>  getIntCategories() {
         LOG.info("Request Categories.");
-        return categoryRepository.findAllByOrderBySortAsc();
+        return this.getExtCategories();
     }
 
     @RequestMapping(path="/int/money/categories",method=RequestMethod.POST)
-    public @ResponseBody Iterable<Category> createCategory(@RequestBody Category category) throws Exception {
+    public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws Exception {
         LOG.info("Create a new account - " + category.getId());
 
         // Is there an account with this ID?
@@ -61,13 +72,13 @@ public class CategoryController {
             throw new Exception(category.getId() + " already exists");
         }
 
-        categoryRepository.save(category);
+        categoryRepository.save(this.modelMapper.map(category,Category.class));
 
-        return categoryRepository.findAll();
+        return this.getExtCategories();
     }
 
     @RequestMapping(path="/int/money/categories",method=RequestMethod.PUT)
-    public @ResponseBody Iterable<Category> updateCategory(@RequestBody Category category) throws Exception {
+    public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws Exception {
         LOG.info("Update an account - " + category.getId());
 
         // Is there an account with this ID?
@@ -88,11 +99,11 @@ public class CategoryController {
             throw new Exception(category.getId() + " cannot find category.");
         }
 
-        return categoryRepository.findAll();
+        return this.getExtCategories();
     }
 
     @RequestMapping(path="/int/money/categories",method=RequestMethod.DELETE)
-    public @ResponseBody OkStatus deleteAccount(@RequestBody Category category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
+    public @ResponseBody OkStatus deleteAccount(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account " + category.getId());
 
         // Is there an account with this ID?

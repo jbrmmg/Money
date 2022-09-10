@@ -1,7 +1,9 @@
 package com.jbr.middletier.money.config;
 
 import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.dto.AccountDTO;
+import com.jbr.middletier.money.dto.CategoryDTO;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -70,6 +72,9 @@ public class ApplicationProperties {
         ModelMapper modelMapper = new ModelMapper();
 
         modelMapper.createTypeMap(Account.class, AccountDTO.class);
+        modelMapper.createTypeMap(AccountDTO.class, Account.class);
+        modelMapper.createTypeMap(Category.class, CategoryDTO.class);
+        modelMapper.createTypeMap(CategoryDTO.class, Category.class);
 
         return modelMapper;
     }

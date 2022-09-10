@@ -23,6 +23,8 @@ import java.util.Calendar;
 public class ArchiveAndReportController {
     final static private Logger LOG = LoggerFactory.getLogger(ArchiveAndReportController.class);
 
+    private static final String FAILED = "FAILED";
+
     private final ReportGenerator reportGenerator;
     private final StatementRepository statementRepository;
     private final ApplicationProperties applicationProperties;
@@ -60,7 +62,7 @@ public class ArchiveAndReportController {
             // Must keep at least 3 years.
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
             if(oldestYear >= currentYear - 3) {
-                archiveRequest.setStatus("FAILED");
+                archiveRequest.setStatus(FAILED);
                 return archiveRequest;
             }
 
@@ -68,7 +70,7 @@ public class ArchiveAndReportController {
 
             // Do reports exist for this year?
             if(!reportGenerator.reportsGeneratedForYear(oldestYear)) {
-                archiveRequest.setStatus("FAILED");
+                archiveRequest.setStatus(FAILED);
                 return archiveRequest;
             }
 
@@ -91,7 +93,7 @@ public class ArchiveAndReportController {
 
             archiveRequest.setStatus("OK");
         } catch (Exception ex) {
-            archiveRequest.setStatus("FAILED");
+            archiveRequest.setStatus(FAILED);
         }
 
         return archiveRequest;
@@ -115,7 +117,7 @@ public class ArchiveAndReportController {
 
             report.setStatus("OK");
         } catch (Exception ex) {
-            report.setStatus("FAILED");
+            report.setStatus(FAILED);
         }
 
         return report;
@@ -130,7 +132,7 @@ public class ArchiveAndReportController {
 
             report.setStatus("OK");
         } catch (Exception ex) {
-            report.setStatus("FAILED");
+            report.setStatus(FAILED);
         }
 
         return report;
