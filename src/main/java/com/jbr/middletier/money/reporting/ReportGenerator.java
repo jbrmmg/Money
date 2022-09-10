@@ -737,27 +737,28 @@ public class ReportGenerator {
         createWorkingDirectories();
 
         File htmlFile = new File(applicationProperties.getHtmlFilename());
-        PrintWriter writer2 = new PrintWriter(htmlFile);
+        List<Transaction> previousTransactionList = new ArrayList<>();
+        try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
 
-        // Get the file template.
-        String template = getTemplate(true);
+            // Get the file template.
+            String template = getTemplate(true);
 
-        template = template.replace("<!-- TITLE -->", "<h1>" + year + " Summary</h1>");
+            template = template.replace("<!-- TITLE -->", "<h1>" + year + " Summary</h1>");
 
-        LOG.info("Create pie chart.");
-        createPieChart(transactionList,"yr");
-        template = template.replace("<!-- PIE -->", "<img class=\"pie\" height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie-yr.png" + "\"/>");
+            LOG.info("Create pie chart.");
+            createPieChart(transactionList, "yr");
+            template = template.replace("<!-- PIE -->", "<img class=\"pie\" height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie-yr.png" + "\"/>");
 
-        LOG.info("Insert totals");
-        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYear((int)year-1);
-        template = template.replace("<!-- TOTALS -->", createComparisonTable(transactionList,previousTransactionList, true));
+            LOG.info("Insert totals");
+            previousTransactionList = transactionRepository.findByStatementIdYear((int) year - 1);
+            template = template.replace("<!-- TOTALS -->", createComparisonTable(transactionList, previousTransactionList, true));
 
-        for(int i = 0; i < 12; i++) {
-            template = addReportToTemplate(template, Integer.toString(i),year,i + 1);
+            for (int i = 0; i < 12; i++) {
+                template = addReportToTemplate(template, Integer.toString(i), year, i + 1);
+            }
+
+            writer2.println(template);
         }
-
-        writer2.println(template);
-        writer2.close();
 
         createImages(transactionList);
         createImages(previousTransactionList);
