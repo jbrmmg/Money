@@ -642,7 +642,6 @@ public class ReconciliationController {
         return result;
     }
 
-
     private void loadReconcileFile(File recFile, IReconcileFileProcessor lineProcessor) throws Exception {
         // Clear existing data.
         LOG.info("Clear the reconciliation data.");
