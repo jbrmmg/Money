@@ -60,7 +60,7 @@ public class ReportGenerator {
         this.accountRepository = accountRepository;
     }
 
-    class CategoryPercentage implements Comparable<CategoryPercentage> {
+    static class CategoryPercentage implements Comparable<CategoryPercentage> {
         public Category category;
         public double amount;
         double percentage;
@@ -232,7 +232,7 @@ public class ReportGenerator {
 
             LOG.debug("-----------------------------------------------------------------");
             LOG.debug("Category:    " + nextCategoryPercentage.category.getName());
-            LOG.debug("Percentagge: " + percent);
+            LOG.debug("Percentage:  " + percent);
             LOG.debug("Angle:       " + halfWay);
             LOG.debug("Amount:      " + nextCategoryPercentage.amount);
             LOG.debug("-----------------------------------------------------------------");
@@ -252,7 +252,7 @@ public class ReportGenerator {
         String svg_URI_input = Paths.get(svgFilename).toUri().toURL().toString();
         TranscoderInput input_svg_image = new TranscoderInput(svg_URI_input);
         //Step-2: Define OutputStream to PNG Image and attach to TranscoderOutput
-        OutputStream png_ostream = new FileOutputStream(pngFilename);
+        OutputStream png_ostream = Files.newOutputStream(Paths.get(pngFilename));
         TranscoderOutput output_png_image = new TranscoderOutput(png_ostream);
         // Step-3: Create PNGTranscoder and define hints if required
         PNGTranscoder my_converter = new PNGTranscoder();
@@ -268,7 +268,7 @@ public class ReportGenerator {
     private int getSplitIndex(String description) {
         // Split the description, have a maximum of 30 chars on the first line.
 
-        // If less that 20 characters then leave as is.
+        // If less description 20 characters then leave as is.
         if(description.length() <= 20) {
             return 0;
         }
@@ -416,18 +416,19 @@ public class ReportGenerator {
             File pngFile = new File(pngFilename);
 
             if(!pngFile.exists()) {
-                // Create a SVG for the account.
+                // Create an SVG for the account.
                 File svgFile = new File(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg");
-                PrintWriter svgWriter = new PrintWriter(svgFile);
+                try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
 
-                svgWriter.write(accountController.getAccountLogo(nextTransactions.getAccount().getId(), false));
-                svgWriter.close();
+                    svgWriter.write(accountController.getAccountLogo(nextTransactions.getAccount().getId(), false));
+                    svgWriter.close();
 
-                // Create a PNG from SVG
-                createPngFromSvg(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg",
-                        workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png",
-                        100,
-                        100);
+                    // Create a PNG from SVG
+                    createPngFromSvg(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg",
+                            workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png",
+                            100,
+                            100);
+                }
             }
         }
     }
@@ -450,23 +451,24 @@ public class ReportGenerator {
             File pngFile = new File(pngFilename);
 
             if(!pngFile.exists()) {
-                // Create a SVG for the account.
+                // Create an SVG for the account.
                 File svgFile = new File(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg");
-                PrintWriter svgWriter = new PrintWriter(svgFile);
+                try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
 
-                svgWriter.write(createCategoryLog(nextTransactions.getCategory()));
-                svgWriter.close();
+                    svgWriter.write(createCategoryLog(nextTransactions.getCategory()));
+                    svgWriter.close();
 
-                // Create a PNG from SVG
-                createPngFromSvg(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg",
-                        workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png",
-                        100,
-                        100);
+                    // Create a PNG from SVG
+                    createPngFromSvg(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg",
+                            workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png",
+                            100,
+                            100);
+                }
             }
         }
     }
 
-    class CategoryComparison implements Comparable<CategoryComparison> {
+    static class CategoryComparison implements Comparable<CategoryComparison> {
         public Category category;
         double thisMonth;
         double previousMonth;
@@ -499,7 +501,7 @@ public class ReportGenerator {
         for(Transaction nextTransaction: transactions) {
             // Has this category already been seen?
             CategoryComparison categoryComparison;
-            if(comparisons.keySet().contains(nextTransaction.getCategory().getId())) {
+            if(comparisons.containsKey(nextTransaction.getCategory().getId())) {
                 categoryComparison = comparisons.get(nextTransaction.getCategory().getId());
             } else {
                 categoryComparison = new CategoryComparison(nextTransaction.getCategory());
@@ -513,7 +515,7 @@ public class ReportGenerator {
         for(Transaction nextTransaction: previousTransactions) {
             // Has this category already been seen?
             CategoryComparison categoryComparison;
-            if(comparisons.keySet().contains(nextTransaction.getCategory().getId())) {
+            if(comparisons.containsKey(nextTransaction.getCategory().getId())) {
                 categoryComparison = comparisons.get(nextTransaction.getCategory().getId());
             } else {
                 categoryComparison = new CategoryComparison(nextTransaction.getCategory());
@@ -637,10 +639,10 @@ public class ReportGenerator {
         // Generate a PDF?
         Document document = new Document();
         PdfWriter writer = PdfWriter.getInstance(document,
-                new FileOutputStream(applicationProperties.getPDFFilename()));
+                Files.newOutputStream(Paths.get(applicationProperties.getPDFFilename())));
         document.open();
         XMLWorkerHelper.getInstance().parseXHtml(writer, document,
-                new FileInputStream(applicationProperties.getHtmlFilename()));
+                Files.newInputStream(Paths.get(applicationProperties.getHtmlFilename())));
         document.close();
     }
 
@@ -656,7 +658,7 @@ public class ReportGenerator {
         // Get all the transactions for the specified statement.
         List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth((int)year,(int)month);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("MMMM YYYY");
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy");
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, (int)year);
         calendar.set(Calendar.MONTH, (int)month - 1);
@@ -781,7 +783,7 @@ public class ReportGenerator {
     }
 
     private String getMonthFilename(boolean fullPath, long year, long month) {
-        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-YYYY");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-yyyy");
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, (int)year);
         calendar.set(Calendar.MONTH, (int)month - 1);
@@ -793,7 +795,7 @@ public class ReportGenerator {
         return applicationProperties.getReportShare() + "/" + year + "/Report-" + sdf2.format(calendar.getTime()) + ".pdf";
     }
 
-    class MonthStatus {
+    static class MonthStatus {
         int year;
         int month;
 
