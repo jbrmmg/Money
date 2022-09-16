@@ -12,13 +12,13 @@ import org.jdom2.output.XMLOutputter;
 public class ScalableVectorGraphics {
     private final Document svg;
 
-    private final static String ATTRIBUTE_CLASS = "class";
-    private final static String ATTRIBUTE_WIDTH = "width";
-    private final static String ATTRIBUTE_HEIGHT = "height";
-    private final static String ATTRIBUTE_X = "x";
-    private final static String ATTRIBUTE_Y = "y";
-    private final static String ELEMENT_RECT = "rect";
-    private final static String DECLARATION_FILL = "fill";
+    private static final String ATTRIBUTE_CLASS = "class";
+    private static final String ATTRIBUTE_WIDTH = "width";
+    private static final String ATTRIBUTE_HEIGHT = "height";
+    private static final String ATTRIBUTE_X = "x";
+    private static final String ATTRIBUTE_Y = "y";
+    private static final String ELEMENT_RECT = "rect";
+    private static final String DECLARATION_FILL = "fill";
 
     private CSSStyleRule getTextRule(int fontSize, String fillColour) {
         CSSStyleRule textRule = new CSSStyleRule();
