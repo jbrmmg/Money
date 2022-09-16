@@ -215,7 +215,7 @@ public class LogoTest {
     public void testLogoGenerationNWDE() throws IOException, ParserConfigurationException, SAXException {
         LogoManager.ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("NWDE", false);
         Assert.assertNotNull(logo);
-        checkLogoString(logo.getSvgAsString(),48, "FFFFFF", "004A8F", "FFFFFF", "FFFFFF", "NW");
+        checkLogoString(logo.getSvgAsString(),48, "FFFFFF", "004A8F", "FFFFFF", "ED1C24", "NW");
     }
 
     @Test
