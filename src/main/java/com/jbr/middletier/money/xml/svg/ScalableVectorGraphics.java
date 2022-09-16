@@ -9,10 +9,14 @@ import org.jdom2.*;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
-import java.io.IOException;
-
 public class ScalableVectorGraphics {
     private final Document svg;
+
+    private final static String ATTRIBUTE_CLASS = "class";
+    private final static String ATTRIBUTE_WIDTH = "width";
+    private final static String ATTRIBUTE_HEIGHT = "height";
+    private final static String ATTRIBUTE_X = "x";
+    private final static String ATTRIBUTE_Y = "y";
 
     private CSSStyleRule getTextRule(int fontSize, String fillColour) {
         CSSStyleRule textRule = new CSSStyleRule();
@@ -105,11 +109,11 @@ public class ScalableVectorGraphics {
                 .setContent(styleSheet);
 
         Element rectangle = new Element("rect", svgNamespace)
-                .setAttribute("class","amborder")
-                .setAttribute("width","100")
-                .setAttribute("height","100")
-                .setAttribute("x","0")
-                .setAttribute("y","0");
+                .setAttribute(ATTRIBUTE_CLASS,"amborder")
+                .setAttribute(ATTRIBUTE_WIDTH,"100")
+                .setAttribute(ATTRIBUTE_HEIGHT,"100")
+                .setAttribute(ATTRIBUTE_X,"0")
+                .setAttribute(ATTRIBUTE_Y,"0");
 
         Element rectangleOptional = null;
         String rectangle2Size = "90";
@@ -119,35 +123,35 @@ public class ScalableVectorGraphics {
             rectangle2Location = "10";
 
             rectangleOptional = new Element("rect", svgNamespace)
-                    .setAttribute("class","amborder2")
-                    .setAttribute("width","90")
-                    .setAttribute("height","90")
-                    .setAttribute("x","5")
-                    .setAttribute("y","5");
+                    .setAttribute(ATTRIBUTE_CLASS,"amborder2")
+                    .setAttribute(ATTRIBUTE_WIDTH,"90")
+                    .setAttribute(ATTRIBUTE_HEIGHT,"90")
+                    .setAttribute(ATTRIBUTE_X,"5")
+                    .setAttribute(ATTRIBUTE_Y,"5");
         }
 
 
         Element rectangle2 = new Element("rect", svgNamespace)
-                .setAttribute("class","am")
-                .setAttribute("width",rectangle2Size)
-                .setAttribute("height",rectangle2Size)
-                .setAttribute("x",rectangle2Location)
-                .setAttribute("y",rectangle2Location);
+                .setAttribute(ATTRIBUTE_CLASS,"am")
+                .setAttribute(ATTRIBUTE_WIDTH,rectangle2Size)
+                .setAttribute(ATTRIBUTE_HEIGHT,rectangle2Size)
+                .setAttribute(ATTRIBUTE_X,rectangle2Location)
+                .setAttribute(ATTRIBUTE_Y,rectangle2Location);
 
         Content content = new Text(logoDefinition.getLogoText());
 
         Element tspan = new Element("tspan", svgNamespace)
-                .setAttribute("class", "am")
-                .setAttribute("x", "50")
-                .setAttribute("y", logoDefinition.getY().toString())
+                .setAttribute(ATTRIBUTE_CLASS, "am")
+                .setAttribute(ATTRIBUTE_X, "50")
+                .setAttribute(ATTRIBUTE_Y, logoDefinition.getY().toString())
                 .setContent(content);
 
         Element text = new Element("text", svgNamespace)
                 .addContent(tspan);
 
         Element root = new Element("svg", svgNamespace)
-                .setAttribute("width","100")
-                .setAttribute("height","100")
+                .setAttribute(ATTRIBUTE_WIDTH,"100")
+                .setAttribute(ATTRIBUTE_HEIGHT,"100")
                 .setAttribute("viewBox","0 0 100 100")
                 .addContent(style)
                 .addContent(rectangle);
