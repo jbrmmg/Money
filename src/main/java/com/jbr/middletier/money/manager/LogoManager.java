@@ -2,6 +2,7 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.data.LogoDefinition;
 import com.jbr.middletier.money.dataaccess.LogoDefinitionRepository;
+import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,18 +33,6 @@ public class LogoManager {
         this.resourceLoader = resourceLoader;
     }
 
-    public static class ScalableVectorGraphics {
-        private final String svgString;
-
-        private ScalableVectorGraphics(String svgString) {
-            this.svgString = svgString;
-        }
-
-        public String getSvgAsString() {
-            return this.svgString;
-        }
-    }
-
     public ScalableVectorGraphics getSvgLogoForAccount(String accountId, boolean disabled) {
         LOG.info("Find logo for account id {} (disabled={})", accountId,disabled);
 
@@ -60,28 +49,6 @@ public class LogoManager {
             }
         }
 
-        // Generate a logo, SVG
-        String template;
-        try {
-            Resource resource = resourceLoader.getResource(logoDefinition.get().getSecondBorder() ? "classpath:html/logo-template-2.svg" : "classpath:html/logo-template.svg");
-            InputStream is = resource.getInputStream();
-
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader reader = new BufferedReader(isr);
-
-            template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-        } catch (Exception exception) {
-            throw new IllegalStateException("Unable to get the SVG template from the resources");
-        }
-
-        template = template.replace("%%FONT_SIZE%%", logoDefinition.get().getFontSize().toString());
-        template = template.replace("%%TEXT_COLOUR%%", logoDefinition.get().getTextColour());
-        template = template.replace("%%FILL_COLOUR%%", logoDefinition.get().getFillColour());
-        template = template.replace("%%BORDER_COLOUR%%", logoDefinition.get().getBorderColour());
-        template = template.replace("%%BORDER_TWO_COLOUR%%", logoDefinition.get().getBorderTwoColour());
-        template = template.replace("%%Y%%", logoDefinition.get().getY().toString());
-        template = template.replace("%%LOGO_TEXT%%", logoDefinition.get().getLogoText());
-
-        return new ScalableVectorGraphics(template);
+        return new ScalableVectorGraphics(logoDefinition.get());
     }
 }

@@ -199,21 +199,21 @@ public class LogoTest {
         Assert.assertEquals("FFFFFC", logoDefinition.getTextColour());
         Assert.assertEquals(10, logoDefinition.getFontSize().longValue());
 
-        LogoManager.ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("XYFS", false);
+        ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("XYFS", false);
         Assert.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),32, "FFFFFF", "656565", "FFFFFF", null, "UNK");
     }
 
     @Test
     public void testLogoGenerationJLPC() throws IOException, ParserConfigurationException, SAXException {
-        LogoManager.ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("JLPC", true);
+        ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("JLPC", true);
         Assert.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),75, "5C5C5C", "003B25", "5C5C5C", null, "jl");
     }
 
     @Test
     public void testLogoGenerationNWDE() throws IOException, ParserConfigurationException, SAXException {
-        LogoManager.ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("NWDE", false);
+        ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("NWDE", false);
         Assert.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),48, "FFFFFF", "004A8F", "FFFFFF", "ED1C24", "NW");
     }
@@ -230,7 +230,7 @@ public class LogoTest {
         logoDefinition.setTextColour("FFFFFF");
         logoDefinition.setY(66);
 
-        ScalableVectorGraphics svg = new ScalableVectorGraphics();
-        svg.test(logoDefinition);
+        ScalableVectorGraphics svg = new ScalableVectorGraphics(logoDefinition);
+        svg.getSvgAsString();
     }
 }

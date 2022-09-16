@@ -12,6 +12,8 @@ import org.jdom2.output.XMLOutputter;
 import java.io.IOException;
 
 public class ScalableVectorGraphics {
+    private final Document svg;
+
     private CSSStyleRule getTextRule(int fontSize, String fillColour) {
         CSSStyleRule textRule = new CSSStyleRule();
 
@@ -33,7 +35,7 @@ public class ScalableVectorGraphics {
         declaration = new CSSDeclaration("font-family", CSSExpression.createSimple("Arial"));
         textRule.addDeclaration(declaration);
 
-        declaration = new CSSDeclaration("text-aligh", CSSExpression.createSimple("center"));
+        declaration = new CSSDeclaration("text-align", CSSExpression.createSimple("center"));
         textRule.addDeclaration(declaration);
 
         declaration = new CSSDeclaration("text-anchor", CSSExpression.createSimple("middle"));
@@ -54,7 +56,7 @@ public class ScalableVectorGraphics {
         selector.addMember(selectorAttribute);
         fillRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("fill", CSSExpression.createSimple(fillColour));
+        CSSDeclaration declaration = new CSSDeclaration("fill", CSSExpression.createSimple("#" + fillColour));
         fillRule.addDeclaration(declaration);
 
         return fillRule;
@@ -69,7 +71,7 @@ public class ScalableVectorGraphics {
         selector.addMember(selectorAttribute);
         borderRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("fill", CSSExpression.createSimple(borderColour));
+        CSSDeclaration declaration = new CSSDeclaration("fill", CSSExpression.createSimple("#" + borderColour));
         borderRule.addDeclaration(declaration);
 
         return borderRule;
@@ -85,8 +87,8 @@ public class ScalableVectorGraphics {
         return result;
     }
 
-    public void test(LogoDefinition logoDefinition) throws IOException {
-        Document svg = new Document();
+    public ScalableVectorGraphics(LogoDefinition logoDefinition) {
+        this.svg = new Document();
 
         Namespace svgNamespace = Namespace.getNamespace("http://www.w3.org/2000/svg");
 
@@ -109,12 +111,28 @@ public class ScalableVectorGraphics {
                 .setAttribute("x","0")
                 .setAttribute("y","0");
 
+        Element rectangleOptional = null;
+        String rectangle2Size = "90";
+        String rectangle2Location = "5";
+        if(logoDefinition.getBorderTwoColour() != null && logoDefinition.getBorderTwoColour().trim().length() > 0) {
+            rectangle2Size = "80";
+            rectangle2Location = "10";
+
+            rectangleOptional = new Element("rect", svgNamespace)
+                    .setAttribute("class","amborder2")
+                    .setAttribute("width","90")
+                    .setAttribute("height","90")
+                    .setAttribute("x","5")
+                    .setAttribute("y","5");
+        }
+
+
         Element rectangle2 = new Element("rect", svgNamespace)
                 .setAttribute("class","am")
-                .setAttribute("width","90")
-                .setAttribute("height","90")
-                .setAttribute("x","5")
-                .setAttribute("y","5");
+                .setAttribute("width",rectangle2Size)
+                .setAttribute("height",rectangle2Size)
+                .setAttribute("x",rectangle2Location)
+                .setAttribute("y",rectangle2Location);
 
         Content content = new Text(logoDefinition.getLogoText());
 
@@ -132,13 +150,20 @@ public class ScalableVectorGraphics {
                 .setAttribute("height","100")
                 .setAttribute("viewBox","0 0 100 100")
                 .addContent(style)
-                .addContent(rectangle)
-                .addContent(rectangle2)
-                .addContent(text);
+                .addContent(rectangle);
 
-        svg.addContent(root);
+        if(rectangleOptional != null) {
+            root.addContent(rectangleOptional);
+        }
 
-        XMLOutputter outputter = new XMLOutputter(Format.getCompactFormat());
-        outputter.output(svg,System.out);
+        root.addContent(rectangle2);
+        root.addContent(text);
+
+        this.svg.addContent(root);
+    }
+
+    public String getSvgAsString() {
+        XMLOutputter output = new XMLOutputter(Format.getCompactFormat());
+        return output.outputString(this.svg);
     }
 }
