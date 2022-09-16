@@ -17,6 +17,8 @@ public class ScalableVectorGraphics {
     private final static String ATTRIBUTE_HEIGHT = "height";
     private final static String ATTRIBUTE_X = "x";
     private final static String ATTRIBUTE_Y = "y";
+    private final static String ELEMENT_RECT = "rect";
+    private final static String DECLARATION_FILL = "fill";
 
     private CSSStyleRule getTextRule(int fontSize, String fillColour) {
         CSSStyleRule textRule = new CSSStyleRule();
@@ -45,7 +47,7 @@ public class ScalableVectorGraphics {
         declaration = new CSSDeclaration("text-anchor", CSSExpression.createSimple("middle"));
         textRule.addDeclaration(declaration);
 
-        declaration = new CSSDeclaration("fill", CSSExpression.createSimple("#" + fillColour));
+        declaration = new CSSDeclaration(DECLARATION_FILL, CSSExpression.createSimple("#" + fillColour));
         textRule.addDeclaration(declaration);
 
         return textRule;
@@ -60,7 +62,7 @@ public class ScalableVectorGraphics {
         selector.addMember(selectorAttribute);
         fillRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("fill", CSSExpression.createSimple("#" + fillColour));
+        CSSDeclaration declaration = new CSSDeclaration(DECLARATION_FILL, CSSExpression.createSimple("#" + fillColour));
         fillRule.addDeclaration(declaration);
 
         return fillRule;
@@ -75,7 +77,7 @@ public class ScalableVectorGraphics {
         selector.addMember(selectorAttribute);
         borderRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("fill", CSSExpression.createSimple("#" + borderColour));
+        CSSDeclaration declaration = new CSSDeclaration(DECLARATION_FILL, CSSExpression.createSimple("#" + borderColour));
         borderRule.addDeclaration(declaration);
 
         return borderRule;
@@ -108,7 +110,7 @@ public class ScalableVectorGraphics {
         Element style = new Element("style", svgNamespace)
                 .setContent(styleSheet);
 
-        Element rectangle = new Element("rect", svgNamespace)
+        Element rectangle = new Element(ELEMENT_RECT, svgNamespace)
                 .setAttribute(ATTRIBUTE_CLASS,"amborder")
                 .setAttribute(ATTRIBUTE_WIDTH,"100")
                 .setAttribute(ATTRIBUTE_HEIGHT,"100")
@@ -122,7 +124,7 @@ public class ScalableVectorGraphics {
             rectangle2Size = "80";
             rectangle2Location = "10";
 
-            rectangleOptional = new Element("rect", svgNamespace)
+            rectangleOptional = new Element(ELEMENT_RECT, svgNamespace)
                     .setAttribute(ATTRIBUTE_CLASS,"amborder2")
                     .setAttribute(ATTRIBUTE_WIDTH,"90")
                     .setAttribute(ATTRIBUTE_HEIGHT,"90")
@@ -131,7 +133,7 @@ public class ScalableVectorGraphics {
         }
 
 
-        Element rectangle2 = new Element("rect", svgNamespace)
+        Element rectangle2 = new Element(ELEMENT_RECT, svgNamespace)
                 .setAttribute(ATTRIBUTE_CLASS,"am")
                 .setAttribute(ATTRIBUTE_WIDTH,rectangle2Size)
                 .setAttribute(ATTRIBUTE_HEIGHT,rectangle2Size)
