@@ -30,7 +30,7 @@ import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.cate
 @Controller
 @RequestMapping("/jbr")
 public class TransactionController {
-    final static private Logger LOG = LoggerFactory.getLogger(TransactionController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionController.class);
 
     private final TransactionRepository transactionRepository;
     private final RegularRepository regularRepository;
@@ -314,24 +314,24 @@ public class TransactionController {
         throw new InvalidTransactionIdException(transactionRequest.getId());
     }
 
-    @RequestMapping(path="/ext/money/transaction/add", method= RequestMethod.POST)
+    @PostMapping(path="/ext/money/transaction/add")
     public @ResponseBody Iterable<Transaction>  addTransactionExt(@RequestBody NewTransaction newTransaction) throws Exception {
         return addTransaction(newTransaction);
     }
 
 
-    @RequestMapping(path="/int/money/transaction/add", method= RequestMethod.POST)
+    @PostMapping(path="/int/money/transaction/add")
     public @ResponseBody Iterable<Transaction>  addTransactionInt(@RequestBody NewTransaction newTransaction) throws Exception {
         return addTransaction(newTransaction);
     }
 
-    @RequestMapping(path="/ext/money/delete", method= RequestMethod.DELETE)
+    @DeleteMapping(path="/ext/money/delete")
     public @ResponseBody OkStatus deleteExternal(@RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
         deleteTransaction(transactionId);
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/delete", method= RequestMethod.DELETE)
+    @DeleteMapping(path="/int/money/delete")
     public @ResponseBody OkStatus deleteInternal( @RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
         deleteTransaction(transactionId);
         return OkStatus.getOkStatus();
@@ -350,7 +350,7 @@ public class TransactionController {
         return transactionRepository.findAll(getTransactionSearch(type,from,to,category,account), transactionSort);
     }
 
-    @RequestMapping(path="/ext/money/transaction/get",method= RequestMethod.GET)
+    @GetMapping(path="/ext/money/transaction/get")
     public @ResponseBody
     Iterable<Transaction> getExtTransactionsExt(@RequestParam(value="type", defaultValue="UNKN") String type,
                                                    @RequestParam(value="from", defaultValue="UNKN") String from,
@@ -361,7 +361,7 @@ public class TransactionController {
         return getTransactionsImpl(type,from,to,category,account,sortAscending);
     }
 
-    @RequestMapping(path="/int/money/transaction/get",method= RequestMethod.GET)
+    @GetMapping(path="/int/money/transaction/get")
     public @ResponseBody
     Iterable<Transaction> getExtTransactionsInt(@RequestParam(value="type", defaultValue="UNKN") String type,
                                                    @RequestParam(value="from", defaultValue="UNKN") String from,
@@ -372,33 +372,33 @@ public class TransactionController {
         return getTransactionsImpl(type,from,to,category,account,sortAscending);
     }
 
-    @RequestMapping(path="/ext/money/transaction/update", method= RequestMethod.PUT)
+    @PutMapping(path="/ext/money/transaction/update")
     public @ResponseBody OkStatus updateTransactionExt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
         updateTransacation(transaction);
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/transaction/update", method= RequestMethod.PUT)
+    @PutMapping(path="/int/money/transaction/update")
     public @ResponseBody OkStatus updateTransactionInt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
         updateTransacation(transaction);
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/ext/money/transaction/regulars",method= RequestMethod.GET)
+    @GetMapping(path="/ext/money/transaction/regulars")
     public @ResponseBody
     Iterable<Regular> getRegularPaymentsExt() {
         LOG.info("Get the regular payments. (ext)");
         return regularRepository.findAll();
     }
 
-    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.GET)
+    @GetMapping(path="/int/money/transaction/regulars")
     public @ResponseBody
     Iterable<Regular> getRegularPaymentsInt() {
         LOG.info("Get the regular payments.(int)");
         return regularRepository.findAll();
     }
 
-    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.POST)
+    @PostMapping(path="/int/money/transaction/regulars")
     public @ResponseBody
     Iterable<Regular> getRegularPaymentsCreateInt(@RequestBody Regular regular) {
         LOG.info("Create a regular payment");
@@ -407,7 +407,7 @@ public class TransactionController {
         return regularRepository.findAll();
     }
 
-    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.PUT)
+    @PutMapping(path="/int/money/transaction/regulars")
     public @ResponseBody
     Iterable<Regular> getRegularPaymentsUpdateInt(@RequestBody Regular regular) {
         LOG.info("Update a regular payment");
@@ -430,7 +430,7 @@ public class TransactionController {
         return regularRepository.findAll();
     }
 
-    @RequestMapping(path="/int/money/transaction/regulars",method= RequestMethod.DELETE)
+    @DeleteMapping(path="/int/money/transaction/regulars")
     public @ResponseBody
     Iterable<Regular> getRegularPaymentsDeleteInt(@RequestBody Regular regular) {
         LOG.info("Delete a regular payment.");
@@ -445,7 +445,7 @@ public class TransactionController {
         return regularRepository.findAll();
     }
 
-    @RequestMapping(path="/int/money/transaction/email",method=RequestMethod.POST)
+    @PostMapping(path="/int/money/transaction/email")
     public @ResponseBody OkStatus sendEmail(  @RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
                                                     @RequestParam(value="from", defaultValue="creditcards@jbrmmg.me.uk") String from,
                                                     @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,

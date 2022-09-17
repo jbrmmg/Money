@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Controller
 public class EmailGenerator {
-    final static private Logger LOG = LoggerFactory.getLogger(EmailGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EmailGenerator.class);
 
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;

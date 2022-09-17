@@ -25,7 +25,7 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/jbr")
 public class StatementController {
-    final static private Logger LOG = LoggerFactory.getLogger(StatementController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StatementController.class);
 
     private final StatementRepository statementRepository;
     private final TransactionRepository transactionRepository;
@@ -103,33 +103,33 @@ public class StatementController {
         }
     }
 
-    @RequestMapping(path="/ext/money/statement", method= RequestMethod.GET)
+    @GetMapping(path="/ext/money/statement")
     public @ResponseBody
     Iterable<Statement>  statementsExt() {
         return statements();
     }
 
-    @RequestMapping(path="/int/money/statement", method= RequestMethod.GET)
+    @GetMapping(path="/int/money/statement")
     public @ResponseBody
     Iterable<Statement>  statementsInt() {
         return statements();
     }
 
-    @RequestMapping(path="/ext/money/statement/lock", method= RequestMethod.POST)
+    @PostMapping(path="/ext/money/statement/lock")
     public @ResponseBody OkStatus statementLockExt(@RequestBody LockStatementRequest request) {
         statementLock(request);
 
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/statement/lock", method= RequestMethod.POST)
+    @PostMapping(path="/int/money/statement/lock")
     public @ResponseBody OkStatus statementLockInt(@RequestBody LockStatementRequest request) {
         statementLock(request);
 
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/statement",method=RequestMethod.POST)
+    @PostMapping(path="/int/money/statement")
     public @ResponseBody Iterable<Statement> createStatement(@RequestBody Statement statement) throws Exception {
         LOG.info("Create a new statement - " + statement.toString());
 
@@ -144,7 +144,7 @@ public class StatementController {
         return statements();
     }
 
-    @RequestMapping(path="/int/money/statement",method=RequestMethod.PUT)
+    @PutMapping(path="/int/money/statement")
     public @ResponseBody Iterable<Statement> updateStatement(@RequestBody Statement statement) throws Exception {
         LOG.info("Update a statement - " + statement.toString());
 
@@ -163,7 +163,7 @@ public class StatementController {
         return statements();
     }
 
-    @RequestMapping(path="/int/money/statement",method=RequestMethod.DELETE)
+    @DeleteMapping(path="/int/money/statement")
     public @ResponseBody OkStatus deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
         LOG.info("Delete an account - " + statement.getId().toString());
 

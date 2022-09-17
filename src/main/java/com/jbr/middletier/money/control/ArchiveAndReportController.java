@@ -12,16 +12,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.Calendar;
 
 @Controller
 @RequestMapping("/jbr")
 public class ArchiveAndReportController {
-    final static private Logger LOG = LoggerFactory.getLogger(ArchiveAndReportController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ArchiveAndReportController.class);
 
     private static final String FAILED = "FAILED";
 
@@ -41,7 +39,7 @@ public class ArchiveAndReportController {
         this.transactionRepository = transactionRepository;
     }
 
-    @RequestMapping(path="/int/money/transaction/archive", method= RequestMethod.POST)
+    @PostMapping(path="/int/money/transaction/archive")
     public @ResponseBody
     ArchiveOrReportRequest archive(@RequestBody ArchiveOrReportRequest archiveRequest) {
         try {
@@ -57,7 +55,7 @@ public class ArchiveAndReportController {
                 }
             }
 
-            LOG.info("Oldest year - " + oldestYear);
+            LOG.info("Oldest year - {}", oldestYear);
 
             // Must keep at least 3 years.
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
@@ -66,7 +64,7 @@ public class ArchiveAndReportController {
                 return archiveRequest;
             }
 
-            LOG.info("Oldest year can be archived - " + oldestYear);
+            LOG.info("Oldest year can be archived - {}", oldestYear);
 
             // Do reports exist for this year?
             if(!reportGenerator.reportsGeneratedForYear(oldestYear)) {
@@ -74,7 +72,7 @@ public class ArchiveAndReportController {
                 return archiveRequest;
             }
 
-            LOG.info("About to archive - " + oldestYear);
+            LOG.info("About to archive - {}", oldestYear);
 
             // Delete the transactions that are in this year.
             Iterable<Transaction> transactionsToDelete = transactionRepository.findByStatementIdYear((int)oldestYear);
@@ -108,7 +106,7 @@ public class ArchiveAndReportController {
         archive(new ArchiveOrReportRequest());
     }
 
-    @RequestMapping(path="/int/money/transaction/report", method= RequestMethod.POST)
+    @PostMapping(path="/int/money/transaction/report")
     public @ResponseBody
     ArchiveOrReportRequest report(@RequestBody ArchiveOrReportRequest report) {
         try {
@@ -123,7 +121,7 @@ public class ArchiveAndReportController {
         return report;
     }
 
-    @RequestMapping(path="/int/money/transaction/annualreport", method= RequestMethod.POST)
+    @PostMapping(path="/int/money/transaction/annualreport")
     public @ResponseBody
     ArchiveOrReportRequest annualReport(@RequestBody ArchiveOrReportRequest report) {
         try {

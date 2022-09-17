@@ -22,7 +22,7 @@ public class RegularCtrl {
 
     private final ApplicationProperties applicationProperties;
 
-    final static private Logger LOG = LoggerFactory.getLogger(RegularCtrl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RegularCtrl.class);
 
     private static SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
 

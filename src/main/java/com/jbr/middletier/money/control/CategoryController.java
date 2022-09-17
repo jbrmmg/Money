@@ -26,7 +26,7 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/jbr")
 public class CategoryController {
-    final static private Logger LOG = LoggerFactory.getLogger(CategoryController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CategoryController.class);
 
     private final CategoryRepository categoryRepository;
     private final ModelMapper modelMapper;
@@ -42,7 +42,7 @@ public class CategoryController {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
-    @RequestMapping(path="/ext/money/categories", method= RequestMethod.GET)
+    @GetMapping(path="/ext/money/categories")
     public @ResponseBody
     List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
@@ -55,14 +55,14 @@ public class CategoryController {
         return result;
     }
 
-    @RequestMapping(path="/int/money/categories", method= RequestMethod.GET)
+    @GetMapping(path="/int/money/categories")
     public @ResponseBody
     List<CategoryDTO>  getIntCategories() {
         LOG.info("Request Categories.");
         return this.getExtCategories();
     }
 
-    @RequestMapping(path="/int/money/categories",method=RequestMethod.POST)
+    @PostMapping(path="/int/money/categories")
     public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws Exception {
         LOG.info("Create a new account - " + category.getId());
 
@@ -77,7 +77,7 @@ public class CategoryController {
         return this.getExtCategories();
     }
 
-    @RequestMapping(path="/int/money/categories",method=RequestMethod.PUT)
+    @PutMapping(path="/int/money/categories")
     public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws Exception {
         LOG.info("Update an account - " + category.getId());
 
@@ -102,7 +102,7 @@ public class CategoryController {
         return this.getExtCategories();
     }
 
-    @RequestMapping(path="/int/money/categories",method=RequestMethod.DELETE)
+    @DeleteMapping(path="/int/money/categories")
     public @ResponseBody OkStatus deleteAccount(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account " + category.getId());
 

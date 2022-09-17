@@ -52,7 +52,7 @@ public class Regular {
     @Size(max=40)
     private String description;
 
-    final static private Logger LOG = LoggerFactory.getLogger(Regular.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Regular.class);
     private static SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
 
     private Date removeTime(Date dateTime) {

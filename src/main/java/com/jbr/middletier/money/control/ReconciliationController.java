@@ -10,15 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,7 +28,7 @@ import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
 @Controller
 @RequestMapping("/jbr")
 public class ReconciliationController {
-    final static private Logger LOG = LoggerFactory.getLogger(ReconciliationController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReconciliationController.class);
 
     private final ReconciliationRepository reconciliationRepository;
     private final CategoryRepository categoryRepository;
@@ -54,11 +51,6 @@ public class ReconciliationController {
         this.categoryRepository = categoryRepository;
         this.transactionController = transactionController;
         this.accountRepository = accountRepository;
-    }
-
-    @ExceptionHandler(Exception.class)
-    public void handleException(HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
     private static class MatchInformation {
@@ -756,13 +748,13 @@ public class ReconciliationController {
         return result;
     }
 
-    @RequestMapping(path="/ext/money/reconciliation/update", method= RequestMethod.PUT)
+    @PutMapping(path="/ext/money/reconciliation/update")
     public @ResponseBody OkStatus reconcileCategoryExt(@RequestBody ReconcileUpdate reconciliationUpdate ) {
         processReconcileUpdate(reconciliationUpdate);
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/reconciliation/update", method= RequestMethod.PUT)
+    @PutMapping(path="/int/money/reconciliation/update")
     public @ResponseBody OkStatus reconcileCategoryInt(@RequestBody ReconcileUpdate reconciliationUpdate) {
         processReconcileUpdate(reconciliationUpdate);
         return OkStatus.getOkStatus();
@@ -780,42 +772,42 @@ public class ReconciliationController {
         return matchData(account.get());
     }
 
-    @RequestMapping(path="/ext/money/match", method= RequestMethod.GET)
+    @GetMapping(path="/ext/money/match")
     public @ResponseBody
     List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws Exception {
         LOG.info("External match data - reconciliation data with reconciled transactions");
         return matchImpl(accountId);
     }
 
-    @RequestMapping(path="/int/money/match", method= RequestMethod.GET)
+    @GetMapping(path="/int/money/match")
     public @ResponseBody
     List<MatchData>  matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws Exception {
         LOG.info("Internal match data - reconciliation data with reconciled transactions");
         return matchImpl(accountId);
     }
 
-    @RequestMapping(path="/ext/money/reconciliation/auto", method= RequestMethod.PUT)
+    @PutMapping(path="/ext/money/reconciliation/auto")
     public @ResponseBody OkStatus reconcileDataExt() throws Exception {
         LOG.info("Auto Reconciliation Data (ext) ");
         autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/reconciliation/auto", method= RequestMethod.PUT)
+    @PutMapping(path="/int/money/reconciliation/auto")
     public @ResponseBody OkStatus reconcileDataInt() throws Exception {
         LOG.info("Auto Reconciliation Data ");
         autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/ext/money/reconciliation/clear", method= RequestMethod.DELETE)
+    @DeleteMapping(path="/ext/money/reconciliation/clear")
     public @ResponseBody OkStatus reconcileDataDeleteExt() {
         LOG.info("Clear Reconciliation Data (ext) ");
         clearRepositoryData();
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/reconciliation/clear", method= RequestMethod.DELETE)
+    @DeleteMapping(path="/int/money/reconciliation/clear")
     public @ResponseBody OkStatus reconcileDataDeleteInt() {
         LOG.info("Clear Reconciliation Data ");
         clearRepositoryData();

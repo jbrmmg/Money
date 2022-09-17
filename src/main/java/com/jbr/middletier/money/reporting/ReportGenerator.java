@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 @Controller
 public class ReportGenerator {
-    final static private Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
 
     private final TransactionRepository transactionRepository;
     private final ResourceLoader resourceLoader;
