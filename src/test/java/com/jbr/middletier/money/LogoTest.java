@@ -264,7 +264,7 @@ public class LogoTest {
     }
 
     @Test
-    public void testing() throws IOException {
+    public void testing() {
         LogoDefinition logoDefinition = new LogoDefinition();
         logoDefinition.setLogoText("NW");
         logoDefinition.setFontSize(48);

@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
+import com.jbr.middletier.money.exceptions.AccountAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import com.jbr.middletier.money.manager.LogoManager;
 import org.modelmapper.ModelMapper;
@@ -16,9 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,11 +44,6 @@ public class AccountController {
 
     public String getAccountLogo(String id, Boolean disabled) {
         return this.logoManager.getSvgLogoForAccount(id,disabled).getSvgAsString();
-    }
-
-    @ExceptionHandler(Exception.class)
-    public void handleException(HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
     @GetMapping(path="/ext/money/accounts")
@@ -96,13 +89,13 @@ public class AccountController {
     }
 
     @PostMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws Exception {
-        LOG.info("Create a new account - " + account.getId());
+    public @ResponseBody List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws AccountAlreadyExistsException {
+        LOG.info("Create a new account - {}}", account.getId());
 
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
         if(existingAccount.isPresent()) {
-            throw new Exception(account.getId() + " already exists");
+            throw new AccountAlreadyExistsException(account);
         }
 
         accountRepository.save(this.modelMapper.map(account,Account.class));
@@ -112,7 +105,7 @@ public class AccountController {
 
     @PutMapping(path="/int/money/accounts")
     public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) {
-        LOG.info("Update an account - " + account.getId());
+        LOG.info("Update an account - {}", account.getId());
 
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
@@ -129,7 +122,7 @@ public class AccountController {
 
     @DeleteMapping(path="/int/money/accounts")
     public @ResponseBody OkStatus deleteAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
-        LOG.info("Delete account " + account.getId());
+        LOG.info("Delete account {}", account.getId());
 
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
