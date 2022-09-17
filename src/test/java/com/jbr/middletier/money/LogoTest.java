@@ -6,6 +6,7 @@ import com.helger.css.reader.CSSReader;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.LogoDefinition;
 import com.jbr.middletier.money.manager.LogoManager;
+import com.jbr.middletier.money.xml.svg.LogoSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.jdom2.*;
 import org.jdom2.input.DOMBuilder;
@@ -41,38 +42,63 @@ public class LogoTest {
 
     private void checkText(CSSStyleRule rule, int textSize, String colour) {
         Assert.assertEquals(7, rule.getDeclarationCount());
+        boolean fontWeightFound = false;
+        boolean fontSizeFound = false;
+        boolean fontFamilyFound = false;
+        boolean lineHeightFound = false;
+        boolean textAlignFound = false;
+        boolean textAnchorFound = false;
+        boolean fillFound = false;
         for(int i = 0; i < rule.getDeclarationCount(); i++) {
             CSSDeclaration declaration = rule.getDeclarationAtIndex(i);
             switch(Objects.requireNonNull(declaration).getProperty()) {
                 case "font-weight":
                     Assert.assertEquals("bold", declaration.getExpressionAsCSSString());
+                    fontWeightFound = true;
                     break;
                 case "font-size":
                     Assert.assertEquals(textSize + "px", declaration.getExpressionAsCSSString());
+                    fontSizeFound = true;
                     break;
                 case "font-family":
                     Assert.assertEquals("Arial", declaration.getExpressionAsCSSString());
+                    fontFamilyFound = true;
                     break;
                 case "line-height":
                     Assert.assertEquals("125%", declaration.getExpressionAsCSSString());
+                    lineHeightFound = true;
                     break;
                 case "text-align":
                     Assert.assertEquals("center", declaration.getExpressionAsCSSString());
+                    textAlignFound = true;
                     break;
                 case "text-anchor":
                     Assert.assertEquals("middle", declaration.getExpressionAsCSSString());
+                    textAnchorFound = true;
                     break;
                 case "fill":
                     Assert.assertEquals("#" + colour, declaration.getExpressionAsCSSString());
+                    fillFound = true;
                     break;
                 default:
                     Assert.fail();
             }
         }
+        Assert.assertTrue(fontWeightFound);
+        Assert.assertTrue(fontSizeFound);
+        Assert.assertTrue(fontFamilyFound);
+        Assert.assertTrue(lineHeightFound);
+        Assert.assertTrue(textAlignFound);
+        Assert.assertTrue(textAnchorFound);
+        Assert.assertTrue(fillFound);
     }
 
     private void checkCss(List<Content> styleContent, int textSize, String textColour, String fillColour, String borderColour, String borderColour2)  {
         boolean found = false;
+        boolean tspanCssFound = false;
+        boolean rectAmCssFound = false;
+        boolean rectAmBorderCssFound = false;
+        boolean rectAmBorder2CssFound = false;
         for(Content next: styleContent) {
             if(next instanceof CDATA) {
                 found = true;
@@ -94,16 +120,20 @@ public class LogoTest {
                     switch(selectorName) {
                         case "tspan.am":
                             checkText(nextRule, textSize, textColour);
+                            tspanCssFound = true;
                             break;
                         case "rect.am":
                             checkRectFill(nextRule, fillColour);
+                            rectAmCssFound = true;
                             break;
                         case "rect.amborder":
                             checkRectFill(nextRule, borderColour);
+                            rectAmBorderCssFound = true;
                             break;
                         case "rect.amborder2":
                             Assert.assertNotNull(borderColour2);
                             checkRectFill(nextRule, borderColour2);
+                            rectAmBorder2CssFound = true;
                             break;
                         default:
                             Assert.fail();
@@ -112,6 +142,10 @@ public class LogoTest {
             }
         }
         Assert.assertTrue(found);
+        Assert.assertTrue(tspanCssFound);
+        Assert.assertTrue(rectAmCssFound);
+        Assert.assertTrue(rectAmBorderCssFound);
+        Assert.assertTrue(rectAmBorder2CssFound);
     }
 
     private void checkRect(Element rectangle, int width, int height, int x, int y) {
@@ -139,7 +173,7 @@ public class LogoTest {
 
         // Check the style sheet.
         Element style = root.getChild("style", namespace);
-        checkCss(style.getContent(), textSize, textColour, fillColour, borderColour, borderColour2);
+        checkCss(style.getContent(), textSize, textColour, fillColour, borderColour, borderColour2 == null ? "FFFFFF" : borderColour2);
 
         // Check the text element.
         Element text = root.getChild("text", namespace);
@@ -148,6 +182,9 @@ public class LogoTest {
         Assert.assertEquals(expectedLogoText,logoText.getText());
 
         // Check the other elements.
+        boolean rectAmBorderFound = false;
+        boolean rectAmBorder2Found = false;
+        boolean rectAmFound = false;
         for(Element nextElement : root.getChildren()) {
             switch (nextElement.getName()) {
                 case "style":
@@ -159,9 +196,11 @@ public class LogoTest {
                     switch(nextElement.getAttribute("class").getValue()) {
                         case "amborder":
                             checkRect(nextElement, 100, 100, 0, 0);
+                            rectAmBorderFound = true;
                             break;
                         case "amborder2":
                             checkRect(nextElement, 90, 90, 5, 5);
+                            rectAmBorder2Found = true;
                             break;
                         case "am":
                             if(borderColour2 == null) {
@@ -169,6 +208,7 @@ public class LogoTest {
                             } else {
                                 checkRect(nextElement, 80, 80, 10, 10);
                             }
+                            rectAmFound = true;
                             break;
                         default:
                             Assert.fail();
@@ -177,6 +217,11 @@ public class LogoTest {
                 default:
                     Assert.fail();
             }
+        }
+        Assert.assertTrue(rectAmBorderFound);
+        Assert.assertTrue(rectAmFound);
+        if(borderColour2 != null) {
+            Assert.assertTrue(rectAmBorder2Found);
         }
     }
 
@@ -230,7 +275,7 @@ public class LogoTest {
         logoDefinition.setTextColour("FFFFFF");
         logoDefinition.setY(66);
 
-        ScalableVectorGraphics svg = new ScalableVectorGraphics(logoDefinition);
+        ScalableVectorGraphics svg = new LogoSvg(logoDefinition);
         svg.getSvgAsString();
     }
 }

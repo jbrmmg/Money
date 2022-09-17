@@ -2,19 +2,14 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.data.LogoDefinition;
 import com.jbr.middletier.money.dataaccess.LogoDefinitionRepository;
+import com.jbr.middletier.money.xml.svg.LogoSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Controller;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
 public class LogoManager {
@@ -49,6 +44,6 @@ public class LogoManager {
             }
         }
 
-        return new ScalableVectorGraphics(logoDefinition.get());
+        return new LogoSvg(logoDefinition.get());
     }
 }
