@@ -866,21 +866,21 @@ public class ReportGenerator {
     public boolean reportsGeneratedForYear(long year) {
         // Check that the reports have been generated for the year specified.
 
-        LOG.info("Checking - " + applicationProperties.getReportShare() + "/" + year);
+        LOG.info("Checking - {}/{}", applicationProperties.getReportShare(), year);
 
         // Does the year directory exist?
         if(!Files.exists(Paths.get(applicationProperties.getReportShare() + "/" + year))) {
             return false;
         }
 
-        LOG.info("Checking - " + getYearFilename(true,year));
+        LOG.info("Checking - {}", getYearFilename(true,year));
 
         if(!Files.exists(Paths.get(getYearFilename(true,year)))) {
             return false;
         }
 
         for(int month = 0; month < 12; month++) {
-            LOG.info("Checking - " + getMonthFilename(true,year, month + 1));
+            LOG.info("Checking - {}", getMonthFilename(true,year, month + 1));
 
             if(!Files.exists(Paths.get(getMonthFilename(true, year, month + 1)))) {
                 return false;

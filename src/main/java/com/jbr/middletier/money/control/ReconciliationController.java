@@ -308,7 +308,7 @@ public class ReconciliationController {
 
             if(category.isPresent()) {
                 if(transaction.get().getOppositeTransactionId() == null) {
-                    LOG.info("Category updated for - " + reconciliationUpdate.getId());
+                    LOG.info("Category updated for - {}", reconciliationUpdate.getId());
                     transaction.get().setCategory(category.get());
                     transactionRepository.save(transaction.get());
                 }
@@ -330,7 +330,7 @@ public class ReconciliationController {
             Optional<Category> category =  categoryRepository.findById(reconciliationUpdate.getCategoryId());
 
             if(category.isPresent()) {
-                LOG.info("Category updated for - " + reconciliationUpdate.getId());
+                LOG.info("Category updated for - {}", reconciliationUpdate.getId());
                 reconciliationData.get().setCategory(category.get());
                 reconciliationRepository.save(reconciliationData.get());
             } else {
@@ -342,7 +342,7 @@ public class ReconciliationController {
     }
 
     private void processReconcileUpdate(ReconcileUpdate reconciliationUpdate) {
-        LOG.info("Update category (ext) - " + reconciliationUpdate.getId() + " - " + reconciliationUpdate.getCategoryId() + " - " + reconciliationUpdate.getType());
+        LOG.info("Update category (ext) - {} - {} - {}", reconciliationUpdate.getId(), reconciliationUpdate.getCategoryId(), reconciliationUpdate.getType());
 
         if(reconciliationUpdate.getType().equalsIgnoreCase("trn")) {
             transactionCategoryUpdate(reconciliationUpdate);
@@ -605,8 +605,8 @@ public class ReconciliationController {
                 reconciliationRepository.save(newReconciliationData);
             }
         } catch (Exception ex) {
-            LOG.info("Failed to process record - " + record);
-            LOG.info("Error - " + ex.getMessage());
+            LOG.info("Failed to process record - {}", record);
+            LOG.info("Error - {}", ex.getMessage());
         }
     }
 
@@ -614,7 +614,7 @@ public class ReconciliationController {
         // Each line is a record - split by CR/LF
         String[] records = data.split("\n");
 
-        LOG.info("Records - " + records.length);
+        LOG.info("Records - {}", records.length);
 
         // Insert data into the table.
         for(String nextRecord : records) {
@@ -640,7 +640,7 @@ public class ReconciliationController {
         reconciliationRepository.deleteAll();
 
         // Load the AMEX file.
-        LOG.info("About to process an AMEX file - " + recFile.getPath());
+        LOG.info("About to process an AMEX file - {}", recFile.getPath());
 
         // AMEX File is a CSV
         // Date (dd/mm/yy), Reference, Amount *-1, Description, additional
@@ -707,7 +707,7 @@ public class ReconciliationController {
     @RequestMapping(path="/ext/money/reconciliation/add", method= RequestMethod.POST)
     public @ResponseBody
     OkStatus  reconcileDataExt( @RequestBody String reconciliationData) {
-        LOG.info("Adding Reconciliation Data (ext) - " + reconciliationData.length());
+        LOG.info("Adding Reconciliation Data (ext) - {}", reconciliationData.length());
         addReconciliationData(reconciliationData);
         return OkStatus.getOkStatus();
     }
@@ -715,7 +715,7 @@ public class ReconciliationController {
     @RequestMapping(path="/int/money/reconciliation/add", method= RequestMethod.POST)
     public @ResponseBody
     OkStatus  reconcileDataInt( @RequestBody String reconciliationData) {
-        LOG.info("Adding Reconciliation Data - " + reconciliationData.length());
+        LOG.info("Adding Reconciliation Data - {}", reconciliationData.length());
         addReconciliationData(reconciliationData);
         return OkStatus.getOkStatus();
     }
@@ -723,7 +723,7 @@ public class ReconciliationController {
     @RequestMapping(path="int/money/reconciliation/load", method= RequestMethod.POST)
     public @ResponseBody
     OkStatus reconcileDataLoadInt(@RequestBody LoadFileRequest loadFileRequest) throws Exception {
-        LOG.info("Request to load file - " + loadFileRequest.getPath() + " " + loadFileRequest.getType());
+        LOG.info("Request to load file - {} {}", loadFileRequest.getPath(), loadFileRequest.getType());
         loadFile(loadFileRequest);
         return OkStatus.getOkStatus();
     }

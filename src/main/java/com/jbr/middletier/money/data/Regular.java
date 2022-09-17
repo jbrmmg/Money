@@ -92,30 +92,30 @@ public class Regular {
 
             switch (unit) {
                 case "D":
-                    LOG.info("Day x " + count);
+                    LOG.info("Day x {}", count);
                     calendar.add(Calendar.DATE, count);
                     break;
 
                 case "W":
-                    LOG.info("Week x " + count);
+                    LOG.info("Week x {}", count);
                     calendar.add(Calendar.DATE, count * 7);
                     break;
 
                 case "M":
-                    LOG.info("Month x " + count);
+                    LOG.info("Month x {}", count);
                     calendar.add(Calendar.MONTH, count);
                     break;
 
                 case "Y":
-                    LOG.info("Year x " + count);
+                    LOG.info("Year x {}", count);
                     calendar.add(Calendar.YEAR, count);
                     break;
 
                 default:
-                    throw new CannotDetermineNextDateException("Unexpected frequency unit - " + unit );
+                    throw new CannotDetermineNextDateException("Unexpected frequency unit - {}" + unit);
             }
 
-            LOG.info("Add Frequency Date: " + loggingSDF.format(calendar.getTime()));
+            LOG.info("Add Frequency Date: {}", loggingSDF.format(calendar.getTime()));
 
             return calendar.getTime();
         } catch (CannotDetermineNextDateException ex) {

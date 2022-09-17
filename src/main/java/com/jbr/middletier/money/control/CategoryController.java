@@ -64,7 +64,7 @@ public class CategoryController {
 
     @PostMapping(path="/int/money/categories")
     public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws Exception {
-        LOG.info("Create a new account - " + category.getId());
+        LOG.info("Create a new account - {}", category.getId());
 
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());
@@ -79,7 +79,7 @@ public class CategoryController {
 
     @PutMapping(path="/int/money/categories")
     public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws Exception {
-        LOG.info("Update an account - " + category.getId());
+        LOG.info("Update an account - {}", category.getId());
 
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());
@@ -104,7 +104,7 @@ public class CategoryController {
 
     @DeleteMapping(path="/int/money/categories")
     public @ResponseBody OkStatus deleteAccount(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
-        LOG.info("Delete account " + category.getId());
+        LOG.info("Delete account {}", category.getId());
 
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());

@@ -55,7 +55,7 @@ public class RegularCtrl {
                 calendar.add(Calendar.DATE,adjustmentAmt);
             }
 
-            LOG.info("Date has been adjusted " + adjustment + " " + loggingSDF.format(calendar.getTime()));
+            LOG.info("Date has been adjusted {} {}", adjustment, loggingSDF.format(calendar.getTime()));
         }
 
         return calendar.getTime();
@@ -86,14 +86,14 @@ public class RegularCtrl {
 
     public void generateRegularPayments(Date forDate) {
         // Generate for date.
-        LOG.info("Generate as of: " + loggingSDF.format(forDate));
+        LOG.info("Generate as of: {}", loggingSDF.format(forDate));
 
         // Process the regular payments.
         Iterable<Regular> regularPayments = regularRepository.findAll();
 
         // Go through each payment.
         for(Regular nextRegular : regularPayments) {
-            LOG.info("Process next regular payment " + nextRegular.getId() + " " + nextRegular.getAccount() + " " + nextRegular.getCategory() + " " + nextRegular.getAmount());
+            LOG.info("Process next regular payment {} {} {} {}", nextRegular.getId(), nextRegular.getAccount(), nextRegular.getCategory(), nextRegular.getAmount());
             processRegular(forDate, nextRegular);
         }
     }
@@ -108,7 +108,7 @@ public class RegularCtrl {
         // Generate for today.
         Date today = new Date();
 
-        LOG.info("TODAY: " + loggingSDF.format(today));
+        LOG.info("TODAY: {}", loggingSDF.format(today));
         generateRegularPayments(new Date());
     }
 }

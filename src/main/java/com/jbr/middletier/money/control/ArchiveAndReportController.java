@@ -79,14 +79,14 @@ public class ArchiveAndReportController {
 
             for (Transaction nextTransaction: transactionsToDelete) {
                 transactionRepository.delete(nextTransaction);
-                LOG.info("Delete transaction  - " + nextTransaction.getId());
+                LOG.info("Delete transaction  - {}", nextTransaction.getId());
             }
 
             // Delete the Statements.
             Iterable<Statement> statementsToDelete = statementRepository.findByIdYear((int)oldestYear);
             for(Statement nextStatement: statementsToDelete) {
                 statementRepository.delete(nextStatement);
-                LOG.info("Delete statement - " + nextStatement.getId().getYear() + " " + nextStatement.getId().getMonth());
+                LOG.info("Delete statement - {} {}", nextStatement.getId().getYear(), nextStatement.getId().getMonth());
             }
 
             archiveRequest.setStatus("OK");

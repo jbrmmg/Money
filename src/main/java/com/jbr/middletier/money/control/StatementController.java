@@ -131,7 +131,7 @@ public class StatementController {
 
     @PostMapping(path="/int/money/statement")
     public @ResponseBody Iterable<Statement> createStatement(@RequestBody Statement statement) throws Exception {
-        LOG.info("Create a new statement - " + statement.toString());
+        LOG.info("Create a new statement - {}", statement.toString());
 
         // Is there an account with this ID?
         Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
@@ -146,7 +146,7 @@ public class StatementController {
 
     @PutMapping(path="/int/money/statement")
     public @ResponseBody Iterable<Statement> updateStatement(@RequestBody Statement statement) throws Exception {
-        LOG.info("Update a statement - " + statement.toString());
+        LOG.info("Update a statement - {}", statement.toString());
 
         // Is there a statement with this
         Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
@@ -165,7 +165,7 @@ public class StatementController {
 
     @DeleteMapping(path="/int/money/statement")
     public @ResponseBody OkStatus deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
-        LOG.info("Delete an account - " + statement.getId().toString());
+        LOG.info("Delete an account - {}", statement.getId().toString());
 
         // Is there an account with this ID?
         Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
