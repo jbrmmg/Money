@@ -20,7 +20,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -102,7 +102,7 @@ public class MoneyTest {
     private MediaType getContentType() {
         return new MediaType(MediaType.APPLICATION_JSON.getType(),
                 MediaType.APPLICATION_JSON.getSubtype(),
-                Charset.forName("utf8"));
+                StandardCharsets.UTF_8);
     }
 
     @Test
@@ -158,7 +158,7 @@ public class MoneyTest {
             updateRequest.setId(nextTransaction.getId());
             updateRequest.setAmount(1283.21);
 
-            assertEquals(nextTransaction.getAmount(),1280.32,0);
+            assertEquals(1280.32, nextTransaction.getAmount(),0.001);
             mockMvc.perform(put("/jbr/int/money/transaction/update")
                     .content(this.json(updateRequest))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -169,7 +169,7 @@ public class MoneyTest {
         transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             // Delete this item.
-            assertEquals(nextTransaction.getAmount(),1283.21,0);
+            assertEquals(1283.21,nextTransaction.getAmount(),0.001);
             mockMvc.perform(delete("/jbr/int/money/delete?transactionId=" + nextTransaction.getId()))
                     .andExpect(status().isOk());
         }
@@ -195,12 +195,12 @@ public class MoneyTest {
         Iterable<Transaction> transactions = transactionRepository.findAll();
 
         Transaction nextTransaction = transactions.iterator().next();
-        assertEquals(nextTransaction.getAmount(),1280.32,0);
+        assertEquals(1280.32, nextTransaction.getAmount(),0.001);
         UpdateTransaction updateRequest = new UpdateTransaction();
         updateRequest.setId(nextTransaction.getId());
         updateRequest.setAmount(1283.21);
 
-        assertEquals(nextTransaction.getAmount(),1280.32,0);
+        assertEquals(1280.32, nextTransaction.getAmount(),0.001);
         mockMvc.perform(put("/jbr/int/money/transaction/update")
                 .content(this.json(updateRequest))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -210,7 +210,7 @@ public class MoneyTest {
         transactions = transactionRepository.findAll();
         for(Transaction nextTransactionToDelete : transactions) {
             // Delete this item.
-            assertEquals(abs(nextTransactionToDelete.getAmount()),1283.21,0);
+            assertEquals(1283.21, abs(nextTransactionToDelete.getAmount()),0.001);
             mockMvc.perform(delete("/jbr/ext/money/delete?transactionId=" + nextTransactionToDelete.getId()))
                     .andExpect(status().isOk());
         }
@@ -326,21 +326,21 @@ public class MoneyTest {
                 if(!nextStatement.getLocked()) {
                     bankUnlocked++;
 
-                    assertEquals(nextStatement.getOpenBalance(),1280.32,0.01);
+                    assertEquals(1280.32, nextStatement.getOpenBalance(),0.001);
                 } else {
                     bankLocked++;
 
-                    assertEquals(nextStatement.getOpenBalance(),0,0.01);
+                    assertEquals(0, nextStatement.getOpenBalance(),0.001);
                 }
             } else {
                 other++;
             }
         }
 
-        assertEquals(amexUnlocked,1);
-        assertEquals(bankUnlocked,1);
-        assertEquals(bankLocked,1);
-        assertEquals(other,2);
+        assertEquals(1, amexUnlocked);
+        assertEquals(1, bankUnlocked);
+        assertEquals(1, bankLocked);
+        assertEquals(2, other);
     }
 
     // Test Get Statement
