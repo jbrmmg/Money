@@ -32,7 +32,6 @@ public class Account {
     @Column(name="colour")
     private String colour;
 
-    @SuppressWarnings("unused")
     public Account() {
     }
 
@@ -58,5 +57,5 @@ public class Account {
         return colour;
     }
 
-    public void setColor(String colour) { this.colour = colour; }
+    public void setColour(String colour) { this.colour = colour; }
 }

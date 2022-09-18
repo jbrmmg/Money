@@ -2,21 +2,21 @@ package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
+import com.jbr.middletier.money.dto.RegularDTO;
+import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.reporting.EmailGenerator;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.mail.*;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -37,23 +37,21 @@ public class TransactionController {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     private final EmailGenerator emailGenerator;
+    private final ModelMapper modelMapper;
 
     @Autowired
     public TransactionController(TransactionRepository transactionRepository,
                                  RegularRepository regularRepository,
                                  AccountRepository accountRepository,
                                  CategoryRepository categoryRepository,
-                                 EmailGenerator emailGenerator) {
+                                 EmailGenerator emailGenerator,
+                                 ModelMapper modelMapper) {
         this.transactionRepository = transactionRepository;
         this.regularRepository = regularRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.emailGenerator = emailGenerator;
-    }
-
-    @ExceptionHandler(Exception.class)
-    public void handleException(HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value());
+        this.modelMapper = modelMapper;
     }
 
     private Specification<Transaction> getReconciledTransactions(Iterable<Account> accounts, Date statmentDate, Iterable<Category> categories) {
@@ -200,10 +198,10 @@ public class TransactionController {
         throw new InvalidTransactionIdException(transactionId);
     }
 
-    private List<Transaction> addTransaction(NewTransaction newTransaction) throws Exception {
+    private List<TransactionDTO> addTransaction(NewTransaction newTransaction) throws Exception {
         LOG.info("New Transaction.");
 
-        List<Transaction> result = new ArrayList<>();
+        List<TransactionDTO> result = new ArrayList<>();
 
         // Get the account and category
         Optional<Account> account = accountRepository.findById(newTransaction.getAccountId());
@@ -243,10 +241,10 @@ public class TransactionController {
 
             transactionRepository.save(savedTransaction);
 
-            result.add(savedTransaction);
-            result.add(oppositeTransaction);
+            result.add(modelMapper.map(savedTransaction, TransactionDTO.class));
+            result.add(modelMapper.map(oppositeTransaction, TransactionDTO.class));
         } else{
-            result.add(savedTransaction);
+            result.add(modelMapper.map(savedTransaction, TransactionDTO.class));
         }
 
         return result;
@@ -315,13 +313,13 @@ public class TransactionController {
     }
 
     @PostMapping(path="/ext/money/transaction/add")
-    public @ResponseBody Iterable<Transaction>  addTransactionExt(@RequestBody NewTransaction newTransaction) throws Exception {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody NewTransaction newTransaction) throws Exception {
         return addTransaction(newTransaction);
     }
 
 
     @PostMapping(path="/int/money/transaction/add")
-    public @ResponseBody Iterable<Transaction>  addTransactionInt(@RequestBody NewTransaction newTransaction) throws Exception {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody NewTransaction newTransaction) throws Exception {
         return addTransaction(newTransaction);
     }
 
@@ -337,8 +335,7 @@ public class TransactionController {
         return OkStatus.getOkStatus();
     }
 
-    private Iterable<Transaction> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
-
+    private Iterable<TransactionDTO> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
         Sort transactionSort = Sort.by(Sort.Direction.ASC,"date", "account", "amount");
 
         if(sortAscending != null) {
@@ -347,12 +344,16 @@ public class TransactionController {
             }
         }
 
-        return transactionRepository.findAll(getTransactionSearch(type,from,to,category,account), transactionSort);
+        List<TransactionDTO> result = new ArrayList<>();
+        for(Transaction transaction : transactionRepository.findAll(getTransactionSearch(type,from,to,category,account), transactionSort)) {
+            result.add(modelMapper.map(transaction,TransactionDTO.class));
+        }
+
+        return result;
     }
 
     @GetMapping(path="/ext/money/transaction/get")
-    public @ResponseBody
-    Iterable<Transaction> getExtTransactionsExt(@RequestParam(value="type", defaultValue="UNKN") String type,
+    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsExt(@RequestParam(value="type", defaultValue="UNKN") String type,
                                                    @RequestParam(value="from", defaultValue="UNKN") String from,
                                                    @RequestParam(value="to", defaultValue="UNKN") String to,
                                                    @RequestParam(value="category", defaultValue="UNKN")  String category,
@@ -362,13 +363,12 @@ public class TransactionController {
     }
 
     @GetMapping(path="/int/money/transaction/get")
-    public @ResponseBody
-    Iterable<Transaction> getExtTransactionsInt(@RequestParam(value="type", defaultValue="UNKN") String type,
-                                                   @RequestParam(value="from", defaultValue="UNKN") String from,
-                                                   @RequestParam(value="to", defaultValue="UNKN") String to,
-                                                   @RequestParam(value="category", defaultValue="UNKN")  String category,
-                                                   @RequestParam(value="account", defaultValue="UNKN") String account,
-                                                   @RequestParam(value="sortAscending", defaultValue="true") Boolean sortAscending) throws ParseException {
+    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsInt(@RequestParam(value="type", defaultValue="UNKN") String type,
+                                                                        @RequestParam(value="from", defaultValue="UNKN") String from,
+                                                                        @RequestParam(value="to", defaultValue="UNKN") String to,
+                                                                        @RequestParam(value="category", defaultValue="UNKN")  String category,
+                                                                        @RequestParam(value="account", defaultValue="UNKN") String account,
+                                                                        @RequestParam(value="sortAscending", defaultValue="true") Boolean sortAscending) throws ParseException {
         return getTransactionsImpl(type,from,to,category,account,sortAscending);
     }
 
@@ -384,32 +384,38 @@ public class TransactionController {
         return OkStatus.getOkStatus();
     }
 
+    private Iterable<RegularDTO> internalGetRegularPayments() {
+        List<RegularDTO> result = new ArrayList<>();
+
+        for(Regular regular : regularRepository.findAll()) {
+            result.add(modelMapper.map(regular, RegularDTO.class));
+        }
+
+        return result;
+    }
+
     @GetMapping(path="/ext/money/transaction/regulars")
-    public @ResponseBody
-    Iterable<Regular> getRegularPaymentsExt() {
+    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsExt() {
         LOG.info("Get the regular payments. (ext)");
-        return regularRepository.findAll();
+        return internalGetRegularPayments();
     }
 
     @GetMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody
-    Iterable<Regular> getRegularPaymentsInt() {
+    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsInt() {
         LOG.info("Get the regular payments.(int)");
-        return regularRepository.findAll();
+        return internalGetRegularPayments();
     }
 
     @PostMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody
-    Iterable<Regular> getRegularPaymentsCreateInt(@RequestBody Regular regular) {
+    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsCreateInt(@RequestBody RegularDTO regular) {
         LOG.info("Create a regular payment");
-        regularRepository.save(regular);
+        regularRepository.save(modelMapper.map(regular,Regular.class));
 
-        return regularRepository.findAll();
+        return internalGetRegularPayments();
     }
 
     @PutMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody
-    Iterable<Regular> getRegularPaymentsUpdateInt(@RequestBody Regular regular) {
+    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsUpdateInt(@RequestBody RegularDTO regular) {
         LOG.info("Update a regular payment");
         Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
 
@@ -417,8 +423,8 @@ public class TransactionController {
             existingRegular.get().setDescription(regular.getDescription());
             existingRegular.get().setWeekendAdj(regular.getWeekendAdj());
             existingRegular.get().setFrequency(regular.getFrequency());
-            existingRegular.get().setCategory(regular.getCategory());
-            existingRegular.get().setAccount(regular.getAccount());
+            existingRegular.get().setCategory(modelMapper.map(regular.getCategory(),Category.class));
+            existingRegular.get().setAccount(modelMapper.map(regular.getAccount(),Account.class));
             existingRegular.get().setAmount(regular.getAmount());
             existingRegular.get().setStart(regular.getStart());
 
@@ -427,12 +433,11 @@ public class TransactionController {
             throw new IllegalStateException(String.format("Regular payment does not exist %d", regular.getId()));
         }
 
-        return regularRepository.findAll();
+        return internalGetRegularPayments();
     }
 
     @DeleteMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody
-    Iterable<Regular> getRegularPaymentsDeleteInt(@RequestBody Regular regular) {
+    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsDeleteInt(@RequestBody RegularDTO regular) {
         LOG.info("Delete a regular payment.");
         Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
 
@@ -442,7 +447,7 @@ public class TransactionController {
             throw new IllegalStateException(String.format("Regular payment does not exist %d", regular.getId()));
         }
 
-        return regularRepository.findAll();
+        return internalGetRegularPayments();
     }
 
     @PostMapping(path="/int/money/transaction/email")

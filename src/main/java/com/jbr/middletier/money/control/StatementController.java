@@ -4,7 +4,9 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -30,14 +33,16 @@ public class StatementController {
     private final StatementRepository statementRepository;
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final ModelMapper modelMapper;
 
     @Autowired
     public StatementController(StatementRepository statementRepository,
                                TransactionRepository transactionRepository,
-                               AccountRepository accountRepository) {
+                               AccountRepository accountRepository, ModelMapper modelMapper) {
         this.statementRepository = statementRepository;
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
+        this.modelMapper = modelMapper;
     }
 
     @ExceptionHandler(Exception.class)
@@ -45,10 +50,13 @@ public class StatementController {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
-    private Iterable<Statement> statements() {
+    private Iterable<StatementDTO> statements() {
         LOG.info("Get statements.");
 
-        List<Statement> statementList = statementRepository.findAllByOrderByIdAccountAsc();
+        List<StatementDTO> statementList = new ArrayList<>();
+        for(Statement nextStatement : statementRepository.findAllByOrderByIdAccountAsc()){
+            statementList.add(modelMapper.map(nextStatement,StatementDTO.class));
+        }
 
         // Sort the list by the backup time.
         Collections.sort(statementList);
@@ -105,13 +113,13 @@ public class StatementController {
 
     @GetMapping(path="/ext/money/statement")
     public @ResponseBody
-    Iterable<Statement>  statementsExt() {
+    Iterable<StatementDTO>  statementsExt() {
         return statements();
     }
 
     @GetMapping(path="/int/money/statement")
     public @ResponseBody
-    Iterable<Statement>  statementsInt() {
+    Iterable<StatementDTO>  statementsInt() {
         return statements();
     }
 
@@ -130,7 +138,7 @@ public class StatementController {
     }
 
     @PostMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<Statement> createStatement(@RequestBody Statement statement) throws Exception {
+    public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody Statement statement) throws Exception {
         LOG.info("Create a new statement - {}", statement.toString());
 
         // Is there an account with this ID?
@@ -145,11 +153,11 @@ public class StatementController {
     }
 
     @PutMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<Statement> updateStatement(@RequestBody Statement statement) throws Exception {
+    public @ResponseBody Iterable<StatementDTO> updateStatement(@RequestBody StatementDTO statement) throws Exception {
         LOG.info("Update a statement - {}", statement.toString());
 
         // Is there a statement with this
-        Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
+        Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(), StatementId.class));
         if(existingStatement.isPresent()) {
             existingStatement.get().setOpenBalance(statement.getOpenBalance());
 
@@ -164,11 +172,11 @@ public class StatementController {
     }
 
     @DeleteMapping(path="/int/money/statement")
-    public @ResponseBody OkStatus deleteStatement(@RequestBody Statement statement) throws InvalidStatementIdException {
+    public @ResponseBody OkStatus deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException {
         LOG.info("Delete an account - {}", statement.getId().toString());
 
         // Is there an account with this ID?
-        Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
+        Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(), StatementId.class));
         if(existingStatement.isPresent()) {
 
             statementRepository.delete(existingStatement.get());

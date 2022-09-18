@@ -133,7 +133,7 @@ public class Regular {
         this.start = start;
     }
 
-    private Date getLastDate() {
+    public Date getLastDate() {
         if(this.lastCreated == null) {
             return null;
         }

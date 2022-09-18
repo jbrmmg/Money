@@ -32,7 +32,6 @@ public class AccountController {
 
     private final AccountRepository accountRepository;
     private final LogoManager logoManager;
-
     private final ModelMapper modelMapper;
 
     @Autowired
@@ -110,9 +109,8 @@ public class AccountController {
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
         if(existingAccount.isPresent()) {
-            existingAccount.get().setColor(account.getColour());
+            existingAccount.get().setColour(account.getColour());
             existingAccount.get().setImagePrefix(account.getImagePrefix());
-            existingAccount.get().setColor(account.getColour());
             existingAccount.get().setName(account.getName());
             accountRepository.save(existingAccount.get());
         }
