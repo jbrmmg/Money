@@ -317,13 +317,13 @@ public class TransactionController {
     }
 
     @PostMapping(path="/ext/money/transaction/add")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody NewTransaction newTransaction) throws Exception {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody NewTransaction newTransaction) throws InvalidCategoryIdException, InvalidAccountIdException {
         return addTransaction(newTransaction);
     }
 
 
     @PostMapping(path="/int/money/transaction/add")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody NewTransaction newTransaction) throws Exception {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody NewTransaction newTransaction) throws InvalidCategoryIdException, InvalidAccountIdException {
         return addTransaction(newTransaction);
     }
 

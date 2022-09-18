@@ -31,22 +31,7 @@ public class StatementDTO implements Comparable<StatementDTO> {
 
     @Override
     public int compareTo(final StatementDTO o) {
-        // First compare the account.
-        if(!this.id.getAccount().getId().equalsIgnoreCase(o.id.getAccount().getId())) {
-            return this.id.getAccount().getId().compareTo(o.id.getAccount().getId());
-        }
-
-        // Then compare the year
-        if(!this.id.getYear().equals(o.id.getYear())) {
-            return this.id.getYear().compareTo(o.id.getYear());
-        }
-
-        // Finally the month
-        if(!this.id.getMonth().equals(o.id.getMonth())) {
-            return this.id.getMonth().compareTo(o.id.getMonth());
-        }
-
-        return 0;
+        return id.compareTo(o.id);
     }
 
     @Override
@@ -56,5 +41,10 @@ public class StatementDTO implements Comparable<StatementDTO> {
         }
 
         return compareTo((StatementDTO) obj) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
     }
 }
