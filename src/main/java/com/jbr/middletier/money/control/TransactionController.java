@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.RegularDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.reporting.EmailGenerator;
@@ -198,7 +199,10 @@ public class TransactionController {
         throw new InvalidTransactionIdException(transactionId);
     }
 
-    private List<TransactionDTO> addTransaction(NewTransaction newTransaction) throws Exception {
+    private List<TransactionDTO> addTransaction(NewTransaction newTransaction) throws InvalidAccountIdException, InvalidCategoryIdException {
+        // TODO make this pass a list of transactions (list because of transfer) instead of a different object
+        // TODO clean up the exceptions.
+        // TODO move some code to managers
         LOG.info("New Transaction.");
 
         List<TransactionDTO> result = new ArrayList<>();
@@ -206,12 +210,12 @@ public class TransactionController {
         // Get the account and category
         Optional<Account> account = accountRepository.findById(newTransaction.getAccountId());
         if(!account.isPresent()) {
-            throw new Exception("Invalid account specified.");
+            throw new InvalidAccountIdException("Invalid account specified.");
         }
 
         Optional<Category> category = categoryRepository.findById(newTransaction.getCategoryId());
         if(!category.isPresent()) {
-            throw new Exception("Invalid category specified.");
+            throw new InvalidCategoryIdException("Invalid category specified.");
         }
 
         // Create transactions.
@@ -226,7 +230,7 @@ public class TransactionController {
         if(newTransaction.isAccountTransfer()) {
             Optional<Account> transferAccount = accountRepository.findById(newTransaction.getTransferAccountId());
             if(!transferAccount.isPresent()) {
-                throw new Exception("Invalid transfer account specified.");
+                throw new InvalidAccountIdException("Invalid transfer account specified.");
             }
 
             transaction = new Transaction(  transferAccount.get(),

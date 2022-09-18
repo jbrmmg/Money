@@ -48,4 +48,13 @@ public class StatementDTO implements Comparable<StatementDTO> {
 
         return 0;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof StatementDTO)) {
+            return false;
+        }
+
+        return compareTo((StatementDTO) obj) == 0;
+    }
 }

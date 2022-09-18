@@ -48,8 +48,6 @@ public class Category {
     @Column(name="systemUse")
     private Boolean systemUse;
 
-    public  Category() {}
-
     public String getId() {
         return this.id;
     }

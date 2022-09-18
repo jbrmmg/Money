@@ -21,6 +21,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Account id invalid", ex));
     }
 
+    @ExceptionHandler(InvalidStatementIdException.class)
+    protected ResponseEntity<Object> handleInvalidStatementId(InvalidStatementIdException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Statement id invalid", ex));
+    }
+
+    @ExceptionHandler(StatementAlreadyExists.class)
+    protected ResponseEntity<Object> handleStatementAlreadyExists(StatementAlreadyExists ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Statement already exists", ex));
+    }
+
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError,apiError.getStatus());
     }

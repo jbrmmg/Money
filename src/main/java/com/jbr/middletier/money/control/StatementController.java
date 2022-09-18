@@ -6,6 +6,7 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
+import com.jbr.middletier.money.exceptions.StatementAlreadyExists;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,22 +139,22 @@ public class StatementController {
     }
 
     @PostMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody Statement statement) throws Exception {
+    public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody StatementDTO statement) throws StatementAlreadyExists {
         LOG.info("Create a new statement - {}", statement.toString());
 
         // Is there an account with this ID?
-        Optional<Statement> existingStatement = statementRepository.findById(statement.getId());
+        Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(),StatementId.class));
         if(existingStatement.isPresent()) {
-            throw new Exception(statement.getId().toString() + " already exists");
+            throw new StatementAlreadyExists(statement);
         }
 
-        statementRepository.save(statement);
+        statementRepository.save(modelMapper.map(statement,Statement.class));
 
         return statements();
     }
 
     @PutMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<StatementDTO> updateStatement(@RequestBody StatementDTO statement) throws Exception {
+    public @ResponseBody Iterable<StatementDTO> updateStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException {
         LOG.info("Update a statement - {}", statement.toString());
 
         // Is there a statement with this
@@ -165,7 +166,7 @@ public class StatementController {
 
             statementRepository.save(existingStatement.get());
         } else {
-            throw new Exception(statement.getId().toString() + " cannot find statement.");
+            throw new InvalidStatementIdException(statement);
         }
 
         return statements();

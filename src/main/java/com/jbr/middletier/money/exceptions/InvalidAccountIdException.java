@@ -6,4 +6,8 @@ public class InvalidAccountIdException extends Exception {
     public InvalidAccountIdException(AccountDTO account) {
         super("Cannot find account with id " + account.getId());
     }
+
+    public InvalidAccountIdException(String accountId) {
+        super("Cannot find category with id " + accountId);
+    }
 }
