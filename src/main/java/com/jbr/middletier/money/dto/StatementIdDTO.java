@@ -59,6 +59,15 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof StatementIdDTO)) {
+            return false;
+        }
+
+        return compareTo((StatementIdDTO) obj) == 0;
+    }
+
+    @Override
     public int hashCode() {
         return this.toString().hashCode();
     }

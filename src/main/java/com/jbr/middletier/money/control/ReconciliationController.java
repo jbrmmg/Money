@@ -2,9 +2,7 @@ package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
-import com.jbr.middletier.money.exceptions.EmptyMatchDataException;
-import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
-import com.jbr.middletier.money.exceptions.MultipleUnlockedStatementException;
+import com.jbr.middletier.money.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +11,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -28,6 +25,7 @@ import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
 @Controller
 @RequestMapping("/jbr")
 public class ReconciliationController {
+    // TODO split out into reconcilation manager
     private static final Logger LOG = LoggerFactory.getLogger(ReconciliationController.class);
 
     private final ReconciliationRepository reconciliationRepository;
@@ -77,7 +75,7 @@ public class ReconciliationController {
         reconciliationRepository.deleteAll();
     }
 
-    private void autoReconcileData() throws Exception {
+    private void autoReconcileData() throws EmptyMatchDataException, ParseException, InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
 
@@ -101,9 +99,20 @@ public class ReconciliationController {
                     reconcileRequest.setReconcile(true);
                     reconcileExt(reconcileRequest);
                 }
-            } catch (Exception ex)
-            {
-                LOG.error("Failed to process match data.",ex);
+            } catch (ParseException ex) {
+                LOG.error("Parse exception in process match data.");
+                throw ex;
+            } catch (InvalidCategoryIdException ex) {
+                LOG.error("Invalid Category Id exception.");
+                throw ex;
+            } catch (InvalidAccountIdException ex) {
+                LOG.error("Invalid Account Id exception.");
+                throw ex;
+            } catch (MultipleUnlockedStatementException ex) {
+                LOG.error("Multiple Unlock Statement Exception.");
+                throw ex;
+            } catch (InvalidTransactionIdException ex) {
+                LOG.error("Invalid Transaction Id Exception.");
                 throw ex;
             }
         }
@@ -388,7 +397,7 @@ public class ReconciliationController {
     private interface IReconcileFileProcessor {
         boolean skipLine(String line);
 
-        ReconciliationData getReconcileData(String[] columns) throws Exception;
+        ReconciliationData getReconcileData(String[] columns);
     }
 
     private class AmexFileProcessor implements  IReconcileFileProcessor {
@@ -396,9 +405,10 @@ public class ReconciliationController {
             return line.startsWith("Date,");
         }
 
-        public ReconciliationData getReconcileData(String[] columns) throws Exception {
+        public ReconciliationData getReconcileData(String[] columns) {
             if(columns.length < 5) {
-                throw new Exception("Unexpected line");
+                // TODO improve this exception.
+                throw new IllegalStateException("Unexpected line");
             }
 
             // Column 1 = date.
@@ -634,7 +644,7 @@ public class ReconciliationController {
         return result;
     }
 
-    private void loadReconcileFile(File recFile, IReconcileFileProcessor lineProcessor) throws Exception {
+    private void loadReconcileFile(File recFile, IReconcileFileProcessor lineProcessor) throws IOException {
         // Clear existing data.
         LOG.info("Clear the reconciliation data.");
         reconciliationRepository.deleteAll();
@@ -667,15 +677,16 @@ public class ReconciliationController {
         }
     }
 
-    private void loadFile(LoadFileRequest loadFileRequest) throws Exception {
+    private void loadFile(LoadFileRequest loadFileRequest) throws IOException {
         // Load the file.
         File recFile = new File(loadFileRequest.getPath());
 
         if(!recFile.exists()) {
-            throw new Exception("Cannot find file " + loadFileRequest.getPath());
+            throw new FileNotFoundException("Cannot find file " + loadFileRequest.getPath());
         }
 
         // Process the file of the specified type.
+        //TODO make this an enum
         switch(loadFileRequest.getType()) {
             case "AMEX":
                 loadReconcileFile(recFile, new AmexFileProcessor() );
@@ -688,7 +699,7 @@ public class ReconciliationController {
                 break;
 
             default:
-                throw new Exception("Unexpected file type " + loadFileRequest.getType());
+                throw new IllegalStateException("Unexpected file type " + loadFileRequest.getType());
         }
     }
 
@@ -722,7 +733,7 @@ public class ReconciliationController {
 
     @RequestMapping(path="int/money/reconciliation/load", method= RequestMethod.POST)
     public @ResponseBody
-    OkStatus reconcileDataLoadInt(@RequestBody LoadFileRequest loadFileRequest) throws Exception {
+    OkStatus reconcileDataLoadInt(@RequestBody LoadFileRequest loadFileRequest) throws IOException {
         LOG.info("Request to load file - {} {}", loadFileRequest.getPath(), loadFileRequest.getType());
         loadFile(loadFileRequest);
         return OkStatus.getOkStatus();
@@ -760,12 +771,12 @@ public class ReconciliationController {
         return OkStatus.getOkStatus();
     }
 
-    private List<MatchData> matchImpl(String accountId) throws Exception {
+    private List<MatchData> matchImpl(String accountId) throws InvalidAccountIdException {
 
         Optional<Account> account = accountRepository.findById(accountId);
 
         if(!account.isPresent()) {
-            throw new Exception("Invalid account id.");
+            throw new InvalidAccountIdException("Invalid account id." + accountId);
         }
 
         lastAccount = account.get();
@@ -774,27 +785,27 @@ public class ReconciliationController {
 
     @GetMapping(path="/ext/money/match")
     public @ResponseBody
-    List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws Exception {
+    List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
         LOG.info("External match data - reconciliation data with reconciled transactions");
         return matchImpl(accountId);
     }
 
     @GetMapping(path="/int/money/match")
     public @ResponseBody
-    List<MatchData>  matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws Exception {
+    List<MatchData>  matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
         LOG.info("Internal match data - reconciliation data with reconciled transactions");
         return matchImpl(accountId);
     }
 
     @PutMapping(path="/ext/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataExt() throws Exception {
+    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, ParseException {
         LOG.info("Auto Reconciliation Data (ext) ");
         autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path="/int/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataInt() throws Exception {
+    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, ParseException {
         LOG.info("Auto Reconciliation Data ");
         autoReconcileData();
         return OkStatus.getOkStatus();

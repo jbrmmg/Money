@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
+    // TODO make sure all exceptions are handled here.
     @ExceptionHandler(AccountAlreadyExistsException.class)
     protected ResponseEntity<Object> handleBackupAlreadyExist(AccountAlreadyExistsException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Account already exists", ex));
