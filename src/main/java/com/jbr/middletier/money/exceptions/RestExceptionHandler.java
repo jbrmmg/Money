@@ -11,7 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-    // TODO make sure all exceptions are handled here.
+    // TODO make sure all exceptions are handled here & method names.
     @ExceptionHandler(AccountAlreadyExistsException.class)
     protected ResponseEntity<Object> handleBackupAlreadyExist(AccountAlreadyExistsException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Account already exists", ex));
@@ -20,6 +20,21 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidAccountIdException.class)
     protected ResponseEntity<Object> handleBackupAlreadyExist(InvalidAccountIdException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Account id invalid", ex));
+    }
+
+    @ExceptionHandler(CategoryAlreadyExistsException.class)
+    protected ResponseEntity<Object> handleCateogryAlreadyExist(CategoryAlreadyExistsException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Category already exists", ex));
+    }
+
+    @ExceptionHandler(DeleteSystemCategoryException.class)
+    protected ResponseEntity<Object> handlDeleteSystemCategory(DeleteSystemCategoryException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Cannot delete system category", ex));
+    }
+
+    @ExceptionHandler(InvalidCategoryIdException.class)
+    protected ResponseEntity<Object> handleInvalidCategoryId(InvalidCategoryIdException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Category id invalid", ex));
     }
 
     @ExceptionHandler(InvalidStatementIdException.class)

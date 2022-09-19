@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import org.modelmapper.ModelMapper;
@@ -58,7 +59,7 @@ public class CategoryController {
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());
         if(existingCategory.isPresent()) {
-            throw new Exception(category.getId() + " already exists");
+            throw new CategoryAlreadyExistsException(category);
         }
 
         categoryRepository.save(this.modelMapper.map(category,Category.class));
@@ -85,14 +86,14 @@ public class CategoryController {
 
             categoryRepository.save(existingCategory.get());
         } else {
-            throw new Exception(category.getId() + " cannot find category.");
+            throw new InvalidCategoryIdException(category);
         }
 
         return this.getExtCategories();
     }
 
     @DeleteMapping(path="/int/money/categories")
-    public @ResponseBody OkStatus deleteCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
+    public @ResponseBody List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account {}", category.getId());
 
         // Is there an account with this ID?
@@ -103,7 +104,7 @@ public class CategoryController {
             }
 
             categoryRepository.delete(existingCategory.get());
-            return OkStatus.getOkStatus();
+            return this.getExtCategories();
         }
 
         throw new InvalidCategoryIdException(category);
