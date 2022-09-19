@@ -1,7 +1,6 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.exceptions.AccountAlreadyExistsException;
@@ -45,30 +44,6 @@ public class AccountController {
         return this.logoManager.getSvgLogoForAccount(id,disabled).getSvgAsString();
     }
 
-    @GetMapping(path="/ext/money/accounts")
-    public @ResponseBody List<AccountDTO> getExtAccounts() {
-        LOG.info("Request Accounts (ext).");
-
-        List<AccountDTO> result = new ArrayList<>();
-        for(Account nextAccount: accountRepository.findAll()) {
-            result.add(this.modelMapper.map(nextAccount, AccountDTO.class));
-        }
-
-        return result;
-    }
-
-    @GetMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO>  getIntAccounts() {
-        LOG.info("Request Accounts (int).");
-
-        List<AccountDTO> result = new ArrayList<>();
-        for(Account nextAccount: accountRepository.findAll()) {
-            result.add(this.modelMapper.map(nextAccount, AccountDTO.class));
-        }
-
-        return result;
-    }
-
     @GetMapping(path="/int/money/account/logo")
     public @ResponseBody ResponseEntity<String> getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
                                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
@@ -80,11 +55,34 @@ public class AccountController {
 
     @GetMapping(path="/ext/money/account/logo")
     public @ResponseBody ResponseEntity<String> getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
-                                                  @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
+                                                                  @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (ext)");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("image/svg+xml"));
         return new ResponseEntity<>(getAccountLogo(id, disabled), headers, HttpStatus.OK);
+    }
+
+    private List<AccountDTO> getAccounts() {
+        List<AccountDTO> result = new ArrayList<>();
+        for(Account nextAccount: accountRepository.findAll()) {
+            result.add(this.modelMapper.map(nextAccount, AccountDTO.class));
+        }
+
+        return result;
+    }
+
+    @GetMapping(path="/ext/money/accounts")
+    public @ResponseBody List<AccountDTO> getExtAccounts() {
+        LOG.info("Request Accounts (ext).");
+
+        return getAccounts();
+    }
+
+    @GetMapping(path="/int/money/accounts")
+    public @ResponseBody List<AccountDTO>  getIntAccounts() {
+        LOG.info("Request Accounts (int).");
+
+        return getAccounts();
     }
 
     @PostMapping(path="/int/money/accounts")
@@ -99,11 +97,11 @@ public class AccountController {
 
         accountRepository.save(this.modelMapper.map(account,Account.class));
 
-        return this.getIntAccounts();
+        return getAccounts();
     }
 
     @PutMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) {
+    public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
         LOG.info("Update an account - {}", account.getId());
 
         // Is there an account with this ID?
@@ -113,20 +111,23 @@ public class AccountController {
             existingAccount.get().setImagePrefix(account.getImagePrefix());
             existingAccount.get().setName(account.getName());
             accountRepository.save(existingAccount.get());
+
+            return getAccounts();
         }
 
-        return this.getIntAccounts();
+        throw new InvalidAccountIdException(account);
     }
 
     @DeleteMapping(path="/int/money/accounts")
-    public @ResponseBody OkStatus deleteAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
+    public @ResponseBody List<AccountDTO> deleteAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
         LOG.info("Delete account {}", account.getId());
 
         // Is there an account with this ID?
         Optional<Account> existingAccount = accountRepository.findById(account.getId());
         if(existingAccount.isPresent()) {
             accountRepository.delete(existingAccount.get());
-            return OkStatus.getOkStatus();
+
+            return getAccounts();
         }
 
         throw new InvalidAccountIdException(account);
