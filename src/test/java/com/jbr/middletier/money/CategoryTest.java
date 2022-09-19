@@ -110,7 +110,7 @@ public class CategoryTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find category with id XXXX", error);
+        Assert.assertEquals("Cannot find category with id XXX", error);
     }
 
     @Test
