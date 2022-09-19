@@ -232,4 +232,11 @@ public class PoJoTest {
         Assert.assertEquals(sdf.parse("2019-02-05 12:00:00"),regular.getStart());
         Assert.assertEquals(sdf.parse("2019-03-05 12:00:00"),regular.getLastDate());
     }
+
+    @Test
+    public void StatusTest() {
+        StatusDTO status = new StatusDTO();
+        status.setStatus("FAILED");
+        Assert.assertEquals("FAILED", status.getStatus());
+    }
 }

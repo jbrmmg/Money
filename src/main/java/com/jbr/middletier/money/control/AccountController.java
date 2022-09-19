@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,6 +68,8 @@ public class AccountController {
         for(Account nextAccount: accountRepository.findAll()) {
             result.add(this.modelMapper.map(nextAccount, AccountDTO.class));
         }
+
+        Collections.sort(result);
 
         return result;
     }

@@ -8,6 +8,6 @@ public class InvalidAccountIdException extends Exception {
     }
 
     public InvalidAccountIdException(String accountId) {
-        super("Cannot find category with id " + accountId);
+        super("Cannot find account with id " + accountId);
     }
 }

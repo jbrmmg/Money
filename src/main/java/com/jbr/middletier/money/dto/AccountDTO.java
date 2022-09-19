@@ -1,6 +1,8 @@
 package com.jbr.middletier.money.dto;
 
-public class AccountDTO {
+import org.jetbrains.annotations.NotNull;
+
+public class AccountDTO implements Comparable<AccountDTO> {
     private String id;
     private String name;
     private String imagePrefix;
@@ -36,5 +38,34 @@ public class AccountDTO {
 
     public void setColour(String colour) {
         this.colour = colour;
+    }
+
+    @Override
+    public int compareTo(@NotNull AccountDTO o) {
+        // Use the ID
+        if(!this.getId().equalsIgnoreCase(o.getId())) {
+            return this.getId().compareTo(o.getId());
+        }
+
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof AccountDTO)) {
+            return false;
+        }
+
+        return compareTo((AccountDTO) obj) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getId().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.getId() + " [" + this.getName() + "]";
     }
 }

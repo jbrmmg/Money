@@ -55,5 +55,6 @@ public class ReportIT extends Support {
                 .andExpect(status().isNotFound());
 
         // Check that the report exists.
+        // TODO check the report exists
     }
 }

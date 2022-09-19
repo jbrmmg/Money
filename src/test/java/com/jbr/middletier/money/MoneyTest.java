@@ -62,21 +62,6 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void accountTest() throws Exception {
-        // Get accounts (external), check that both categories are returned and in the correct order..
-        getMockMvc().perform(get("/jbr/ext/money/accounts/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is("BANK")))
-                .andExpect(jsonPath("$[1].id", is ("AMEX")));
-
-        // Get accounts (internal), check that both categories are returned and in the correct order..
-        getMockMvc().perform(get("/jbr/int/money/accounts/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is("BANK")))
-                .andExpect(jsonPath("$[1].id", is ("AMEX")));
-    }
-
-    @Test
     public void categoryTest() throws Exception {
         // Get categories (external), check that all three categories are returned and in the correct order..
         getMockMvc().perform(get("/jbr/ext/money/categories/"))

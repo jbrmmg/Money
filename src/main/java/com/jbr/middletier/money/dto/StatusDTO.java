@@ -3,10 +3,13 @@ package com.jbr.middletier.money.dto;
 public class StatusDTO {
     private String status;
 
-    public final static StatusDTO OK = new StatusDTO("OK");
+    public static final StatusDTO OK = new StatusDTO("OK");
 
     protected StatusDTO(String status) {
         this.status = status;
+    }
+
+    public StatusDTO() {
     }
 
     public String getStatus() {
