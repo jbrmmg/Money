@@ -1,7 +1,6 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.NewTransaction;
 import com.jbr.middletier.money.dto.AccountDTO;
 import org.junit.Assert;
 import org.junit.Test;
@@ -9,10 +8,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-
-import java.io.IOException;
 import java.util.Objects;
-
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -50,6 +46,14 @@ public class AccountTest extends Support {
         getMockMvc().perform(get("/jbr/int/money/account/logo?id=XYXY&disabled=true"))
                 .andExpect(status().isOk());
         getMockMvc().perform(get("/jbr/int/money/account/logo?id=XYXY&disabled=false"))
+                .andExpect(status().isOk());
+        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=AMEX&disabled=true"))
+                .andExpect(status().isOk());
+        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=AMEX&disabled=false"))
+                .andExpect(status().isOk());
+        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYXY&disabled=true"))
+                .andExpect(status().isOk());
+        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYXY&disabled=false"))
                 .andExpect(status().isOk());
     }
 
