@@ -32,7 +32,7 @@ public class EmailGenerator {
     private final AccountRepository accountRepository;
     private final ResourceLoader resourceLoader;
 
-    private void AppendRow(StringBuilder sb, String date, String category, String account, String description, Double amount) {
+    private void appendRow(StringBuilder sb, String date, String category, String account, String description, Double amount) {
         sb.append("<tr>\n");
         sb.append("<td class=\"date\">").append(date).append("</td>\n");
         sb.append("<td class=\"description\">").append(category).append("</td>\n");
@@ -203,14 +203,14 @@ public class EmailGenerator {
 
         StringBuilder sb = new StringBuilder();
 
-        AppendRow(sb,"", "", "", "Current Balance", endAmount);
-        AppendRow(sb,"", "", "", "", null);
+        appendRow(sb,"", "", "", "Current Balance", endAmount);
+        appendRow(sb,"", "", "", "", null);
         for(EmailTransaction nextTransaction: emailData) {
-            AppendRow(sb,sdf.format(nextTransaction.date), nextTransaction.category, nextTransaction.account, nextTransaction.description, nextTransaction.amount);
+            appendRow(sb,sdf.format(nextTransaction.date), nextTransaction.category, nextTransaction.account, nextTransaction.description, nextTransaction.amount);
             LOG.info(nextTransaction.toString());
         }
-        AppendRow(sb,"", "", "", "", null);
-        AppendRow(sb,"", "", "", "Bought forward", startAmount);
+        appendRow(sb,"", "", "", "", null);
+        appendRow(sb,"", "", "", "Bought forward", startAmount);
 
         message.setContent(template.replace("<!-- TABLEROWS -->", sb.toString()),"text/html");
 

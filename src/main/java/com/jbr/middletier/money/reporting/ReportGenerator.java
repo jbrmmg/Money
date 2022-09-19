@@ -88,7 +88,7 @@ public class ReportGenerator {
         Map<String,CategoryPercentage> result = new HashMap<>();
 
         for(Transaction nextTransaction: transactions) {
-            if(nextTransaction.getCategory().getExpense()) {
+            if(Boolean.TRUE.equals(nextTransaction.getCategory().getExpense())) {
                 CategoryPercentage associatedCategory = result.get(nextTransaction.getCategory().getId());
 
                 if (associatedCategory == null) {
@@ -247,20 +247,20 @@ public class ReportGenerator {
     }
 
     private void createPngFromSvg(String svgFilename, String pngFilename, float height, float width) throws IOException, TranscoderException {
-        String svg_URI_input = Paths.get(svgFilename).toUri().toURL().toString();
-        TranscoderInput input_svg_image = new TranscoderInput(svg_URI_input);
+        String svgUriInput = Paths.get(svgFilename).toUri().toURL().toString();
+        TranscoderInput inputSvgImage = new TranscoderInput(svgUriInput);
         //Step-2: Define OutputStream to PNG Image and attach to TranscoderOutput
-        OutputStream png_ostream = Files.newOutputStream(Paths.get(pngFilename));
-        TranscoderOutput output_png_image = new TranscoderOutput(png_ostream);
+        OutputStream pngOstream = Files.newOutputStream(Paths.get(pngFilename));
+        TranscoderOutput output_png_image = new TranscoderOutput(pngOstream);
         // Step-3: Create PNGTranscoder and define hints if required
-        PNGTranscoder my_converter = new PNGTranscoder();
-        my_converter.addTranscodingHint(PNGTranscoder.KEY_WIDTH,width);
-        my_converter.addTranscodingHint(PNGTranscoder.KEY_HEIGHT,height);
+        PNGTranscoder myConverter = new PNGTranscoder();
+        myConverter.addTranscodingHint(PNGTranscoder.KEY_WIDTH,width);
+        myConverter.addTranscodingHint(PNGTranscoder.KEY_HEIGHT,height);
         // Step-4: Convert and Write output
-        my_converter.transcode(input_svg_image, output_png_image);
+        myConverter.transcode(inputSvgImage, output_png_image);
         // Step 5- close / flush Output Stream
-        png_ostream.flush();
-        png_ostream.close();
+        pngOstream.flush();
+        pngOstream.close();
     }
 
     private int getSplitIndex(String description) {
@@ -540,7 +540,7 @@ public class ReportGenerator {
         Collections.sort(categories);
 
         for(CategoryComparison nextComparison: categories) {
-            if(!nextComparison.category.getExpense()) {
+            if(Boolean.FALSE.equals(nextComparison.category.getExpense())) {
                 continue;
             }
 

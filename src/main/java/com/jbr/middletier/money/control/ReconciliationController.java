@@ -245,7 +245,7 @@ public class ReconciliationController {
         }
 
         // Repeat if necessary.
-        while(repeats.size() > 0) {
+        while(!repeats.isEmpty()) {
             List<ReconciliationData> prevRepeats = repeats;
             repeats = new ArrayList<>();
 
@@ -703,19 +703,19 @@ public class ReconciliationController {
         }
     }
 
-    @RequestMapping(path="/ext/money/reconcile", method= RequestMethod.PUT)
+    @PutMapping(path="/ext/money/reconcile")
     public @ResponseBody OkStatus reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/reconcile", method= RequestMethod.PUT)
+    @PutMapping(path="/int/money/reconcile")
     public @ResponseBody OkStatus reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/ext/money/reconciliation/add", method= RequestMethod.POST)
+    @PostMapping(path="/ext/money/reconciliation/add")
     public @ResponseBody
     OkStatus  reconcileDataExt( @RequestBody String reconciliationData) {
         LOG.info("Adding Reconciliation Data (ext) - {}", reconciliationData.length());
@@ -723,7 +723,7 @@ public class ReconciliationController {
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="/int/money/reconciliation/add", method= RequestMethod.POST)
+    @PostMapping(path="/int/money/reconciliation/add")
     public @ResponseBody
     OkStatus  reconcileDataInt( @RequestBody String reconciliationData) {
         LOG.info("Adding Reconciliation Data - {}", reconciliationData.length());
@@ -731,7 +731,7 @@ public class ReconciliationController {
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="int/money/reconciliation/load", method= RequestMethod.POST)
+    @PostMapping(path="int/money/reconciliation/load")
     public @ResponseBody
     OkStatus reconcileDataLoadInt(@RequestBody LoadFileRequest loadFileRequest) throws IOException {
         LOG.info("Request to load file - {} {}", loadFileRequest.getPath(), loadFileRequest.getType());
@@ -739,7 +739,7 @@ public class ReconciliationController {
         return OkStatus.getOkStatus();
     }
 
-    @RequestMapping(path="int/money/reconciliation/files", method= RequestMethod.GET)
+    @GetMapping(path="int/money/reconciliation/files")
     public @ResponseBody
     Iterable<FileResponse> getListOfFiles() {
         LOG.info("Request to get list of files");

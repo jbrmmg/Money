@@ -84,7 +84,7 @@ public class CategoryController {
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());
         if(existingCategory.isPresent()) {
-            if(existingCategory.get().getSystemUse()) {
+            if(Boolean.TRUE.equals(existingCategory.get().getSystemUse())) {
                 throw new Exception(category.getId() + " cannot update system use category.");
             }
             existingCategory.get().setColour(category.getColour());
@@ -109,7 +109,7 @@ public class CategoryController {
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());
         if(existingCategory.isPresent()) {
-            if(existingCategory.get().getSystemUse()) {
+            if(Boolean.TRUE.equals(existingCategory.get().getSystemUse())) {
                 throw new DeleteSystemCategoryException(category);
             }
 
