@@ -234,6 +234,32 @@ public class PoJoTest {
     }
 
     @Test
+    public void testAccountCompare() {
+        AccountDTO account = new AccountDTO();
+        account.setId("ACFE");
+
+        AccountDTO account2 = new AccountDTO();
+        account2.setId("ACFE");
+
+        Assert.assertEquals(account,account2);
+
+        AccountDTO account3 = new AccountDTO();
+        account3.setId("BCFE");
+
+        Assert.assertEquals(-1, account.compareTo(account3));
+        Assert.assertEquals(1, account3.compareTo(account));
+
+        //noinspection SimplifiableAssertion
+        Assert.assertTrue(account.equals(account2));
+        //noinspection SimplifiableAssertion
+        Assert.assertFalse(account.equals(account3));
+
+        Assert.assertEquals(account.hashCode(),account2.hashCode());
+
+        Assert.assertEquals("ACFE [null]", account.toString());
+    }
+
+    @Test
     public void StatusTest() {
         StatusDTO status = new StatusDTO();
         status.setStatus("FAILED");

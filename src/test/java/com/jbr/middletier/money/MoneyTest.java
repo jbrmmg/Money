@@ -1,12 +1,15 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
+import com.jbr.middletier.money.config.DefaultProfileUtil;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.schedule.RegularCtrl;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -19,6 +22,7 @@ import java.util.Optional;
 import static java.lang.Math.abs;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -59,6 +63,14 @@ public class MoneyTest extends Support {
         transactionRepository.deleteAll();
         reconciliationRepository.deleteAll();
         regularRepository.deleteAll();
+    }
+
+    @Test
+    public void TestDefaultProfile() {
+        SpringApplication app = mock(SpringApplication.class);
+
+        Assert.assertNotNull(app);
+        DefaultProfileUtil.addDefaultProfile(app);
     }
 
     @Test

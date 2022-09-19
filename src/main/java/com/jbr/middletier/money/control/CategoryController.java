@@ -10,12 +10,8 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,14 +33,8 @@ public class CategoryController {
         this.modelMapper = modelMapper;
     }
 
-    @ExceptionHandler(Exception.class)
-    public void handleException(HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value());
-    }
-
     @GetMapping(path="/ext/money/categories")
-    public @ResponseBody
-    List<CategoryDTO>  getExtCategories() {
+    public @ResponseBody List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
 
         List<CategoryDTO> result = new ArrayList<>();
@@ -56,8 +46,7 @@ public class CategoryController {
     }
 
     @GetMapping(path="/int/money/categories")
-    public @ResponseBody
-    List<CategoryDTO>  getIntCategories() {
+    public @ResponseBody List<CategoryDTO>  getIntCategories() {
         LOG.info("Request Categories.");
         return this.getExtCategories();
     }
@@ -103,7 +92,7 @@ public class CategoryController {
     }
 
     @DeleteMapping(path="/int/money/categories")
-    public @ResponseBody OkStatus deleteAccount(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
+    public @ResponseBody OkStatus deleteCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account {}", category.getId());
 
         // Is there an account with this ID?
