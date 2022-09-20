@@ -1,7 +1,6 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;

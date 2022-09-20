@@ -4,6 +4,10 @@ public class ArchiveOrReportRequest {
     private long year;
     private long month;
 
+    public ArchiveOrReportRequest() {
+
+    }
+
     public ArchiveOrReportRequest(long year, long month) {
         this.year = year;
         this.month = month;

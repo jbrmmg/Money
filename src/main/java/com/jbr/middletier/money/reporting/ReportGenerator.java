@@ -715,6 +715,7 @@ public class ReportGenerator {
         try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
 
             String template = getTemplate(false);
+            // TODO programatically create the HTML.
             template = addReportToTemplate(template, "", year, month);
 
             writer2.println(template);
