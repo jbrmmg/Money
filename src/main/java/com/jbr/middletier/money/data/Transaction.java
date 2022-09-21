@@ -70,7 +70,7 @@ public class Transaction {
         this.description = description;
     }
 
-    public static final String TransactionDateFormat = "yyyy-MM-dd";
+    public static final String TRANSACTION_DATE_FORMAT = "yyyy-MM-dd";
 
     public int getId() {
         return id;

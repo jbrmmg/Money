@@ -36,11 +36,12 @@ public class ServiceHealthIndicator implements HealthIndicator {
     public Health health() {
         try {
             List<Category> categoryList = (List<Category>) categoryRepository.findAll();
-            LOG.info(String.format("Check Database %s.", categoryList.size()));
+            LOG.info("Check Database {}}.", categoryList.size());
 
             return Health.up().withDetail("service", this.applicationProperties.getServiceName()).withDetail("Category Types",categoryList.size()).build();
         } catch (Exception ignored) {
-
+            // Ignore exceptions
+            LOG.info("Exception ignored", ignored);
         }
 
         return Health.down().withDetail("service", this.applicationProperties.getServiceName()).build();

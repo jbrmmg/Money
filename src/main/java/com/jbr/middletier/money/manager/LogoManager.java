@@ -17,15 +17,12 @@ public class LogoManager {
 
     private final LogoDefinitionRepository logoDefinitionRepository;
 
-    private final ResourceLoader resourceLoader;
-
     @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
-    private static final String defaultLogoId = "DFLTI";
+    private static final String DEFAULT_LOGO_ID = "DFLTI";
 
     @Autowired
-    public LogoManager(LogoDefinitionRepository logoDefinitionRepository, ResourceLoader resourceLoader) {
+    public LogoManager(LogoDefinitionRepository logoDefinitionRepository) {
         this.logoDefinitionRepository = logoDefinitionRepository;
-        this.resourceLoader = resourceLoader;
     }
 
     public ScalableVectorGraphics getSvgLogoForAccount(String accountId, boolean disabled) {
@@ -37,7 +34,7 @@ public class LogoManager {
         // Get the logo definition
         Optional<LogoDefinition> logoDefinition = logoDefinitionRepository.findById(logoId);
         if(!logoDefinition.isPresent()) {
-            logoDefinition = logoDefinitionRepository.findById(defaultLogoId);
+            logoDefinition = logoDefinitionRepository.findById(DEFAULT_LOGO_ID);
 
             if(!logoDefinition.isPresent()) {
                 throw new IllegalStateException("Cannot find the default logo definition.");

@@ -164,7 +164,7 @@ public class EmailGenerator {
         startAmount -= transactionTotal2;
 
         for(EmailTransaction nextTransaction: emailData) {
-            LOG.info(nextTransaction.toString());
+            LOG.info("{}", nextTransaction);
         }
 
         LOG.info(String.format("%02.2f",startAmount));
@@ -207,7 +207,7 @@ public class EmailGenerator {
         appendRow(sb,"", "", "", "", null);
         for(EmailTransaction nextTransaction: emailData) {
             appendRow(sb,sdf.format(nextTransaction.date), nextTransaction.category, nextTransaction.account, nextTransaction.description, nextTransaction.amount);
-            LOG.info(nextTransaction.toString());
+            LOG.info("{}", nextTransaction);
         }
         appendRow(sb,"", "", "", "", null);
         appendRow(sb,"", "", "", "Bought forward", startAmount);

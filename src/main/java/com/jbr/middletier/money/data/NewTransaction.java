@@ -44,7 +44,7 @@ public class NewTransaction {
         this.accountId = matchData.getAccount().getId();
         this.categoryId = matchData.getCategory().getId();
 
-        SimpleDateFormat formatter = new SimpleDateFormat(Transaction.TransactionDateFormat);
+        SimpleDateFormat formatter = new SimpleDateFormat(Transaction.TRANSACTION_DATE_FORMAT);
         this.date = formatter.parse(matchData.getDate());
 
         this.amount = matchData.getAmount();

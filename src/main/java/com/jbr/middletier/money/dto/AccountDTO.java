@@ -12,28 +12,28 @@ public class AccountDTO implements Comparable<AccountDTO> {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getImagePrefix() {
         return imagePrefix;
     }
 
-    public void setImagePrefix(String imagePrefix) {
-        this.imagePrefix = imagePrefix;
-    }
-
     public String getColour() {
         return colour;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setImagePrefix(String imagePrefix) {
+        this.imagePrefix = imagePrefix;
     }
 
     public void setColour(String colour) {

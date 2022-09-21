@@ -139,7 +139,7 @@ public class TransactionController {
         Date toDate = null;
 
         // Get the from date value if specified.
-        SimpleDateFormat formatter = new SimpleDateFormat(Transaction.TransactionDateFormat);
+        SimpleDateFormat formatter = new SimpleDateFormat(Transaction.TRANSACTION_DATE_FORMAT);
 
         if (!from.equals("UNKN")) {
             fromDate = formatter.parse(from);
@@ -177,6 +177,9 @@ public class TransactionController {
             case "UL":
                 LOG.info("Get Transaction - unlocked");
                 return getUnlockedTransactions(accounts, categories);
+            default:
+                // Ignore
+                // TODO use an enum.
         }
 
         throw new IllegalStateException("Get Transactions invalid type value");
@@ -188,21 +191,18 @@ public class TransactionController {
         // Get the transaction.
         Optional<Transaction> transaction = transactionRepository.findById(transactionId);
 
-        if(transaction.isPresent()) {
+        if(transaction.isPresent() && !transaction.get().reconciled()) {
             // If the transaction is not reconciled then it can be deleted.
-            if(!transaction.get().reconciled()) {
-                transactionRepository.deleteById(transactionId);
-                return;
-            }
+            transactionRepository.deleteById(transactionId);
+            return;
         }
 
         throw new InvalidTransactionIdException(transactionId);
     }
 
     private List<TransactionDTO> addTransaction(NewTransaction newTransaction) throws InvalidAccountIdException, InvalidCategoryIdException {
-        // TODO make this pass a list of transactions (list because of transfer) instead of a different object
-        // TODO clean up the exceptions.
-        // TODO move some code to managers
+        // TODO make this pass a list of transactions (list because of transfer) instead of a different object,
+        // clean up the exceptions & move some code to managers
         LOG.info("New Transaction.");
 
         List<TransactionDTO> result = new ArrayList<>();
@@ -264,11 +264,9 @@ public class TransactionController {
             // If the transaction is locked then the amount cannot be updated.
             boolean locked = false;
 
-            if(transaction.get().getStatement() != null) {
-                if(transaction.get().getStatement().getLocked()) {
-                    locked = true;
-                    LOG.info("Update request - locked transaction.");
-                }
+            if((transaction.get().getStatement() != null) && transaction.get().getStatement().getLocked()) {
+                locked = true;
+                LOG.info("Update request - locked transaction.");
             }
 
             if(!locked) {
@@ -276,15 +274,13 @@ public class TransactionController {
             }
 
             // If a category is specified, then update it (if not a transfer)
-            if(transaction.get().getOppositeTransactionId() == null) {
-                if (transactionRequest.getCategoryId().length() > 0) {
-                    Optional<Category> category = categoryRepository.findById(transactionRequest.getCategoryId());
-                    if(!category.isPresent()) {
-                        throw new InvalidCategoryIdException(transactionRequest.getCategoryId());
-                    }
-
-                    transaction.get().setCategory(category.get());
+            if((transaction.get().getOppositeTransactionId() == null) && (transactionRequest.getCategoryId().length() > 0)) {
+                Optional<Category> category = categoryRepository.findById(transactionRequest.getCategoryId());
+                if(!category.isPresent()) {
+                    throw new InvalidCategoryIdException(transactionRequest.getCategoryId());
                 }
+
+                transaction.get().setCategory(category.get());
             }
 
             // If a description is specified, then update it.
@@ -335,17 +331,14 @@ public class TransactionController {
 
     @DeleteMapping(path="/int/money/delete")
     public @ResponseBody OkStatus deleteInternal( @RequestParam(value="transactionId", defaultValue="0") int transactionId) throws InvalidTransactionIdException {
-        deleteTransaction(transactionId);
-        return OkStatus.getOkStatus();
+        return this.deleteExternal(transactionId);
     }
 
     private Iterable<TransactionDTO> getTransactionsImpl(String type, String from, String to, String category, String account, Boolean sortAscending) throws ParseException {
         Sort transactionSort = Sort.by(Sort.Direction.ASC,"date", "account", "amount");
 
-        if(sortAscending != null) {
-            if(!sortAscending) {
-                transactionSort = Sort.by(Sort.Direction.DESC,"date", "account", "amount");
-            }
+        if(Boolean.FALSE.equals(sortAscending)) {
+            transactionSort = Sort.by(Sort.Direction.DESC,"date", "account", "amount");
         }
 
         List<TransactionDTO> result = new ArrayList<>();
@@ -384,8 +377,7 @@ public class TransactionController {
 
     @PutMapping(path="/int/money/transaction/update")
     public @ResponseBody OkStatus updateTransactionInt(@RequestBody UpdateTransaction transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
-        updateTransacation(transaction);
-        return OkStatus.getOkStatus();
+        return this.updateTransactionExt(transaction);
     }
 
     private Iterable<RegularDTO> internalGetRegularPayments() {
@@ -462,7 +454,7 @@ public class TransactionController {
                                                     @RequestParam(value="password") String password,
                                                     @RequestParam(value="weeks", defaultValue="6") int weeks ) throws Exception {
 
-        LOG.info("sending email to " + to);
+        LOG.info("sending email to {}", to);
 
         try {
             this.emailGenerator.generateReport(to,from,username,host,password,weeks);

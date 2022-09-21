@@ -12,6 +12,10 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class TransactionSpecifications {
+    private TransactionSpecifications() {
+        // Prevent implicit public constructor
+    }
+
     public static Specification<Transaction> accountIn(Iterable<Account> account) {
         // Account id in a list of values.
         return (root, criteriaQuery, criteriaBuilder) -> {
@@ -19,6 +23,7 @@ public class TransactionSpecifications {
             return accountList.in(account);
         };
     }
+
     public static Specification<Transaction> categoryIn(Iterable<Category> category) {
         // Category id in a list of values.
         return (root, criteriaQuery, criteriaBuilder) -> {
@@ -26,9 +31,11 @@ public class TransactionSpecifications {
             return categoryList.in(category);
         };
     }
+
     public static Specification<Transaction> accountIs(Account account) {
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("account"), account);
     }
+
     public static Specification<Transaction> statementDate(Date statementDate) {
         // Get the month and year.
         Calendar calendar = Calendar.getInstance();
@@ -39,12 +46,14 @@ public class TransactionSpecifications {
                 criteriaBuilder.equal(root.get("statement").get("id").get("year"),calendar.get(Calendar.YEAR)),
                 criteriaBuilder.equal(root.get("statement").get("id").get("month"),calendar.get(Calendar.MONTH) + 1) );
     }
+
     public static Specification<Transaction> statementIsNull() {
         // Statement is null
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.and(
                                                             criteriaBuilder.isNull(root.get("statement").get("id").get("year")),
                                                             criteriaBuilder.isNull(root.get("statement").get("id").get("month")) );
     }
+
     public static Specification<Transaction> datesBetween(Date from, Date to) {
         // Strings are dates - from to
         return (root, criteriaQuery, criteriaBuilder) -> {
@@ -53,6 +62,7 @@ public class TransactionSpecifications {
             return criteriaBuilder.between(dateEntryPath,from,to);
         };
     }
+
     public static Specification<Transaction> notLocked() {
         // locked is true (Y)
         return (root, criteriaQuery, criteriaBuilder) -> {
@@ -63,4 +73,5 @@ public class TransactionSpecifications {
             Predicate notLocked = criteriaBuilder.equal(root.get("statement").get("locked"),false);
             return criteriaBuilder.or(noStatement,notLocked);
         };
-    }}
+    }
+}

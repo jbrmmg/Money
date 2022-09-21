@@ -53,7 +53,6 @@ public class Regular {
     private String description;
 
     private static final Logger LOG = LoggerFactory.getLogger(Regular.class);
-    private static SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
 
     private Date removeTime(Date dateTime) {
         // Force the date to be midday.
@@ -74,6 +73,7 @@ public class Regular {
     }
 
     private Date addFrequency ( Date fromDate ) throws CannotDetermineNextDateException {
+        SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
         String fromDateString = "<not set>";
 
         try {

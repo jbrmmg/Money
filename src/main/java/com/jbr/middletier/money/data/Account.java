@@ -6,6 +6,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 /**
  * Created by jason on 07/03/17.
@@ -13,7 +14,7 @@ import javax.validation.constraints.Size;
 
 @Entity
 @Table(name="Account")
-public class Account {
+public class Account implements Serializable {
     @Id
     @Size(max=4)
     @Column(name="id")
@@ -31,9 +32,6 @@ public class Account {
     @Size(max=6)
     @Column(name="colour")
     private String colour;
-
-    public Account() {
-    }
 
     public String getId() {
         return id;
