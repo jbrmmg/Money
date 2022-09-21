@@ -153,11 +153,9 @@ public class ReconciliationController {
             }
 
             // Set details of the match.
-            if(!trnMatch.closeMatch() || trnMatch.daysAway > difference) {
-                if( ( bestDaysAway == -1 )  || (difference < bestDaysAway) ) {
-                    bestDaysAway = difference;
-                    bestTrnMatch = trnMatch;
-                }
+            if ((!trnMatch.closeMatch() || trnMatch.daysAway > difference) && (( bestDaysAway == -1 )  || (difference < bestDaysAway))) {
+                bestDaysAway = difference;
+                bestTrnMatch = trnMatch;
             }
         }
 
@@ -175,7 +173,7 @@ public class ReconciliationController {
 
     private List<MatchData> matchFromLastData() {
         if (lastAccount == null)
-            return null;
+            return new ArrayList<>();
 
         return matchData(lastAccount);
     }
@@ -511,6 +509,7 @@ public class ReconciliationController {
 
             return calendar.getTime();
         } catch (Exception ignored) {
+            LOG.info("Problem converting date, ignored.",ignored);
         }
 
         return null;
@@ -535,6 +534,7 @@ public class ReconciliationController {
             // Attempt to parse the value.
             return Double.parseDouble(elementAmount);
         } catch (Exception ignored) {
+            LOG.info("Problem converting amount, ignored.",ignored);
         }
 
         return null;
@@ -547,7 +547,7 @@ public class ReconciliationController {
 
             // Minimum of 2 (date and amount).
             if(elements.length < 2) {
-                throw new Exception("Too few elements.");
+                throw new IllegalStateException("Too few elements in record.");
             }
 
             // Process the elements.
@@ -586,14 +586,12 @@ public class ReconciliationController {
                 }
 
                 // Is it a category id?
-                if(category == null) {
-                    if (nextElement.length() == 3) {
-                        Optional<Category> maybeCategory = categoryRepository.findById(nextElement);
+                if((category == null) && (nextElement.length() == 3)) {
+                    Optional<Category> maybeCategory = categoryRepository.findById(nextElement);
 
-                        if (maybeCategory.isPresent()) {
-                            category = maybeCategory.get();
-                            continue;
-                        }
+                    if (maybeCategory.isPresent()) {
+                        category = maybeCategory.get();
+                        continue;
                     }
                 }
 
@@ -749,10 +747,8 @@ public class ReconciliationController {
         List<FileResponse> result = new ArrayList<>();
 
         for(final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
-            if(!fileEntry.isDirectory()) {
-                if(fileEntry.getPath().endsWith(".csv")) {
-                    result.add(new FileResponse(fileEntry.getPath()));
-                }
+            if(!fileEntry.isDirectory() && fileEntry.getPath().endsWith(".csv")) {
+                result.add(new FileResponse(fileEntry.getPath()));
             }
         }
 

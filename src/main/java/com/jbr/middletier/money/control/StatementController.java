@@ -92,10 +92,10 @@ public class StatementController {
 
                 for (Transaction nextTransaction : transactions ) {
                     balance += nextTransaction.getAmount();
-                    LOG.debug(String.format("Transaction %s",decimalFormat.format(nextTransaction.getAmount())));
+                    LOG.debug("Transaction {}",decimalFormat.format(nextTransaction.getAmount()));
                 }
 
-                LOG.info(String.format("Balance: %s",decimalFormat.format(balance)));
+                LOG.info("Balance: {}",decimalFormat.format(balance));
 
                 // Create a new statement.
                 Statement newStatement = statement.get().lock(balance);
@@ -113,15 +113,13 @@ public class StatementController {
     }
 
     @GetMapping(path="/ext/money/statement")
-    public @ResponseBody
-    Iterable<StatementDTO>  statementsExt() {
+    public @ResponseBody Iterable<StatementDTO>  statementsExt() {
         return statements();
     }
 
     @GetMapping(path="/int/money/statement")
-    public @ResponseBody
-    Iterable<StatementDTO>  statementsInt() {
-        return statements();
+    public @ResponseBody Iterable<StatementDTO>  statementsInt() {
+        return this.statementsExt();
     }
 
     @PostMapping(path="/ext/money/statement/lock")
@@ -133,14 +131,12 @@ public class StatementController {
 
     @PostMapping(path="/int/money/statement/lock")
     public @ResponseBody OkStatus statementLockInt(@RequestBody LockStatementRequest request) {
-        statementLock(request);
-
-        return OkStatus.getOkStatus();
+        return this.statementLockExt(request);
     }
 
     @PostMapping(path="/int/money/statement")
     public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody StatementDTO statement) throws StatementAlreadyExists {
-        LOG.info("Create a new statement - {}", statement.toString());
+        LOG.info("Create a new statement - {}", statement);
 
         // Is there an account with this ID?
         Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(),StatementId.class));
@@ -155,7 +151,7 @@ public class StatementController {
 
     @PutMapping(path="/int/money/statement")
     public @ResponseBody Iterable<StatementDTO> updateStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException {
-        LOG.info("Update a statement - {}", statement.toString());
+        LOG.info("Update a statement - {}", statement);
 
         // Is there a statement with this
         Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(), StatementId.class));
@@ -174,7 +170,7 @@ public class StatementController {
 
     @DeleteMapping(path="/int/money/statement")
     public @ResponseBody OkStatus deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException {
-        LOG.info("Delete an account - {}", statement.getId().toString());
+        LOG.info("Delete an account - {}", statement.getId());
 
         // Is there an account with this ID?
         Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(), StatementId.class));

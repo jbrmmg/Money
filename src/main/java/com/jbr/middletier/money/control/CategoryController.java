@@ -3,6 +3,7 @@ package com.jbr.middletier.money.control;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.exceptions.CannotUpdateSystemCategory;
 import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
@@ -52,7 +53,7 @@ public class CategoryController {
     }
 
     @PostMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws Exception {
+    public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CategoryAlreadyExistsException {
         LOG.info("Create a new account - {}", category.getId());
 
         // Is there an account with this ID?
@@ -67,14 +68,14 @@ public class CategoryController {
     }
 
     @PutMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws Exception {
+    public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, CannotUpdateSystemCategory {
         LOG.info("Update an account - {}", category.getId());
 
         // Is there an account with this ID?
         Optional<Category> existingCategory = categoryRepository.findById(category.getId());
         if(existingCategory.isPresent()) {
             if(Boolean.TRUE.equals(existingCategory.get().getSystemUse())) {
-                throw new Exception(category.getId() + " cannot update system use category.");
+                throw new CannotUpdateSystemCategory(category);
             }
             existingCategory.get().setColour(category.getColour());
             existingCategory.get().setName(category.getName());

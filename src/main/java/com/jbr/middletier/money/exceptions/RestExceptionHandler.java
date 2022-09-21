@@ -47,6 +47,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Statement already exists", ex));
     }
 
+    @ExceptionHandler(CannotUpdateSystemCategory.class)
+    protected ResponseEntity<Object> handleCannotUpdateSystemCategory(CannotUpdateSystemCategory ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Cannot update system category", ex));
+    }
+
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError,apiError.getStatus());
     }
