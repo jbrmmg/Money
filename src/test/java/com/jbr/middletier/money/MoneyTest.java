@@ -74,24 +74,6 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void categoryTest() throws Exception {
-        // Get categories (external), check that all three categories are returned and in the correct order..
-        getMockMvc().perform(get("/jbr/ext/money/categories/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is("FDG")))
-                .andExpect(jsonPath("$[1].id", is ("FDW")))
-                .andExpect(jsonPath("$[2].id", is ("FDT")));
-
-
-        // Get categories (internal), check that all three categories are returned and in the correct order..
-        getMockMvc().perform(get("/jbr/int/money/categories/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is("FDG")))
-                .andExpect(jsonPath("$[1].id", is ("FDW")))
-                .andExpect(jsonPath("$[2].id", is ("FDT")));
-    }
-
-    @Test
     public void internalTransactionTest() throws Exception {
         cleanUp();
 

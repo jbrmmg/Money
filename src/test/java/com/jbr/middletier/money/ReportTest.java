@@ -3,6 +3,7 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,10 +30,25 @@ public class ReportTest extends Support {
     private TransactionRepository transactionRepository;
 
     @Autowired
+    private StatementRepository statementRepository;
+
+    @Autowired
     private ApplicationProperties applicationProperties;
+
+    private void cleanUp() {
+        transactionRepository.deleteAll();
+        for(Statement next : statementRepository.findAll()) {
+            if(next.getLocked()) {
+                next.setLocked(false);
+                statementRepository.save(next);
+            }
+        }
+    }
 
     @Test
     public void testReport() throws Exception {
+        cleanUp();
+
         // Clear the directories.
         deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
