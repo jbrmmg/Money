@@ -348,7 +348,7 @@ public class ReportGenerator {
         } else {
             table.append("<td class=\"amount\">");
         }
-        table.append(df.format(nextTransaction.getAmount()));
+        table.append(df.format(nextTransaction.getAmount().getValue()));
         table.append("</td>\n");
     }
 
