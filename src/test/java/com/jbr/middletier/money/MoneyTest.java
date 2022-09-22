@@ -699,42 +699,36 @@ public class MoneyTest extends Support {
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
-    @Test
-    public void testLoadReconcilationDataJLP() throws Exception {
+    private void testReconciliationData(String filename, String type) throws Exception {
         String path = "src/test/resources";
 
         File file = new File(path);
         String absolutePath = file.getAbsolutePath();
 
+        LoadFileRequest loadFileRequest = new LoadFileRequest();
+        loadFileRequest.setPath(absolutePath + "/" + filename);
+        loadFileRequest.setType(type);
+
         getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
-                .contentType(getContentType())
-                .content("{ \"path\":\"" + absolutePath + "/test.JLP.csv\", \"type\":\"JOHNLEWIS\" }"))
+                        .contentType(getContentType())
+                        .content(this.json(loadFileRequest)))
                 .andExpect(status().isOk());
+
+        //TODO check this load worked.
+    }
+
+    @Test
+    public void testLoadReconcilationDataJLP() throws Exception {
+        testReconciliationData("test.JLP.csv","JOHNLEWIS");
     }
 
     @Test
     public void testLoadReconcilationDataAMEX() throws Exception {
-        String path = "src/test/resources";
-
-        File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
-
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
-                .contentType(getContentType())
-                .content("{ \"path\":\"" + absolutePath + "/test.AMEX.csv\", \"type\":\"AMEX\" }"))
-                .andExpect(status().isOk());
+        testReconciliationData("test.AMEX.csv","AMEX");
     }
 
     @Test
     public void testLoadReconcilationDataBank() throws Exception {
-        String path = "src/test/resources";
-
-        File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
-
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
-                .contentType(getContentType())
-                .content("{ \"path\":\"" + absolutePath + "/test.FirstDirect.csv\", \"type\":\"FIRSTDIRECT\" }"))
-                .andExpect(status().isOk());
+        testReconciliationData("test.FirstDirect.csv","FIRSTDIRECT");
     }
 }

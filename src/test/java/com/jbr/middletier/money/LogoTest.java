@@ -262,20 +262,4 @@ public class LogoTest {
         Assert.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),48, "FFFFFF", "004A8F", "FFFFFF", "ED1C24", "NW");
     }
-
-    @Test
-    public void testing() {
-        LogoDefinition logoDefinition = new LogoDefinition();
-        logoDefinition.setLogoText("NW");
-        logoDefinition.setFontSize(48);
-        logoDefinition.setFillColour("004A8F");
-        logoDefinition.setBorderColour("FFFFFF");
-        logoDefinition.setBorderTwoColour("ED1C24");
-        logoDefinition.setSecondBorder(true);
-        logoDefinition.setTextColour("FFFFFF");
-        logoDefinition.setY(66);
-
-        ScalableVectorGraphics svg = new LogoSvg(logoDefinition);
-        svg.getSvgAsString();
-    }
 }

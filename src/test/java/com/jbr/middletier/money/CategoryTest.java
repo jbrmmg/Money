@@ -1,7 +1,6 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import org.junit.Assert;
 import org.junit.Test;
@@ -149,5 +148,24 @@ public class CategoryTest extends Support {
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("You cannot delete this category as it is used by system. TRF", error);
+    }
+
+    @Test
+    public void updateSystemTest() throws Exception {
+        CategoryDTO category = new CategoryDTO();
+        category.setId("TRF");
+        category.setColour("FCFCFC");
+        category.setExpense(true);
+        category.setGroup("FRD");
+        category.setRestricted(false);
+        category.setSort(9999L);
+        category.setSystemUse(false);
+
+        String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/categories")
+                        .content(this.json(category))
+                        .contentType(getContentType()))
+                .andExpect(status().isConflict())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertEquals("Cannot update system category TRF", error);
     }
 }
