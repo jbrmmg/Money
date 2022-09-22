@@ -9,7 +9,6 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
@@ -34,11 +33,6 @@ public class ArchiveAndReportController {
         this.archiveManager.archive(archiveRequest);
 
         return StatusDTO.OK;
-    }
-
-    @Scheduled(cron = "#{@applicationProperties.archiveSchedule}")
-    public void scheduledArchive() {
-        archive(null);
     }
 
     @PostMapping(path="/int/money/transaction/report")

@@ -9,6 +9,7 @@ import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
 import java.util.Calendar;
@@ -32,9 +33,14 @@ public class ArchiveManager {
         this.reportGenerator = reportGenerator;
     }
 
+    @Scheduled(cron = "#{@applicationProperties.archiveSchedule}")
+    public void scheduledArchive() {
+        archive(null);
+    }
+
     public void archive(ArchiveOrReportRequest archiveRequest) {
         // If archive request is null then this is a scheduled request.
-        if(archiveRequest == null || !applicationProperties.getArchiveEnabled()) {
+        if(archiveRequest == null && !applicationProperties.getArchiveEnabled()) {
             LOG.info("Scheduled archive is disabled.");
             return;
         }

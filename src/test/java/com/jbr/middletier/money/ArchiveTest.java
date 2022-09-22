@@ -5,6 +5,8 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.manager.ArchiveManager;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,9 @@ public class ArchiveTest extends Support {
     @Autowired
     private ApplicationProperties applicationProperties;
 
+    @Autowired
+    private ArchiveManager archiveManager;
+
     private void cleanUp() {
         transactionRepository.deleteAll();
         for(Statement next : statementRepository.findAll()) {
@@ -39,6 +44,14 @@ public class ArchiveTest extends Support {
                 statementRepository.save(next);
             }
         }
+    }
+
+    @Test
+    public void testSchedule() {
+        archiveManager.scheduledArchive();
+        // Make sure the test gets here.
+        // TODO add more checkds.
+        Assert.assertTrue(true);
     }
 
     @Test
@@ -91,8 +104,6 @@ public class ArchiveTest extends Support {
         request.setYear(2010);
 
         // TODO improve the checks in this
-        boolean savedEnabled = applicationProperties.getArchiveEnabled();
-        applicationProperties.setArchiveEnabled(false);
         getMockMvc().perform(post("/jbr/int/money/transaction/archive")
                         .content(this.json(request))
                         .contentType(getContentType()))
@@ -119,6 +130,5 @@ public class ArchiveTest extends Support {
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
-        applicationProperties.setArchiveEnabled(savedEnabled);
     }
 }
