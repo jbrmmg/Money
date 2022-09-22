@@ -84,7 +84,7 @@ public class MatchData implements Comparable {
         this.transaction = transaction;
         this.reconciliationId = -1;
         this.reconcilationDate = transaction.getDate();
-        this.reconciliationAmount = transaction.getAmount();
+        this.reconciliationAmount = transaction.getAmount().getValue();
         this.beforeAmount = 0.0;
         this.afterAmount = 0.0;
         this.category = transaction.getCategory();

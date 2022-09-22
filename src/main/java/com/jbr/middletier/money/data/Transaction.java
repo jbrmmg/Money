@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.data;
 
+import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransactionString;
 import org.hibernate.annotations.*;
 
@@ -80,7 +81,7 @@ public class Transaction {
         return this.account;
     }
 
-    public double getAmount() { return this.amount; }
+    public FinancialAmount getAmount() { return new FinancialAmount(this.amount); }
 
     public void setAmount(double amount) {
         this.amount = amount;

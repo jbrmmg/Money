@@ -5,19 +5,18 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
+import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
 import com.jbr.middletier.money.exceptions.StatementAlreadyExists;
+import com.jbr.middletier.money.exceptions.StatementAlreadyLockedException;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,11 +45,6 @@ public class StatementController {
         this.modelMapper = modelMapper;
     }
 
-    @ExceptionHandler(Exception.class)
-    public void handleException(HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value());
-    }
-
     private Iterable<StatementDTO> statements() {
         LOG.info("Get statements.");
 
@@ -65,13 +59,14 @@ public class StatementController {
         return statementList;
     }
 
-    private void statementLock(LockStatementRequest request) {
+    private void statementLock(LockStatementRequest request) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
+        // TODO lock statement should take a statement id.
         LOG.info("Request statement lock.");
 
         // Get the account.
         Optional<Account> account = accountRepository.findById(request.getAccountId());
         if(!account.isPresent()) {
-            throw new IllegalStateException("Request statement lock - invalid account");
+            throw new InvalidAccountIdException(request.getAccountId());
         }
 
         // Load the statement to be locked.
@@ -79,23 +74,20 @@ public class StatementController {
 
         if(statement.isPresent()) {
             // Is the statement already locked?
-            if(!statement.get().getLocked()) {
-                DecimalFormat decimalFormat = new DecimalFormat("#.00");
-
-                // Calculate the balance of the next statement.
+            if(!statement.get().getLocked()) {                // Calculate the balance of the next statement.
                 List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
                         statement.get().getId().getAccount(),
                         statement.get().getId().getYear(),
                         statement.get().getId().getMonth());
 
-                double balance = statement.get().getOpenBalance();
+                FinancialAmount balance = statement.get().getOpenBalance();
 
                 for (Transaction nextTransaction : transactions ) {
-                    balance += nextTransaction.getAmount();
-                    LOG.debug("Transaction {}",decimalFormat.format(nextTransaction.getAmount()));
+                    balance.increment(nextTransaction.getAmount());
+                    LOG.debug("Transaction {}", nextTransaction.getAmount());
                 }
 
-                LOG.info("Balance: {}",decimalFormat.format(balance));
+                LOG.info("Balance: {}",balance);
 
                 // Create a new statement.
                 Statement newStatement = statement.get().lock(balance);
@@ -105,10 +97,10 @@ public class StatementController {
                 statementRepository.save(newStatement);
                 LOG.info("Request statement lock - locked.");
             } else {
-                throw new IllegalStateException("Request statement lock - statement already locked");
+                throw new StatementAlreadyLockedException(request);
             }
         } else {
-            throw new IllegalStateException("Request statement lock - invalid statement id");
+            throw new InvalidStatementIdException(request);
         }
     }
 
@@ -123,14 +115,14 @@ public class StatementController {
     }
 
     @PostMapping(path="/ext/money/statement/lock")
-    public @ResponseBody OkStatus statementLockExt(@RequestBody LockStatementRequest request) {
+    public @ResponseBody OkStatus statementLockExt(@RequestBody LockStatementRequest request) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
         statementLock(request);
 
         return OkStatus.getOkStatus();
     }
 
     @PostMapping(path="/int/money/statement/lock")
-    public @ResponseBody OkStatus statementLockInt(@RequestBody LockStatementRequest request) {
+    public @ResponseBody OkStatus statementLockInt(@RequestBody LockStatementRequest request) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
         return this.statementLockExt(request);
     }
 

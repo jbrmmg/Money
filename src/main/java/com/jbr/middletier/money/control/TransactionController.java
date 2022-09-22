@@ -297,7 +297,7 @@ public class TransactionController {
                     oppositeTransaction.get().setDescription(transactionRequest.getDescription());
 
                     if (!locked) {
-                        oppositeTransaction.get().setAmount(transaction.get().getAmount() * -1);
+                        oppositeTransaction.get().setAmount(transaction.get().getAmount().getValue() * -1);
                     }
 
                     transactionRepository.save(oppositeTransaction.get());

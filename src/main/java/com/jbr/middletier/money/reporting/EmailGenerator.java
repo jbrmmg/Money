@@ -78,7 +78,7 @@ public class EmailGenerator {
 
             private EmailTransaction(Transaction transaction, Iterable<Category> categories) {
                 this.date = transaction.getDate();
-                this.amount = transaction.getAmount();
+                this.amount = transaction.getAmount().getValue();
                 this.description = transaction.getDescription() == null ? "" : transaction.getDescription().replace("WWW.","");
                 this.account = transaction.getAccount().getId();
 
@@ -114,8 +114,8 @@ public class EmailGenerator {
             // Get the latest statement.
             List<Statement> latestStatements = statementRepository.findByIdAccountAndLocked(nextAccount,false);
             for(Statement nextStatement: latestStatements) {
-                endAmount += nextStatement.getOpenBalance();
-                startAmount += nextStatement.getOpenBalance();
+                endAmount += nextStatement.getOpenBalance().getValue();
+                startAmount += nextStatement.getOpenBalance().getValue();
 
                 // Get the transactions for this.
                 List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
@@ -123,8 +123,8 @@ public class EmailGenerator {
                         nextStatement.getId().getYear(),
                         nextStatement.getId().getMonth());
                 for(Transaction nextTransaction : transactions) {
-                    endAmount += nextTransaction.getAmount();
-                    transactionTotal1 += nextTransaction.getAmount();
+                    endAmount += nextTransaction.getAmount().getValue();
+                    transactionTotal1 += nextTransaction.getAmount().getValue();
 
                     emailData.add(new EmailTransaction(nextTransaction,categories));
                 }
@@ -135,7 +135,7 @@ public class EmailGenerator {
                         StatementId.getPreviousId(nextStatement.getId()).getMonth());
                 for(Transaction nextTransaction : transactions) {
                     if(nextTransaction.getDate().after(calendar.getTime())) {
-                        transactionTotal2 += nextTransaction.getAmount();
+                        transactionTotal2 += nextTransaction.getAmount().getValue();
 
                         emailData.add(new EmailTransaction(nextTransaction, categories));
                     }

@@ -1,5 +1,7 @@
 package com.jbr.middletier.money.data;
 
+import com.jbr.middletier.money.util.FinancialAmount;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
@@ -20,10 +22,10 @@ public class Statement {
     @NotNull
     private Boolean locked;
 
-    private Statement(StatementId previousId, double balance) {
+    private Statement(StatementId previousId, FinancialAmount balance) {
         // Create next statement in sequence.
         this.id = StatementId.getNextId(previousId);
-        this.openBalance = balance;
+        this.openBalance = balance.getValue();
         this.locked = false;
     }
 
@@ -42,8 +44,8 @@ public class Statement {
 
     public void setId(StatementId id) { this.id = id; }
 
-    public double getOpenBalance() {
-        return this.openBalance;
+    public FinancialAmount getOpenBalance() {
+        return new FinancialAmount(this.openBalance);
     }
 
     public void setOpenBalance(double openBalance) { this.openBalance = openBalance; }
@@ -56,7 +58,7 @@ public class Statement {
         this.locked = locked;
     }
 
-    public Statement lock(double balance) {
+    public Statement lock(FinancialAmount balance) {
         // Lock this statement and create the next in sequence.
         locked = true;
 

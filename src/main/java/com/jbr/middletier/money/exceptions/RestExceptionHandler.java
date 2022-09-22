@@ -52,6 +52,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Cannot update system category", ex));
     }
 
+    @ExceptionHandler(StatementAlreadyLockedException.class)
+    protected ResponseEntity<Object> handleStatementAlreadyLocked(StatementAlreadyLockedException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT, "Cannot lock a statement again.", ex));
+    }
+
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError,apiError.getStatus());
     }

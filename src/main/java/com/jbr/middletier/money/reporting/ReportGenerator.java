@@ -100,7 +100,7 @@ public class ReportGenerator {
                     result.put(nextTransaction.getCategory().getId(), associatedCategory);
                 }
 
-                associatedCategory.amount += nextTransaction.getAmount();
+                associatedCategory.amount += nextTransaction.getAmount().getValue();
             }
         }
 
@@ -343,7 +343,7 @@ public class ReportGenerator {
         table.append("</td>\n");
 
         // Amount
-        if(nextTransaction.getAmount() < 0) {
+        if(nextTransaction.getAmount().getValue() < 0) {
             table.append("<td class=\"amount amount-debit\">");
         } else {
             table.append("<td class=\"amount\">");
@@ -506,7 +506,7 @@ public class ReportGenerator {
             }
 
             // Update the details on the category.
-            categoryComparison.thisMonth += nextTransaction.getAmount();
+            categoryComparison.thisMonth += nextTransaction.getAmount().getValue();
         }
 
         for(Transaction nextTransaction: previousTransactions) {
@@ -520,7 +520,7 @@ public class ReportGenerator {
             }
 
             // Update the details on the category.
-            categoryComparison.previousMonth += nextTransaction.getAmount();
+            categoryComparison.previousMonth += nextTransaction.getAmount().getValue();
         }
 
         result.append("<table>\n");

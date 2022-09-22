@@ -217,7 +217,7 @@ public class ReconciliationController {
                         nextTransaction.getId(),
                         nextTransaction.getDate(),
                         nextTransaction.getCategory(),
-                        nextTransaction.getAmount() );
+                        nextTransaction.getAmount().getValue() );
             }
         }
 
@@ -290,7 +290,7 @@ public class ReconciliationController {
         if(unlockedStatement.size() != 1) {
             LOG.info("Number of statements was not 1.");
         } else {
-            double rollingAmount = unlockedStatement.get(0).getOpenBalance();
+            double rollingAmount = unlockedStatement.get(0).getOpenBalance().getValue();
 
             // Set the open balance data.
             for(MatchData nextMatchData : result) {

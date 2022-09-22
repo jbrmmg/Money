@@ -123,7 +123,7 @@ public class PoJoTest {
         Assert.assertEquals(2,statement.getId().getMonth().intValue());
         Assert.assertEquals(2021,statement.getId().getYear().intValue());
         Assert.assertTrue(statement.getLocked());
-        Assert.assertEquals(102.12,statement.getOpenBalance(),0.001);
+        Assert.assertEquals(102.12,statement.getOpenBalance().getValue(),0.001);
     }
 
     @Test
@@ -177,7 +177,7 @@ public class PoJoTest {
         Assert.assertEquals(2021,transaction.getStatement().getId().getYear().intValue());
         Assert.assertEquals(8,transaction.getStatement().getId().getMonth().intValue());
         Assert.assertEquals(92,transaction.getOppositeTransactionId().intValue());
-        Assert.assertEquals(1.29,transaction.getAmount(),0.001);
+        Assert.assertEquals(1.29,transaction.getAmount().getValue(),0.001);
         Assert.assertEquals("Testing",transaction.getDescription());
     }
 

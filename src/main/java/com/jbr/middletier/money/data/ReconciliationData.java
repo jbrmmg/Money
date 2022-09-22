@@ -91,7 +91,7 @@ public class ReconciliationData {
     }
 
     public long closeMatch(Transaction transaction) {
-        if(transaction.getAmount() != this.amount) {
+        if(transaction.getAmount().getValue() != this.amount) {
             return -1;
         }
 

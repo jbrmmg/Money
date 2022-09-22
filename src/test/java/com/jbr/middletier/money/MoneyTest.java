@@ -40,10 +40,6 @@ public class MoneyTest extends Support {
 
     @Autowired
     private
-    StatementRepository statementRepository;
-
-    @Autowired
-    private
     ReconciliationRepository reconciliationRepository;
 
     @Autowired
@@ -93,7 +89,7 @@ public class MoneyTest extends Support {
             updateRequest.setId(nextTransaction.getId());
             updateRequest.setAmount(1283.21);
 
-            assertEquals(1280.32, nextTransaction.getAmount(),0.001);
+            assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
             getMockMvc().perform(put("/jbr/int/money/transaction/update")
                     .content(this.json(updateRequest))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -104,7 +100,7 @@ public class MoneyTest extends Support {
         transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             // Delete this item.
-            assertEquals(1283.21,nextTransaction.getAmount(),0.001);
+            assertEquals(1283.21,nextTransaction.getAmount().getValue(),0.001);
             getMockMvc().perform(delete("/jbr/int/money/delete?transactionId=" + nextTransaction.getId()))
                     .andExpect(status().isOk());
         }
@@ -130,12 +126,12 @@ public class MoneyTest extends Support {
         Iterable<Transaction> transactions = transactionRepository.findAll();
 
         Transaction nextTransaction = transactions.iterator().next();
-        assertEquals(1280.32, nextTransaction.getAmount(),0.001);
+        assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
         UpdateTransaction updateRequest = new UpdateTransaction();
         updateRequest.setId(nextTransaction.getId());
         updateRequest.setAmount(1283.21);
 
-        assertEquals(1280.32, nextTransaction.getAmount(),0.001);
+        assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
         getMockMvc().perform(put("/jbr/int/money/transaction/update")
                 .content(this.json(updateRequest))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -145,7 +141,7 @@ public class MoneyTest extends Support {
         transactions = transactionRepository.findAll();
         for(Transaction nextTransactionToDelete : transactions) {
             // Delete this item.
-            assertEquals(1283.21, abs(nextTransactionToDelete.getAmount()),0.001);
+            assertEquals(1283.21, abs(nextTransactionToDelete.getAmount().getValue()),0.001);
             getMockMvc().perform(delete("/jbr/ext/money/delete?transactionId=" + nextTransactionToDelete.getId()))
                     .andExpect(status().isOk());
         }
@@ -199,100 +195,6 @@ public class MoneyTest extends Support {
             getMockMvc().perform(delete("/jbr/ext/money/delete?transactionId=" + nextTransaction.getId()))
                     .andExpect(status().isOk());
         }
-    }
-
-    // Test Lock Statement
-    @Test
-    public void testLockStatement() throws Exception {
-        cleanUp();
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-        // Do more and check reconciled.
-
-        // Add transaction.
-        getMockMvc().perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDG", sdf.parse("1968-05-24"), 1280.32, "AMEX", "Test Transaction")))
-                .contentType(getContentType()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(1280.32)))
-                .andExpect(jsonPath("$[1].amount", is(-1280.32)));
-
-        // Reconcile the transaction..
-        Iterable<Transaction> transactions = transactionRepository.findAll();
-        for(Transaction nextTransaction : transactions) {
-            assertFalse(nextTransaction.reconciled());
-            ReconcileTransaction reconcileRequest = new ReconcileTransaction();
-            reconcileRequest.setId(nextTransaction.getId());
-            reconcileRequest.setReconcile(true);
-            getMockMvc().perform(put("/jbr/ext/money/reconcile")
-                    .content(this.json(reconcileRequest))
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk());
-        }
-
-        // Lock the statement.
-        LockStatementRequest lockReqest = new LockStatementRequest();
-        lockReqest.setAccountId("BANK");
-        lockReqest.setYear(2010);
-        lockReqest.setMonth(1);
-        getMockMvc().perform(post("/jbr/ext/money/statement/lock")
-                .content(this.json(lockReqest))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        // Expect that there is one AMEX, one Bank locked and one Bank unlocked.
-        int amexUnlocked = 0;
-        int bankUnlocked = 0;
-        int bankLocked = 0;
-        int other = 0;
-        Iterable<Statement> statements = statementRepository.findAllByOrderByIdAccountAsc();
-        for(Statement nextStatement : statements) {
-            // Check the statements.
-            if(nextStatement.getId().getAccount().getId().equalsIgnoreCase("AMEX")) {
-                // AMEX statement, should be unlocked.
-                if(!nextStatement.getLocked()) {
-                    amexUnlocked++;
-                } else {
-                    other++;
-                }
-            } else if(nextStatement.getId().getAccount().getId().equalsIgnoreCase( "BANK")) {
-                // Should have one of each
-                if(!nextStatement.getLocked()) {
-                    bankUnlocked++;
-
-                    assertEquals(1280.32, nextStatement.getOpenBalance(),0.001);
-                } else {
-                    bankLocked++;
-
-                    assertEquals(0, nextStatement.getOpenBalance(),0.001);
-                }
-            } else {
-                other++;
-            }
-        }
-
-        assertEquals(1, amexUnlocked);
-        assertEquals(1, bankUnlocked);
-        assertEquals(1, bankLocked);
-        assertEquals(2, other);
-    }
-
-    // Test Get Statement
-    @Test
-    public void testGetStatement() throws Exception {
-        cleanUp();
-
-        // Check the url.
-        getMockMvc().perform(get("/jbr/ext/money/statement")
-                .contentType(getContentType()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id.account.id", is("AMEX")))
-                .andExpect(jsonPath("$[1].id.account.id", is("BANK")))
-                .andExpect(jsonPath("$[0].openBalance", is(0.0)))
-                .andExpect(jsonPath("$[1].openBalance", is(0.0)));
-
-
     }
 
     // Test load reconciliation data.
