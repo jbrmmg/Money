@@ -1,81 +1,38 @@
-package com.jbr.middletier.money.integration;
+package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.Support;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.*;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.testcontainers.containers.MySQLContainer;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-    @SpringBootTest(classes = MiddleTier.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-@ContextConfiguration(initializers = {ReportIT.Initializer.class})
-@ActiveProfiles(value="it")
-public class ReportIT extends Support {
-    @SuppressWarnings("rawtypes")
-    @ClassRule
-    public static MySQLContainer mysqlContainer = new MySQLContainer("mysql:8.0.28")
-            .withDatabaseName("integration-tests-db")
-            .withUsername("sa")
-            .withPassword("sa");
-
-    static class Initializer
-            implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-        @Override
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    "spring.datasource.url=" + mysqlContainer.getJdbcUrl(),
-                    "spring.datasource.username=" + mysqlContainer.getUsername(),
-                    "spring.datasource.password=" + mysqlContainer.getPassword()
-            ).applyTo(configurableApplicationContext.getEnvironment());
-        }
-    }
-
+@ActiveProfiles(value="report")
+public class ReportTest extends Support {
     @Autowired
     private TransactionRepository transactionRepository;
 
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    protected void deleteDirectoryContents(Path path) throws IOException {
-        if(!Files.exists(path))
-            return;
-
-        //noinspection ResultOfMethodCallIgnored,resource
-        Files.walk(path)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
-    }
-
     @Test
-    public void reportTest() throws Exception {
+    public void testReport() throws Exception {
         // Clear the directories.
         deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
@@ -86,8 +43,8 @@ public class ReportIT extends Support {
         NewTransaction transaction = new NewTransaction("AMEX", "HSE", sdf.parse("2010-01-01"), 10.02, "Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(transaction))
-                .contentType(getContentType()))
+                        .content(this.json(transaction))
+                        .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         Account account = new Account();

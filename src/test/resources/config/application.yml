@@ -30,6 +30,8 @@ money:
     report-enabled: false
     archive-schedule: 0 0 4 20-31 1 ?
     archive-enabled: false
+    report-share: ./target/testfiles/MoneyReports/
+    report-working: ./target/testfiles/PdnReport/
 
 logging:
     level:

@@ -34,7 +34,7 @@ public class ArchiveManager {
 
     public void archive(ArchiveOrReportRequest archiveRequest) {
         // If archive request is null then this is a scheduled request.
-        if(archiveRequest == null && !applicationProperties.getArchiveEnabled()) {
+        if(archiveRequest == null || !applicationProperties.getArchiveEnabled()) {
             LOG.info("Scheduled archive is disabled.");
             return;
         }
