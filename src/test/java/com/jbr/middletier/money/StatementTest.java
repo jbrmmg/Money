@@ -281,7 +281,30 @@ public class StatementTest extends Support {
         getMockMvc().perform(put("/jbr/int/money/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResolvedException();
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testCreateStatement() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account);
+        statementId.setMonth(4);
+        statementId.setYear(2010);
+        StatementDTO statement = new StatementDTO();
+        statement.setId(statementId);
+        statement.setLocked(false);
+        statement.setOpenBalance(1023.9);
+        getMockMvc().perform(post("/jbr/int/money/statement")
+                        .content(this.json(statement))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        for(Statement next : statementRepository.findAll()) {
+            if(next.getId().getMonth() == 4) {
+                statementRepository.delete(next);
+            }
+        }
     }
 }

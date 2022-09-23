@@ -52,6 +52,9 @@ public class MoneyTest extends Support {
     AccountRepository accountRepository;
 
     @Autowired
+    StatementRepository statementRepository;
+
+    @Autowired
     private
     RegularCtrl regularCtrl;
 
@@ -59,6 +62,14 @@ public class MoneyTest extends Support {
         transactionRepository.deleteAll();
         reconciliationRepository.deleteAll();
         regularRepository.deleteAll();
+        for(Statement next: statementRepository.findAll()) {
+            if(next.getId().getMonth() != 1) {
+                statementRepository.delete(next);
+            } else if(next.getLocked()) {
+                next.setLocked(false);
+                statementRepository.save(next);
+            }
+        }
     }
 
     @Test
