@@ -124,6 +124,30 @@ public class PoJoTest {
         Assert.assertEquals(2021,statement.getId().getYear().intValue());
         Assert.assertTrue(statement.getLocked());
         Assert.assertEquals(102.12,statement.getOpenBalance().getValue(),0.001);
+
+        StatementIdDTO statementIdDTO2 = new StatementIdDTO();
+        statementIdDTO2.setAccount(accountDTO);
+        statementIdDTO2.setMonth(2);
+        statementIdDTO2.setYear(2021);
+        Assert.assertEquals(0, statementIdDTO.compareTo(statementIdDTO2));
+
+        statementIdDTO2.setYear(2020);
+        Assert.assertEquals(1, statementIdDTO.compareTo(statementIdDTO2));
+
+        //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
+        Assert.assertFalse(statementIdDTO.equals(Double.valueOf(21.2)));
+
+        StatementDTO statementDTO2 = new StatementDTO();
+        statementDTO2.setId(statementIdDTO2);
+        statementIdDTO2.setYear(2021);
+        statementIdDTO2.setMonth(2);
+
+        //noinspection SimplifiableAssertion
+        Assert.assertTrue(statementDTO.equals(statementDTO2));
+
+        //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
+        Assert.assertFalse(statementDTO.equals(Double.valueOf(21.2)));
+
     }
 
     @Test
