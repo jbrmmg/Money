@@ -231,6 +231,9 @@ public class PoJoTest {
         Assert.assertEquals("Testing",regular.getDescription());
         Assert.assertEquals(sdf.parse("2019-02-05 12:00:00"),regular.getStart());
         Assert.assertEquals(sdf.parse("2019-03-05 12:00:00"),regular.getLastDate());
+
+        //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes,UnnecessaryBoxing
+        Assert.assertFalse(accountDTO.equals(Double.valueOf(210.2)));
     }
 
     @Test
