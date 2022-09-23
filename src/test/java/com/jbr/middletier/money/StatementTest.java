@@ -42,6 +42,14 @@ public class StatementTest extends Support {
 
     private void cleanUp() {
         transactionRepository.deleteAll();
+        for(Statement next : statementRepository.findAll()) {
+            if(next.getId().getMonth() != 1) {
+                statementRepository.delete(next);
+            } else if(next.getLocked()) {
+                next.setLocked(false);
+                statementRepository.save(next);
+            }
+        }
     }
 
     // Test Lock Statement
