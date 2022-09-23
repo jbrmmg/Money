@@ -211,4 +211,58 @@ public class StatementTest extends Support {
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Cannot find statement with id BANK 2012 1", error);
     }
+
+    @Test
+    public void testDeleteInvalidId() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("XXXX");
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account);
+        statementId.setMonth(1);
+        statementId.setYear(2010);
+        StatementDTO statement = new StatementDTO();
+        statement.setId(statementId);
+        String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
+                        .content(this.json(statement))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertEquals("Cannot find statement with id XXXX.201001", error);
+    }
+
+    @Test
+    public void testUpdateAccount() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("XXXX");
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account);
+        statementId.setMonth(1);
+        statementId.setYear(2010);
+        StatementDTO statement = new StatementDTO();
+        statement.setId(statementId);
+        String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/statement")
+                        .content(this.json(statement))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertEquals("Cannot find statement with id XXXX.201001", error);
+    }
+
+    @Test
+    public void testStatementAlreadyExists() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account);
+        statementId.setMonth(1);
+        statementId.setYear(2010);
+        StatementDTO statement = new StatementDTO();
+        statement.setId(statementId);
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/statement")
+                        .content(this.json(statement))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertEquals("Statement already exists - AMEX.201001", error);
+    }
 }
