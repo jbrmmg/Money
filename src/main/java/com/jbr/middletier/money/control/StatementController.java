@@ -5,10 +5,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
-import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
-import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
-import com.jbr.middletier.money.exceptions.StatementAlreadyExists;
-import com.jbr.middletier.money.exceptions.StatementAlreadyLockedException;
+import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -161,12 +158,15 @@ public class StatementController {
     }
 
     @DeleteMapping(path="/int/money/statement")
-    public @ResponseBody OkStatus deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException {
+    public @ResponseBody OkStatus deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatement {
         LOG.info("Delete an account - {}", statement.getId());
 
         // Is there an account with this ID?
         Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(), StatementId.class));
         if(existingStatement.isPresent()) {
+            if(existingStatement.get().getLocked()) {
+                throw new CannotDeleteLockedStatement(existingStatement.get());
+            }
 
             statementRepository.delete(existingStatement.get());
             return OkStatus.getOkStatus();

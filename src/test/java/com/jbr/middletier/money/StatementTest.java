@@ -4,6 +4,9 @@ import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.dto.AccountDTO;
+import com.jbr.middletier.money.dto.StatementDTO;
+import com.jbr.middletier.money.dto.StatementIdDTO;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,7 +17,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Objects;
 
@@ -125,6 +127,30 @@ public class StatementTest extends Support {
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Statement already locked BANK 2010 1", error);
+
+        // Delete the statement.
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account);
+        statementId.setYear(2010);
+        statementId.setMonth(1);
+        StatementDTO statement = new StatementDTO();
+        statement.setId(statementId);
+
+        error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
+                        .content(this.json(statement))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertEquals("Cannot delete locked statement BANK201001", error);
+
+        statementId.setMonth(2);
+        getMockMvc().perform(delete("/jbr/int/money/statement")
+                        .content(this.json(statement))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // TODO check that the previous statement is now unlocked.
     }
 
     @Test

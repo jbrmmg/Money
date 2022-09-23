@@ -57,6 +57,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT, "Cannot lock a statement again.", ex));
     }
 
+    @ExceptionHandler(CannotDeleteLockedStatement.class)
+    protected ResponseEntity<Object> handleStatementAlreadyLocked(CannotDeleteLockedStatement ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT, "Cannot delete locked statement.", ex));
+    }
+
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError,apiError.getStatus());
     }
