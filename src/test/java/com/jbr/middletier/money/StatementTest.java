@@ -265,4 +265,23 @@ public class StatementTest extends Support {
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Statement already exists - AMEX.201001", error);
     }
+
+    @Test
+    public void testUpdateStatement() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account);
+        statementId.setMonth(1);
+        statementId.setYear(2010);
+        StatementDTO statement = new StatementDTO();
+        statement.setId(statementId);
+        statement.setLocked(false);
+        statement.setOpenBalance(1023.9);
+        getMockMvc().perform(put("/jbr/int/money/statement")
+                        .content(this.json(statement))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResolvedException();
+    }
 }
