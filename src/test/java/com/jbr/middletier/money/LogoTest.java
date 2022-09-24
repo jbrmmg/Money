@@ -5,8 +5,8 @@ import com.helger.css.decl.*;
 import com.helger.css.reader.CSSReader;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.LogoDefinition;
+import com.jbr.middletier.money.dataaccess.LogoDefinitionRepository;
 import com.jbr.middletier.money.manager.LogoManager;
-import com.jbr.middletier.money.xml.svg.LogoSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.jdom2.*;
 import org.jdom2.input.DOMBuilder;
@@ -27,12 +27,16 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 public class LogoTest {
     @Autowired
     private LogoManager logoManager;
+
+    @Autowired
+    private LogoDefinitionRepository logoDefinitionRepository;
 
     private void checkRectFill(CSSStyleRule rule, String colour) {
         Assert.assertEquals(1, rule.getDeclarationCount());
@@ -262,4 +266,24 @@ public class LogoTest {
         Assert.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),48, "FFFFFF", "004A8F", "FFFFFF", "ED1C24", "NW");
     }
+
+    @Test
+    public void testCannotFindDefault() {
+        Optional<LogoDefinition> logo = Optional.empty();
+
+        try {
+            logo = logoDefinitionRepository.findById("DFLTI");
+            Assert.assertTrue(logo.isPresent());
+            logoDefinitionRepository.delete(logo.get());
+            logoManager.getSvgLogoForAccount("XXXX", false);
+            Assert.fail();
+        } catch(IllegalStateException ex) {
+            Assert.assertEquals("Cannot find the default logo definition.", ex.getMessage());
+        }
+
+        if(logo.isPresent()) {
+            logoDefinitionRepository.save(logo.get());
+        }
+    }
+
 }
