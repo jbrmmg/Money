@@ -651,14 +651,14 @@ public class MoneyTest extends Support {
 
     @Test
     public void testHealthFail() {
-        CategoryRepository mockReposity = Mockito.mock(CategoryRepository.class);
-        when(mockReposity.findAll()).thenReturn(new ArrayList<>());
+        CategoryRepository mockRepository = Mockito.mock(CategoryRepository.class);
+        when(mockRepository.findAll()).thenReturn(new ArrayList<>());
         ApplicationProperties applicationProperties = Mockito.mock(ApplicationProperties.class);
         when(applicationProperties.getServiceName())
                 .thenThrow(IllegalStateException.class)
                 .thenReturn("Fred");
 
-        ServiceHealthIndicator healthIndicator = new ServiceHealthIndicator(mockReposity,applicationProperties);
+        ServiceHealthIndicator healthIndicator = new ServiceHealthIndicator(mockRepository,applicationProperties);
         Health health = healthIndicator.health();
         Assert.assertEquals(Status.DOWN, health.getStatus());
     }
