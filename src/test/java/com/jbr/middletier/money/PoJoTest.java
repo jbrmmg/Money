@@ -144,6 +144,7 @@ public class PoJoTest {
 
         //noinspection SimplifiableAssertion
         Assert.assertEquals(true, statementDTO.equals(statementDTO2));
+        Assert.assertEquals(true, statementDTO.getId().equals(statementDTO2.getId()));
 
         statementIdDTO2.setMonth(3);
         Assert.assertNotEquals(true, statementDTO.equals(statementDTO2));

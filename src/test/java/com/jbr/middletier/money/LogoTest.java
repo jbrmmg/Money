@@ -269,12 +269,11 @@ public class LogoTest {
 
     @Test
     public void testCannotFindDefault() {
-        Optional<LogoDefinition> logo = Optional.empty();
+        Optional<LogoDefinition> logo = logoDefinitionRepository.findById("DFLTI");
+        Assert.assertTrue(logo.isPresent());
+        logoDefinitionRepository.delete(logo.get());
 
         try {
-            logo = logoDefinitionRepository.findById("DFLTI");
-            Assert.assertTrue(logo.isPresent());
-            logoDefinitionRepository.delete(logo.get());
             logoManager.getSvgLogoForAccount("XXXX", false);
             Assert.fail();
         } catch(IllegalStateException ex) {
@@ -286,4 +285,15 @@ public class LogoTest {
         }
     }
 
+    @Test
+    public void testLogoDefinition() {
+        LogoDefinition logoDefinition = new LogoDefinition();
+        Assert.assertFalse(logoDefinition.getSecondBorder());
+        logoDefinition.setSecondBorder(true);
+        Assert.assertTrue(logoDefinition.getSecondBorder());
+        logoDefinition.setY(10);
+        Assert.assertEquals(10, logoDefinition.getY().intValue());
+        logoDefinition.setId("Test");
+        Assert.assertEquals("Test", logoDefinition.getId());
+    }
 }

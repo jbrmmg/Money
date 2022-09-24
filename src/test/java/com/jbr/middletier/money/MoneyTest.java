@@ -1,21 +1,27 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.DefaultProfileUtil;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
+import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.RegularCtrl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
@@ -23,6 +29,7 @@ import static java.lang.Math.abs;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -55,8 +62,10 @@ public class MoneyTest extends Support {
     StatementRepository statementRepository;
 
     @Autowired
-    private
     RegularCtrl regularCtrl;
+
+    @Autowired
+    ServiceHealthIndicator serviceHealthIndicator;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -625,5 +634,32 @@ public class MoneyTest extends Support {
     @Test
     public void testLoadReconcilationDataBank() throws Exception {
         testReconciliationData("test.FirstDirect.csv","FIRSTDIRECT");
+    }
+
+    @Test
+    public void testStatus() {
+        OkStatus okStatus = OkStatus.getOkStatus();
+        okStatus.setStatus("Test");
+        Assert.assertEquals("Test", okStatus.getStatus());
+    }
+
+    @Test
+    public void testHealth() {
+        Health health = serviceHealthIndicator.health();
+        Assert.assertEquals(Status.UP, health.getStatus());
+    }
+
+    @Test
+    public void testHealthFail() {
+        CategoryRepository mockReposity = Mockito.mock(CategoryRepository.class);
+        when(mockReposity.findAll()).thenReturn(new ArrayList<>());
+        ApplicationProperties applicationProperties = Mockito.mock(ApplicationProperties.class);
+        when(applicationProperties.getServiceName())
+                .thenThrow(IllegalStateException.class)
+                .thenReturn("Fred");
+
+        ServiceHealthIndicator healthIndicator = new ServiceHealthIndicator(mockReposity,applicationProperties);
+        Health health = healthIndicator.health();
+        Assert.assertEquals(Status.DOWN, health.getStatus());
     }
 }

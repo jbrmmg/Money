@@ -36,7 +36,7 @@ public class ServiceHealthIndicator implements HealthIndicator {
     public Health health() {
         try {
             List<Category> categoryList = (List<Category>) categoryRepository.findAll();
-            LOG.info("Check Database {}}.", categoryList.size());
+            LOG.info("Check Database {}.", categoryList.size());
 
             return Health.up().withDetail("service", this.applicationProperties.getServiceName()).withDetail("Category Types",categoryList.size()).build();
         } catch (Exception ignored) {
