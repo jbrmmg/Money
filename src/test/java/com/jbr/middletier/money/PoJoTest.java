@@ -134,8 +134,8 @@ public class PoJoTest {
         statementIdDTO2.setYear(2020);
         Assert.assertEquals(1, statementIdDTO.compareTo(statementIdDTO2));
 
-        //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
-        Assert.assertFalse(statementIdDTO.equals(Double.valueOf(21.2)));
+        //noinspection EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
+        Assert.assertNotEquals(true, statementIdDTO.equals(Double.valueOf(21.2)));
 
         StatementDTO statementDTO2 = new StatementDTO();
         statementDTO2.setId(statementIdDTO2);
@@ -143,11 +143,13 @@ public class PoJoTest {
         statementIdDTO2.setMonth(2);
 
         //noinspection SimplifiableAssertion
-        Assert.assertTrue(statementDTO.equals(statementDTO2));
+        Assert.assertEquals(true, statementDTO.equals(statementDTO2));
 
-        //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
-        Assert.assertFalse(statementDTO.equals(Double.valueOf(21.2)));
+        statementIdDTO2.setMonth(3);
+        Assert.assertNotEquals(true, statementDTO.equals(statementDTO2));
 
+        //noinspection EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
+        Assert.assertNotEquals(true, statementDTO.equals(Double.valueOf(21.2)));
     }
 
     @Test
