@@ -33,7 +33,6 @@ spring:
 
 money:
     service-name: middletier-money-dbg
-    web-log-url: http://localhost:10001/jbr/int/log/data
     regular-schedule: 0 30 2 * * ?
     regular-enabled: false
     report-schedule: 0 0 4 1-10 * ?

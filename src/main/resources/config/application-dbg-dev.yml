@@ -25,7 +25,6 @@ server:
 
 money:
   service-name: middletier-money-dbg
-  web-log-url: http://localhost:10001/jbr/int/log/data
   report-working: /home/jason/Working/DbgReport/
   report-share: /home/jason/Working/DbgReportShare/
   report-schedule: 0 23 * * * ?

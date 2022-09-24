@@ -294,4 +294,27 @@ public class PoJoTest {
         status.setStatus("FAILED");
         Assert.assertEquals("FAILED", status.getStatus());
     }
+
+    @Test
+    public void propertyTest() {
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        applicationProperties.setArchiveEnabled(true);
+        applicationProperties.setReportEnabled(true);
+        applicationProperties.setRegularEnabled(true);
+        applicationProperties.setArchiveSchedule("Test");
+        applicationProperties.setRegularSchedule("Test");
+        applicationProperties.setReportSchedule("Test");
+        applicationProperties.setReportShare("Test");
+        applicationProperties.setReportWorking("Test");
+        applicationProperties.setServiceName("Test");
+        Assert.assertEquals("Test", applicationProperties.getArchiveSchedule());
+        Assert.assertEquals("Test", applicationProperties.getRegularSchedule());
+        Assert.assertEquals("Test", applicationProperties.getReportSchedule());
+        Assert.assertEquals("Test", applicationProperties.getReportShare());
+        Assert.assertEquals("Test", applicationProperties.getReportWorking());
+        Assert.assertEquals("Test", applicationProperties.getServiceName());
+        Assert.assertTrue(applicationProperties.getArchiveEnabled());
+        Assert.assertTrue(applicationProperties.getReportEnabled());
+        Assert.assertTrue(applicationProperties.getRegularEnabled());
+    }
 }
