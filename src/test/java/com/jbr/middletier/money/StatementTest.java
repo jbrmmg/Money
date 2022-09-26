@@ -2,6 +2,7 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
@@ -40,15 +41,21 @@ public class StatementTest extends Support {
     private
     StatementRepository statementRepository;
 
+    @Autowired
+    private
+    AccountRepository accountRepository;
+
     private void cleanUp() {
         transactionRepository.deleteAll();
-        for(Statement next : statementRepository.findAll()) {
-            if(next.getId().getMonth() != 1) {
-                statementRepository.delete(next);
-            } else if(next.getLocked()) {
-                next.setLocked(false);
-                statementRepository.save(next);
-            }
+        statementRepository.deleteAll();
+
+        for(Account next : accountRepository.findAll()) {
+            Statement statement = new Statement();
+            statement.setId(new StatementId(next,2010,1));
+            statement.setLocked(false);
+            statement.setOpenBalance(0);
+
+            statementRepository.save(statement);
         }
     }
 
