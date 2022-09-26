@@ -191,6 +191,8 @@ public class StatementTest extends Support {
 
     @Test
     public void testLockInvalidAccount() throws Exception {
+        cleanUp();
+
         LockStatementRequest lockReqest = new LockStatementRequest();
         lockReqest.setAccountId("XXXX");
         lockReqest.setYear(2010);
@@ -205,6 +207,8 @@ public class StatementTest extends Support {
 
     @Test
     public void testLockInvalidStatementId() throws Exception {
+        cleanUp();
+
         LockStatementRequest lockReqest = new LockStatementRequest();
         lockReqest.setAccountId("BANK");
         lockReqest.setYear(2012);
@@ -219,6 +223,8 @@ public class StatementTest extends Support {
 
     @Test
     public void testDeleteInvalidId() throws Exception {
+        cleanUp();
+
         AccountDTO account = new AccountDTO();
         account.setId("XXXX");
         StatementIdDTO statementId = new StatementIdDTO();
@@ -237,6 +243,8 @@ public class StatementTest extends Support {
 
     @Test
     public void testUpdateAccount() throws Exception {
+        cleanUp();
+
         AccountDTO account = new AccountDTO();
         account.setId("XXXX");
         StatementIdDTO statementId = new StatementIdDTO();
@@ -255,6 +263,8 @@ public class StatementTest extends Support {
 
     @Test
     public void testStatementAlreadyExists() throws Exception {
+        cleanUp();
+
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
         StatementIdDTO statementId = new StatementIdDTO();
@@ -273,6 +283,8 @@ public class StatementTest extends Support {
 
     @Test
     public void testUpdateStatement() throws Exception {
+        cleanUp();
+
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
         StatementIdDTO statementId = new StatementIdDTO();
@@ -291,6 +303,8 @@ public class StatementTest extends Support {
 
     @Test
     public void testCreateStatement() throws Exception {
+        cleanUp();
+
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
         StatementIdDTO statementId = new StatementIdDTO();
