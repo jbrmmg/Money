@@ -8,8 +8,8 @@ import org.springframework.data.jpa.domain.Specification;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
+import java.time.LocalDate;
 import java.util.Calendar;
-import java.util.Date;
 
 public class TransactionSpecifications {
     private TransactionSpecifications() {
@@ -36,15 +36,11 @@ public class TransactionSpecifications {
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("account"), account);
     }
 
-    public static Specification<Transaction> statementDate(Date statementDate) {
-        // Get the month and year.
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(statementDate);
-
+    public static Specification<Transaction> statementDate(LocalDate statementDate) {
         // Get the statement id
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.and(
-                criteriaBuilder.equal(root.get("statement").get("id").get("year"),calendar.get(Calendar.YEAR)),
-                criteriaBuilder.equal(root.get("statement").get("id").get("month"),calendar.get(Calendar.MONTH) + 1) );
+                criteriaBuilder.equal(root.get("statement").get("id").get("year"),statementDate.getYear()),
+                criteriaBuilder.equal(root.get("statement").get("id").get("month"),statementDate.getMonth()) );
     }
 
     public static Specification<Transaction> statementIsNull() {
@@ -54,11 +50,11 @@ public class TransactionSpecifications {
                                                             criteriaBuilder.isNull(root.get("statement").get("id").get("month")) );
     }
 
-    public static Specification<Transaction> datesBetween(Date from, Date to) {
+    public static Specification<Transaction> datesBetween(LocalDate from, LocalDate to) {
         // Strings are dates - from to
         return (root, criteriaQuery, criteriaBuilder) -> {
 
-            Path<Date> dateEntryPath = root.get("date");
+            Path<LocalDate> dateEntryPath = root.get("date");
             return criteriaBuilder.between(dateEntryPath,from,to);
         };
     }

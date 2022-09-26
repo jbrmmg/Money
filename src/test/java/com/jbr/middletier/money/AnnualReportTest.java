@@ -15,7 +15,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,8 +54,7 @@ public class AnnualReportTest extends Support {
 
         // Create some transactions
         // TODO add transactions so that pie can be checked.
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-yy");
-        NewTransaction transaction = new NewTransaction("AMEX", "HSE", sdf.parse("2010-01-01"), 10.02, "Testing");
+        NewTransaction transaction = new NewTransaction("AMEX", "HSE", LocalDate.of(2010,1,1), 10.02, "Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction/add")
                         .content(this.json(transaction))

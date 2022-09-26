@@ -7,8 +7,7 @@ import org.hibernate.annotations.*;
 import javax.persistence.*;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
  * Created by jason on 07/03/17.
@@ -30,7 +29,7 @@ public class Transaction {
     private Category category;
 
     @Column(name="date")
-    private Date date;
+    private LocalDate date;
 
     @Column(name="amount")
     private double amount;
@@ -52,22 +51,11 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction (Account account, Category category, Date date, double amount, String description) {
+    public Transaction (Account account, Category category, LocalDate date, double amount, String description) {
         this.account = account;
         this.category = category;
-
         this.date = date;
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(this.date);
-        calendar.set(Calendar.HOUR_OF_DAY,12);
-        calendar.set(Calendar.MINUTE,0);
-        calendar.set(Calendar.SECOND,0);
-        calendar.set(Calendar.MILLISECOND,0);
-        this.date = calendar.getTime();
-
         this.amount = amount;
-
         this.description = description;
     }
 
@@ -120,7 +108,7 @@ public class Transaction {
         return this.oppositeId;
     }
 
-    public Date getDate() { return this.date; }
+    public LocalDate getDate() { return this.date; }
 
     @Override
     public int hashCode() {

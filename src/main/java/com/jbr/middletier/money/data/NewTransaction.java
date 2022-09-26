@@ -1,8 +1,8 @@
 package com.jbr.middletier.money.data;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Created by jason on 11/03/17.
@@ -11,7 +11,7 @@ import java.util.Date;
 public class NewTransaction {
     private String accountId;
     private String categoryId;
-    private Date date;
+    private LocalDate date;
     private double amount;
     private boolean accountTransfer;
     private String transferAccountId;
@@ -20,7 +20,7 @@ public class NewTransaction {
     public NewTransaction() {
     }
 
-    public NewTransaction(String accountId, String categoryId, Date date, double amount, String description) {
+    public NewTransaction(String accountId, String categoryId, LocalDate date, double amount, String description) {
         this.accountId = accountId;
         this.categoryId = categoryId;
         this.date = date;
@@ -30,7 +30,7 @@ public class NewTransaction {
         this.description = description;
     }
 
-    public NewTransaction(String accountId, String categoryId, Date date, double amount, String transferAccount, String description) {
+    public NewTransaction(String accountId, String categoryId, LocalDate date, double amount, String transferAccount, String description) {
         this.accountId = accountId;
         this.categoryId = categoryId;
         this.date = date;
@@ -44,8 +44,8 @@ public class NewTransaction {
         this.accountId = matchData.getAccount().getId();
         this.categoryId = matchData.getCategory().getId();
 
-        SimpleDateFormat formatter = new SimpleDateFormat(Transaction.TRANSACTION_DATE_FORMAT);
-        this.date = formatter.parse(matchData.getDate());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Transaction.TRANSACTION_DATE_FORMAT);
+        this.date = LocalDate.parse(matchData.getDate(),formatter);
 
         this.amount = matchData.getAmount();
         this.accountTransfer = false;
@@ -64,7 +64,7 @@ public class NewTransaction {
         return this.categoryId;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return this.date;
     }
 

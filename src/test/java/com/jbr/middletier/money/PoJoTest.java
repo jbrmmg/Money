@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
@@ -144,10 +144,12 @@ public class PoJoTest {
 
         //noinspection SimplifiableAssertion
         Assert.assertEquals(true, statementDTO.equals(statementDTO2));
+        //noinspection SimplifiableAssertion
         Assert.assertEquals(true, statementDTO.getId().equals(statementDTO2.getId()));
 
         statementIdDTO2.setMonth(3);
         Assert.assertNotEquals(true, statementDTO.equals(statementDTO2));
+        Assert.assertNotEquals(true, statementDTO.getId().equals(statementDTO2.getId()));
 
         //noinspection EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
         Assert.assertNotEquals(true, statementDTO.equals(Double.valueOf(21.2)));
@@ -210,8 +212,6 @@ public class PoJoTest {
 
     @Test
     public void RegularToDTO() throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
         Account account = new Account();
         account.setId("XXXF");
         Category category = new Category();
@@ -222,22 +222,20 @@ public class PoJoTest {
         regular.setAmount(10.20);
         regular.setFrequency("1W");
         regular.setDescription("Testing");
-        regular.setStart(sdf.parse("2019-02-05 11:12:21"));
-        regular.setLastDate(sdf.parse("2019-03-05 10:11:21"));
+        regular.setStart(LocalDate.of(2019,2,5));
+        regular.setLastDate(LocalDate.of(2019,3,5));
         RegularDTO regularDTO = modelMapper.map(regular,RegularDTO.class);
         Assert.assertEquals("XXXF",regularDTO.getAccount().getId());
         Assert.assertEquals("XHF",regularDTO.getCategory().getId());
         Assert.assertEquals(10.20,regularDTO.getAmount(),0.001);
         Assert.assertEquals("1W",regularDTO.getFrequency());
         Assert.assertEquals("Testing",regularDTO.getDescription());
-        Assert.assertEquals(sdf.parse("2019-02-05 12:00:00"),regularDTO.getStart());
-        Assert.assertEquals(sdf.parse("2019-03-05 12:00:00"),regularDTO.getLastDate());
+        Assert.assertEquals(LocalDate.of(2019,2,5),regularDTO.getStart());
+        Assert.assertEquals(LocalDate.of(2019,3,5),regularDTO.getLastDate());
     }
 
     @Test
-    public void RegularFromDTO() throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+    public void RegularFromDTO()  {
         AccountDTO accountDTO = new AccountDTO();
         accountDTO.setId("XXXF");
         CategoryDTO categoryDTO = new CategoryDTO();
@@ -248,16 +246,16 @@ public class PoJoTest {
         regularDTO.setAmount(10.20);
         regularDTO.setFrequency("1W");
         regularDTO.setDescription("Testing");
-        regularDTO.setStart(sdf.parse("2019-02-05 11:12:21"));
-        regularDTO.setLastDate(sdf.parse("2019-03-05 10:11:21"));
+        regularDTO.setStart(LocalDate.of(2019,2,5));
+        regularDTO.setLastDate(LocalDate.of(2019,3,5));
         Regular regular = modelMapper.map(regularDTO,Regular.class);
         Assert.assertEquals("XXXF",regular.getAccount().getId());
         Assert.assertEquals("XHF",regular.getCategory().getId());
         Assert.assertEquals(10.20,regular.getAmount(),0.001);
         Assert.assertEquals("1W",regular.getFrequency());
         Assert.assertEquals("Testing",regular.getDescription());
-        Assert.assertEquals(sdf.parse("2019-02-05 12:00:00"),regular.getStart());
-        Assert.assertEquals(sdf.parse("2019-03-05 12:00:00"),regular.getLastDate());
+        Assert.assertEquals(LocalDate.of(2019,2,5),regular.getStart());
+        Assert.assertEquals(LocalDate.of(2019,3,5),regular.getLastDate());
 
         //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes,UnnecessaryBoxing
         Assert.assertFalse(accountDTO.equals(Double.valueOf(210.2)));

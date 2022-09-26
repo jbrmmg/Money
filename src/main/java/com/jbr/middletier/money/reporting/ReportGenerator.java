@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -296,14 +297,12 @@ public class ReportGenerator {
             return;
         }
 
-        SimpleDateFormat sdfDM = new SimpleDateFormat("dd-MMM");
-        SimpleDateFormat sdfYR = new SimpleDateFormat("yyyy");
         DecimalFormat df = new DecimalFormat("#,###.00");
 
         // Date
         table.append("<td class=\"date\">");
-        table.append(sdfDM.format(nextTransaction.getDate())).append("<br/>");
-        table.append(sdfYR.format(nextTransaction.getDate()));
+        table.append(DateTimeFormatter.ofPattern("dd-MMM").format(nextTransaction.getDate())).append("<br/>");
+        table.append(DateTimeFormatter.ofPattern("yyyy").format(nextTransaction.getDate()));
         table.append("</td>\n");
 
         // Account

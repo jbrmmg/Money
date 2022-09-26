@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.mail.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
@@ -55,7 +57,7 @@ public class TransactionController {
         this.modelMapper = modelMapper;
     }
 
-    private Specification<Transaction> getReconciledTransactions(Iterable<Account> accounts, Date statmentDate, Iterable<Category> categories) {
+    private Specification<Transaction> getReconciledTransactions(Iterable<Account> accounts, LocalDate statmentDate, Iterable<Category> categories) {
         // Validate data.
         if((accounts == null)) {
             throw new IllegalStateException("Reconciled Transctions - must specify a single account");
@@ -90,7 +92,7 @@ public class TransactionController {
         return search;
     }
 
-    private Specification<Transaction> getAllTransactions(Date from, Date to, Iterable<Account> accounts, Iterable<Category> categories) {
+    private Specification<Transaction> getAllTransactions(LocalDate from, LocalDate to, Iterable<Account> accounts, Iterable<Category> categories) {
         // Validate data.
         if(from == null){
             throw new IllegalStateException("All Transctions - must specify a from date");
@@ -135,17 +137,17 @@ public class TransactionController {
                                                                String category,
                                                                String account) throws ParseException, IllegalStateException {
         // Get date values for the from and to values.
-        Date fromDate = null;
-        Date toDate = null;
+        LocalDate fromDate = null;
+        LocalDate toDate = null;
 
         // Get the from date value if specified.
-        SimpleDateFormat formatter = new SimpleDateFormat(Transaction.TRANSACTION_DATE_FORMAT);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Transaction.TRANSACTION_DATE_FORMAT);
 
         if (!from.equals("UNKN")) {
-            fromDate = formatter.parse(from);
+            fromDate = LocalDate.parse(from,formatter);
         }
         if (!to.equals("UNKN")) {
-            toDate = formatter.parse(to);
+            toDate = LocalDate.parse(to,formatter);
         }
 
         // Check for unknown in category and account values.

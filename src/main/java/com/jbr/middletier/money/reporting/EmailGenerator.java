@@ -5,6 +5,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.util.TransportWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,7 @@ public class EmailGenerator {
     private final CategoryRepository categoryRepository;
     private final AccountRepository accountRepository;
     private final ResourceLoader resourceLoader;
+    private final TransportWrapper transportWrapper;
 
     private void appendRow(StringBuilder sb, String date, String category, String account, String description, Double amount) {
         sb.append("<tr>\n");
@@ -53,12 +56,14 @@ public class EmailGenerator {
                           StatementRepository statementRepository,
                           CategoryRepository categoryRepository,
                           AccountRepository accountRepository,
-                          ResourceLoader resourceLoader ) {
+                          ResourceLoader resourceLoader,
+                          TransportWrapper transportWrapper) {
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
         this.categoryRepository = categoryRepository;
         this.accountRepository = accountRepository;
         this.resourceLoader = resourceLoader;
+        this.transportWrapper = transportWrapper;
     }
 
     public void generateReport( String to,
@@ -70,7 +75,7 @@ public class EmailGenerator {
         Iterable<Category> categories = categoryRepository.findAll();
 
         class EmailTransaction {
-            private Date date;
+            private LocalDate date;
             private Double amount;
             private String description;
             private String category;
@@ -104,8 +109,8 @@ public class EmailGenerator {
         double transactionTotal1 = 0;
         double transactionTotal2 = 0;
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR,-weeks * 7);
+        LocalDate sevenWeeks = LocalDate.now();
+        sevenWeeks.plusWeeks(-7);
 
         // Get the latest statement that is locked for each account.
         Iterable<Account> accounts = accountRepository.findAll();
@@ -134,7 +139,7 @@ public class EmailGenerator {
                         StatementId.getPreviousId(nextStatement.getId()).getYear(),
                         StatementId.getPreviousId(nextStatement.getId()).getMonth());
                 for(Transaction nextTransaction : transactions) {
-                    if(nextTransaction.getDate().after(calendar.getTime())) {
+                    if(nextTransaction.getDate().isAfter(sevenWeeks)) {
                         transactionTotal2 += nextTransaction.getAmount().getValue();
 
                         emailData.add(new EmailTransaction(nextTransaction, categories));
@@ -144,9 +149,9 @@ public class EmailGenerator {
         }
 
         emailData.sort((emailTransaction, t1) -> {
-            if(emailTransaction.date.before(t1.date)) {
+            if(emailTransaction.date.isBefore(t1.date)) {
                 return +1;
-            } else if (emailTransaction.date.after(t1.date)) {
+            } else if (emailTransaction.date.isAfter(t1.date)) {
                 return -1;
             }
 
@@ -214,7 +219,7 @@ public class EmailGenerator {
 
         message.setContent(template.replace("<!-- TABLEROWS -->", sb.toString()),"text/html");
 
-        Transport.send(message);
+        transportWrapper.setEmail(message);
 
         LOG.info("email sent.");
     }

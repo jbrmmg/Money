@@ -4,8 +4,11 @@ import com.jbr.middletier.money.util.TransactionString;
 
 import javax.persistence.*;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * Created by jason on 11/04/17.
@@ -27,7 +30,7 @@ public class ReconciliationData {
     private String description;
 
     @Column(name="date")
-    private Date date;
+    private LocalDate date;
 
     @Column(name="amount")
     private double amount;
@@ -35,14 +38,14 @@ public class ReconciliationData {
     public ReconciliationData() {
     }
 
-    public ReconciliationData(Date date, double amount, Category category, String description) {
+    public ReconciliationData(LocalDate date, double amount, Category category, String description) {
         this.amount = amount;
         this.date = date;
         this.category = category;
         this.description = description;
     }
 
-    private boolean compareDateWithoutTime(Date leftSide, Date rightSide) {
+    private boolean compareDateWithoutTime(LocalDate leftSide, LocalDate rightSide) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         String leftDateString = sdf.format(leftSide);
@@ -51,17 +54,9 @@ public class ReconciliationData {
         return leftDateString.equalsIgnoreCase(rightDateString);
     }
 
-    private long dateDifferenceWithoutTime(Date leftSide, Date rightSide) {
+    private long dateDifferenceWithoutTime(LocalDate leftSide, LocalDate rightSide) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-            String leftDateString = sdf.format(leftSide);
-            String rightDateString = sdf.format(rightSide);
-
-            Date newLeftSide = sdf.parse(leftDateString);
-            Date newRightSide = sdf.parse(rightDateString);
-
-            return Math.abs(newLeftSide.getTime() - newRightSide.getTime());
+            return DAYS.between(leftSide,rightSide);
         } catch(Exception e) {
             return 0;
         }
@@ -96,14 +91,14 @@ public class ReconciliationData {
         }
 
         // Subtract one date from the other.
-        return TimeUnit.DAYS.convert(dateDifferenceWithoutTime(this.date,transaction.getDate()),TimeUnit.MILLISECONDS);
+        return dateDifferenceWithoutTime(this.date,transaction.getDate());
     }
 
     public int getId() {
         return this.id;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return this.date;
     }
 

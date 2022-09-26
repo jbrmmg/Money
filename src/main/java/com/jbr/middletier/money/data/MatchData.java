@@ -2,7 +2,8 @@ package com.jbr.middletier.money.data;
 
 import javax.validation.constraints.NotNull;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Created by jason on 11/04/17.
@@ -51,7 +52,7 @@ public class MatchData implements Comparable {
     private enum BackwordActionType { UNRECONCILE, DELETE, NONE }
 
     private final int reconciliationId;
-    private final Date reconcilationDate;
+    private final LocalDate reconcilationDate;
     private final double reconciliationAmount;
     private Transaction transaction;
     private double beforeAmount;
@@ -142,8 +143,7 @@ public class MatchData implements Comparable {
     public Account getAccount() { return this.account; }
 
     public String getDate() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        return sdf.format(this.reconcilationDate);
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd").format(this.reconcilationDate);
     }
 
     public String getForwardAction() {

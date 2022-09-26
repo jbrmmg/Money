@@ -17,9 +17,21 @@ public class FinancialAmount {
         this.value += addition.getValue();
     }
 
+    public boolean isNegative() {
+        return this.value < 0.0;
+    }
+
+    public static String internalToString(double value) {
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        return decimalFormat.format(value);
+    }
+
+    public String toAbsString() {
+        return internalToString(Math.abs(this.value));
+    }
+
     @Override
     public String toString() {
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
-        return decimalFormat.format(this.value);
+        return internalToString(this.value);
     }
 }

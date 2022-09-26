@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.dto;
 
-import java.util.Date;
+
+import java.time.LocalDate;
 
 public class RegularDTO {
     private Integer id;
@@ -9,8 +10,8 @@ public class RegularDTO {
     private CategoryDTO category;
     private String frequency;
     private String weekendAdj;
-    private Date start;
-    private Date lastCreated;
+    private LocalDate start;
+    private LocalDate lastCreated;
     private String description;
 
     public Integer getId() {
@@ -61,19 +62,19 @@ public class RegularDTO {
         this.weekendAdj = weekendAdj;
     }
 
-    public Date getStart() {
+    public LocalDate getStart() {
         return start;
     }
 
-    public void setStart(Date start) {
+    public void setStart(LocalDate start) {
         this.start = start;
     }
 
-    public Date getLastDate() {
+    public LocalDate getLastDate() {
         return lastCreated;
     }
 
-    public void setLastDate(Date lastCreated) {
+    public void setLastDate(LocalDate lastCreated) {
         this.lastCreated = lastCreated;
     }
 

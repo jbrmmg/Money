@@ -1,12 +1,15 @@
 package com.jbr.middletier.money.dto;
 
-import java.util.Date;
+import com.jbr.middletier.money.util.FinancialAmount;
+
+import java.time.LocalDate;
+
 
 public class TransactionDTO {
     private int id;
     private AccountDTO account;
     private CategoryDTO category;
-    private Date date;
+    private LocalDate date;
     private double amount;
     private StatementDTO statement;
     private Integer oppositeId;
@@ -36,11 +39,11 @@ public class TransactionDTO {
         this.category = category;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
@@ -74,5 +77,9 @@ public class TransactionDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public FinancialAmount getFinancialAmount() {
+        return new FinancialAmount(this.amount);
     }
 }

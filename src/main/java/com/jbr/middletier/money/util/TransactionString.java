@@ -1,11 +1,11 @@
 package com.jbr.middletier.money.util;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class TransactionString {
-    public static String formattedTransactionString(Date date, double amount) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-        return sdf.format(date) + String.format("%.2f",amount);
+    public static String formattedTransactionString(LocalDate date, double amount) {
+        return DateTimeFormatter.ofPattern("yyyyMMdd").format(date) + String.format("%.2f",amount);
     }
 }

@@ -3,6 +3,7 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.manager.ArchiveManager;
@@ -15,7 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,15 +35,21 @@ public class ArchiveTest extends Support {
     private ApplicationProperties applicationProperties;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private ArchiveManager archiveManager;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
-        for(Statement next : statementRepository.findAll()) {
-            if(next.getLocked()) {
-                next.setLocked(false);
-                statementRepository.save(next);
-            }
+
+        for(Account next : accountRepository.findAll()) {
+            Statement statement = new Statement();
+            statement.setId(new StatementId(next,2010,1));
+            statement.setLocked(false);
+            statement.setOpenBalance(0);
+
+            statementRepository.save(statement);
         }
     }
 
@@ -64,8 +71,7 @@ public class ArchiveTest extends Support {
 
         // Create some transactions
         // TODO add transactions so that pie can be checked.
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-yy");
-        NewTransaction transaction = new NewTransaction("AMEX", "HSE", sdf.parse("2010-01-01"), 10.02, "Testing");
+        NewTransaction transaction = new NewTransaction("AMEX", "HSE", LocalDate.of(2010,1,1), 10.02, "Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction/add")
                         .content(this.json(transaction))

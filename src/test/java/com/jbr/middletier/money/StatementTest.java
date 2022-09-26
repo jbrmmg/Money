@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.is;
@@ -57,13 +57,11 @@ public class StatementTest extends Support {
     public void testLockStatement() throws Exception {
         cleanUp();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
         // Do more and check reconciled.
 
         // Add transaction.
         getMockMvc().perform(post("/jbr/ext/money/transaction/add")
-                        .content(this.json(new NewTransaction("BANK", "FDG", sdf.parse("1968-05-24"), 1280.32, "AMEX", "Test Transaction")))
+                        .content(this.json(new NewTransaction("BANK", "FDG", LocalDate.of(1968,5,24), 1280.32, "AMEX", "Test Transaction")))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1280.32)))

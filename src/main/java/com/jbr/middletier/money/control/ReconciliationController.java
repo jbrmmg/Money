@@ -15,6 +15,8 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
@@ -25,7 +27,7 @@ import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
 @Controller
 @RequestMapping("/jbr")
 public class ReconciliationController {
-    // TODO split out into reconcilation manager
+    // TODO split out into reconciliation manager
     private static final Logger LOG = LoggerFactory.getLogger(ReconciliationController.class);
 
     private final ReconciliationRepository reconciliationRepository;
@@ -79,8 +81,8 @@ public class ReconciliationController {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
 
-        if(matchData == null)
-        {
+        //noinspection ConstantConditions
+        if(matchData == null) {
             LOG.info("Null match data, doing nothing");
             throw new EmptyMatchDataException();
         }
@@ -178,16 +180,14 @@ public class ReconciliationController {
         return matchData(lastAccount);
     }
 
-    private void logTransactionData(String type, int id, Date date, Category category, double amount) {
-
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-
+    private void logTransactionData(String type, int id, LocalDate date, Category category, double amount) {
+        //TODO use financial amount here
         DecimalFormat df = new DecimalFormat("#,##0.00");
 
         String logData = type + " - " +
                 id + " " +
-                sdf.format(date) + " " +
-                category + " " +
+                date + " " +
+                (category == null ? "" : category.getName()) + " " +
                 df.format(amount);
 
         LOG.debug(logData);
@@ -410,7 +410,7 @@ public class ReconciliationController {
             }
 
             // Column 1 = date.
-            Date transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yy");
+            LocalDate transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yy");
 
             // Column 3 = amount * -1
             double transactionAmount = Double.parseDouble(columns[4]);
@@ -439,7 +439,7 @@ public class ReconciliationController {
             }
 
             // Column 1 = date.
-            Date transactionDate = getReconciliationDateDate(columns[0],"dd-MMM-yyyy");
+            LocalDate transactionDate = getReconciliationDateDate(columns[0],"dd-MMM-yyyy");
 
             if(transactionDate != null) {
                 // Column 3 = amount * -1, remove £
@@ -483,7 +483,7 @@ public class ReconciliationController {
             }
 
             // Column 1 = date.
-            Date transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yyyy");
+            LocalDate transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yyyy");
 
             // Column 3 = amount * -1
             double transactionAmount = Double.parseDouble(columns[2]);
@@ -496,18 +496,10 @@ public class ReconciliationController {
         }
     }
 
-    private Date getReconciliationDateDate(String elementDate, String format) {
+    private LocalDate getReconciliationDateDate(String elementDate, String format) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(format);
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(sdf.parse(elementDate));
-            calendar.set(Calendar.HOUR_OF_DAY,12);
-            calendar.set(Calendar.MINUTE,0);
-            calendar.set(Calendar.SECOND,0);
-            calendar.set(Calendar.MILLISECOND,0);
-
-            return calendar.getTime();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            return LocalDate.parse(elementDate,formatter);
         } catch (Exception ignored) {
             LOG.info("Problem converting date, ignored.",ignored);
         }
@@ -515,11 +507,11 @@ public class ReconciliationController {
         return null;
     }
 
-    private Date getReconciliationDataDate(String elementDate) {
+    private LocalDate getReconciliationDataDate(String elementDate) {
         String[] dateFormats = new String[] {"dd-MM-yyyy","dd-MMM-yyyy","yyyy-MM-dd","dd/MM/yyyy", "dd/MMM/yyyy"};
 
         for(String nextDateFormat : dateFormats) {
-            Date nextDate = getReconciliationDateDate(elementDate, nextDateFormat);
+            LocalDate nextDate = getReconciliationDateDate(elementDate, nextDateFormat);
 
             if(nextDate != null) {
                 return nextDate;
@@ -551,7 +543,7 @@ public class ReconciliationController {
             }
 
             // Process the elements.
-            Date transactionDate = null;
+            LocalDate transactionDate = null;
             Double transactionAmount = null;
             Category category = null;
             String description = "";
@@ -563,14 +555,8 @@ public class ReconciliationController {
 
                     if(transactionDate != null) {
                         // Check, if the year is less than 100
-                        Calendar calendar = Calendar.getInstance();
-                        calendar.setTime(transactionDate);
-                        int year = calendar.get(Calendar.YEAR);
-                        if(year < 100) {
-                            int day = calendar.get(Calendar.DAY_OF_MONTH);
-                            int month = calendar.get(Calendar.MONTH);
-                            calendar.set(year + 2000, month, day);
-                            transactionDate = calendar.getTime();
+                        if(transactionDate.getYear() < 100) {
+                            transactionDate = transactionDate.plusYears(2000);
                         }
 
                         continue;
