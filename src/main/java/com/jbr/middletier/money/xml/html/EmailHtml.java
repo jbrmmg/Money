@@ -11,7 +11,6 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import org.jdom2.Element;
 import org.jdom2.Text;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;

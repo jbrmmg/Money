@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.reporting;
 
+import antlr.Lookahead;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -30,7 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -654,17 +655,12 @@ public class ReportGenerator {
         // Get all the transactions for the specified statement.
         List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth((int)year,(int)month);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy");
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, (int)year);
-        calendar.set(Calendar.MONTH, (int)month - 1);
-
         String titleMarker =  specific.length() > 0 ? "<!-- TITLE " + specific + " -->" : "<!-- TITLE -->";
         String pieMarker = specific.length() > 0 ? "<!-- PIE " + specific + " -->" : "<!-- PIE -->";
         String tableMarker = specific.length() > 0 ? "<!-- TABLE " + specific + " -->" : "<!-- TABLE -->";
         String totalsMarker = specific.length() > 0 ? "<!-- TOTALS " + specific + " -->" : "<!-- TOTALS -->";
 
-        template = template.replace(titleMarker, "<h1>" + sdf.format(calendar.getTime()) + "</h1>");
+        template = template.replace(titleMarker, "<h1>" + DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of((int)year,(int)month,1)) + "</h1>");
 
         LOG.info("Create pie chart.");
         createPieChart(transactionList,specific);
@@ -781,16 +777,15 @@ public class ReportGenerator {
     }
 
     private String getMonthFilename(boolean fullPath, long year, long month) {
-        SimpleDateFormat sdf2 = new SimpleDateFormat("MMMM-yyyy");
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, (int)year);
-        calendar.set(Calendar.MONTH, (int)month - 1);
+
+        LocalDate reportDate = LocalDate.of((int)year, (int)month, 1);
+        String reportDateString = DateTimeFormatter.ofPattern("MMMM-yyyy").format(reportDate);
 
         if(!fullPath) {
-            return "Report-" + sdf2.format(calendar.getTime()) + ".pdf";
+            return "Report-" + reportDateString + ".pdf";
         }
 
-        return applicationProperties.getReportShare() + "/" + year + "/Report-" + sdf2.format(calendar.getTime()) + ".pdf";
+        return applicationProperties.getReportShare() + "/" + year + "/Report-" + reportDateString + ".pdf";
     }
 
     static class MonthStatus {

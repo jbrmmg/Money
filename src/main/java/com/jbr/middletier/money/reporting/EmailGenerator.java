@@ -19,8 +19,8 @@ import javax.mail.internet.MimeMessage;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -182,8 +182,6 @@ public class EmailGenerator {
         properties.put("mail.smtp.host",host);
         properties.put("mail.smtp.port","25");
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM");
-
         Session session = Session.getInstance(properties,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
@@ -211,7 +209,12 @@ public class EmailGenerator {
         appendRow(sb,"", "", "", "Current Balance", endAmount);
         appendRow(sb,"", "", "", "", null);
         for(EmailTransaction nextTransaction: emailData) {
-            appendRow(sb,sdf.format(nextTransaction.date), nextTransaction.category, nextTransaction.account, nextTransaction.description, nextTransaction.amount);
+            appendRow(sb,
+                    DateTimeFormatter.ofPattern("dd/MMM").format(nextTransaction.date),
+                    nextTransaction.category,
+                    nextTransaction.account,
+                    nextTransaction.description,
+                    nextTransaction.amount);
             LOG.info("{}", nextTransaction);
         }
         appendRow(sb,"", "", "", "", null);

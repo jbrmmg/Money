@@ -1,7 +1,6 @@
 package com.jbr.middletier.money.data;
 
 import javax.validation.constraints.NotNull;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 

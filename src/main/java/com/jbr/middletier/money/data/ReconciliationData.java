@@ -3,10 +3,7 @@ package com.jbr.middletier.money.data;
 import com.jbr.middletier.money.util.TransactionString;
 
 import javax.persistence.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.concurrent.TimeUnit;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -43,15 +40,6 @@ public class ReconciliationData {
         this.date = date;
         this.category = category;
         this.description = description;
-    }
-
-    private boolean compareDateWithoutTime(LocalDate leftSide, LocalDate rightSide) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-        String leftDateString = sdf.format(leftSide);
-        String rightDateString = sdf.format(rightSide);
-
-        return leftDateString.equalsIgnoreCase(rightDateString);
     }
 
     private long dateDifferenceWithoutTime(LocalDate leftSide, LocalDate rightSide) {
