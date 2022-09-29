@@ -430,6 +430,31 @@ public class ReconciliationController {
         }
     }
 
+    private class JohnLewis2FileProcessor implements  IReconcileFileProcessor {
+        public boolean skipLine(String line) {
+            return line.startsWith("Date,");
+        }
+
+        public ReconciliationData getReconcileData(String[] columns) throws Exception {
+            if(columns.length < 3) {
+                throw new Exception("Unexpected line");
+            }
+
+            // Column 1 = date.
+            Date transactionDate = getRecocillationDateDate(columns[0],"dd/MM/yyyy");
+
+            // Column 3 = amount * -1
+            double transactionAmount = Double.parseDouble(columns[2]);
+            transactionAmount *= -1;
+
+            // Column 4 = description.
+            String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
+
+            LOG.info("Got a valid record - inserting.");
+            return new ReconciliationData(transactionDate, transactionAmount, null, description);
+        }
+    }
+
     private class JohnLewisFileProcessor implements  IReconcileFileProcessor {
         public boolean skipLine(String line) {
             return false;
@@ -697,6 +722,9 @@ public class ReconciliationController {
                 break;
             case "JOHNLEWIS":
                 loadReconcileFile(recFile, new JohnLewisFileProcessor() );
+                break;
+            case "JOHNLEWIS2":
+                loadReconcileFile(recFile, new JohnLewis2FileProcessor() );
                 break;
             case "FIRSTDIRECT":
                 loadReconcileFile(recFile, new FirstDirectFileProcessor() );
