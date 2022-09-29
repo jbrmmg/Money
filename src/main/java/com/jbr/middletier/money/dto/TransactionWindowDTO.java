@@ -28,8 +28,8 @@ public class TransactionWindowDTO {
         return startBalance;
     }
 
-    public void setStartBalance(double startBalance) {
-        this.startBalance = new FinancialAmount(startBalance);
+    public void setStartBalance(FinancialAmount startBalance) {
+        this.startBalance = new FinancialAmount(startBalance.getValue());
     }
 
     public List<TransactionDTO> getTransactions() {

@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.reporting;
 
-import antlr.Lookahead;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
