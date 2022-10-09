@@ -5,9 +5,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.StatementDTO;
-import com.jbr.middletier.money.dto.StatementIdDTO;
+import com.jbr.middletier.money.dto.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.is;
@@ -64,11 +63,23 @@ public class StatementTest extends Support {
     public void testLockStatement() throws Exception {
         cleanUp();
 
-        // Do more and check reconciled.
+        AccountDTO account1 = new AccountDTO();
+        account1.setId("BANK");
+        AccountDTO account2 = new AccountDTO();
+        account2.setId("AMEX");
+
+        TransactionDTO transaction1 = new TransactionDTO();
+        transaction1.setAccount(account1);
+        transaction1.setDate(LocalDate.of(1968,5,24));
+        transaction1.setAmount(1280.32);
+
+        TransactionDTO transaction2 = new TransactionDTO();
+        transaction2.setAccount(account2);
+        transaction2.setDate(LocalDate.of(1968,5,24));
 
         // Add transaction.
-        getMockMvc().perform(post("/jbr/ext/money/transaction/add")
-                        .content(this.json(new NewTransaction("BANK", "FDG", LocalDate.of(1968,5,24), 1280.32, "AMEX", "Test Transaction")))
+        getMockMvc().perform(post("/jbr/ext/money/transaction")
+                        .content(this.json(Arrays.asList(transaction1,transaction2)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1280.32)))
@@ -88,12 +99,12 @@ public class StatementTest extends Support {
         }
 
         // Lock the statement.
-        LockStatementRequest lockReqest = new LockStatementRequest();
-        lockReqest.setAccountId("BANK");
-        lockReqest.setYear(2010);
-        lockReqest.setMonth(1);
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account1);
+        statementId.setYear(2010);
+        statementId.setMonth(1);
         getMockMvc().perform(post("/jbr/ext/money/statement/lock")
-                        .content(this.json(lockReqest))
+                        .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -135,19 +146,13 @@ public class StatementTest extends Support {
 
         // Check it cannot be locked again.
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
-                        .content(this.json(lockReqest))
+                        .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Statement already locked BANK 2010 1", error);
 
         // Delete the statement.
-        AccountDTO account = new AccountDTO();
-        account.setId("BANK");
-        StatementIdDTO statementId = new StatementIdDTO();
-        statementId.setAccount(account);
-        statementId.setYear(2010);
-        statementId.setMonth(1);
         StatementDTO statement = new StatementDTO();
         statement.setId(statementId);
 
@@ -193,28 +198,32 @@ public class StatementTest extends Support {
     public void testLockInvalidAccount() throws Exception {
         cleanUp();
 
-        LockStatementRequest lockReqest = new LockStatementRequest();
-        lockReqest.setAccountId("XXXX");
-        lockReqest.setYear(2010);
-        lockReqest.setMonth(1);
+        StatementIdDTO statementId = new StatementIdDTO();
+        AccountDTO account = new AccountDTO();
+        account.setId("XXXX");
+        statementId.setAccount(account);
+        statementId.setYear(2020);
+        statementId.setMonth(1);
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
-                        .content(this.json(lockReqest))
+                        .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find account with id XXXX", error);
+        Assert.assertEquals("Cannot find statement with id XXXX202001", error);
     }
 
     @Test
     public void testLockInvalidStatementId() throws Exception {
         cleanUp();
 
-        LockStatementRequest lockReqest = new LockStatementRequest();
-        lockReqest.setAccountId("BANK");
-        lockReqest.setYear(2012);
-        lockReqest.setMonth(1);
+        StatementIdDTO statementId = new StatementIdDTO();
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+        statementId.setAccount(account);
+        statementId.setYear(2012);
+        statementId.setMonth(1);
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
-                        .content(this.json(lockReqest))
+                        .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
@@ -230,35 +239,23 @@ public class StatementTest extends Support {
         StatementIdDTO statementId = new StatementIdDTO();
         statementId.setAccount(account);
         statementId.setMonth(1);
-        statementId.setYear(2010);
+        statementId.setYear(2020);
         StatementDTO statement = new StatementDTO();
         statement.setId(statementId);
         String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find statement with id XXXX.201001", error);
-    }
+        Assert.assertEquals("Cannot find account with id XXXX", error);
 
-    @Test
-    public void testUpdateAccount() throws Exception {
-        cleanUp();
-
-        AccountDTO account = new AccountDTO();
-        account.setId("XXXX");
-        StatementIdDTO statementId = new StatementIdDTO();
-        statementId.setAccount(account);
-        statementId.setMonth(1);
-        statementId.setYear(2010);
-        StatementDTO statement = new StatementDTO();
-        statement.setId(statementId);
-        String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/statement")
+        account.setId("BANK");
+        error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict())
+                .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find statement with id XXXX.201001", error);
+        Assert.assertEquals("Cannot delete last statement BANK.202001", error);
     }
 
     @Test
@@ -279,26 +276,6 @@ public class StatementTest extends Support {
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Statement already exists - AMEX.201001", error);
-    }
-
-    @Test
-    public void testUpdateStatement() throws Exception {
-        cleanUp();
-
-        AccountDTO account = new AccountDTO();
-        account.setId("AMEX");
-        StatementIdDTO statementId = new StatementIdDTO();
-        statementId.setAccount(account);
-        statementId.setMonth(1);
-        statementId.setYear(2010);
-        StatementDTO statement = new StatementDTO();
-        statement.setId(statementId);
-        statement.setLocked(false);
-        statement.setOpenBalance(1023.9);
-        getMockMvc().perform(put("/jbr/int/money/statement")
-                        .content(this.json(statement))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
     }
 
     @Test

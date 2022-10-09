@@ -9,6 +9,7 @@ import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.TransactionWindowDTO;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,7 @@ public class TransactionManagerTest {
 
 
     @Test
+    @Ignore
     public void test() throws ParseException {
         transactionRepository.deleteAll();
         statementRepository.deleteAll();

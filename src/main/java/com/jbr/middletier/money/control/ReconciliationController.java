@@ -2,7 +2,11 @@ package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
+import com.jbr.middletier.money.dto.AccountDTO;
+import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.*;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +39,8 @@ public class ReconciliationController {
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final TransactionController transactionController;
+
+    private final ModelMapper modelMapper;
     private Account lastAccount = null;
 
     @Autowired
@@ -43,13 +49,15 @@ public class ReconciliationController {
                                     ReconciliationRepository reconciliationRepository,
                                     CategoryRepository categoryRepository,
                                     AccountRepository accountRepository,
-                                    TransactionController transactionController) {
+                                    TransactionController transactionController,
+                                    ModelMapper modelMapper) {
         this.statementRepository = statementRepository;
         this.transactionRepository = transactionRepository;
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
         this.transactionController = transactionController;
         this.accountRepository = accountRepository;
+        this.modelMapper = modelMapper;
     }
 
     private static class MatchInformation {
@@ -76,7 +84,7 @@ public class ReconciliationController {
         reconciliationRepository.deleteAll();
     }
 
-    private void autoReconcileData() throws EmptyMatchDataException, ParseException, InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException {
+    private void autoReconcileData() throws EmptyMatchDataException, ParseException, InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
 
@@ -91,8 +99,19 @@ public class ReconciliationController {
             try {
                 // Process the action.
                 if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.CREATE.toString())) {
+                    TransactionDTO newTransaction = new TransactionDTO();
+
+                    newTransaction.setAccount(modelMapper.map(next.getAccount(), AccountDTO.class));
+                    newTransaction.setCategory(modelMapper.map(next.getCategory(), CategoryDTO.class));
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Transaction.TRANSACTION_DATE_FORMAT);
+                    newTransaction.setDate(LocalDate.parse(next.getDate(),formatter));
+
+                    newTransaction.setAmount(next.getAmount());
+                    newTransaction.setDescription(next.getDescription());
+
                     // Create the transaction.
-                    transactionController.addTransactionExt(new NewTransaction(next));
+                    transactionController.addTransactionExt(Collections.singletonList(newTransaction));
                 } else if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.RECONCILE.toString())) {
                     // Reconcile the transaction
                     ReconcileTransaction reconcileRequest = new ReconcileTransaction();
@@ -100,9 +119,6 @@ public class ReconciliationController {
                     reconcileRequest.setReconcile(true);
                     reconcileExt(reconcileRequest);
                 }
-            } catch (ParseException ex) {
-                LOG.error("Parse exception in process match data.");
-                throw ex;
             } catch (InvalidCategoryIdException ex) {
                 LOG.error("Invalid Category Id exception.");
                 throw ex;
@@ -114,6 +130,9 @@ public class ReconciliationController {
                 throw ex;
             } catch (InvalidTransactionIdException ex) {
                 LOG.error("Invalid Transaction Id Exception.");
+                throw ex;
+            } catch (InvalidTransactionException ex) {
+                LOG.error("Invalid Transaction Exception.");
                 throw ex;
             }
         }
@@ -779,14 +798,14 @@ public class ReconciliationController {
     }
 
     @PutMapping(path="/ext/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, ParseException {
+    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, ParseException, InvalidTransactionException {
         LOG.info("Auto Reconciliation Data (ext) ");
         autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path="/int/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, ParseException {
+    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, ParseException, InvalidTransactionException {
         LOG.info("Auto Reconciliation Data ");
         autoReconcileData();
         return OkStatus.getOkStatus();

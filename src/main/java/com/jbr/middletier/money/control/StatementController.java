@@ -1,23 +1,14 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
+import com.jbr.middletier.money.dto.StatementIdDTO;
 import com.jbr.middletier.money.exceptions.*;
-import com.jbr.middletier.money.util.FinancialAmount;
-import org.modelmapper.ModelMapper;
+import com.jbr.middletier.money.manager.StatementManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by jason on 07/03/17.
@@ -27,151 +18,46 @@ import java.util.Optional;
 public class StatementController {
     private static final Logger LOG = LoggerFactory.getLogger(StatementController.class);
 
-    private final StatementRepository statementRepository;
-    private final TransactionRepository transactionRepository;
-    private final AccountRepository accountRepository;
-    private final ModelMapper modelMapper;
+    private final StatementManager statementManager;
 
     @Autowired
-    public StatementController(StatementRepository statementRepository,
-                               TransactionRepository transactionRepository,
-                               AccountRepository accountRepository, ModelMapper modelMapper) {
-        this.statementRepository = statementRepository;
-        this.transactionRepository = transactionRepository;
-        this.accountRepository = accountRepository;
-        this.modelMapper = modelMapper;
-    }
-
-    private Iterable<StatementDTO> statements() {
-        LOG.info("Get statements.");
-
-        List<StatementDTO> statementList = new ArrayList<>();
-        for(Statement nextStatement : statementRepository.findAllByOrderByIdAccountAsc()){
-            statementList.add(modelMapper.map(nextStatement,StatementDTO.class));
-        }
-
-        // Sort the list by the backup time.
-        Collections.sort(statementList);
-
-        return statementList;
-    }
-
-    private void statementLock(LockStatementRequest request) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
-        // TODO lock statement should take a statement id.
-        LOG.info("Request statement lock.");
-
-        // Get the account.
-        Optional<Account> account = accountRepository.findById(request.getAccountId());
-        if(!account.isPresent()) {
-            throw new InvalidAccountIdException(request.getAccountId());
-        }
-
-        // Load the statement to be locked.
-        Optional<Statement> statement = statementRepository.findById(new StatementId(account.get(),request.getYear(),request.getMonth()));
-
-        if(statement.isPresent()) {
-            // Is the statement already locked?
-            if(!statement.get().getLocked()) {                // Calculate the balance of the next statement.
-                List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
-                        statement.get().getId().getAccount(),
-                        statement.get().getId().getYear(),
-                        statement.get().getId().getMonth());
-
-                FinancialAmount balance = statement.get().getOpenBalance();
-
-                for (Transaction nextTransaction : transactions ) {
-                    balance.increment(nextTransaction.getAmount());
-                    LOG.debug("Transaction {}", nextTransaction.getAmount());
-                }
-
-                LOG.info("Balance: {}",balance);
-
-                // Create a new statement.
-                Statement newStatement = statement.get().lock(balance);
-
-                // Update existing statement and create new one.
-                statementRepository.save(statement.get());
-                statementRepository.save(newStatement);
-                LOG.info("Request statement lock - locked.");
-            } else {
-                throw new StatementAlreadyLockedException(request);
-            }
-        } else {
-            throw new InvalidStatementIdException(request);
-        }
+    public StatementController(StatementManager statementManager) {
+        this.statementManager = statementManager;
     }
 
     @GetMapping(path="/ext/money/statement")
-    public @ResponseBody Iterable<StatementDTO>  statementsExt() {
-        return statements();
+    public @ResponseBody Iterable<StatementDTO>  statementsExt(@RequestParam(value="accountId", required = false) String accountId,
+                                                               @RequestParam(value="locked", required = false) Boolean locked) {
+        return this.statementManager.getStatements(accountId,locked);
     }
 
     @GetMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<StatementDTO>  statementsInt() {
-        return this.statementsExt();
+    public @ResponseBody Iterable<StatementDTO>  statementsInt(@RequestParam(value="accountId", required = false) String accountId,
+                                                               @RequestParam(value="locked", required = false) Boolean locked) {
+        return this.statementsExt(accountId,locked);
     }
 
     @PostMapping(path="/ext/money/statement/lock")
-    public @ResponseBody OkStatus statementLockExt(@RequestBody LockStatementRequest request) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
-        statementLock(request);
-
-        return OkStatus.getOkStatus();
+    public @ResponseBody Iterable<StatementDTO> statementLockExt(@RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException {
+        return this.statementManager.statementLock(statementId);
     }
 
     @PostMapping(path="/int/money/statement/lock")
-    public @ResponseBody OkStatus statementLockInt(@RequestBody LockStatementRequest request) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
-        return this.statementLockExt(request);
+    public @ResponseBody Iterable<StatementDTO> statementLockInt(@RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
+        return this.statementLockExt(statementId);
     }
 
     @PostMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody StatementDTO statement) throws StatementAlreadyExists {
+    public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody StatementDTO statement) throws StatementAlreadyExists, InvalidAccountIdException {
         LOG.info("Create a new statement - {}", statement);
 
-        // Is there an account with this ID?
-        Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(),StatementId.class));
-        if(existingStatement.isPresent()) {
-            throw new StatementAlreadyExists(statement);
-        }
-
-        statementRepository.save(modelMapper.map(statement,Statement.class));
-
-        return statements();
-    }
-
-    @PutMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<StatementDTO> updateStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException {
-        LOG.info("Update a statement - {}", statement);
-
-        // Is there a statement with this
-        Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(), StatementId.class));
-        if(existingStatement.isPresent()) {
-            existingStatement.get().setOpenBalance(statement.getOpenBalance());
-
-            LOG.warn("Statement balance updated.");
-
-            statementRepository.save(existingStatement.get());
-        } else {
-            throw new InvalidStatementIdException(statement);
-        }
-
-        return statements();
+        return this.statementManager.createStatement(statement);
     }
 
     @DeleteMapping(path="/int/money/statement")
-    public @ResponseBody OkStatus deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatement {
+    public @ResponseBody Iterable<StatementDTO> deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatement, InvalidAccountIdException, CannotDeleteLastStatement {
         LOG.info("Delete an account - {}", statement.getId());
 
-        // Is there an account with this ID?
-        Optional<Statement> existingStatement = statementRepository.findById(modelMapper.map(statement.getId(), StatementId.class));
-        if(existingStatement.isPresent()) {
-            if(existingStatement.get().getLocked()) {
-                throw new CannotDeleteLockedStatement(existingStatement.get());
-            }
-
-            statementRepository.delete(existingStatement.get());
-            return OkStatus.getOkStatus();
-        }
-
-        throw new InvalidStatementIdException(statement);
+        return this.statementManager.deleteStatement(statement);
     }
 }

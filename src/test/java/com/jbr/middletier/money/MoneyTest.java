@@ -5,6 +5,9 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.DefaultProfileUtil;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
+import com.jbr.middletier.money.dto.AccountDTO;
+import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.RegularCtrl;
 import org.junit.Assert;
@@ -24,6 +27,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import static java.lang.Math.abs;
 import static org.hamcrest.Matchers.*;
@@ -95,8 +100,19 @@ public class MoneyTest extends Support {
     public void internalTransactionTest() throws Exception {
         cleanUp();
 
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+        CategoryDTO category = new CategoryDTO();
+        category.setId("FDW");
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(1968,5,24));
+        transaction.setAmount(1280.32);
+        transaction.setDescription("Test transaction");
+
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDW", LocalDate.of(1968,5,24), 1280.32, "Test transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount",is(1280.32)))
@@ -130,9 +146,20 @@ public class MoneyTest extends Support {
     public void externalTranasactionTest() throws Exception {
         cleanUp();
 
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+        CategoryDTO category = new CategoryDTO();
+        category.setId("FDG");
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(1968,5,24));
+        transaction.setAmount(1280.32);
+        transaction.setDescription("Test transaction");
+
         // Add transaction.
         getMockMvc().perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDG", LocalDate.of(1968,5,24), 1280.32, "AMEX", "Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1280.32)))
@@ -170,9 +197,23 @@ public class MoneyTest extends Support {
     public void reconcileTransaction() throws Exception {
         cleanUp();
 
-        // Setup a transaction.
+        AccountDTO account1 = new AccountDTO();
+        account1.setId("BANK");
+        AccountDTO account2 = new AccountDTO();
+        account2.setId("AMEX");
+
+        TransactionDTO transaction1 = new TransactionDTO();
+        transaction1.setAccount(account1);
+        transaction1.setDate(LocalDate.of(1968,5,24));
+        transaction1.setAmount(1280.32);
+
+        TransactionDTO transaction2 = new TransactionDTO();
+        transaction2.setAccount(account2);
+        transaction2.setDate(LocalDate.of(1968,5,24));
+
+        // Set-up a transaction.
         getMockMvc().perform(post("/jbr/ext/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", LocalDate.of(1968,5,25), 1281.32, "BANK", "Test Transaction")))
+                .content(this.json(Arrays.asList(transaction1,transaction2)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1281.32)))
@@ -229,14 +270,28 @@ public class MoneyTest extends Support {
     public void testGetTransaction() throws Exception {
         cleanUp();
 
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+
+        CategoryDTO category = new CategoryDTO();
+        category.setId("FDG");
+
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(1968,5,24));
+        transaction.setAmount(1.23);
+
         // Create transactions in each account.
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "FDG", LocalDate.of(1968,5,24), 1.23, "Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
+        account.setId("JLPC");
+        transaction.setAmount(3.45);
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("JLPC", "FDG", LocalDate.of(1968,5,25), 3.45, "Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -253,8 +308,11 @@ public class MoneyTest extends Support {
                 .andExpect(jsonPath("$", hasSize(1)));
 
         // Create another transaction
+        account.setId("JLPC");
+        category.setId("UTT");
+        transaction.setAmount(3.45);
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("BANK", "UTT", LocalDate.of(1968,5,26), 1.53, "Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -286,13 +344,25 @@ public class MoneyTest extends Support {
     public void testMatch1() throws Exception {
         cleanUp();
 
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+
+        CategoryDTO category = new CategoryDTO();
+        category.setId("FDG");
+
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(1968,5,24));
+        transaction.setAmount(1.23);
+
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", LocalDate.of(1968,5,24), 1.23, "Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", LocalDate.of(1968,5,24), 1.23, "Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
@@ -333,19 +403,31 @@ public class MoneyTest extends Support {
     public void testMatch2() throws Exception {
         cleanUp();
 
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+
+        CategoryDTO category = new CategoryDTO();
+        category.setId("FDG");
+
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(1968,5,24));
+        transaction.setAmount(1.23);
+
         // Load transactions.
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", LocalDate.of(1968,5,24), 1.23,"Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", LocalDate.of(1968,5,27), 1.23,"Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         getMockMvc().perform(post("/jbr/int/money/transaction/add")
-                .content(this.json(new NewTransaction("AMEX", "FDG", LocalDate.of(1968,5,26), 1.23,"Test Transaction")))
+                .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 

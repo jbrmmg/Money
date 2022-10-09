@@ -6,10 +6,15 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.dto.AccountDTO;
+import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.StatementIdDTO;
+import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.manager.ArchiveManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -17,6 +22,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,6 +45,9 @@ public class ArchiveTest extends Support {
 
     @Autowired
     private ArchiveManager archiveManager;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -71,17 +80,24 @@ public class ArchiveTest extends Support {
 
         // Create some transactions
         // TODO add transactions so that pie can be checked.
-        NewTransaction transaction = new NewTransaction("AMEX", "HSE", LocalDate.of(2010,1,1), 10.02, "Testing");
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+        CategoryDTO category = new CategoryDTO();
+        category.setId("HSE");
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(2010,1,1));
+        transaction.setAmount(10.02);
+        transaction.setDescription("Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction/add")
-                        .content(this.json(transaction))
+                        .content(this.json(Collections.singletonList(transaction)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        Account account = new Account();
-        account.setId("AMEX");
         StatementId statementId = new StatementId();
-        statementId.setAccount(account);
+        statementId.setAccount(modelMapper.map(account,Account.class));
         statementId.setMonth(1);
         statementId.setYear(2010);
         Statement statement = new Statement();
@@ -94,13 +110,13 @@ public class ArchiveTest extends Support {
         }
 
         // Lock the statement
-        LockStatementRequest lockStatementRequest = new LockStatementRequest();
-        lockStatementRequest.setAccountId("AMEX");
-        lockStatementRequest.setMonth(1);
-        lockStatementRequest.setYear(2010);
+        StatementIdDTO lockStatementId = new StatementIdDTO();
+        lockStatementId.setAccount(account);
+        lockStatementId.setMonth(1);
+        lockStatementId.setYear(2010);
 
         getMockMvc().perform(post("/jbr/int/money/statement/lock")
-                        .content(this.json(lockStatementRequest))
+                        .content(this.json(lockStatementId))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 

@@ -110,6 +110,10 @@ public class Transaction {
 
     public LocalDate getDate() { return this.date; }
 
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
     @Override
     public int hashCode() {
         return this.toString().hashCode();

@@ -2,6 +2,7 @@ package com.jbr.middletier.money.dataaccess;
 
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
+import com.jbr.middletier.money.data.DateRange;
 import com.jbr.middletier.money.data.Transaction;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -50,12 +51,12 @@ public class TransactionSpecifications {
                                                             criteriaBuilder.isNull(root.get("statement").get("id").get("month")) );
     }
 
-    public static Specification<Transaction> datesBetween(LocalDate from, LocalDate to) {
+    public static Specification<Transaction> datesBetween(DateRange dateRange) {
         // Strings are dates - from to
         return (root, criteriaQuery, criteriaBuilder) -> {
 
             Path<LocalDate> dateEntryPath = root.get("date");
-            return criteriaBuilder.between(dateEntryPath,from,to);
+            return criteriaBuilder.between(dateEntryPath,dateRange.getFrom(),dateRange.getTo());
         };
     }
 

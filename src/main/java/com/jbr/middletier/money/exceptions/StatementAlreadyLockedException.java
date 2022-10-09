@@ -1,10 +1,9 @@
 package com.jbr.middletier.money.exceptions;
 
-import com.jbr.middletier.money.data.LockStatementRequest;
-import com.jbr.middletier.money.dto.StatementDTO;
+import com.jbr.middletier.money.data.StatementId;
 
 public class StatementAlreadyLockedException extends Exception {
-    public StatementAlreadyLockedException(LockStatementRequest request) {
-        super("Statement already locked " + request.toString());
+    public StatementAlreadyLockedException(StatementId statementId) {
+        super("Statement already locked " + statementId.toString());
     }
 }

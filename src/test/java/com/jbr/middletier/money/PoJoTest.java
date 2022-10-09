@@ -316,4 +316,18 @@ public class PoJoTest {
         Assert.assertTrue(applicationProperties.getReportEnabled());
         Assert.assertTrue(applicationProperties.getRegularEnabled());
     }
+
+    @Test
+    public void lockStatementRequest() {
+        StatementIdDTO statementId = new StatementIdDTO();
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+        statementId.setAccount(account);
+        statementId.setYear(2021);
+        statementId.setMonth(3);
+        Assert.assertEquals("AMEX", statementId.getAccount().getId());
+        Assert.assertEquals(2021, statementId.getYear().intValue());
+        Assert.assertEquals(3, statementId.getMonth().intValue());
+        statementId.setMonth(32);
+    }
 }
