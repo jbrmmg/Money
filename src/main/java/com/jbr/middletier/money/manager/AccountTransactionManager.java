@@ -202,10 +202,16 @@ public class AccountTransactionManager {
                                                             List<String> categoryIds,
                                                             List<String> accountIds) throws InvalidTransactionSearchException {
         // Get the accounts
-        Iterable<Account> accounts = accountRepository.findAllById(accountIds);
+        Iterable<Account> accounts = null;
+        if(accountIds != null) {
+            accounts = accountRepository.findAllById(accountIds);
+        }
 
         // Get the categories
-        Iterable<Category> categories = categoryRepository.findAllById(categoryIds);
+        Iterable<Category> categories = null;
+        if(categoryIds != null) {
+            categories = categoryRepository.findAllById(categoryIds);
+        }
 
         // Process the request.
         switch (type) {

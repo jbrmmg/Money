@@ -36,10 +36,12 @@ public class TransactionController {
                                                                         @RequestParam(value="category", required = false)  String category,
                                                                         @RequestParam(value="account", required = false)  String account,
                                                                         @RequestParam(value="sortAscending", required = false) Boolean sortAscending) throws InvalidTransactionSearchException {
+
+
         return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(type),
                 new DateRange(from, to),
-                Arrays.asList(category.split(",")),
-                Arrays.asList(account.split(",")),
+                category == null ? null : Arrays.asList(category.split(",")),
+                account == null ? null : Arrays.asList(account.split(",")),
                 Boolean.TRUE.equals(sortAscending));
     }
 

@@ -283,25 +283,25 @@ public class MoneyTest extends Support {
         transaction.setAmount(1.23);
 
         // Create transactions in each account.
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         account.setId("JLPC");
         transaction.setAmount(3.45);
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=AMEX")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(1.23)))
                 .andExpect(jsonPath("$", hasSize(1)));
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction/get?type=UN&account=JLPC")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=JLPC")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(3.45)))
@@ -310,32 +310,29 @@ public class MoneyTest extends Support {
         // Create another transaction
         account.setId("JLPC");
         category.setId("UTT");
-        transaction.setAmount(3.45);
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        transaction.setAmount(2.78);
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=JLPC")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(1.23)))
-                .andExpect(jsonPath("$[1].amount", is(1.53)))
+                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(2.78, 3.45)))
                 .andExpect(jsonPath("$", hasSize(2)));
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=FDG")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=JLPC&category=FDG")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(1.23)))
+                .andExpect(jsonPath("$[0].amount", is(3.45)))
                 .andExpect(jsonPath("$", hasSize(1)));
 
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction/get?type=UL&account=BANK,JLPC")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UL&account=AMEX,JLPC")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(1.23)))
-                .andExpect(jsonPath("$[1].amount", is(3.45)))
-                .andExpect(jsonPath("$[2].amount", is(1.53)))
+                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1.23, 3.45, 2.78)))
                 .andExpect(jsonPath("$", hasSize(3)));
     }
 
