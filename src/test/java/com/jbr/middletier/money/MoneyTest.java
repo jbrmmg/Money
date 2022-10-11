@@ -115,7 +115,7 @@ public class MoneyTest extends Support {
         transaction.setAmount(1280.32);
         transaction.setDescription("Test transaction");
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -125,13 +125,12 @@ public class MoneyTest extends Support {
         // Amend the transaction.
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
-            UpdateTransaction updateRequest = new UpdateTransaction();
-            updateRequest.setId(nextTransaction.getId());
-            updateRequest.setAmount(1283.21);
+            TransactionDTO updateTransaction = modelMapper.map(nextTransaction,TransactionDTO.class);
+            updateTransaction.setAmount(1283.21);
 
             assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
-            getMockMvc().perform(put("/jbr/int/money/transaction/update")
-                    .content(this.json(updateRequest))
+            getMockMvc().perform(put("/jbr/int/money/transaction")
+                    .content(this.json(updateTransaction))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
@@ -139,9 +138,13 @@ public class MoneyTest extends Support {
         // Delete the transaction.
         transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
+            TransactionDTO deleteTransaction = modelMapper.map(nextTransaction,TransactionDTO.class);
+
             // Delete this item.
             assertEquals(1283.21,nextTransaction.getAmount().getValue(),0.001);
-            getMockMvc().perform(delete("/jbr/int/money/delete?transactionId=" + nextTransaction.getId()))
+            getMockMvc().perform(delete("/jbr/int/money/transaction")
+                    .content(this.json(deleteTransaction))
+                    .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
     }
