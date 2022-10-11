@@ -225,9 +225,9 @@ public class StatementTest extends Support {
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
                         .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find statement with id BANK 2012 1", error);
+        Assert.assertEquals("Cannot find statement with id BANK201201", error);
     }
 
     @Test
