@@ -107,7 +107,7 @@ public class CategoryTest extends Support {
         String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Cannot find category with id XXX", error);
     }
@@ -126,7 +126,7 @@ public class CategoryTest extends Support {
         String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Cannot find category with id XXX", error);
     }
@@ -164,7 +164,7 @@ public class CategoryTest extends Support {
         String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
-                .andExpect(status().isConflict())
+                .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Cannot update system category TRF", error);
     }

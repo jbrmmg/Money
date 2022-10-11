@@ -162,7 +162,7 @@ public class MoneyTest extends Support {
         transaction.setDescription("Test transaction");
 
         // Add transaction.
-        getMockMvc().perform(post("/jbr/ext/money/transaction/add")
+        getMockMvc().perform(post("/jbr/ext/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
