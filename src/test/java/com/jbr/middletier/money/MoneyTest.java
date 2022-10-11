@@ -419,17 +419,17 @@ public class MoneyTest extends Support {
         transaction.setAmount(1.23);
 
         // Load transactions.
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
