@@ -282,6 +282,8 @@ public class StatementTest extends Support {
     public void testCreateStatement() throws Exception {
         cleanUp();
 
+        statementRepository.deleteAll();
+
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
         StatementIdDTO statementId = new StatementIdDTO();
