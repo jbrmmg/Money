@@ -611,7 +611,7 @@ public class MoneyTest extends Support {
         testDate = testDate.plusDays(2);
 
         // Check that we have 1 transaction.
-        getMockMvc().perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=FDG")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=BANK&category=FDG")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
