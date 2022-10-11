@@ -14,6 +14,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.health.Health;
@@ -71,6 +72,9 @@ public class MoneyTest extends Support {
 
     @Autowired
     ServiceHealthIndicator serviceHealthIndicator;
+
+    @Autowired
+    ModelMapper modelMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -212,12 +216,11 @@ public class MoneyTest extends Support {
         transaction2.setDate(LocalDate.of(1968,5,24));
 
         // Set-up a transaction.
-        getMockMvc().perform(post("/jbr/ext/money/transaction/add")
+        getMockMvc().perform(post("/jbr/ext/money/transaction")
                 .content(this.json(Arrays.asList(transaction1,transaction2)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(1281.32)))
-                .andExpect(jsonPath("$[1].amount", is(-1281.32)));
+                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1280.32, -1280.32)));
 
         // Reconcile the transaction..
         Iterable<Transaction> transactions = transactionRepository.findAll();
@@ -249,7 +252,10 @@ public class MoneyTest extends Support {
         transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             // Delete this item.
-            getMockMvc().perform(delete("/jbr/ext/money/delete?transactionId=" + nextTransaction.getId()))
+            TransactionDTO nextTransactionDTO = modelMapper.map(nextTransaction,TransactionDTO.class);
+            getMockMvc().perform(delete("/jbr/ext/money/transaction")
+                    .content(this.json(nextTransactionDTO))
+                    .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
     }
