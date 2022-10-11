@@ -569,7 +569,7 @@ public class MoneyTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].amount", containsInAnyOrder(10.0, 12.0)))
-                .andExpect(jsonPath("$[0].description", is("Regular 1")))
+                .andExpect(jsonPath("$[*].description", containsInAnyOrder("Regular 1", null)))
                 .andExpect(jsonPath("$", hasSize(2)));
 
 
