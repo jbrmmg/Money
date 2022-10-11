@@ -1,12 +1,9 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
-import com.jbr.middletier.money.reporting.EmailGenerator;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +34,7 @@ public class TransactionController {
                                                                         @RequestParam(value="account", required = false)  String account,
                                                                         @RequestParam(value="sortAscending", required = false) Boolean sortAscending) throws InvalidTransactionSearchException {
 
-
+        LOG.info("Get Transactions {} {} {} {} {} {}", type, from, to, category, account, sortAscending);
         return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(type),
                 new DateRange(from, to),
                 category == null ? null : Arrays.asList(category.split(",")),
