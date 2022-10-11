@@ -124,7 +124,7 @@ public class AccountTest extends Support {
         String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/accounts")
                         .content(this.json(account))
                         .contentType(getContentType()))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
         Assert.assertEquals("Cannot find account with id XXXX", error);
     }
