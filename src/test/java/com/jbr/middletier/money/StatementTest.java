@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -75,15 +76,14 @@ public class StatementTest extends Support {
 
         TransactionDTO transaction2 = new TransactionDTO();
         transaction2.setAccount(account2);
-        transaction2.setDate(LocalDate.of(1968,5,24));
 
         // Add transaction.
         getMockMvc().perform(post("/jbr/ext/money/transaction")
                         .content(this.json(Arrays.asList(transaction1,transaction2)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(1280.32)))
-                .andExpect(jsonPath("$[1].amount", is(-1280.32)));
+                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1280.32, -1280.32)))
+                .andExpect(jsonPath("$[*].category.id", containsInAnyOrder("TRF", "TRF")));
 
         // Reconcile the transaction..
         Iterable<Transaction> transactions = transactionRepository.findAll();
@@ -148,9 +148,9 @@ public class StatementTest extends Support {
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
                         .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict())
+                .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Statement already locked BANK 2010 1", error);
+        Assert.assertEquals("Statement already locked BANK201001", error);
 
         // Delete the statement.
         StatementDTO statement = new StatementDTO();
@@ -159,9 +159,9 @@ public class StatementTest extends Support {
         error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict())
+                .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot delete locked statement BANK201001", error);
+        Assert.assertEquals("Cannot delete locked statement BANK.201001", error);
 
         statementId.setMonth(2);
         getMockMvc().perform(delete("/jbr/int/money/statement")

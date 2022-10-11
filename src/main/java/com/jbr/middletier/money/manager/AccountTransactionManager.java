@@ -251,9 +251,7 @@ public class AccountTransactionManager {
         return result;
     }
 
-    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws InvalidTransactionException, InvalidAccountIdException, InvalidCategoryIdException {
-        List<TransactionDTO> result = new ArrayList<>();
-
+    private Transaction internalCreateTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
         // Check the account and category are valid.
         Optional<Account> account = accountRepository.findById(transaction.getAccount().getId());
         if(!account.isPresent()) {
@@ -265,22 +263,32 @@ public class AccountTransactionManager {
             throw new InvalidCategoryIdException(transaction.getCategory());
         }
 
-        Transaction newTransaction = transactionRepository.save(modelMapper.map(transaction,Transaction.class));
+        return transactionRepository.save(modelMapper.map(transaction,Transaction.class));
+    }
 
-        result.add(modelMapper.map(newTransaction,TransactionDTO.class));
+    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
+        List<TransactionDTO> result = new ArrayList<>();
+
+        Transaction newTranaction = internalCreateTransaction(transaction);
+
+        result.add(modelMapper.map(newTranaction,TransactionDTO.class));
         return result;
     }
 
     @Transactional
     protected List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidTransactionException, InvalidCategoryIdException, InvalidAccountIdException {
+        Transaction fromTransaction = internalCreateTransaction(from);
+
         // Save the 'from' transaction and update the opposite id on the 'to'
-        List<TransactionDTO> result = new ArrayList<>(createIndividualTransaction(from));
-        to.setOppositeTransactionId(result.get(0).getId());
+        List<TransactionDTO> result = new ArrayList<>();
+        result.add(modelMapper.map(fromTransaction,TransactionDTO.class));
+        to.setOppositeTransactionId(fromTransaction.getId());
 
         // Save the 'to' transaction and update the 'from' transaction.
         result.addAll(createIndividualTransaction(to));
-        result.get(0).setOppositeTransactionId(result.get(1).getOppositeTransactionId());
-        transactionRepository.save(modelMapper.map(result.get(0),Transaction.class));
+        fromTransaction.setOppositeTransactionId(result.get(1).getId());
+        result.get(0).setOppositeTransactionId(fromTransaction.getOppositeTransactionId());
+        transactionRepository.save(fromTransaction);
 
         return result;
     }
@@ -313,6 +321,7 @@ public class AccountTransactionManager {
 
         // Ensure the amount is the reverse
         to.setAmount(from.getAmount() * -1);
+        to.setDate(from.getDate());
 
         // The transaction is either an individual transaction or it's a transfer
         return createTransferTransaction(from,to);
