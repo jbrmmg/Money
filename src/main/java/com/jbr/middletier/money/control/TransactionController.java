@@ -30,12 +30,12 @@ public class TransactionController {
     }
 
     @GetMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsExt(@RequestParam(value="type") String type,
-                                                                        @RequestParam(value="from") String from,
-                                                                        @RequestParam(value="to") String to,
-                                                                        @RequestParam(value="category")  String category,
-                                                                        @RequestParam(value="account")  String account,
-                                                                        @RequestParam(value="sortAscending") Boolean sortAscending) throws InvalidTransactionSearchException {
+    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsExt(@RequestParam(value="type", required = false) String type,
+                                                                        @RequestParam(value="from", required = false) String from,
+                                                                        @RequestParam(value="to", required = false) String to,
+                                                                        @RequestParam(value="category", required = false)  String category,
+                                                                        @RequestParam(value="account", required = false)  String account,
+                                                                        @RequestParam(value="sortAscending", required = false) Boolean sortAscending) throws InvalidTransactionSearchException {
         return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(type),
                 new DateRange(from, to),
                 Arrays.asList(category.split(",")),
@@ -44,12 +44,12 @@ public class TransactionController {
     }
 
     @GetMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsInt(@RequestParam(value="type") String type,
-                                                                        @RequestParam(value="from") String from,
-                                                                        @RequestParam(value="to") String to,
-                                                                        @RequestParam(value="category")  String category,
-                                                                        @RequestParam(value="account") String account,
-                                                                        @RequestParam(value="sortAscending") Boolean sortAscending) throws InvalidTransactionSearchException {
+    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsInt(@RequestParam(value="type", required = false) String type,
+                                                                        @RequestParam(value="from", required = false) String from,
+                                                                        @RequestParam(value="to", required = false) String to,
+                                                                        @RequestParam(value="category", required = false)  String category,
+                                                                        @RequestParam(value="account", required = false) String account,
+                                                                        @RequestParam(value="sortAscending", required = false) Boolean sortAscending) throws InvalidTransactionSearchException {
         return this.getExtTransactionsExt(type,from,to,category,account,sortAscending);
     }
 
