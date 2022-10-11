@@ -359,12 +359,12 @@ public class MoneyTest extends Support {
         transaction.setDate(LocalDate.of(1968,5,24));
         transaction.setAmount(1.23);
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/add")
+        getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -561,12 +561,11 @@ public class MoneyTest extends Support {
         regularCtrl.generateRegularPayments();
 
         // Check that we have 1 transaction.
-        getMockMvc().perform(get("/jbr/ext/money/transaction/get?type=UN&account=BANK&category=FDG")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=BANK&category=FDG")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(10.0)))
+                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(10.0, 12.0)))
                 .andExpect(jsonPath("$[0].description", is("Regular 1")))
-                .andExpect(jsonPath("$[1].amount", is(12.0)))
                 .andExpect(jsonPath("$", hasSize(2)));
 
 
