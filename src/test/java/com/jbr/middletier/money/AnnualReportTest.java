@@ -74,7 +74,7 @@ public class AnnualReportTest extends Support {
         transaction.setAmount(10.02);
         transaction.setDescription("Testing");
 
-        getMockMvc().perform(post("/jbr/ext/money/transaction/add")
+        getMockMvc().perform(post("/jbr/ext/money/transaction")
                         .content(this.json(Collections.singletonList(transaction)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
