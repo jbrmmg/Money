@@ -137,7 +137,7 @@ public class StatementManager {
     }
 
     @Transactional
-    public void deleteStatementTransaction(StatementDTO last, StatementDTO penultimate) {
+    protected void deleteStatementTransaction(StatementDTO last, StatementDTO penultimate) {
         penultimate.setLocked(false);
         statementRepository.save(modelMapper.map(penultimate,Statement.class));
 
@@ -146,7 +146,8 @@ public class StatementManager {
         statementRepository.delete(modelMapper.map(last,Statement.class));
     }
 
-    public void internalDeleteStatement(StatementDTO statement, List<StatementDTO> statements) throws InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
+    @Transactional
+    protected void internalDeleteStatement(StatementDTO statement, List<StatementDTO> statements) throws InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
         // Only the last statement in the list can be deleted
         if(statements.isEmpty()) {
             LOG.warn("There are no statements for the account.");
@@ -177,6 +178,7 @@ public class StatementManager {
         deleteStatementTransaction(last, penultimate);
     }
 
+    @Transactional
     public Iterable<StatementDTO> deleteStatement(StatementDTO statement) throws InvalidAccountIdException, InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
         Account account = getAccount(statement);
 
