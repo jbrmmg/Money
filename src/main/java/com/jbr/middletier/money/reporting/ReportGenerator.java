@@ -5,7 +5,6 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.control.AccountController;
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Statement;
@@ -13,6 +12,7 @@ import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.manager.LogoManager;
 import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class ReportGenerator {
     private final TransactionRepository transactionRepository;
     private final ResourceLoader resourceLoader;
     private final ApplicationProperties applicationProperties;
-    private final AccountController accountController;
+    private final LogoManager logoManager;
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
 
@@ -50,13 +50,13 @@ public class ReportGenerator {
     public ReportGenerator(TransactionRepository transactionRepository,
                            ResourceLoader resourceLoader,
                            ApplicationProperties applicationProperties,
-                           AccountController accountController,
+                           LogoManager logoManager,
                            StatementRepository statementRepository,
                            AccountRepository accountRepository ) {
         this.transactionRepository = transactionRepository;
         this.resourceLoader = resourceLoader;
         this.applicationProperties = applicationProperties;
-        this.accountController = accountController;
+        this.logoManager = logoManager;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
     }
@@ -416,8 +416,7 @@ public class ReportGenerator {
                 // Create an SVG for the account.
                 File svgFile = new File(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg");
                 try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
-
-                    svgWriter.write(accountController.getAccountLogo(nextTransactions.getAccount().getId(), false));
+                    svgWriter.write(logoManager.getSvgLogoForAccount(nextTransactions.getAccount().getId(),false).getSvgAsString());
                 }
 
                 // Create a PNG from SVG
