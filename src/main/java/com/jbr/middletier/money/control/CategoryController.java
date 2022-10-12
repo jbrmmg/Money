@@ -7,6 +7,7 @@ import com.jbr.middletier.money.exceptions.CannotUpdateSystemCategory;
 import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
+import com.jbr.middletier.money.manager.CategoryManager;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,25 +26,18 @@ import java.util.Optional;
 public class CategoryController {
     private static final Logger LOG = LoggerFactory.getLogger(CategoryController.class);
 
-    private final CategoryRepository categoryRepository;
-    private final ModelMapper modelMapper;
+    private final CategoryManager categoryManager;
 
     @Autowired
-    public CategoryController(CategoryRepository categoryRepository, ModelMapper modelMapper) {
-        this.categoryRepository = categoryRepository;
-        this.modelMapper = modelMapper;
+    public CategoryController(CategoryManager categoryManager) {
+        this.categoryManager = categoryManager;
     }
 
     @GetMapping(path="/ext/money/categories")
     public @ResponseBody List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
 
-        List<CategoryDTO> result = new ArrayList<>();
-        for(Category nextCategory: categoryRepository.findAllByOrderBySortAsc()) {
-            result.add(this.modelMapper.map(nextCategory, CategoryDTO.class));
-        }
-
-        return result;
+        return categoryManager.getCategories();
     }
 
     @GetMapping(path="/int/money/categories")
@@ -56,57 +50,20 @@ public class CategoryController {
     public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CategoryAlreadyExistsException {
         LOG.info("Create a new account - {}", category.getId());
 
-        // Is there an account with this ID?
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-        if(existingCategory.isPresent()) {
-            throw new CategoryAlreadyExistsException(category);
-        }
-
-        categoryRepository.save(this.modelMapper.map(category,Category.class));
-
-        return this.getExtCategories();
+        return categoryManager.createCategory(category);
     }
 
     @PutMapping(path="/int/money/categories")
     public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, CannotUpdateSystemCategory {
         LOG.info("Update an account - {}", category.getId());
 
-        // Is there an account with this ID?
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-        if(existingCategory.isPresent()) {
-            if(Boolean.TRUE.equals(existingCategory.get().getSystemUse())) {
-                throw new CannotUpdateSystemCategory(category);
-            }
-            existingCategory.get().setColour(category.getColour());
-            existingCategory.get().setName(category.getName());
-            existingCategory.get().setGroup(category.getGroup());
-            existingCategory.get().setRestricted(category.getRestricted());
-            existingCategory.get().setSort(category.getSort());
-            existingCategory.get().setExpense(category.getExpense());
-
-            categoryRepository.save(existingCategory.get());
-        } else {
-            throw new InvalidCategoryIdException(category);
-        }
-
-        return this.getExtCategories();
+        return categoryManager.updateCategory(category);
     }
 
     @DeleteMapping(path="/int/money/categories")
     public @ResponseBody List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
         LOG.info("Delete account {}", category.getId());
 
-        // Is there an account with this ID?
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-        if(existingCategory.isPresent()) {
-            if(Boolean.TRUE.equals(existingCategory.get().getSystemUse())) {
-                throw new DeleteSystemCategoryException(category);
-            }
-
-            categoryRepository.delete(existingCategory.get());
-            return this.getExtCategories();
-        }
-
-        throw new InvalidCategoryIdException(category);
+        return categoryManager.deleteCategory(category);
     }
 }
