@@ -1,22 +1,17 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.exceptions.CannotUpdateSystemCategory;
 import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import com.jbr.middletier.money.manager.CategoryManager;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by jason on 08/02/17.
