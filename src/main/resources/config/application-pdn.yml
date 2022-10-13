@@ -33,6 +33,7 @@ money:
     regular-enabled: true
     report-enabled: true
     archive-enabled: true
+    reconcile-file-location: /home/jason/Downloads
 
 info:
     app:

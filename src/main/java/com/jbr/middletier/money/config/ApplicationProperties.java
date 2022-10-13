@@ -19,6 +19,7 @@ public class ApplicationProperties {
     private boolean reportEnabled;
     private String archiveSchedule;
     private boolean archiveEnabled;
+    private String reconcileFileLocation;
 
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
 
@@ -59,6 +60,14 @@ public class ApplicationProperties {
     public String getPDFFilename() { return getReportWorking() + "/Report.pdf"; }
 
     public String getHtmlFilename() { return getReportWorking() + "/Report.html"; }
+
+    public String getReconcileFileLocation() {
+        return reconcileFileLocation;
+    }
+
+    public void setReconcileFileLocation(String reconcileFileLocation) {
+        this.reconcileFileLocation = reconcileFileLocation;
+    }
 
     @Bean
     public ModelMapper modelMapper() {

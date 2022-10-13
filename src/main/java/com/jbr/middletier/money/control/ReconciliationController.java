@@ -6,6 +6,7 @@ import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +40,8 @@ public class ReconciliationController {
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final TransactionController transactionController;
-
     private final ModelMapper modelMapper;
+    private final ReconciliationFileManager reconciliationFileManager;
     private Account lastAccount = null;
 
     @Autowired
@@ -50,7 +51,8 @@ public class ReconciliationController {
                                     CategoryRepository categoryRepository,
                                     AccountRepository accountRepository,
                                     TransactionController transactionController,
-                                    ModelMapper modelMapper) {
+                                    ModelMapper modelMapper,
+                                    ReconciliationFileManager reconciliationFileManager) {
         this.statementRepository = statementRepository;
         this.transactionRepository = transactionRepository;
         this.reconciliationRepository = reconciliationRepository;
@@ -58,6 +60,7 @@ public class ReconciliationController {
         this.transactionController = transactionController;
         this.accountRepository = accountRepository;
         this.modelMapper = modelMapper;
+        this.reconciliationFileManager = reconciliationFileManager;
     }
 
     private static class MatchInformation {
@@ -746,17 +749,7 @@ public class ReconciliationController {
     Iterable<FileResponse> getListOfFiles() {
         LOG.info("Request to get list of files");
 
-        final File folder = new File("/home/jason/Downloads");
-
-        List<FileResponse> result = new ArrayList<>();
-
-        for(final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
-            if(!fileEntry.isDirectory() && fileEntry.getPath().endsWith(".csv")) {
-                result.add(new FileResponse(fileEntry.getPath()));
-            }
-        }
-
-        return result;
+        return reconciliationFileManager.getFiles();
     }
 
     @PutMapping(path="/ext/money/reconciliation/update")
