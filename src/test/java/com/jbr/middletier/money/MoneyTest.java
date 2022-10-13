@@ -672,7 +672,7 @@ public class MoneyTest extends Support {
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
-    private void testReconciliationData(String filename, String type) throws Exception {
+    private void testReconciliationData(String filename, String type, int expectedCount, double expectedSum) throws Exception {
         String path = "src/test/resources/reconciliation";
 
         File file = new File(path);
@@ -687,22 +687,30 @@ public class MoneyTest extends Support {
                         .content(this.json(loadFileRequest)))
                 .andExpect(status().isOk());
 
-        //TODO check this load worked.
+        int actualCount = 0;
+        double actualSum = 0.0;
+        for(ReconciliationData next : reconciliationRepository.findAll()) {
+            actualCount++;
+            actualSum += next.getAmount();
+        }
+
+        Assert.assertEquals(expectedCount,actualCount);
+        Assert.assertEquals(expectedSum,actualSum,0.001);
     }
 
     @Test
     public void testLoadReconcilationDataJLP() throws Exception {
-        testReconciliationData("test.JLP.csv","JLPC");
+        testReconciliationData("test.JLP.csv","JLPC",19, -7110.34);
     }
 
     @Test
     public void testLoadReconcilationDataAMEX() throws Exception {
-        testReconciliationData("test.AMEX.csv","AMEX");
+        testReconciliationData("test.AMEX.csv","AMEX",15, -132.64);
     }
 
     @Test
     public void testLoadReconcilationDataBank() throws Exception {
-        testReconciliationData("test.FirstDirect.csv","BANK");
+        testReconciliationData("test.FirstDirect.csv","BANK",18, -1004.52);
     }
 
     @Test

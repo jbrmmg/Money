@@ -330,4 +330,26 @@ public class PoJoTest {
         Assert.assertEquals(3, statementId.getMonth().intValue());
         statementId.setMonth(32);
     }
+
+    @Test
+    public void TransactionToReconciliationData() {
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+
+        CategoryDTO category = new CategoryDTO();
+        category.setId("HSE");
+
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setDescription("Test");
+        transaction.setDate(LocalDate.of(2022,10,13));
+        transaction.setAmount(29.2);
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+
+        ReconciliationData reconciliation = modelMapper.map(transaction,ReconciliationData.class);
+        Assert.assertEquals("Test", reconciliation.getDescription());
+        Assert.assertEquals(29.2, reconciliation.getAmount(), 0.01);
+        Assert.assertEquals(LocalDate.of(2022,10,13), reconciliation.getDate());
+        Assert.assertEquals("HSE", reconciliation.getCategory().getId());
+    }
 }

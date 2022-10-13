@@ -540,51 +540,6 @@ public class ReconciliationController {
         }
     }
 
-    private String[] splitDataLine(String line) {
-        String[] intermediate = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
-
-        String[] result = new String[intermediate.length];
-
-        for(int i = 0; i < intermediate.length; i++) {
-            result[i] = intermediate[i].replace("\"","");
-        }
-
-        return result;
-    }
-
-    private void loadReconcileFile(File recFile, IReconcileFileProcessor lineProcessor) throws IOException {
-        // Clear existing data.
-        LOG.info("Clear the reconciliation data.");
-        reconciliationRepository.deleteAll();
-
-        // Load the AMEX file.
-        LOG.info("About to process an AMEX file - {}", recFile.getPath());
-
-        // AMEX File is a CSV
-        // Date (dd/mm/yy), Reference, Amount *-1, Description, additional
-        try(BufferedReader reader = new BufferedReader(new FileReader(recFile.getPath()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // Clean the line.
-                while (line.contains("  ") || line.contains("\t")) {
-                    line = line.replace("  ", " ");
-                    line = line.replace("\t", " ");
-                }
-
-                line = line.trim();
-
-                // Get the reconciliation data.
-                if (!lineProcessor.skipLine(line)) {
-                    ReconciliationData recLine = lineProcessor.getReconcileData(splitDataLine(line));
-
-                    if (recLine != null) {
-                        reconciliationRepository.save(recLine);
-                    }
-                }
-            }
-        }
-    }
-
     private void loadFile(ReconciliationFileDTO fileResponse) throws IOException, InvalidAccountIdException {
         Optional<Account> account = accountRepository.findById(fileResponse.getAccountId());
 

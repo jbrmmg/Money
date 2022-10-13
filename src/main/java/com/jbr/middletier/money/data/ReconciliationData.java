@@ -90,9 +90,13 @@ public class ReconciliationData {
         return this.date;
     }
 
+    public void setDate(LocalDate date) { this.date = date; }
+
     public double getAmount() {
         return this.amount;
     }
+
+    public void setAmount(double amount) { this.amount = amount; }
 
     public Category getCategory() { return this.category; }
 
@@ -101,4 +105,8 @@ public class ReconciliationData {
     }
 
     public String getDescription() { return this.description; }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }
