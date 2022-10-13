@@ -673,6 +673,8 @@ public class MoneyTest extends Support {
     }
 
     private void testReconciliationData(String filename, String type, int expectedCount, double expectedSum) throws Exception {
+        reconciliationRepository.deleteAll();
+
         String path = "src/test/resources/reconciliation";
 
         File file = new File(path);
@@ -680,7 +682,6 @@ public class MoneyTest extends Support {
 
         ReconciliationFileDTO loadFileRequest = new ReconciliationFileDTO();
         loadFileRequest.setFilename (absolutePath + "/" + filename);
-        loadFileRequest.setAccountId(type);
 
         getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
                         .contentType(getContentType())

@@ -540,14 +540,8 @@ public class ReconciliationController {
         }
     }
 
-    private void loadFile(ReconciliationFileDTO fileResponse) throws IOException, InvalidAccountIdException {
-        Optional<Account> account = accountRepository.findById(fileResponse.getAccountId());
-
-        if(!account.isPresent()) {
-            throw new InvalidAccountIdException(fileResponse.getAccountId());
-        }
-
-        List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(fileResponse,modelMapper.map(account,AccountDTO.class));
+    private void loadFile(ReconciliationFileDTO fileResponse) throws IOException {
+        List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(fileResponse);
 
         for(TransactionDTO next : transactions) {
             ReconciliationData newReconciliationData = modelMapper.map(next,ReconciliationData.class);
@@ -586,7 +580,7 @@ public class ReconciliationController {
 
     @PostMapping(path="int/money/reconciliation/load")
     public @ResponseBody OkStatus reconcileDataLoadInt(@RequestBody ReconciliationFileDTO reconciliationFile) throws IOException, InvalidAccountIdException {
-        LOG.info("Request to load file - {} {}", reconciliationFile.getFilename(), reconciliationFile.getAccountId());
+        LOG.info("Request to load file - {}", reconciliationFile.getFilename());
         loadFile(reconciliationFile);
         return OkStatus.getOkStatus();
     }

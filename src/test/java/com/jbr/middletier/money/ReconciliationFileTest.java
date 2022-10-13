@@ -31,9 +31,7 @@ public class ReconciliationFileTest {
     }
 
     private void testReconcilationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {
-        AccountDTO account = new AccountDTO();
-        account.setId("ACNT");
-        List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(file,account);
+        List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(file);
 
         Assert.assertEquals(count, transactions.size());
 

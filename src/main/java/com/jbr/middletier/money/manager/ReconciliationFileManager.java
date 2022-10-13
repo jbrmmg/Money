@@ -100,14 +100,13 @@ public class ReconciliationFileManager {
         return result;
     }
 
-    private TransactionDTO processLine(FileFormatDescription format, String line, AccountDTO account) {
+    private TransactionDTO processLine(FileFormatDescription format, String line) {
         // Split the string into columns (CSV).
         List<String> columns = getColumms(line);
 
         try {
             // We need to get 3 things from the line; date, description and amount.
             TransactionDTO result = new TransactionDTO();
-            result.setAccount(account);
             result.setDate(format.getDate(columns));
             result.setAmount(format.getAmount(columns));
             result.setDescription(format.getDescription(columns));
@@ -120,7 +119,7 @@ public class ReconciliationFileManager {
         }
     }
 
-    private List<TransactionDTO> processFile(FileFormatDescription format, List<String> contents, AccountDTO account) {
+    private List<TransactionDTO> processFile(FileFormatDescription format, List<String> contents) {
         LOG.info("Process file with format {}", format.toString());
 
         List<TransactionDTO> result = new ArrayList<>();
@@ -138,7 +137,7 @@ public class ReconciliationFileManager {
             }
 
             // Process this line.
-            TransactionDTO transaction = processLine(format, nextLine, account);
+            TransactionDTO transaction = processLine(format, nextLine);
             if(transaction != null) {
                 result.add(transaction);
             }
@@ -147,8 +146,8 @@ public class ReconciliationFileManager {
         return result;
     }
 
-    public List<TransactionDTO> getFileTransactions(ReconciliationFileDTO file, AccountDTO account) throws IOException {
-        LOG.info("Get transactions from {} for {}", file.getFilename(), account.getId());
+    public List<TransactionDTO> getFileTransactions(ReconciliationFileDTO file) throws IOException {
+        LOG.info("Get transactions from {}", file.getFilename());
 
         // Get the full filename
         File transactionFile = new File(file.getFilename());
@@ -164,7 +163,7 @@ public class ReconciliationFileManager {
         FileFormatDescription formatDescription = determineFileFormat(contents);
 
         // Process the file.
-        List<TransactionDTO> result = processFile(formatDescription, contents, account);
+        List<TransactionDTO> result = processFile(formatDescription, contents);
 
         LOG.info("Processed file, found {} transactions", result.size());
 
