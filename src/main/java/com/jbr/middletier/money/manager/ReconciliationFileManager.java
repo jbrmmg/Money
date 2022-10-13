@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.FileResponse;
+import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
@@ -31,16 +31,19 @@ public class ReconciliationFileManager {
         this.reconcileFormatRepository = reconcileFormatRepository;
     }
 
-    public List<FileResponse> getFiles() {
+    public List<ReconciliationFileDTO> getFiles() {
         LOG.info("Get files from {}", applicationProperties.getReconcileFileLocation());
 
         final File folder = new File(applicationProperties.getReconcileFileLocation());
 
-        List<FileResponse> result = new ArrayList<>();
+        List<ReconciliationFileDTO> result = new ArrayList<>();
 
         for(final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if(!fileEntry.isDirectory() && fileEntry.getPath().endsWith(".csv")) {
-                result.add(new FileResponse(fileEntry.getPath()));
+                ReconciliationFileDTO newReconciliationFile = new ReconciliationFileDTO();
+                newReconciliationFile.setFilename(fileEntry.getPath());
+
+                result.add(newReconciliationFile);
             }
         }
 
@@ -144,11 +147,11 @@ public class ReconciliationFileManager {
         return result;
     }
 
-    public List<TransactionDTO> getFileTransactions(FileResponse file, AccountDTO account) throws IOException {
-        LOG.info("Get transactions from {} for {}", file.getFile(), account.getId());
+    public List<TransactionDTO> getFileTransactions(ReconciliationFileDTO file, AccountDTO account) throws IOException {
+        LOG.info("Get transactions from {} for {}", file.getFilename(), account.getId());
 
         // Get the full filename
-        File transactionFile = new File(file.getFile());
+        File transactionFile = new File(file.getFilename());
 
         if(!Files.exists(transactionFile.toPath())) {
             throw new FileNotFoundException("Cannot find " +  transactionFile.getName());

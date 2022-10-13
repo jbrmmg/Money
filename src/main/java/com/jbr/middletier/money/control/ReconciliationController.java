@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
@@ -419,104 +420,6 @@ public class ReconciliationController {
         ReconciliationData getReconcileData(String[] columns);
     }
 
-    private class AmexFileProcessor implements  IReconcileFileProcessor {
-        public boolean skipLine(String line) {
-            return line.startsWith("Date,");
-        }
-
-        public ReconciliationData getReconcileData(String[] columns) {
-            if(columns.length < 5) {
-                // TODO improve this exception.
-                throw new IllegalStateException("Unexpected line");
-            }
-
-            // Column 1 = date.
-            LocalDate transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yy");
-
-            // Column 3 = amount * -1
-            double transactionAmount = Double.parseDouble(columns[4]);
-            transactionAmount *= -1;
-
-            // Column 4 = description.
-            String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
-
-            LOG.info("Got a valid record - inserting.");
-            return new ReconciliationData(transactionDate, transactionAmount, null, description);
-        }
-    }
-
-    private class JohnLewisFileProcessor implements  IReconcileFileProcessor {
-        public boolean skipLine(String line) {
-            return false;
-        }
-
-        public ReconciliationData getReconcileData(String[] columns) {
-            if(columns.length < 3) {
-                return null;
-            }
-
-            if(columns[2].equalsIgnoreCase("amount")) {
-                return null;
-            }
-
-            // Column 1 = date.
-            LocalDate transactionDate = getReconciliationDateDate(columns[0],"dd-MMM-yyyy");
-
-            if(transactionDate != null) {
-                // Column 3 = amount * -1, remove £
-                String amountString = columns[2];
-
-                amountString = amountString.replace("£","");
-                amountString = amountString.replace(" ","");
-
-                double multiplier = -1;
-                if(amountString.charAt(0) == '+')
-                {
-                    multiplier = 1;
-                }
-
-                double transactionAmount = Double.parseDouble(amountString.replace(",",""));
-                transactionAmount *= multiplier;
-
-                // Column 4 = description.
-                String description = columns[1].length() > 40 ? columns[1].substring(0, 40) : columns[1];
-
-                LOG.info("Got a valid record - inserting.");
-                return new ReconciliationData(transactionDate, transactionAmount, null, description);
-            }
-
-            return null;
-        }
-    }
-
-    private class FirstDirectFileProcessor implements  IReconcileFileProcessor {
-        public boolean skipLine(String line) {
-            return false;
-        }
-
-        public ReconciliationData getReconcileData(String[] columns) {
-            if(columns.length < 4) {
-                return null;
-            }
-
-            if(columns[2].equalsIgnoreCase("amount")) {
-                return null;
-            }
-
-            // Column 1 = date.
-            LocalDate transactionDate = getReconciliationDateDate(columns[0],"dd/MM/yyyy");
-
-            // Column 3 = amount * -1
-            double transactionAmount = Double.parseDouble(columns[2]);
-
-            // Column 4 = description.
-            String description = columns[1].length() > 40 ? columns[1].substring(0,40) : columns[1];
-
-            LOG.info("Got a valid record - inserting.");
-            return new ReconciliationData(transactionDate, transactionAmount, null, description);
-        }
-    }
-
     private LocalDate getReconciliationDateDate(String elementDate, String format) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
@@ -682,29 +585,19 @@ public class ReconciliationController {
         }
     }
 
-    private void loadFile(LoadFileRequest loadFileRequest) throws IOException {
-        // Load the file.
-        File recFile = new File(loadFileRequest.getPath());
+    private void loadFile(ReconciliationFileDTO fileResponse) throws IOException, InvalidAccountIdException {
+        Optional<Account> account = accountRepository.findById(fileResponse.getAccountId());
 
-        if(!recFile.exists()) {
-            throw new FileNotFoundException("Cannot find file " + loadFileRequest.getPath());
+        if(!account.isPresent()) {
+            throw new InvalidAccountIdException(fileResponse.getAccountId());
         }
 
-        // Process the file of the specified type.
-        //TODO make this an enum
-        switch(loadFileRequest.getType()) {
-            case "AMEX":
-                loadReconcileFile(recFile, new AmexFileProcessor() );
-                break;
-            case "JOHNLEWIS":
-                loadReconcileFile(recFile, new JohnLewisFileProcessor() );
-                break;
-            case "FIRSTDIRECT":
-                loadReconcileFile(recFile, new FirstDirectFileProcessor() );
-                break;
+        List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(fileResponse,modelMapper.map(account,AccountDTO.class));
 
-            default:
-                throw new IllegalStateException("Unexpected file type " + loadFileRequest.getType());
+        for(TransactionDTO next : transactions) {
+            ReconciliationData newReconciliationData = modelMapper.map(next,ReconciliationData.class);
+
+            reconciliationRepository.save(newReconciliationData);
         }
     }
 
@@ -737,16 +630,14 @@ public class ReconciliationController {
     }
 
     @PostMapping(path="int/money/reconciliation/load")
-    public @ResponseBody
-    OkStatus reconcileDataLoadInt(@RequestBody LoadFileRequest loadFileRequest) throws IOException {
-        LOG.info("Request to load file - {} {}", loadFileRequest.getPath(), loadFileRequest.getType());
-        loadFile(loadFileRequest);
+    public @ResponseBody OkStatus reconcileDataLoadInt(@RequestBody ReconciliationFileDTO reconciliationFile) throws IOException, InvalidAccountIdException {
+        LOG.info("Request to load file - {} {}", reconciliationFile.getFilename(), reconciliationFile.getAccountId());
+        loadFile(reconciliationFile);
         return OkStatus.getOkStatus();
     }
 
     @GetMapping(path="int/money/reconciliation/files")
-    public @ResponseBody
-    Iterable<FileResponse> getListOfFiles() {
+    public @ResponseBody Iterable<ReconciliationFileDTO> getListOfFiles() {
         LOG.info("Request to get list of files");
 
         return reconciliationFileManager.getFiles();

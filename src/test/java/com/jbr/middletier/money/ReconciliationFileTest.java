@@ -1,7 +1,7 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.FileResponse;
+import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
@@ -26,11 +26,11 @@ public class ReconciliationFileTest {
 
     @Test
     public void testFilesAvailable() {
-        List<FileResponse> files = reconciliationFileManager.getFiles();
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         Assert.assertEquals(5, files.size());
     }
 
-    private void testReconcilationFile(FileResponse file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {
+    private void testReconcilationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {
         AccountDTO account = new AccountDTO();
         account.setId("ACNT");
         List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(file,account);
@@ -62,10 +62,10 @@ public class ReconciliationFileTest {
 
     @Test
     public void testAmexFile() throws IOException {
-        List<FileResponse> files = reconciliationFileManager.getFiles();
-        FileResponse amexFile = null;
-        for(FileResponse next : files) {
-            if(next.getFile().toLowerCase().contains("amex")) {
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
+        ReconciliationFileDTO amexFile = null;
+        for(ReconciliationFileDTO next : files) {
+            if(next.getFilename().toLowerCase().contains("amex")) {
                 amexFile = next;
             }
         }
@@ -75,10 +75,10 @@ public class ReconciliationFileTest {
 
     @Test
     public void testFirstDirectFile() throws IOException {
-        List<FileResponse> files = reconciliationFileManager.getFiles();
-        FileResponse fdFile = null;
-        for(FileResponse next : files) {
-            if(next.getFile().toLowerCase().contains("first")) {
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
+        ReconciliationFileDTO fdFile = null;
+        for(ReconciliationFileDTO next : files) {
+            if(next.getFilename().toLowerCase().contains("first")) {
                 fdFile = next;
             }
         }
@@ -88,10 +88,10 @@ public class ReconciliationFileTest {
 
     @Test
     public void testJlpFile() throws IOException {
-        List<FileResponse> files = reconciliationFileManager.getFiles();
-        FileResponse jlpFile = null;
-        for(FileResponse next : files) {
-            if(next.getFile().toLowerCase().contains("jlp.")) {
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
+        ReconciliationFileDTO jlpFile = null;
+        for(ReconciliationFileDTO next : files) {
+            if(next.getFilename().toLowerCase().contains("jlp.")) {
                 jlpFile = next;
             }
         }
@@ -101,10 +101,10 @@ public class ReconciliationFileTest {
 
     @Test
     public void testJlp2File() throws IOException {
-        List<FileResponse> files = reconciliationFileManager.getFiles();
-        FileResponse jlpFile = null;
-        for(FileResponse next : files) {
-            if(next.getFile().toLowerCase().contains("jlp2")) {
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
+        ReconciliationFileDTO jlpFile = null;
+        for(ReconciliationFileDTO next : files) {
+            if(next.getFilename().toLowerCase().contains("jlp2")) {
                 jlpFile = next;
             }
         }
@@ -114,10 +114,10 @@ public class ReconciliationFileTest {
 
     @Test
     public void testNationwideFile() throws IOException {
-        List<FileResponse> files = reconciliationFileManager.getFiles();
-        FileResponse nationwideFile = null;
-        for(FileResponse next : files) {
-            if(next.getFile().toLowerCase().contains("nwde")) {
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
+        ReconciliationFileDTO nationwideFile = null;
+        for(ReconciliationFileDTO next : files) {
+            if(next.getFilename().toLowerCase().contains("nwde")) {
                 nationwideFile = next;
             }
         }

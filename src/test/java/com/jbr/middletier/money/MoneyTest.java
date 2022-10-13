@@ -7,6 +7,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.RegularCtrl;
@@ -672,14 +673,14 @@ public class MoneyTest extends Support {
     }
 
     private void testReconciliationData(String filename, String type) throws Exception {
-        String path = "src/test/resources";
+        String path = "src/test/resources/reconciliation";
 
         File file = new File(path);
         String absolutePath = file.getAbsolutePath();
 
-        LoadFileRequest loadFileRequest = new LoadFileRequest();
-        loadFileRequest.setPath(absolutePath + "/" + filename);
-        loadFileRequest.setType(type);
+        ReconciliationFileDTO loadFileRequest = new ReconciliationFileDTO();
+        loadFileRequest.setFilename (absolutePath + "/" + filename);
+        loadFileRequest.setAccountId(type);
 
         getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
                         .contentType(getContentType())
@@ -691,7 +692,7 @@ public class MoneyTest extends Support {
 
     @Test
     public void testLoadReconcilationDataJLP() throws Exception {
-        testReconciliationData("test.JLP.csv","JOHNLEWIS");
+        testReconciliationData("test.JLP.csv","JLPC");
     }
 
     @Test
@@ -701,7 +702,7 @@ public class MoneyTest extends Support {
 
     @Test
     public void testLoadReconcilationDataBank() throws Exception {
-        testReconciliationData("test.FirstDirect.csv","FIRSTDIRECT");
+        testReconciliationData("test.FirstDirect.csv","BANK");
     }
 
     @Test
