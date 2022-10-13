@@ -2,6 +2,7 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.FileResponse;
+import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +23,12 @@ public class ReconciliationFileManager {
     private static final Logger LOG = LoggerFactory.getLogger(ReconciliationFileManager.class);
 
     final private ApplicationProperties applicationProperties;
+    final private ReconcileFormatRepository reconcileFormatRepository;
 
-    public ReconciliationFileManager(ApplicationProperties applicationProperties) {
+    public ReconciliationFileManager(ApplicationProperties applicationProperties,
+                                     ReconcileFormatRepository reconcileFormatRepository) {
         this.applicationProperties = applicationProperties;
+        this.reconcileFormatRepository = reconcileFormatRepository;
     }
 
     public List<FileResponse> getFiles() {
@@ -68,9 +71,8 @@ public class ReconciliationFileManager {
 
     private FileFormatDescription determineFileFormat(List<String> contents) {
         // The first line before the transactions indicates the structure of the file.
-        int lineCount = 0;
         for(String nextLine : contents) {
-            FileFormatDescription format = new FileFormatDescription(nextLine, lineCount);
+            FileFormatDescription format = new FileFormatDescription(reconcileFormatRepository, nextLine);
             if(format.getValid()) {
                 return format;
             }

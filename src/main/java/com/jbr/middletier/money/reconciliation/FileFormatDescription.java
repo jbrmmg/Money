@@ -1,99 +1,91 @@
 package com.jbr.middletier.money.reconciliation;
 
+import com.jbr.middletier.money.data.ReconcileFormat;
+import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
+import com.jbr.middletier.money.manager.ReconciliationFileManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
 public class FileFormatDescription {
-    private boolean valid;
-    private int firstLine;
-    private int date;
-    private String dateFormat;
-    private int description;
-    private int amountIn;
-    private int amountOut;
-    private boolean reverse;
+    private static final Logger LOG = LoggerFactory.getLogger(FileFormatDescription.class);
 
-    public FileFormatDescription(String titleLine, int line) {
-        this.valid = false;
+    private ReconcileFormat reconcileFormat;
 
-        if(titleLine.equalsIgnoreCase("Date,Description,Card Member,Account #,Amount")) {
-            // This is an AMEX file
-            this.valid = true;
-            this.firstLine = line + 1;
-            this.date = 0;
-            this.description = 1;
-            this.amountIn = 4;
-            this.amountOut = 4;
-            this.dateFormat = "dd/MM/yyyy";
-            this.reverse = true;
-            return;
-        }
-
-        if(titleLine.equalsIgnoreCase("Date,Description,Amount,Balance")) {
-            // This is an First Direct file
-            this.valid = true;
-            this.firstLine = line + 1;
-            this.date = 0;
-            this.description = 1;
-            this.amountIn = 2;
-            this.amountOut = 2;
-            this.dateFormat = "dd/MM/yyyy";
-            this.reverse = false;
-            return;
-        }
-
-        if(titleLine.equalsIgnoreCase("Date Processed,Description,Amount,")) {
-            // This is an JLP file
-            this.valid = true;
-            this.firstLine = line + 1;
-            this.date = 0;
-            this.description = 1;
-            this.amountIn = 2;
-            this.amountOut = 2;
-            this.dateFormat = "dd-MMM-yyyy";
-            this.reverse = true;
-            return;
-        }
-
-        if(titleLine.equalsIgnoreCase("Date,Description,Amount(GBP)")) {
-            // This is an JLP 2 file
-            this.valid = true;
-            this.firstLine = line + 1;
-            this.date = 0;
-            this.description = 1;
-            this.amountIn = 2;
-            this.amountOut = 2;
-            this.dateFormat = "dd/MM/yyyy";
-            this.reverse = true;
-            return;
-        }
-
-        if(titleLine.equalsIgnoreCase("\"Date\",\"Transactions\",\"Location\",\"Paid out\",\"Paid in\"")) {
-            // This is a nationwide file
-            this.valid = true;
-            this.firstLine = line + 5;
-            this.date = 0;
-            this.description = 1;
-            this.amountIn = 4;
-            this.amountOut = 3;
-            this.dateFormat = "dd MMM yyyy";
-            this.reverse = false;
-            return;
+    public FileFormatDescription(ReconcileFormatRepository reconcileFormatRepository, String titleLine) {
+        this.reconcileFormat = null;
+        for(ReconcileFormat next : reconcileFormatRepository.findAllByHeaderLine(titleLine)) {
+            LOG.info("Found format with id {}", next.getId());
+            this.reconcileFormat = next;
         }
     }
 
     public FileFormatDescription() {
-        this.valid = false;
+        this.reconcileFormat = null;
     }
 
     public boolean getValid() {
-        return this.valid;
+        return this.reconcileFormat != null;
     }
 
     public int getFirstLine() {
-        return this.firstLine;
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getFirstLine();
+
+        return 0;
+    }
+
+    private int getDateColumn() {
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getDateColumn();
+
+        return 0;
+    }
+
+    private String getDateFormat() {
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getDateFormat();
+
+        return "dd/MM/yyyy";
+    }
+
+    private boolean getReverse() {
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getReverse();
+
+        return false;
+    }
+
+    private boolean getSingleAmount() {
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getAmountInColumn().equals(this.reconcileFormat.getAmountOutColumn());
+
+        return false;
+    }
+
+    private int getAmountInColumn() {
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getAmountInColumn();
+
+        return 0;
+    }
+
+    private int getAmountOutColumn() {
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getAmountOutColumn();
+
+        return 0;
+    }
+
+    private int getDescriptionColumn() {
+        if(this.reconcileFormat != null)
+            return this.reconcileFormat.getDescriptionColumn();
+
+        return 0;
     }
 
     private String unQuote(String quoted) {
@@ -113,11 +105,11 @@ public class FileFormatDescription {
     }
 
     public LocalDate getDate(List<String> columns) throws FileFormatException {
-        String value = getColumnValue(this.date,columns);
+        String value = getColumnValue(getDateColumn(),columns);
 
         LocalDate result;
         try {
-            result = LocalDate.parse(value,DateTimeFormatter.ofPattern(this.dateFormat));
+            result = LocalDate.parse(value,DateTimeFormatter.ofPattern(getDateFormat()));
         } catch (DateTimeParseException ex) {
             throw new FileFormatException("Cannot convert the string to a date " + ex.getMessage());
         }
@@ -136,7 +128,7 @@ public class FileFormatDescription {
         try {
             numericValue = Double.parseDouble(value);
 
-            if(reverse) {
+            if(getReverse()) {
                 numericValue *= -1;
             }
         } catch (NumberFormatException ex) {
@@ -147,21 +139,21 @@ public class FileFormatDescription {
     }
 
     private double internalGetSplitAmount(List<String> columns) throws FileFormatException {
-        double inAmount = internalGetAmount(columns,amountIn);
-        double outAmount = internalGetAmount(columns,amountOut) * -1;
+        double inAmount = internalGetAmount(columns,getAmountInColumn());
+        double outAmount = internalGetAmount(columns,getAmountOutColumn()) * -1;
 
         return inAmount + outAmount;
     }
 
     public double getAmount(List<String> columns) throws FileFormatException {
-        if(this.amountIn == this.amountOut) {
-            return internalGetAmount(columns,this.amountIn);
+        if(getSingleAmount()) {
+            return internalGetAmount(columns,getAmountInColumn());
         }
 
         return internalGetSplitAmount(columns);
     }
 
     public String getDescription(List<String> columns) throws FileFormatException {
-        return getColumnValue(this.description,columns);
+        return getColumnValue(getDescriptionColumn(),columns);
     }
 }
