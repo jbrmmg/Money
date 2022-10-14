@@ -265,17 +265,6 @@ public class MoneyTest extends Support {
         }
     }
 
-    // Test load reconciliation data.
-    @Test
-    public void testLoadReconciationData() throws Exception {
-        cleanUp();
-
-        // Check reconciliation data load.
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/add")
-                .content("12/12/2015,21.1\n12/12/2015,21.31"))
-                .andExpect(status().isOk());
-    }
-
     // Test Get Transactions
     @Test
     public void testGetTransaction() throws Exception {
@@ -345,128 +334,6 @@ public class MoneyTest extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1.23, 3.45, 2.78)))
                 .andExpect(jsonPath("$", hasSize(3)));
-    }
-
-    @Test
-    // Test match - multiple exact match.
-    public void testMatch1() throws Exception {
-        cleanUp();
-
-        AccountDTO account = new AccountDTO();
-        account.setId("AMEX");
-
-        CategoryDTO category = new CategoryDTO();
-        category.setId("FDG");
-
-        TransactionDTO transaction = new TransactionDTO();
-        transaction.setAccount(account);
-        transaction.setCategory(category);
-        transaction.setDate(LocalDate.of(1968,5,24));
-        transaction.setAmount(1.23);
-
-        getMockMvc().perform(post("/jbr/int/money/transaction")
-                .content(this.json(Collections.singletonList(transaction)))
-                .contentType(getContentType()))
-                .andExpect(status().isOk());
-
-        getMockMvc().perform(post("/jbr/int/money/transaction")
-                .content(this.json(Collections.singletonList(transaction)))
-                .contentType(getContentType()))
-                .andExpect(status().isOk());
-
-        // Reconcile the transaction..
-        Iterable<Transaction> transactions = transactionRepository.findAll();
-        for(Transaction nextTransaction : transactions) {
-            assertFalse(nextTransaction.reconciled());
-            ReconcileTransaction reconcileRequest = new ReconcileTransaction();
-            reconcileRequest.setId(nextTransaction.getId());
-            reconcileRequest.setReconcile(true);
-            getMockMvc().perform(put("/jbr/ext/money/reconcile")
-                    .content(this.json(reconcileRequest))
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk());
-        }
-
-        // Load recon data.
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/add")
-                .content("24/05/1968,1.23,FDG,What are we saying\n24/05/1968,1.23\n24/05/1968,1.23"))
-                .andExpect(status().isOk());
-
-        // Match - should be 2 exact match and 1 not matched.
-        getMockMvc().perform(get("/jbr/int/money/match?account=AMEX"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[2].amount", is(1.23)))
-                .andExpect(jsonPath("$[2].forwardAction", is("NONE")))
-                .andExpect(jsonPath("$[2].category.id", is("FDG")))
-                .andExpect(jsonPath("$[1].amount", is(1.23)))
-                .andExpect(jsonPath("$[1].description", is("What are we saying")))
-                .andExpect(jsonPath("$[1].forwardAction", is("NONE")))
-                .andExpect(jsonPath("$[0].amount", is(1.23)))
-                .andExpect(jsonPath("$[0].forwardAction", is("SETCATEGORY")));
-    }
-
-    // Test match wrong dates - cause repeat.
-    @Test
-    public void testMatch2() throws Exception {
-        cleanUp();
-
-        AccountDTO account = new AccountDTO();
-        account.setId("AMEX");
-
-        CategoryDTO category = new CategoryDTO();
-        category.setId("FDG");
-
-        TransactionDTO transaction = new TransactionDTO();
-        transaction.setAccount(account);
-        transaction.setCategory(category);
-        transaction.setDate(LocalDate.of(1968,5,24));
-        transaction.setAmount(1.23);
-
-        // Load transactions.
-        getMockMvc().perform(post("/jbr/int/money/transaction")
-                .content(this.json(Collections.singletonList(transaction)))
-                .contentType(getContentType()))
-                .andExpect(status().isOk());
-
-        getMockMvc().perform(post("/jbr/int/money/transaction")
-                .content(this.json(Collections.singletonList(transaction)))
-                .contentType(getContentType()))
-                .andExpect(status().isOk());
-
-        getMockMvc().perform(post("/jbr/int/money/transaction")
-                .content(this.json(Collections.singletonList(transaction)))
-                .contentType(getContentType()))
-                .andExpect(status().isOk());
-
-        // Reconcile the transaction..
-        Iterable<Transaction> transactions = transactionRepository.findAll();
-        for(Transaction nextTransaction : transactions) {
-            assertFalse(nextTransaction.reconciled());
-            ReconcileTransaction reconcileRequest = new ReconcileTransaction();
-            reconcileRequest.setId(nextTransaction.getId());
-            reconcileRequest.setReconcile(true);
-            getMockMvc().perform(put("/jbr/ext/money/reconcile")
-                    .content(this.json(reconcileRequest))
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk());
-        }
-
-        // Load recon data.
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/add")
-                .content("24/05/1968,1.23\n24/06/1968,1.23\n24/06/1968,1.23"))
-                .andExpect(status().isOk());
-
-        // Match - should be 2 exact match and 1 not matched.
-        getMockMvc().perform(get("/jbr/int/money/match?account=AMEX"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[0].amount", is(1.23)))
-                .andExpect(jsonPath("$[0].forwardAction", is("NONE")))
-                .andExpect(jsonPath("$[1].amount", is(1.23)))
-                .andExpect(jsonPath("$[1].forwardAction", is("NONE")))
-                .andExpect(jsonPath("$[2].amount", is(1.23)))
-                .andExpect(jsonPath("$[2].forwardAction", is("NONE")));
     }
 
     @Test
@@ -673,8 +540,6 @@ public class MoneyTest extends Support {
     }
 
     private void testReconciliationData(String filename, String type, int expectedCount, double expectedSum) throws Exception {
-        reconciliationRepository.deleteAll();
-
         String path = "src/test/resources/reconciliation";
 
         File file = new File(path);
