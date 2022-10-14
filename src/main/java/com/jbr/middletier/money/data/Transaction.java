@@ -120,6 +120,19 @@ public class Transaction {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+
+        if (!(o instanceof Transaction)) {
+            return false;
+        }
+
+        Transaction transaction = (Transaction) o;
+
+        return this.toString().equals(transaction.toString());
+    }
+
+    @Override
     public String toString() {
         return TransactionString.formattedTransactionString(this.date,this.amount);
     }

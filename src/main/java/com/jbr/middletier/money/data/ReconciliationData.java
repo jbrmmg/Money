@@ -54,13 +54,13 @@ public class ReconciliationData {
     public boolean equals(Object o) {
         if (o == this) return true;
 
-        if (!(o instanceof Transaction)) {
+        if (!(o instanceof ReconciliationData)) {
             return false;
         }
 
-        Transaction transaction = (Transaction) o;
+        ReconciliationData reconciliationData = (ReconciliationData) o;
 
-        return this.toString().equals(transaction.toString());
+        return this.toString().equals(reconciliationData.toString());
     }
 
     @Override

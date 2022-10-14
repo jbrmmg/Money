@@ -141,8 +141,7 @@ public class ReconciliationManager {
             }
 
             // Is this an exact match?
-            //noinspection EqualsBetweenInconvertibleTypes
-            if(nextReconciliationData.equals(nextTransaction)) {
+            if(nextReconciliationData.toString().equals(nextTransaction.toString())) {
                 trnMatch.setReconciliationData(nextReconciliationData);
                 trnMatch.setDaysAway(0);
                 matchData.matchTransaction(nextTransaction);

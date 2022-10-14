@@ -731,7 +731,7 @@ public class ReportGenerator {
         createWorkingDirectories();
 
         File htmlFile = new File(applicationProperties.getHtmlFilename());
-        List<Transaction> previousTransactionList = new ArrayList<>();
+        List<Transaction> previousTransactionList;
         try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
 
             // Get the file template.

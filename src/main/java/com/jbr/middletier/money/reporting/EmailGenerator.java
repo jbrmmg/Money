@@ -74,33 +74,6 @@ public class EmailGenerator {
                                 int weeks) throws Exception {
         Iterable<Category> categories = categoryRepository.findAll();
 
-        class EmailTransaction {
-            private LocalDate date;
-            private Double amount;
-            private String description;
-            private String category;
-            private String account;
-
-            private EmailTransaction(Transaction transaction, Iterable<Category> categories) {
-                this.date = transaction.getDate();
-                this.amount = transaction.getAmount().getValue();
-                this.description = transaction.getDescription() == null ? "" : transaction.getDescription().replace("WWW.","");
-                this.account = transaction.getAccount().getId();
-
-                for(Category nextCategory : categories) {
-                    if(nextCategory.getId().equalsIgnoreCase(transaction.getCategory().getId())) {
-                        this.category = nextCategory.getName();
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public String toString() {
-                return description;
-            }
-        }
-
         List<EmailTransaction> emailData = new ArrayList<>();
 
         // Get the data that we will contain in the email.
@@ -110,7 +83,7 @@ public class EmailGenerator {
         double transactionTotal2 = 0;
 
         LocalDate sevenWeeks = LocalDate.now();
-        sevenWeeks.plusWeeks(-7);
+        sevenWeeks = sevenWeeks.plusWeeks(-7);
 
         // Get the latest statement that is locked for each account.
         Iterable<Account> accounts = accountRepository.findAll();
@@ -149,15 +122,15 @@ public class EmailGenerator {
         }
 
         emailData.sort((emailTransaction, t1) -> {
-            if(emailTransaction.date.isBefore(t1.date)) {
+            if(emailTransaction.getDate().isBefore(t1.getDate())) {
                 return +1;
-            } else if (emailTransaction.date.isAfter(t1.date)) {
+            } else if (emailTransaction.getDate().isAfter(t1.getDate())) {
                 return -1;
             }
 
-            if(emailTransaction.amount > t1.amount) {
+            if(emailTransaction.getAmount() > t1.getAmount()) {
                 return +1;
-            } else if(emailTransaction.amount < t1.amount) {
+            } else if(emailTransaction.getAmount() < t1.getAmount()) {
                 return -1;
             }
 
@@ -210,11 +183,11 @@ public class EmailGenerator {
         appendRow(sb,"", "", "", "", null);
         for(EmailTransaction nextTransaction: emailData) {
             appendRow(sb,
-                    DateTimeFormatter.ofPattern("dd/MMM").format(nextTransaction.date),
-                    nextTransaction.category,
-                    nextTransaction.account,
-                    nextTransaction.description,
-                    nextTransaction.amount);
+                    DateTimeFormatter.ofPattern("dd/MMM").format(nextTransaction.getDate()),
+                    nextTransaction.getCategory(),
+                    nextTransaction.getAccount(),
+                    nextTransaction.toString(),
+                    nextTransaction.getAmount());
             LOG.info("{}", nextTransaction);
         }
         appendRow(sb,"", "", "", "", null);
