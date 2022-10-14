@@ -677,7 +677,7 @@ public class ReportGenerator {
         int previousMonth = month - 1;
         int previousYear = year;
 
-        if(month <= 1) {
+        if(month == 1) {
             previousMonth = 12;
             previousYear--;
         }
@@ -798,6 +798,7 @@ public class ReportGenerator {
         int activeAccounts;
     }
 
+    @SuppressWarnings("RedundantCast")
     @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
     public void regularReport() throws DocumentException, IOException, TranscoderException {
         // If this is enabled, then generate reports.
@@ -817,7 +818,7 @@ public class ReportGenerator {
         for(Statement nextStatement: allStatements) {
             if(nextStatement.getLocked()) {
                 // What is the ID?
-                long statementId = nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth();
+                long statementId = (long)(nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth());
                 MonthStatus nextMonthStatus;
 
                 if(monthStatusMap.containsKey(statementId)) {

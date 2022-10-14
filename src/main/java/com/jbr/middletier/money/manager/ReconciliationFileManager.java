@@ -21,8 +21,8 @@ import java.util.stream.Stream;
 public class ReconciliationFileManager {
     private static final Logger LOG = LoggerFactory.getLogger(ReconciliationFileManager.class);
 
-    final private ApplicationProperties applicationProperties;
-    final private ReconcileFormatRepository reconcileFormatRepository;
+    private final ApplicationProperties applicationProperties;
+    private final ReconcileFormatRepository reconcileFormatRepository;
 
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
                                      ReconcileFormatRepository reconcileFormatRepository) {
@@ -119,7 +119,7 @@ public class ReconciliationFileManager {
     }
 
     private List<TransactionDTO> processFile(FileFormatDescription format, List<String> contents) {
-        LOG.info("Process file with format {}", format.toString());
+        LOG.info("Process file with format {}", format);
 
         List<TransactionDTO> result = new ArrayList<>();
 

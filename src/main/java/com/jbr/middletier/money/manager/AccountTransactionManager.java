@@ -55,7 +55,7 @@ public class AccountTransactionManager {
         List<Transaction> transactions = this.transactionRepository.findByAccountAndDateBeforeOrderByDateDesc(account,result.getStart().plusDays(1), page);
         for(Transaction next : transactions) {
             if(next.getDate().equals(result.getStart())) {
-                System.out.println(next.getId() + " " + next.getStatement().getId().getMonth() + "-" + next.getStatement().getId().getYear());
+                LOG.info("{} {}-{}",next.getId(),next.getStatement().getId().getMonth(),next.getStatement().getId().getYear());
             }
         }
     }
@@ -124,18 +124,18 @@ public class AccountTransactionManager {
         transactionRepository.saveAll(transactions);
     }
 
-    private Specification<Transaction> getReconciledTransactions(Iterable<Account> accounts, LocalDate statmentDate, Iterable<Category> categories) throws InvalidTransactionSearchException {
+    private Specification<Transaction> getReconciledTransactions(Iterable<Account> accounts, LocalDate statementDate, Iterable<Category> categories) throws InvalidTransactionSearchException {
         // Validate data.
         if((accounts == null)) {
             throw new InvalidTransactionSearchException("Must specify account");
         }
 
-        if(statmentDate == null){
+        if(statementDate == null){
             throw new InvalidTransactionSearchException("Must specify statement date");
         }
 
         // Reconciled transactions - for a particular month (statement), single account, list of categories.
-        Specification<Transaction> search = Specification.where(statementDate(statmentDate)).and(accountIn(accounts));
+        Specification<Transaction> search = Specification.where(statementDate(statementDate)).and(accountIn(accounts));
 
         if(categories != null) {
             search = search.and(categoryIn(categories));
@@ -225,10 +225,12 @@ public class AccountTransactionManager {
             case TRT_ALL:
                 LOG.info("Get Transaction - all");
                 return getAllTransactions(dateRange, accounts, categories);
+            case TRT_UNLOCKED:
+                LOG.info("Get Transaction - unlocked");
+                return getUnlockedTransactions(accounts, categories);
         }
 
-        LOG.info("Get Transaction - unlocked");
-        return getUnlockedTransactions(accounts, categories);
+        throw new IllegalStateException("Should never get here as all Enum values are catered for.");
     }
 
     public List<TransactionDTO> getTransactions(TransactionRequestType type,
@@ -270,9 +272,9 @@ public class AccountTransactionManager {
     private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
         List<TransactionDTO> result = new ArrayList<>();
 
-        Transaction newTranaction = internalCreateTransaction(transaction);
+        Transaction newTransaction = internalCreateTransaction(transaction);
 
-        result.add(modelMapper.map(newTranaction,TransactionDTO.class));
+        result.add(modelMapper.map(newTransaction,TransactionDTO.class));
         return result;
     }
 

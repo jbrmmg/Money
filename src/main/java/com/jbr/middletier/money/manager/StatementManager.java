@@ -57,10 +57,8 @@ public class StatementManager {
     }
 
     private boolean returnStatement(Statement statement, String accountId, Boolean locked) {
-        if(accountId != null) {
-            if(!statement.getId().getAccount().getId().equals(accountId)) {
-                return false;
-            }
+        if((accountId != null) && (!statement.getId().getAccount().getId().equals(accountId))) {
+            return false;
         }
 
         if(locked != null) {
