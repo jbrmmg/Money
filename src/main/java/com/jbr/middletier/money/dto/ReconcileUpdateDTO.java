@@ -1,12 +1,12 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.dto;
 
 @SuppressWarnings("unused")
-public class ReconcileUpdate {
+public class ReconcileUpdateDTO {
     private int id;
     private String categoryId;
     private String type;
 
-    public ReconcileUpdate() {
+    public ReconcileUpdateDTO() {
         this.id = -1;
         this.categoryId = "";
         this.type = "rec";

@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
@@ -44,42 +45,39 @@ public class ReconciliationController {
         return reconcileExt(reconcileTransaction);
     }
 
-    @PostMapping(path="int/money/reconciliation/load")
-    public @ResponseBody Iterable<ReconciliationFileDTO> reconcileDataLoadInt(@RequestBody ReconciliationFileDTO reconciliationFile) throws IOException, InvalidAccountIdException {
+    @PostMapping(path="/int/money/reconciliation/load")
+    public @ResponseBody Iterable<ReconciliationFileDTO> reconcileDataLoadInt(@RequestBody ReconciliationFileDTO reconciliationFile) throws IOException {
         LOG.info("Request to load file - {}", reconciliationFile.getFilename());
         reconciliationManager.loadFile(reconciliationFile,reconciliationFileManager);
         return getListOfFiles();
     }
 
-    @GetMapping(path="int/money/reconciliation/files")
+    @GetMapping(path="/int/money/reconciliation/files")
     public @ResponseBody Iterable<ReconciliationFileDTO> getListOfFiles() {
         LOG.info("Request to get list of files");
         return reconciliationFileManager.getFiles();
     }
 
     @PutMapping(path="/ext/money/reconciliation/update")
-    public @ResponseBody OkStatus reconcileCategoryExt(@RequestBody ReconcileUpdate reconciliationUpdate ) {
+    public @ResponseBody OkStatus reconcileCategoryExt(@RequestBody ReconcileUpdateDTO reconciliationUpdate ) {
+        LOG.info("Reconcile Category Update");
         reconciliationManager.processReconcileUpdate(reconciliationUpdate);
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path="/int/money/reconciliation/update")
-    public @ResponseBody OkStatus reconcileCategoryInt(@RequestBody ReconcileUpdate reconciliationUpdate) {
+    public @ResponseBody OkStatus reconcileCategoryInt(@RequestBody ReconcileUpdateDTO reconciliationUpdate) {
         return reconcileCategoryExt(reconciliationUpdate);
     }
 
-
-
     @GetMapping(path="/ext/money/match")
-    public @ResponseBody
-    List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
+    public @ResponseBody List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
         LOG.info("External match data - reconciliation data with reconciled transactions");
         return reconciliationManager.matchImpl(accountId);
     }
 
     @GetMapping(path="/int/money/match")
-    public @ResponseBody
-    List<MatchData>  matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
+    public @ResponseBody List<MatchData> matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
         return matchExt(accountId);
     }
 

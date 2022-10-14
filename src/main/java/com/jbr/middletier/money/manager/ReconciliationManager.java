@@ -3,11 +3,9 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.control.TransactionController;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.dto.ReconciliationFileDTO;
-import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.reconciliation.MatchInformation;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,26 +66,6 @@ public class ReconciliationManager {
             ReconciliationData newReconciliationData = modelMapper.map(next,ReconciliationData.class);
 
             reconciliationRepository.save(newReconciliationData);
-        }
-    }
-
-    private static class MatchInformation {
-        ReconciliationData reconciliationData;
-        public Transaction transaction;
-        long daysAway;
-
-        MatchInformation() {
-            this.reconciliationData = null;
-            this.transaction = null;
-            this.daysAway = 0;
-        }
-
-        boolean exactMatch() {
-            return this.reconciliationData != null && this.daysAway == 0;
-        }
-
-        boolean closeMatch() {
-            return this.reconciliationData != null && this.daysAway != 0;
         }
     }
 
@@ -154,7 +132,7 @@ public class ReconciliationManager {
                 trnMatches.put(nextTransaction.getId(), new MatchInformation());
             }
             MatchInformation trnMatch = trnMatches.get(nextTransaction.getId());
-            trnMatch.transaction = nextTransaction;
+            trnMatch.setTransaction(nextTransaction);
 
             // Is this transaction already exactly matched?
             if(trnMatch.exactMatch()) {
@@ -164,8 +142,8 @@ public class ReconciliationManager {
             // Is this an exact match?
             //noinspection EqualsBetweenInconvertibleTypes
             if(nextReconciliationData.equals(nextTransaction)) {
-                trnMatch.reconciliationData = nextReconciliationData;
-                trnMatch.daysAway = 0;
+                trnMatch.setReconciliationData(nextReconciliationData);
+                trnMatch.setDaysAway(0);
                 matchData.matchTransaction(nextTransaction);
                 return;
             }
@@ -177,7 +155,7 @@ public class ReconciliationManager {
             }
 
             // Set details of the match.
-            if ((!trnMatch.closeMatch() || trnMatch.daysAway > difference) && (( bestDaysAway == -1 )  || (difference < bestDaysAway))) {
+            if ((!trnMatch.closeMatch() || trnMatch.getDaysAway() > difference) && (( bestDaysAway == -1 )  || (difference < bestDaysAway))) {
                 bestDaysAway = difference;
                 bestTrnMatch = trnMatch;
             }
@@ -186,12 +164,12 @@ public class ReconciliationManager {
         // If there was a good match, the use it.
         if(bestTrnMatch != null) {
             // If the transaction was already matched, then need to repeat the search.
-            if (bestTrnMatch.reconciliationData != null) {
-                repeats.add(bestTrnMatch.reconciliationData);
+            if (bestTrnMatch.getReconciliationData() != null) {
+                repeats.add(bestTrnMatch.getReconciliationData());
             }
 
-            bestTrnMatch.daysAway = bestDaysAway;
-            bestTrnMatch.reconciliationData = nextReconciliationData;
+            bestTrnMatch.setDaysAway(bestDaysAway);
+            bestTrnMatch.setReconciliationData(nextReconciliationData);
         }
     }
 
@@ -279,13 +257,13 @@ public class ReconciliationManager {
         for(MatchInformation nextMatchInfo : trnMatches.values()) {
             if(nextMatchInfo.closeMatch()) {
                 // Get the match data index.
-                int matchDataIndex = matchDataMap.get(nextMatchInfo.reconciliationData.getId());
+                int matchDataIndex = matchDataMap.get(nextMatchInfo.getReconciliationData().getId());
 
                 // Get the Match Data.
                 MatchData matchData = result.get(matchDataIndex);
 
                 // Set the close match transaction.
-                matchData.matchTransaction(nextMatchInfo.transaction);
+                matchData.matchTransaction(nextMatchInfo.getTransaction());
             }
         }
 
@@ -295,7 +273,7 @@ public class ReconciliationManager {
             if(nextTransaction.getStatement() != null)  {
                 if(trnMatches.containsKey(nextTransaction.getId())){
                     MatchInformation matchInformation = trnMatches.get(nextTransaction.getId());
-                    if(matchInformation.reconciliationData == null) {
+                    if(matchInformation.getReconciliationData() == null) {
                         result.add(new MatchData(nextTransaction));
                     }
                 } else {
@@ -327,7 +305,7 @@ public class ReconciliationManager {
         return result;
     }
 
-    private void transactionCategoryUpdate(ReconcileUpdate reconciliationUpdate) {
+    private void transactionCategoryUpdate(ReconcileUpdateDTO reconciliationUpdate) {
         // Get the transaction.
         Optional<Transaction> transaction = transactionRepository.findById(reconciliationUpdate.getId());
 
@@ -350,7 +328,7 @@ public class ReconciliationManager {
         }
     }
 
-    private void reconciliationCategoryUpdate(ReconcileUpdate reconciliationUpdate) {
+    private void reconciliationCategoryUpdate(ReconcileUpdateDTO reconciliationUpdate) {
         // Get the reconciliation data.
         Optional<ReconciliationData> reconciliationData = reconciliationRepository.findById(reconciliationUpdate.getId());
 
@@ -370,7 +348,7 @@ public class ReconciliationManager {
         }
     }
 
-    public void processReconcileUpdate(ReconcileUpdate reconciliationUpdate) {
+    public void processReconcileUpdate(ReconcileUpdateDTO reconciliationUpdate) {
         LOG.info("Update category (ext) - {} - {} - {}", reconciliationUpdate.getId(), reconciliationUpdate.getCategoryId(), reconciliationUpdate.getType());
 
         if(reconciliationUpdate.getType().equalsIgnoreCase("trn")) {
