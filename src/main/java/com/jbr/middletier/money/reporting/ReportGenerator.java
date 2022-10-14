@@ -116,7 +116,7 @@ public class ReportGenerator {
         }
 
         for(CategoryPercentage nextCategory: result.values()) {
-            if(!nextCategory.ignore) {
+            if(!nextCategory.ignore && totalAmount != 0.0) {
                 nextCategory.percentage = nextCategory.amount / totalAmount * 100;
             }
         }
@@ -573,7 +573,10 @@ public class ReportGenerator {
         result.append("<td class=\"total-row ").append(getAmountClass(totalSpending)).append("\">").append(df.format(totalSpending)).append("</td>\n");
         result.append("<td class=\"total-row ").append(getAmountClass(previousTotalSpending)).append("\">").append(df.format(previousTotalSpending)).append("</td>\n");
 
-        double totalPercentageChange = ( ( totalSpending - previousTotalSpending ) / previousTotalSpending ) * 100.0;
+        double totalPercentageChange = 0.0;
+        if (previousTotalSpending != 0.0) {
+            totalPercentageChange = ((totalSpending - previousTotalSpending) / previousTotalSpending) * 100.0;
+        }
         if(previousTotalSpending != 0.0 && totalPercentageChange != 0.0) {
             result.append("<td class=\"total-row ").append(getAmountClass(totalPercentageChange)).append("\">").append(df.format(totalPercentageChange)).append("%</td>\n");
         } else {
@@ -649,16 +652,16 @@ public class ReportGenerator {
         crateCategoryImages(applicationProperties.getReportWorking(),transactions);
     }
 
-    private String addReportToTemplate(String template, String specific, long year, long month) throws IOException, TranscoderException {
+    private String addReportToTemplate(String template, String specific, int year, int month) throws IOException, TranscoderException {
         // Get all the transactions for the specified statement.
-        List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth((int)year,(int)month);
+        List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(year,month);
 
         String titleMarker =  specific.length() > 0 ? "<!-- TITLE " + specific + " -->" : "<!-- TITLE -->";
         String pieMarker = specific.length() > 0 ? "<!-- PIE " + specific + " -->" : "<!-- PIE -->";
         String tableMarker = specific.length() > 0 ? "<!-- TABLE " + specific + " -->" : "<!-- TABLE -->";
         String totalsMarker = specific.length() > 0 ? "<!-- TOTALS " + specific + " -->" : "<!-- TOTALS -->";
 
-        template = template.replace(titleMarker, "<h1>" + DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of((int)year,(int)month,1)) + "</h1>");
+        template = template.replace(titleMarker, "<h1>" + DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of(year,month,1)) + "</h1>");
 
         LOG.info("Create pie chart.");
         createPieChart(transactionList,specific);
@@ -671,8 +674,8 @@ public class ReportGenerator {
         template = template.replace(tableMarker, createTransactionTable(transactionList));
 
         // Get the previous month
-        int previousMonth = (int)month - 1;
-        int previousYear = (int)year;
+        int previousMonth = month - 1;
+        int previousYear = year;
 
         if(month <= 1) {
             previousMonth = 12;
@@ -699,7 +702,7 @@ public class ReportGenerator {
         Files.copy( Paths.get(source), Paths.get(destinationPath + "/" + destination), StandardCopyOption.REPLACE_EXISTING );
     }
 
-    public void generateReport(long year, long month) throws IOException, DocumentException, TranscoderException {
+    public void generateReport(int year, int month) throws IOException, DocumentException, TranscoderException {
         LOG.info("Generate report");
 
         createWorkingDirectories();
@@ -722,11 +725,11 @@ public class ReportGenerator {
                 getMonthFilename(false,year,month));
     }
 
-    public void generateAnnualReport(long year) throws IOException, TranscoderException, DocumentException {
+    public void generateAnnualReport(int year) throws IOException, TranscoderException, DocumentException {
         LOG.info("Generate annual report");
 
         // Get all the transactions for the specified statement.
-        List<Transaction> transactionList = transactionRepository.findByStatementIdYear((int)year);
+        List<Transaction> transactionList = transactionRepository.findByStatementIdYear(year);
 
         createWorkingDirectories();
 
@@ -744,7 +747,7 @@ public class ReportGenerator {
             template = template.replace("<!-- PIE -->", "<img class=\"pie\" height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie-yr.png" + "\"/>");
 
             LOG.info("Insert totals");
-            previousTransactionList = transactionRepository.findByStatementIdYear((int) year - 1);
+            previousTransactionList = transactionRepository.findByStatementIdYear(year - 1);
             template = template.replace("<!-- TOTALS -->", createComparisonTable(transactionList, previousTransactionList, true));
 
             for (int i = 0; i < 12; i++) {
@@ -774,9 +777,9 @@ public class ReportGenerator {
         return applicationProperties.getReportShare() + "/" + year + "/Report-" + year + ".pdf";
     }
 
-    private String getMonthFilename(boolean fullPath, long year, long month) {
+    private String getMonthFilename(boolean fullPath, int year, int month) {
 
-        LocalDate reportDate = LocalDate.of((int)year, (int)month, 1);
+        LocalDate reportDate = LocalDate.of(year, month, 1);
         String reportDateString = DateTimeFormatter.ofPattern("MMMM-yyyy").format(reportDate);
 
         if(!fullPath) {
@@ -856,7 +859,7 @@ public class ReportGenerator {
         }
     }
 
-    public boolean reportsGeneratedForYear(long year) {
+    public boolean reportsGeneratedForYear(int year) {
         // Check that the reports have been generated for the year specified.
 
         LOG.info("Checking - {}/{}", applicationProperties.getReportShare(), year);

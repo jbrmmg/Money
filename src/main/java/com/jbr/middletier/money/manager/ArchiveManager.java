@@ -48,7 +48,7 @@ public class ArchiveManager {
         LOG.info("Archive Controller - request archive.");
 
         // Find the oldest year in the database.
-        long oldestYear = 100000;
+        int oldestYear = Integer.MAX_VALUE;
 
         Iterable<Statement> years = statementRepository.findAll();
         for(Statement nextStatement: years) {
@@ -77,7 +77,7 @@ public class ArchiveManager {
         LOG.info("About to archive - {}", oldestYear);
 
         // Delete the transactions that are in this year.
-        Iterable<Transaction> transactionsToDelete = transactionRepository.findByStatementIdYear((int)oldestYear);
+        Iterable<Transaction> transactionsToDelete = transactionRepository.findByStatementIdYear(oldestYear);
 
         for (Transaction nextTransaction: transactionsToDelete) {
             transactionRepository.delete(nextTransaction);
@@ -85,7 +85,7 @@ public class ArchiveManager {
         }
 
         // Delete the Statements.
-        Iterable<Statement> statementsToDelete = statementRepository.findByIdYear((int)oldestYear);
+        Iterable<Statement> statementsToDelete = statementRepository.findByIdYear(oldestYear);
         for(Statement nextStatement: statementsToDelete) {
             statementRepository.delete(nextStatement);
             LOG.info("Delete statement - {} {}", nextStatement.getId().getYear(), nextStatement.getId().getMonth());

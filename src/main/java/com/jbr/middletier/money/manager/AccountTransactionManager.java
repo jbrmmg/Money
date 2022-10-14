@@ -294,6 +294,7 @@ public class AccountTransactionManager {
         return result;
     }
 
+    @Transactional
     public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException, InvalidCategoryIdException, InvalidAccountIdException {
         if(transaction.size() == 1) {
             return createIndividualTransaction(transaction.get(0));
