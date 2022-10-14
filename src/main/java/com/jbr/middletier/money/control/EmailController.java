@@ -38,7 +38,6 @@ public class EmailController {
         try {
             this.emailGenerator.generateReport(to,from,username,host,password,weeks);
         } catch(MessagingException e) {
-            LOG.error(e.getMessage());
             throw e;
         }
 
