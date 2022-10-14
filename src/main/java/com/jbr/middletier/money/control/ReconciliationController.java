@@ -1,11 +1,13 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dto.ReconcileTransactionDTO;
 import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
+import com.jbr.middletier.money.reconciliation.MatchData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +37,13 @@ public class ReconciliationController {
     }
 
     @PutMapping(path="/ext/money/reconcile")
-    public @ResponseBody OkStatus reconcileExt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
+    public @ResponseBody OkStatus reconcileExt(@RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         reconciliationManager.reconcile(reconcileTransaction.getTransactionId(),reconcileTransaction.getReconcile());
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path="/int/money/reconcile")
-    public @ResponseBody OkStatus reconcileInt(@RequestBody ReconcileTransaction reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
+    public @ResponseBody OkStatus reconcileInt(@RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         return reconcileExt(reconcileTransaction);
     }
 

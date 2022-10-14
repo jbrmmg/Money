@@ -5,10 +5,7 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.DefaultProfileUtil;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.dto.ReconciliationFileDTO;
-import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.RegularCtrl;
 import org.junit.Assert;
@@ -231,7 +228,7 @@ public class MoneyTest extends Support {
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             assertFalse(nextTransaction.reconciled());
-            ReconcileTransaction reconcileRequest = new ReconcileTransaction();
+            ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
             getMockMvc().perform(put("/jbr/ext/money/reconcile")
@@ -244,7 +241,7 @@ public class MoneyTest extends Support {
         transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             assertTrue(nextTransaction.reconciled());
-            ReconcileTransaction reconcileRequest = new ReconcileTransaction();
+            ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(false);
             getMockMvc().perform(put("/jbr/ext/money/reconcile")

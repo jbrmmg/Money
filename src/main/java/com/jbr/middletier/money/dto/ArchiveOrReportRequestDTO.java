@@ -1,14 +1,14 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.dto;
 
-public class ArchiveOrReportRequest {
+public class ArchiveOrReportRequestDTO {
     private long year;
     private long month;
 
-    public ArchiveOrReportRequest() {
+    public ArchiveOrReportRequestDTO() {
 
     }
 
-    public ArchiveOrReportRequest(long year, long month) {
+    public ArchiveOrReportRequestDTO(long year, long month) {
         this.year = year;
         this.month = month;
     }

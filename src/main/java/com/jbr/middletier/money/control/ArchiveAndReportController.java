@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.itextpdf.text.DocumentException;
-import com.jbr.middletier.money.data.ArchiveOrReportRequest;
+import com.jbr.middletier.money.dto.ArchiveOrReportRequestDTO;
 import com.jbr.middletier.money.dto.StatusDTO;
 import com.jbr.middletier.money.manager.ArchiveManager;
 import com.jbr.middletier.money.reporting.ReportGenerator;
@@ -29,14 +29,14 @@ public class ArchiveAndReportController {
     }
 
     @PostMapping(path="/int/money/transaction/archive")
-    public @ResponseBody StatusDTO archive(@RequestBody ArchiveOrReportRequest archiveRequest) {
+    public @ResponseBody StatusDTO archive(@RequestBody ArchiveOrReportRequestDTO archiveRequest) {
         this.archiveManager.archive(archiveRequest);
 
         return StatusDTO.OK;
     }
 
     @PostMapping(path="/int/money/transaction/report")
-    public @ResponseBody StatusDTO report(@RequestBody ArchiveOrReportRequest report) throws TranscoderException, DocumentException, IOException {
+    public @ResponseBody StatusDTO report(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
         //TODO check the exceptions
         LOG.info("Report Controller - request report.");
         reportGenerator.generateReport(report.getYear(),report.getMonth());
@@ -45,7 +45,7 @@ public class ArchiveAndReportController {
     }
 
     @PostMapping(path="/int/money/transaction/annualreport")
-    public @ResponseBody StatusDTO annualReport(@RequestBody ArchiveOrReportRequest report) throws TranscoderException, DocumentException, IOException {
+    public @ResponseBody StatusDTO annualReport(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
         //TODO check the exceptions
         LOG.info("Report Controller - request report (Annual).");
         reportGenerator.generateAnnualReport(report.getYear());

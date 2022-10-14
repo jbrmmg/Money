@@ -1,10 +1,10 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.dto;
 
-public class ReconcileTransaction {
+public class ReconcileTransactionDTO {
     private int transactionId;
     private boolean reconcile;
 
-    public ReconcileTransaction() {
+    public ReconcileTransactionDTO() {
         this.transactionId = -1;
         this.reconcile = false;
     }

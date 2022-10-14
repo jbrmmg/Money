@@ -6,10 +6,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.dto.StatementIdDTO;
-import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.manager.ArchiveManager;
 import org.junit.Assert;
 import org.junit.Test;
@@ -121,7 +118,7 @@ public class ArchiveTest extends Support {
                 .andExpect(status().isOk());
 
         // Request the report.
-        ArchiveOrReportRequest request = new ArchiveOrReportRequest();
+        ArchiveOrReportRequestDTO request = new ArchiveOrReportRequestDTO();
         request.setMonth(1);
         request.setYear(2010);
 

@@ -2,7 +2,7 @@ package com.jbr.middletier.money.dataaccess;
 
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.DateRange;
+import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.data.Transaction;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -10,7 +10,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import java.time.LocalDate;
-import java.util.Calendar;
 
 public class TransactionSpecifications {
     private TransactionSpecifications() {
@@ -51,7 +50,7 @@ public class TransactionSpecifications {
                                                             criteriaBuilder.isNull(root.get("statement").get("id").get("month")) );
     }
 
-    public static Specification<Transaction> datesBetween(DateRange dateRange) {
+    public static Specification<Transaction> datesBetween(DateRangeDTO dateRange) {
         // Strings are dates - from to
         return (root, criteriaQuery, criteriaBuilder) -> {
 

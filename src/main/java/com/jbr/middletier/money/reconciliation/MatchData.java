@@ -1,4 +1,9 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.reconciliation;
+
+import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.data.Category;
+import com.jbr.middletier.money.data.ReconciliationData;
+import com.jbr.middletier.money.data.Transaction;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;

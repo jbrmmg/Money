@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.ArchiveOrReportRequest;
+import com.jbr.middletier.money.dto.ArchiveOrReportRequestDTO;
 import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
@@ -38,7 +38,7 @@ public class ArchiveManager {
         archive(null);
     }
 
-    public void archive(ArchiveOrReportRequest archiveRequest) {
+    public void archive(ArchiveOrReportRequestDTO archiveRequest) {
         // If archive request is null then this is a scheduled request.
         if(archiveRequest == null && !applicationProperties.getArchiveEnabled()) {
             LOG.info("Scheduled archive is disabled.");

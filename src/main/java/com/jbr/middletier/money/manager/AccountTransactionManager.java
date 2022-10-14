@@ -5,6 +5,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.TransactionWindowDTO;
 import com.jbr.middletier.money.exceptions.*;
@@ -158,7 +159,7 @@ public class AccountTransactionManager {
         return search;
     }
 
-    private Specification<Transaction> getAllTransactions(DateRange dateRange, Iterable<Account> accounts, Iterable<Category> categories) throws InvalidTransactionSearchException {
+    private Specification<Transaction> getAllTransactions(DateRangeDTO dateRange, Iterable<Account> accounts, Iterable<Category> categories) throws InvalidTransactionSearchException {
         // Validate data.
         if(dateRange.getFrom() == null){
             throw new InvalidTransactionSearchException("must specify a from date");
@@ -198,7 +199,7 @@ public class AccountTransactionManager {
     }
 
     private Specification<Transaction> getTransactionSearch(TransactionRequestType type,
-                                                            DateRange dateRange,
+                                                            DateRangeDTO dateRange,
                                                             List<String> categoryIds,
                                                             List<String> accountIds) throws InvalidTransactionSearchException {
         // Get the accounts
@@ -231,7 +232,7 @@ public class AccountTransactionManager {
     }
 
     public List<TransactionDTO> getTransactions(TransactionRequestType type,
-                                                DateRange dateRange,
+                                                DateRangeDTO dateRange,
                                                 List<String> categoryIds,
                                                 List<String> accountIds,
                                                 boolean sortAscending) throws InvalidTransactionSearchException {

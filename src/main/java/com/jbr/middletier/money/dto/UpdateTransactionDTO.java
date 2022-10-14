@@ -1,13 +1,13 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.dto;
 
 @SuppressWarnings("unused")
-public class UpdateTransaction {
+public class UpdateTransactionDTO {
     private int id;
     private double amount;
     private String categoryId;
     private String description;
 
-    public UpdateTransaction() {
+    public UpdateTransactionDTO() {
         this.id = -1;
         this.amount = 0.0;
         this.categoryId = "";

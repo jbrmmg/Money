@@ -1,9 +1,11 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.dto;
+
+import com.jbr.middletier.money.data.Transaction;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class DateRange {
+public class DateRangeDTO {
     private LocalDate from;
     private LocalDate to;
 
@@ -17,7 +19,7 @@ public class DateRange {
         return LocalDate.parse(dateString,formatter);
     }
 
-    public DateRange(String from, String to) {
+    public DateRangeDTO(String from, String to) {
         this.from = getDate(from);
         this.to = getDate(to);
     }

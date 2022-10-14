@@ -5,6 +5,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.reconciliation.MatchInformation;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;

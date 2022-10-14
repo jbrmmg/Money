@@ -89,7 +89,7 @@ public class StatementTest extends Support {
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             assertFalse(nextTransaction.reconciled());
-            ReconcileTransaction reconcileRequest = new ReconcileTransaction();
+            ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
             getMockMvc().perform(put("/jbr/ext/money/reconcile")

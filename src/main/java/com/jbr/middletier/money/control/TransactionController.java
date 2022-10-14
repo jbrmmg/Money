@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -36,7 +37,7 @@ public class TransactionController {
 
         LOG.info("Get Transactions {} {} {} {} {} {}", type, from, to, category, account, sortAscending);
         return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(type),
-                new DateRange(from, to),
+                new DateRangeDTO(from, to),
                 category == null ? null : Arrays.asList(category.split(",")),
                 account == null ? null : Arrays.asList(account.split(",")),
                 Boolean.TRUE.equals(sortAscending));
