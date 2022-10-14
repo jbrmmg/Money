@@ -2,7 +2,6 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
-import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.junit.Assert;

@@ -277,7 +277,7 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidTransactionException, InvalidCategoryIdException, InvalidAccountIdException {
+    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidCategoryIdException, InvalidAccountIdException {
         Transaction fromTransaction = internalCreateTransaction(from);
 
         // Save the 'from' transaction and update the opposite id on the 'to'

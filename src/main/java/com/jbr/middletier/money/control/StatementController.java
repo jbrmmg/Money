@@ -43,7 +43,7 @@ public class StatementController {
     }
 
     @PostMapping(path="/int/money/statement/lock")
-    public @ResponseBody Iterable<StatementDTO> statementLockInt(@RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException, InvalidAccountIdException {
+    public @ResponseBody Iterable<StatementDTO> statementLockInt(@RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException {
         return this.statementLockExt(statementId);
     }
 

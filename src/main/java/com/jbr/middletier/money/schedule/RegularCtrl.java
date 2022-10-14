@@ -5,6 +5,7 @@ import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,7 @@ public class RegularCtrl {
                 nextRegular.setLastDate(saveDate);
                 regularRepository.save(nextRegular);
             }
-        } catch( Regular.CannotDetermineNextDateException ex) {
+        } catch( CannotDetermineNextDateException ex) {
             LOG.error("Cannot determine the next payemnt." + ex.getMessage());
         } catch ( Exception ex) {
             LOG.error("Failed to process regular payment.",ex);

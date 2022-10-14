@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.data;
 
+import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +52,6 @@ public class Regular {
     private String description;
 
     private static final Logger LOG = LoggerFactory.getLogger(Regular.class);
-
-    public class CannotDetermineNextDateException extends Exception {
-        CannotDetermineNextDateException(String message)  {
-            super(message);
-        }
-    }
 
     private LocalDate addFrequency ( LocalDate fromDate ) throws CannotDetermineNextDateException {
         try {
@@ -118,8 +113,7 @@ public class Regular {
 
     public boolean isNextDateToday(LocalDate useToday) throws CannotDetermineNextDateException {
         // Is the next date today?
-        LocalDate today = useToday;
-        return today.equals(getNextDate(today));
+        return useToday.equals(getNextDate(useToday));
     }
 
     private boolean isDateTodayOrFuture(LocalDate today, LocalDate fromDate) {

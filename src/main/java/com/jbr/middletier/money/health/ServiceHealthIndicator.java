@@ -39,9 +39,8 @@ public class ServiceHealthIndicator implements HealthIndicator {
             LOG.info("Check Database {}.", categoryList.size());
 
             return Health.up().withDetail("service", this.applicationProperties.getServiceName()).withDetail("Category Types",categoryList.size()).build();
-        } catch (Exception ignored) {
-            // Ignore exceptions
-            LOG.info("Exception ignored", ignored);
+        } catch (Exception ex) {
+            LOG.info("Exception ignored", ex);
         }
 
         return Health.down().withDetail("service", this.applicationProperties.getServiceName()).build();

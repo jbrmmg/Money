@@ -211,7 +211,7 @@ public class PoJoTest {
     }
 
     @Test
-    public void RegularToDTO() throws ParseException {
+    public void RegularToDTO() {
         Account account = new Account();
         account.setId("XXXF");
         Category category = new Category();

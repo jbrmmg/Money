@@ -1,7 +1,5 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
@@ -41,6 +39,8 @@ public class RegularPaymentManager {
     }
 
     public void createRegularPayment(RegularDTO regular) throws RegularAlreadyExistsException {
+        LOG.info("Create regular payment.");
+
         // Make sure this id is null.
         if(regular.getId() != null) {
             throw new RegularAlreadyExistsException(regular);
@@ -50,6 +50,8 @@ public class RegularPaymentManager {
     }
 
     public void updateRegularPayment(RegularDTO regular) throws InvalidRegularIdException {
+        LOG.info("Update regular payment.");
+
         Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
 
         if(existingRegular.isPresent()) {
@@ -60,6 +62,8 @@ public class RegularPaymentManager {
     }
 
     public void deleteRegularPayment(RegularDTO regular) throws InvalidRegularIdException {
+        LOG.info("Delete regular payment.");
+
         Optional<Regular> existingRegular = regularRepository.findById(regular.getId());
 
         if(existingRegular.isPresent()) {

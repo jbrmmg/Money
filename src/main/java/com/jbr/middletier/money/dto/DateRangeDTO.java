@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class DateRangeDTO {
-    private LocalDate from;
-    private LocalDate to;
+    private final LocalDate from;
+    private final LocalDate to;
 
     private LocalDate getDate(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Transaction.TRANSACTION_DATE_FORMAT);

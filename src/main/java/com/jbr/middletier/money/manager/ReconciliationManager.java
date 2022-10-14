@@ -70,7 +70,7 @@ public class ReconciliationManager {
         }
     }
 
-    public void autoReconcileData() throws EmptyMatchDataException, ParseException, InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public void autoReconcileData() throws EmptyMatchDataException, InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
 
