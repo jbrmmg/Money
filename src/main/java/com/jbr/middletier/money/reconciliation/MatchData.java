@@ -35,7 +35,7 @@ public class MatchData implements Comparable<MatchData> {
         }
 
         // Check the date.
-        int dateCompare = this.reconcilationDate.compareTo(object.reconcilationDate);
+        int dateCompare = this.reconciliationDate.compareTo(object.reconciliationDate);
         if (dateCompare != 0) {
             return dateCompare;
         }
@@ -57,12 +57,22 @@ public class MatchData implements Comparable<MatchData> {
         return this.compareTo(other) == 0;
     }
 
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getId() + "-" + getDate() + "-" + getAmount() + "-" + getForwardAction();
+    }
+
     public enum ForwardActionType { SETCATEGORY, CREATE, RECONCILE, UNRECONCILE, NONE }
 
     private enum BackwardActionType { UNRECONCILE, DELETE, NONE }
 
     private final int reconciliationId;
-    private final LocalDate reconcilationDate;
+    private final LocalDate reconciliationDate;
     private final double reconciliationAmount;
     private Transaction transaction;
     private double beforeAmount;
@@ -75,7 +85,7 @@ public class MatchData implements Comparable<MatchData> {
 
     public MatchData(ReconciliationData source, Account account)  {
         this.reconciliationId = source.getId();
-        this.reconcilationDate = source.getDate();
+        this.reconciliationDate = source.getDate();
         this.reconciliationAmount = source.getAmount();
         this.transaction = null;
         this.category = source.getCategory();
@@ -94,7 +104,7 @@ public class MatchData implements Comparable<MatchData> {
     public MatchData(Transaction transaction) {
         this.transaction = transaction;
         this.reconciliationId = -1;
-        this.reconcilationDate = transaction.getDate();
+        this.reconciliationDate = transaction.getDate();
         this.reconciliationAmount = transaction.getAmount().getValue();
         this.beforeAmount = 0.0;
         this.afterAmount = 0.0;
@@ -153,7 +163,7 @@ public class MatchData implements Comparable<MatchData> {
     public Account getAccount() { return this.account; }
 
     public String getDate() {
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd").format(this.reconcilationDate);
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd").format(this.reconciliationDate);
     }
 
     public String getForwardAction() {
