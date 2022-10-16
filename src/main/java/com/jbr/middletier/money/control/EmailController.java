@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.mail.MessagingException;
-
 @Controller
 @RequestMapping("/jbr")
 public class EmailController {
@@ -32,15 +30,9 @@ public class EmailController {
                                             @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,
                                             @RequestParam(value="host", defaultValue="smtp.ionos.co.uk") String host,
                                             @RequestParam(value="password") String password,
-                                            @RequestParam(value="weeks", defaultValue="7") int weeks ) throws EmailGenerationException {
+                                            @RequestParam(value="weeks", defaultValue="7") long weeks ) throws EmailGenerationException {
         LOG.info("sending email to {}", to);
-
-        try {
-            this.emailGenerator.generateReport(to,from,username,host,password,weeks);
-        } catch(EmailGenerationException e) {
-            LOG.error("Email failed",e);
-            throw e;
-        }
+        this.emailGenerator.generateReport(to,from,username,host,password,weeks);
 
         return OkStatus.getOkStatus();
     }

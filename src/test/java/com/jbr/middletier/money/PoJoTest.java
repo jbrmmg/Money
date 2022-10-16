@@ -234,6 +234,7 @@ public class PoJoTest {
         Assert.assertEquals(LocalDate.of(2019,3,5),regularDTO.getLastDate());
     }
 
+    @SuppressWarnings("AssertBetweenInconvertibleTypes")
     @Test
     public void RegularFromDTO()  {
         AccountDTO accountDTO = new AccountDTO();
@@ -257,8 +258,7 @@ public class PoJoTest {
         Assert.assertEquals(LocalDate.of(2019,2,5),regular.getStart());
         Assert.assertEquals(LocalDate.of(2019,3,5),regular.getLastDate());
 
-        //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes,UnnecessaryBoxing
-        Assert.assertFalse(accountDTO.equals(Double.valueOf(210.2)));
+        Assert.assertNotEquals(210.2, accountDTO);
     }
 
     @Test
@@ -277,13 +277,9 @@ public class PoJoTest {
         Assert.assertEquals(-1, account.compareTo(account3));
         Assert.assertEquals(1, account3.compareTo(account));
 
-        //noinspection SimplifiableAssertion
-        Assert.assertTrue(account.equals(account2));
-        //noinspection SimplifiableAssertion
-        Assert.assertFalse(account.equals(account3));
-
+        Assert.assertEquals(account2, account);
+        Assert.assertNotEquals(account3, account);
         Assert.assertEquals(account.hashCode(),account2.hashCode());
-
         Assert.assertEquals("ACFE [null]", account.toString());
     }
 

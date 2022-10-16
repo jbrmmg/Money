@@ -49,7 +49,7 @@ public class EmailGenerator {
                                 String username,
                                 String host,
                                 String password,
-                                int weeks) throws EmailGenerationException {
+                                long weeks) throws EmailGenerationException {
         try {
             List<TransactionDTO> emailTransactions = new ArrayList<>();
 

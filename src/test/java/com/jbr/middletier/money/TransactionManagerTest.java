@@ -40,7 +40,7 @@ public class TransactionManagerTest {
 
 
     @Test
-    @Ignore
+    @Ignore // This is not ready yet.
     public void test() throws ParseException {
         transactionRepository.deleteAll();
         statementRepository.deleteAll();
