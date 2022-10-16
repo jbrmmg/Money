@@ -54,10 +54,10 @@ public class EmailGenerator {
             List<TransactionDTO> emailTransactions = new ArrayList<>();
 
             // Get the data that we will contain in the email.
-            double startAmount = 0.0;
-            double endAmount = 0.0;
-            double transactionTotal1 = 0;
-            double transactionTotal2 = 0;
+            FinancialAmount startAmount = new FinancialAmount();
+            FinancialAmount endAmount = new FinancialAmount();
+            FinancialAmount transactionTotal1 = new FinancialAmount();
+            FinancialAmount transactionTotal2 = new FinancialAmount();
 
             LocalDate oldest = LocalDate.now();
             oldest = oldest.plusWeeks(-1 * weeks);
@@ -69,8 +69,8 @@ public class EmailGenerator {
                 // Get the latest statement.
                 List<Statement> latestStatements = statementRepository.findByIdAccountAndLocked(nextAccount, false);
                 for (Statement nextStatement : latestStatements) {
-                    endAmount += nextStatement.getOpenBalance().getValue();
-                    startAmount += nextStatement.getOpenBalance().getValue();
+                    endAmount.increment(nextStatement.getOpenBalance());
+                    startAmount.increment(nextStatement.getOpenBalance());
 
                     // Get the transactions for this.
                     List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
@@ -78,8 +78,8 @@ public class EmailGenerator {
                             nextStatement.getId().getYear(),
                             nextStatement.getId().getMonth());
                     for (Transaction nextTransaction : transactions) {
-                        endAmount += nextTransaction.getAmount().getValue();
-                        transactionTotal1 += nextTransaction.getAmount().getValue();
+                        endAmount.increment(nextTransaction.getAmount());
+                        transactionTotal1.increment(nextTransaction.getAmount());
 
                         emailTransactions.add(modelMapper.map(nextTransaction,TransactionDTO.class));
                     }
@@ -90,7 +90,7 @@ public class EmailGenerator {
                             StatementId.getPreviousId(nextStatement.getId()).getMonth());
                     for (Transaction nextTransaction : transactions) {
                         if (nextTransaction.getDate().isAfter(oldest)) {
-                            transactionTotal2 += nextTransaction.getAmount().getValue();
+                            transactionTotal2.increment(nextTransaction.getAmount().getValue());
 
                             emailTransactions.add(modelMapper.map(nextTransaction,TransactionDTO.class));
                         }
@@ -115,16 +115,17 @@ public class EmailGenerator {
             });
 
             startAmount = endAmount;
-            startAmount -= transactionTotal1;
-            startAmount -= transactionTotal2;
+            startAmount.decrement(transactionTotal1);
+            startAmount.decrement(transactionTotal2);
 
             for (TransactionDTO nextTransaction : emailTransactions) {
                 LOG.info("{}", nextTransaction);
             }
 
-            LOG.info(String.format("%02.2f", startAmount));
-            LOG.info(String.format("%02.2f", endAmount));
-            LOG.info(String.format("%02.2f", transactionTotal1 + transactionTotal2));
+            LOG.info("Start:        {}", startAmount);
+            LOG.info("End:          {}", endAmount);
+            LOG.info("Transaction 1 {}", transactionTotal1);
+            LOG.info("Transaction 2 {}", transactionTotal2);
 
             Properties properties = new Properties();
             properties.put("mail.smtp.auth", "true");
@@ -146,7 +147,7 @@ public class EmailGenerator {
             message.setSubject("Credit card bills");
 
             // Get the email template.
-            EmailHtml html = new EmailHtml(new FinancialAmount(startAmount),emailTransactions);
+            EmailHtml html = new EmailHtml(startAmount,emailTransactions);
             message.setContent(html.getHtmlAsString(), "text/html");
 
             transportWrapper.setEmail(message);

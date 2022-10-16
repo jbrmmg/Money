@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.data;
 
 import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,11 +181,11 @@ public class Regular {
 
     public void setDescription(String description) { this.description = description; }
 
-    public String getWeekendAdj() {
-        return this.weekendAdj;
+    public AdjustmentType getWeekendAdj() {
+        return AdjustmentType.getAdjustmentType(this.weekendAdj);
     }
 
-    public void setWeekendAdj(String weekendAdj) {
-        this.weekendAdj = weekendAdj;
+    public void setWeekendAdj(AdjustmentType weekendAdj) {
+        this.weekendAdj = weekendAdj.getTypeName();
     }
 }

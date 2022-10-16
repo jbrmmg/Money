@@ -1,6 +1,8 @@
 package com.jbr.middletier.money.dto;
 
 
+import com.jbr.middletier.money.schedule.AdjustmentType;
+
 import java.time.LocalDate;
 
 public class RegularDTO {
@@ -9,7 +11,7 @@ public class RegularDTO {
     private double amount;
     private CategoryDTO category;
     private String frequency;
-    private String weekendAdj;
+    private AdjustmentType weekendAdj;
     private LocalDate start;
     private LocalDate lastCreated;
     private String description;
@@ -54,11 +56,11 @@ public class RegularDTO {
         this.frequency = frequency;
     }
 
-    public String getWeekendAdj() {
-        return weekendAdj;
+    public AdjustmentType getWeekendAdj() {
+        return this.weekendAdj;
     }
 
-    public void setWeekendAdj(String weekendAdj) {
+    public void setWeekendAdj(AdjustmentType weekendAdj) {
         this.weekendAdj = weekendAdj;
     }
 

@@ -4,6 +4,7 @@ import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -224,12 +225,14 @@ public class PoJoTest {
         regular.setDescription("Testing");
         regular.setStart(LocalDate.of(2019,2,5));
         regular.setLastDate(LocalDate.of(2019,3,5));
+        regular.setWeekendAdj(AdjustmentType.AT_BACKWARD);
         RegularDTO regularDTO = modelMapper.map(regular,RegularDTO.class);
         Assert.assertEquals("XXXF",regularDTO.getAccount().getId());
         Assert.assertEquals("XHF",regularDTO.getCategory().getId());
         Assert.assertEquals(10.20,regularDTO.getAmount(),0.001);
         Assert.assertEquals("1W",regularDTO.getFrequency());
         Assert.assertEquals("Testing",regularDTO.getDescription());
+        Assert.assertEquals(AdjustmentType.AT_BACKWARD,regularDTO.getWeekendAdj());
         Assert.assertEquals(LocalDate.of(2019,2,5),regularDTO.getStart());
         Assert.assertEquals(LocalDate.of(2019,3,5),regularDTO.getLastDate());
     }
@@ -249,12 +252,14 @@ public class PoJoTest {
         regularDTO.setDescription("Testing");
         regularDTO.setStart(LocalDate.of(2019,2,5));
         regularDTO.setLastDate(LocalDate.of(2019,3,5));
+        regularDTO.setWeekendAdj(AdjustmentType.AT_FORWARD);
         Regular regular = modelMapper.map(regularDTO,Regular.class);
         Assert.assertEquals("XXXF",regular.getAccount().getId());
         Assert.assertEquals("XHF",regular.getCategory().getId());
         Assert.assertEquals(10.20,regular.getAmount(),0.001);
         Assert.assertEquals("1W",regular.getFrequency());
         Assert.assertEquals("Testing",regular.getDescription());
+        Assert.assertEquals(AdjustmentType.AT_FORWARD,regular.getWeekendAdj());
         Assert.assertEquals(LocalDate.of(2019,2,5),regular.getStart());
         Assert.assertEquals(LocalDate.of(2019,3,5),regular.getLastDate());
     }

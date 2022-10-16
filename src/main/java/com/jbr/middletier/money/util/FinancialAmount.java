@@ -9,6 +9,8 @@ public class FinancialAmount {
         this.value = value;
     }
 
+    public FinancialAmount() { this.value = 0.0; }
+
     public double getValue() {
         return this.value;
     }
@@ -18,6 +20,10 @@ public class FinancialAmount {
     }
 
     public void increment(double addition) { this.value += addition; }
+
+    public void decrement(FinancialAmount subtraction) {
+        increment(-1 * subtraction.value);
+    }
 
     public boolean isNegative() {
         return this.value < 0.0;

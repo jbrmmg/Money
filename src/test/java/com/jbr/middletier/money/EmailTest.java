@@ -40,6 +40,7 @@ public class EmailTest {
                 accountRepository,
                 transportWrapper,
                 modelMapper);
+        Assert.assertNotNull(emailGenerator);
 
         //emailGenerator.generateReport("a@b.com", "a@b.com", "user", "host", "pwd", 1);
     }

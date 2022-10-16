@@ -33,15 +33,17 @@ public class RegularCtrl {
         this.applicationProperties = applicationProperties;
     }
 
-    private LocalDate adjustDate(LocalDate transactionDate, String adjustment) {
-        int adjustmentAmt = 0;
+    private LocalDate adjustDate(LocalDate transactionDate, AdjustmentType adjustment) {
+        int adjustmentAmt;
         switch(adjustment) {
-            case "FW":
+            case AT_FORWARD:
                 adjustmentAmt = 1;
                 break;
-            case "BW":
+            case AT_BACKWARD:
                 adjustmentAmt = -1;
                 break;
+            default:
+                adjustmentAmt = 0;
         }
 
         if(adjustmentAmt != 0) {
@@ -72,9 +74,9 @@ public class RegularCtrl {
                 regularRepository.save(nextRegular);
             }
         } catch( CannotDetermineNextDateException ex) {
-            LOG.error("Cannot determine the next payemnt." + ex.getMessage());
+            LOG.error("Cannot determine the next payemnt.", ex);
         } catch ( Exception ex) {
-            LOG.error("Failed to process regular payment.",ex);
+            LOG.error("Failed to process regular payment.", ex);
         }
     }
 

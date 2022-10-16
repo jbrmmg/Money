@@ -7,6 +7,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
 import org.junit.Assert;
 import org.junit.Test;
@@ -356,7 +357,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
-        testRegularPayment.setWeekendAdj("NO");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
         testRegularPayment.setDescription("Regular 1");
 
         regularRepository.save(testRegularPayment);
@@ -370,7 +371,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setAmount(11.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
-        testRegularPayment.setWeekendAdj("NO");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
 
         regularRepository.save(testRegularPayment);
 
@@ -384,7 +385,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
-        testRegularPayment.setWeekendAdj("NO");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
 
         regularRepository.save(testRegularPayment);
 
@@ -399,7 +400,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setFrequency("1X");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
-        testRegularPayment.setWeekendAdj("NO");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
 
         regularRepository.save(testRegularPayment);
 
@@ -410,7 +411,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setFrequency("1M");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
-        testRegularPayment.setWeekendAdj("NO");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
 
         regularRepository.save(testRegularPayment);
 
@@ -421,7 +422,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setFrequency("1Y");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
-        testRegularPayment.setWeekendAdj("NO");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
 
         regularRepository.save(testRegularPayment);
 
@@ -472,7 +473,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
-        testRegularPayment.setWeekendAdj("FW");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_FORWARD);
 
         regularRepository.save(testRegularPayment);
 
@@ -518,7 +519,7 @@ public class MoneyTest extends Support {
         testRegularPayment.setAmount(10.0);
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
-        testRegularPayment.setWeekendAdj("BW");
+        testRegularPayment.setWeekendAdj(AdjustmentType.AT_BACKWARD);
 
         regularRepository.save(testRegularPayment);
 
