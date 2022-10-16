@@ -16,6 +16,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class EmailHtml extends HyperTextMarkupLanguage {
+    private static final String TABLE_HEADER = "th";
+    private static final String TABLE_ROW = "tr";
+    private static final String TABLE = "table";
+    private static final String BODY = "body";
+    private static final String CLASS = "class";
+    private static final String PADDING = "padding";
+    private static final String DESCRIPTION = "description";
+
     private final FinancialAmount start;
     private final List<TransactionDTO> transactions;
 
@@ -28,7 +36,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         selector.addMember(selectorAttribute);
         fillRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("padding", CSSExpression.createSimple("2px 4px 0 0"));
+        CSSDeclaration declaration = new CSSDeclaration(PADDING, CSSExpression.createSimple("2px 4px 0 0"));
         fillRule.addDeclaration(declaration);
 
         return fillRule;
@@ -73,13 +81,13 @@ public class EmailHtml extends HyperTextMarkupLanguage {
     private CSSStyleRule getDescriptionRule() {
         CSSStyleRule descriptionRule = new CSSStyleRule();
 
-        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember("description");
+        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember(DESCRIPTION);
         CSSSelector selector = new CSSSelector();
 
         selector.addMember(selectorAttribute);
         descriptionRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("padding", CSSExpression.createSimple("2px 4px 0 0"));
+        CSSDeclaration declaration = new CSSDeclaration(PADDING, CSSExpression.createSimple("2px 4px 0 0"));
         descriptionRule.addDeclaration(declaration);
 
         return descriptionRule;
@@ -94,7 +102,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         selector.addMember(selectorAttribute);
         amountRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("padding", CSSExpression.createSimple("2px 0 0 0"));
+        CSSDeclaration declaration = new CSSDeclaration(PADDING, CSSExpression.createSimple("2px 0 0 0"));
         amountRule.addDeclaration(declaration);
 
         return amountRule;
@@ -170,7 +178,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getDateColumn(LocalDate date) {
         Element result = createTdElement()
-                .setAttribute("class","date");
+                .setAttribute(CLASS,"date");
 
         if(null == date) {
             return result;
@@ -181,7 +189,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getAccountColumn(AccountDTO account) {
         Element result = createTdElement()
-                .setAttribute("class","description");
+                .setAttribute(CLASS,DESCRIPTION);
 
         if(null == account) {
             return result;
@@ -192,7 +200,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getCategoryColumn(CategoryDTO category) {
         Element result = createTdElement()
-                .setAttribute("class","description");
+                .setAttribute(CLASS,DESCRIPTION);
 
         if(null == category) {
             return result;
@@ -203,18 +211,18 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getDescriptionColumn(String description) {
         return createTdElement()
-                .setAttribute("class", "description")
+                .setAttribute(CLASS, DESCRIPTION)
                 .addContent(new Text(description));
     }
 
     private Element getAmountColumn(FinancialAmount amount) {
         return createTdElement()
-                .setAttribute("class", amount.isNegative() ? "amount amount-data db" : "amount amount-data")
+                .setAttribute(CLASS, amount.isNegative() ? "amount amount-data db" : "amount amount-data")
                 .addContent(new Text(amount.toAbsString()));
     }
 
     private Element createRow(LocalDate date, CategoryDTO category, AccountDTO account, String description, FinancialAmount amount) {
-        return new Element("tr")
+        return new Element(TABLE_ROW)
                 .addContent(getDateColumn(date))
                 .addContent(getCategoryColumn(category))
                 .addContent(getAccountColumn(account))
@@ -234,29 +242,29 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         Element headerText = new Element("p")
                 .addContent(new Text("Credit card transactions up to today."));
 
-        Element tableHeaderDate = new Element("th")
+        Element tableHeaderDate = new Element(TABLE_HEADER)
                 .addContent(new Text("Date"));
 
-        Element tableHeaderCategory = new Element("th")
+        Element tableHeaderCategory = new Element(TABLE_HEADER)
                 .addContent(new Text("Category"));
 
-        Element tableHeaderAccount = new Element("th")
+        Element tableHeaderAccount = new Element(TABLE_HEADER)
                 .addContent(new Text("Account"));
 
-        Element tableHeaderDescription = new Element("th")
+        Element tableHeaderDescription = new Element(TABLE_HEADER)
                 .addContent(new Text("Description"));
 
-        Element tableHeaderAmount = new Element("th")
+        Element tableHeaderAmount = new Element(TABLE_HEADER)
                 .addContent(new Text("Amount"));
 
-        Element tableHeader = new Element("tr")
+        Element tableHeader = new Element(TABLE_ROW)
                 .addContent(tableHeaderDate)
                 .addContent(tableHeaderCategory)
                 .addContent(tableHeaderAccount)
                 .addContent(tableHeaderDescription)
                 .addContent(tableHeaderAmount);
 
-        Element table = new Element("table")
+        Element table = new Element(TABLE)
                 .addContent(tableHeader);
 
         FinancialAmount endBalance = this.start;
@@ -267,7 +275,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         }
         table.addContent(createRow(null, null, null, "Carried Forward", endBalance));
 
-        return new Element("body")
+        return new Element(BODY)
                 .addContent(headerText)
                 .addContent(table);
     }

@@ -12,6 +12,8 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransportWrapper;
 import com.jbr.middletier.money.xml.html.EmailHtml;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
+import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
@@ -24,12 +26,11 @@ import java.util.List;
 
 public class EmailTest {
     @Test
+    @Ignore("This test is not yet ready.")
     public void testEmail() throws Exception {
-        CategoryRepository categoryRepository = Mockito.mock(CategoryRepository.class);
         TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
         StatementRepository statementRepository = Mockito.mock(StatementRepository.class);
         AccountRepository accountRepository = Mockito.mock(AccountRepository.class);
-        ResourceLoader resourceLoader = Mockito.mock(ResourceLoader.class);
         TransportWrapper transportWrapper = Mockito.mock(TransportWrapper.class);
         ModelMapper modelMapper = Mockito.mock(ModelMapper.class);
 
@@ -76,6 +77,7 @@ public class EmailTest {
 
         HyperTextMarkupLanguage email = new EmailHtml(start,transactions);
         String f = email.getHtmlAsString();
+        Assert.assertEquals(1693, f.length());
 
         System.out.println(f);
     }
