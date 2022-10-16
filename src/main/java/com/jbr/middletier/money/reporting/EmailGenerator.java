@@ -135,6 +135,7 @@ public class EmailGenerator {
 
             Session session = Session.getInstance(properties,
                     new javax.mail.Authenticator() {
+                        @Override
                         protected PasswordAuthentication getPasswordAuthentication() {
                             return new PasswordAuthentication(username, password);
                         }
