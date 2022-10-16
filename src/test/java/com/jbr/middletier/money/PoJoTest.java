@@ -257,8 +257,6 @@ public class PoJoTest {
         Assert.assertEquals("Testing",regular.getDescription());
         Assert.assertEquals(LocalDate.of(2019,2,5),regular.getStart());
         Assert.assertEquals(LocalDate.of(2019,3,5),regular.getLastDate());
-
-        Assert.assertNotEquals(210.2, accountDTO);
     }
 
     @Test
