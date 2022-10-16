@@ -79,7 +79,7 @@ public class ReportTest extends Support {
         transaction.setAccount(account);
         transaction.setCategory(category);
         transaction.setDate(LocalDate.of(2010,1,1));
-        transaction.setAmount(10.02);
+        transaction.setAmount(-10.02);
         transaction.setDescription("Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")
@@ -89,7 +89,7 @@ public class ReportTest extends Support {
 
         transaction.setCategory(category);
         transaction.setDate(LocalDate.of(2010,1,2));
-        transaction.setAmount(210.02);
+        transaction.setAmount(-210.02);
         transaction.setDescription("Testing 1");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")
@@ -100,7 +100,7 @@ public class ReportTest extends Support {
         category.setId("FDG");
         transaction.setCategory(category);
         transaction.setDate(LocalDate.of(2010,1,2));
-        transaction.setAmount(84.12);
+        transaction.setAmount(-84.12);
         transaction.setDescription("Testing 2");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")

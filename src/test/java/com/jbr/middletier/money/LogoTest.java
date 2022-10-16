@@ -280,9 +280,7 @@ public class LogoTest {
             Assert.assertEquals("Cannot find the default logo definition.", ex.getMessage());
         }
 
-        if(logo.isPresent()) {
-            logoDefinitionRepository.save(logo.get());
-        }
+        logo.ifPresent(logoDefinition -> logoDefinitionRepository.save(logoDefinition));
     }
 
     @Test
