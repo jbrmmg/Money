@@ -12,8 +12,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.text.ParseException;
 import java.time.LocalDate;
 
 @RunWith(SpringRunner.class)
@@ -237,7 +235,6 @@ public class PoJoTest {
         Assert.assertEquals(LocalDate.of(2019,3,5),regularDTO.getLastDate());
     }
 
-    @SuppressWarnings("AssertBetweenInconvertibleTypes")
     @Test
     public void RegularFromDTO()  {
         AccountDTO accountDTO = new AccountDTO();
