@@ -14,6 +14,7 @@ import com.jbr.middletier.money.xml.html.EmailHtml;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.modelmapper.ModelMapper;
 import org.springframework.core.io.ResourceLoader;
 
 import java.text.ParseException;
@@ -30,14 +31,14 @@ public class EmailTest {
         AccountRepository accountRepository = Mockito.mock(AccountRepository.class);
         ResourceLoader resourceLoader = Mockito.mock(ResourceLoader.class);
         TransportWrapper transportWrapper = Mockito.mock(TransportWrapper.class);
+        ModelMapper modelMapper = Mockito.mock(ModelMapper.class);
 
         EmailGenerator emailGenerator = new EmailGenerator(
                 transactionRepository,
                 statementRepository,
-                categoryRepository,
                 accountRepository,
-                resourceLoader,
-                transportWrapper);
+                transportWrapper,
+                modelMapper);
 
         //emailGenerator.generateReport("a@b.com", "a@b.com", "user", "host", "pwd", 1);
     }
@@ -73,7 +74,7 @@ public class EmailTest {
         transaction.setAccount(account);
         transactions.add(transaction);
 
-        HyperTextMarkupLanguage email = new EmailHtml(start,transactions,end);
+        HyperTextMarkupLanguage email = new EmailHtml(start,transactions);
         String f = email.getHtmlAsString();
 
         System.out.println(f);

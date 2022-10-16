@@ -11,7 +11,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-    // TODO make sure all exceptions are handled here & method names.
     @ExceptionHandler(AccountAlreadyExistsException.class)
     protected ResponseEntity<Object> handleBackupAlreadyExist(AccountAlreadyExistsException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Account already exists", ex));
@@ -80,6 +79,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidTransactionSearchException.class)
     protected ResponseEntity<Object> handleRegularIdException(InvalidTransactionSearchException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT, "Regular payment invalid id.", ex));
+    }
+
+    @ExceptionHandler(EmailGenerationException.class)
+    protected ResponseEntity<Object> handleEmailException(EmailGenerationException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "Email generation failed.", ex));
     }
 
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {

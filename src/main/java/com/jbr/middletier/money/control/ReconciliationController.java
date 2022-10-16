@@ -84,7 +84,7 @@ public class ReconciliationController {
     }
 
     @PutMapping(path="/ext/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, ParseException, InvalidTransactionException {
+    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, InvalidTransactionException {
         LOG.info("Auto Reconciliation Data (ext) ");
         reconciliationManager.autoReconcileData();
         return OkStatus.getOkStatus();

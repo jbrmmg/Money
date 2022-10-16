@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.OkStatus;
+import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.reporting.EmailGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +32,13 @@ public class EmailController {
                                             @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,
                                             @RequestParam(value="host", defaultValue="smtp.ionos.co.uk") String host,
                                             @RequestParam(value="password") String password,
-                                            @RequestParam(value="weeks", defaultValue="6") int weeks ) throws Exception {
-        // TODO change the exception to be specific
+                                            @RequestParam(value="weeks", defaultValue="7") int weeks ) throws EmailGenerationException {
         LOG.info("sending email to {}", to);
 
         try {
             this.emailGenerator.generateReport(to,from,username,host,password,weeks);
-        } catch(MessagingException e) {
+        } catch(EmailGenerationException e) {
+            LOG.error("Email failed",e);
             throw e;
         }
 

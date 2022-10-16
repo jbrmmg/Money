@@ -17,7 +17,6 @@ import java.util.List;
 
 public class EmailHtml extends HyperTextMarkupLanguage {
     private final FinancialAmount start;
-    private final FinancialAmount end;
     private final List<TransactionDTO> transactions;
 
     private CSSStyleRule getDateRule() {
@@ -260,22 +259,23 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         Element table = new Element("table")
                 .addContent(tableHeader);
 
+        FinancialAmount endBalance = this.start;
         table.addContent(createRow(null, null, null, "Brought Forward", this.start));
         for(TransactionDTO next : this.transactions) {
             table.addContent(createRow(next));
+            endBalance.increment(next.getAmount());
         }
-        table.addContent(createRow(null, null, null, "Carried Forward", this.end));
+        table.addContent(createRow(null, null, null, "Carried Forward", endBalance));
 
         return new Element("body")
                 .addContent(headerText)
                 .addContent(table);
     }
 
-    public EmailHtml(FinancialAmount startBalance, List<TransactionDTO> transactions, FinancialAmount endBalance) {
+    public EmailHtml(FinancialAmount startBalance, List<TransactionDTO> transactions) {
         super();
 
         this.start = startBalance;
         this.transactions = transactions;
-        this.end = endBalance;
     }
 }

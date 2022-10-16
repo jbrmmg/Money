@@ -17,6 +17,8 @@ public class FinancialAmount {
         this.value += addition.getValue();
     }
 
+    public void increment(double addition) { this.value += addition; }
+
     public boolean isNegative() {
         return this.value < 0.0;
     }
