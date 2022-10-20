@@ -31,7 +31,14 @@ public class CategoryPercentageHelper {
     }
 
     public Set<Category> getCategories() {
-        Set<Category> sortedSet = new HashSet<>();
+        // Sort the set by the category id.
+        Set<Category> sortedSet = new TreeSet<>(new Comparator<Category>() {
+            @Override
+            public int compare(Category category, Category t1) {
+                return category.getId().compareTo(t1.getId());
+            }
+        });
+
         this.categoryMap.keySet().stream().sorted(Comparator.comparing(Category::getId)).forEach(sortedSet::add);
 
         return sortedSet;
