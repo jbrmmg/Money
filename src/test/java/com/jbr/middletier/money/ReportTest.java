@@ -10,6 +10,9 @@ import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.ArchiveOrReportRequestDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.input.DOMBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,8 +22,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.xml.sax.InputSource;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -138,12 +145,37 @@ public class ReportTest extends Support {
                 .andExpect(status().isOk());
 
         // Check that the report exists.
-        // TODO do a more indepth comparison of the SVG files.
+        File htmlFile = new File(applicationProperties.getReportWorking() + "/Report.html");
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.png").toPath()));
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.svg").toPath()));
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.png").toPath()));
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.svg").toPath()));
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/Report.html").toPath()));
+        Assert.assertTrue(Files.exists(htmlFile.toPath()));
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf").toPath()));
+
+        // Check the HTML file.
+        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        InputSource is = new InputSource();
+        String html = new String(Files.readAllBytes(htmlFile.toPath()));
+        is.setCharacterStream(new StringReader(html));
+        org.w3c.dom.Document  document = db.parse(is);
+
+        Document domDocument = new DOMBuilder().build(document);
+        Element root = domDocument.getRootElement();
+
+        Assert.assertEquals("html", root.getName());
+        Element head = root.getChild("head");
+        Assert.assertNotNull(head);
+
+        Element title = head.getChild("title");
+        Assert.assertNotNull(title);
+        Assert.assertEquals("Report", title.getText());
+
+        Element style = head.getChild("style");
+        Assert.assertNotNull(style);
+        //TODO check the CSS
+
+        Element body = root.getChild("body");
+        Assert.assertNotNull(root.getChild("body"));
     }
 }

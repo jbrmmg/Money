@@ -10,9 +10,6 @@ import org.jdom2.*;
 public class LogoSvg extends ScalableVectorGraphics {
 
     private static final String ATTRIBUTE_CLASS = "class";
-    private static final String ATTRIBUTE_WIDTH = "width";
-    private static final String ATTRIBUTE_HEIGHT = "height";
-    private static final String ATTRIBUTE_VIEW_BOX = "viewBox";
     private static final String ATTRIBUTE_X = "x";
     private static final String ATTRIBUTE_Y = "y";
     private static final String ELEMENT_RECT = "rect";
@@ -103,7 +100,7 @@ public class LogoSvg extends ScalableVectorGraphics {
     }
 
     public LogoSvg(LogoDefinition logoDefinition) {
-        super();
+        super(false);
 
         Namespace svgNamespace = Namespace.getNamespace(NAMESPACE);
 

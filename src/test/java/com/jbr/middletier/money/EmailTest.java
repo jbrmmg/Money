@@ -80,6 +80,8 @@ public class EmailTest {
         String f = email.getHtmlAsString();
         Assert.assertEquals(1693, f.length());
 
+        //TODO perform a much better check here (see the report test).
+
         System.out.println(f);
     }
 }

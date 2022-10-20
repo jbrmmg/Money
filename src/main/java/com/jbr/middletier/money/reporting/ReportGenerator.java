@@ -13,6 +13,9 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.manager.LogoManager;
+import com.jbr.middletier.money.xml.svg.CategorySvg;
+import com.jbr.middletier.money.xml.svg.PieChartSvg;
+import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,187 +64,11 @@ public class ReportGenerator {
         this.accountRepository = accountRepository;
     }
 
-    static class CategoryPercentage implements Comparable<CategoryPercentage> {
-        public Category category;
-        public double amount;
-        double percentage;
-        boolean ignore;
-
-        @Override
-        public int compareTo(CategoryPercentage anotherPercentage) {
-            return Double.compare(this.percentage,anotherPercentage.percentage);
-        }
-    }
-
-    private String getTextColour(String colour) {
-        return getBrightness(colour) > 130 ? "000000" : "FFFFFF";
-    }
-
-    private double getBrightness(String colour) {
-        int red = Integer.parseInt(colour.substring(0,2),16);
-        int green = Integer.parseInt(colour.substring(2,4),16);
-        int blue = Integer.parseInt(colour.substring(4,6),16);
-
-        return Math.sqrt(red * red * .241 + green * green * .691 + blue * blue * .068);
-    }
-
-    private Map<String,CategoryPercentage> getCategoryPercentages(List<Transaction> transactions) {
-        Map<String,CategoryPercentage> result = new HashMap<>();
-
-        for(Transaction nextTransaction: transactions) {
-            if(Boolean.TRUE.equals(nextTransaction.getCategory().getExpense())) {
-                CategoryPercentage associatedCategory = result.get(nextTransaction.getCategory().getId());
-
-                if (associatedCategory == null) {
-                    associatedCategory = new CategoryPercentage();
-                    associatedCategory.category = nextTransaction.getCategory();
-                    associatedCategory.amount = 0.0;
-                    associatedCategory.percentage = 0.0;
-                    associatedCategory.ignore = false;
-                    result.put(nextTransaction.getCategory().getId(), associatedCategory);
-                }
-
-                associatedCategory.amount += nextTransaction.getAmount().getValue();
-            }
-        }
-
-        double totalAmount = 0.0;
-        for(CategoryPercentage nextCategory: result.values()) {
-            if(nextCategory.amount < 0.0) {
-                totalAmount += nextCategory.amount;
-            } else {
-                nextCategory.ignore = true;
-                nextCategory.amount = 0.0;
-            }
-        }
-
-        for(CategoryPercentage nextCategory: result.values()) {
-            if(!nextCategory.ignore && totalAmount != 0.0) {
-                nextCategory.percentage = nextCategory.amount / totalAmount * 100;
-            }
-        }
-
-        return result.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue())
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                                Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private String getPieChartSlice(String id, int x, int y, int radius, double percentage, String colour) {
-        return String.format("<circle id=\"%s\" r=\"%d\" cx=\"%d\" cy=\"%d\" fill=\"none\" stroke=\"#%s\" stroke-width=\"%d\" stroke-dasharray=\"%f %f\" transform=\"rotate(-90) translate(%d)\"></circle>\n",
-                id,
-                radius,
-                x,
-                y,
-                colour,
-                2 * radius,
-                2 * radius * Math.PI * percentage / 100.0,
-                2 * radius * Math.PI,
-                -4 * radius);
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private String textAtRingAndAngle(String id, int xCentre, int yCentre, int ring, double angle, double percentage, String colour, String text) {
-        // Convert the ring and angle to co-ordinates.
-        double x = xCentre + Math.sin(Math.toRadians((angle + 180) * -1)) * ring;
-        double y = yCentre + Math.cos(Math.toRadians((angle + 180) * -1)) * ring;
-
-        double rotateAngle = angle + 90;
-
-        boolean textAnchorEnd = false;
-
-        // If the rotate angle is in the range -90 to -180, then add 180 and anchor text to the end.
-        if( (rotateAngle >= -270) && (rotateAngle < -90) ){
-            textAnchorEnd = true;
-            rotateAngle += 180;
-        }
-
-        int textSize = 120;
-
-        if(percentage > 50) {
-            textSize = 1200;
-        } else if (percentage > 20) {
-            textSize = 600;
-        } else if (percentage > 5) {
-            textSize = 300;
-        }
-
-        String textColour = getTextColour(colour);
-
-        StringBuilder textBuilder = new StringBuilder();
-
-        textBuilder.append("<text id=\"").append(id).append("\" ");
-        textBuilder.append("x=\"").append(x).append("\" ");
-        textBuilder.append("y=\"").append(y).append("\" ");
-
-        if(textAnchorEnd) {
-            textBuilder.append("text-anchor=\"end\" ");
-        }
-
-        textBuilder.append("fill=\"#").append(textColour).append("\" ");
-        textBuilder.append("font-size=\"").append(textSize).append("px\" ");
-        textBuilder.append("transform=\"rotate(").append(rotateAngle).append(" ").append(x).append(",").append(y).append(")\">");
-        textBuilder.append(text);
-        textBuilder.append("</text>\n");
-        return textBuilder.toString();
-    }
-
     private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
         String pieChartFile = applicationProperties.getReportWorking() + "/pie.svg";
         try(PrintWriter pie = new PrintWriter(pieChartFile)) {
-            pie.write("<svg viewBox=\"0 0 10000 10000\" xmlns=\"http://www.w3.org/2000/svg\">\n");
-            pie.write("<circle id=\"BCKG\" r=\"5000\" cx=\"5000\" cy=\"5000\" fill=\"white\"></circle>\n");
-
-            // Circumference = 2 * r * pi = 10000 * pi = 31416
-
-            double percent = 100;
-            Map<String, CategoryPercentage> categoryPercentageMap = getCategoryPercentages(transactions);
-            for (String nextCategoryId : categoryPercentageMap.keySet()) {
-                CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
-                if (nextCategoryPercentage.ignore) {
-                    continue;
-                }
-
-                pie.write(getPieChartSlice(nextCategoryPercentage.category.getId(), 5000, 5000, 2500, percent, nextCategoryPercentage.category.getColour()));
-
-                percent -= nextCategoryPercentage.percentage;
-                if (percent < 0) {
-                    percent = 0;
-                }
-            }
-
-            percent = 100;
-            for (String nextCategoryId : categoryPercentageMap.keySet()) {
-                CategoryPercentage nextCategoryPercentage = categoryPercentageMap.get(nextCategoryId);
-                if (nextCategoryPercentage.ignore) {
-                    continue;
-                }
-
-                double halfWay = (100 - (percent - nextCategoryPercentage.percentage / 2)) * 3.6;
-                pie.write(textAtRingAndAngle(
-                        nextCategoryPercentage.category.getId() + "-txt",
-                        5000,
-                        5000,
-                        4800,
-                        halfWay * -1.0,
-                        nextCategoryPercentage.percentage,
-                        nextCategoryPercentage.category.getColour(),
-                        nextCategoryPercentage.category.getName()));
-
-                LOG.debug("-----------------------------------------------------------------");
-                LOG.debug("Category:    " + nextCategoryPercentage.category.getName());
-                LOG.debug("Percentage:  " + percent);
-                LOG.debug("Angle:       " + halfWay);
-                LOG.debug("Amount:      " + nextCategoryPercentage.amount);
-                LOG.debug("-----------------------------------------------------------------");
-
-                percent -= nextCategoryPercentage.percentage;
-            }
-
-            pie.write("<circle id=\"OUTL\" r=\"5000\" cx=\"5000\" cy=\"5000\" stroke=\"black\" stroke-width=\"20\" fill=\"none\"></circle>\n");
-            pie.write("</svg>");
+            ScalableVectorGraphics pieChart = new PieChartSvg(transactions);
+            pie.write(pieChart.getSvgAsString());
         }
 
         createPngFromSvg(pieChartFile,applicationProperties.getReportWorking() + "/pie-" + type +".png", 1000, 1000);
@@ -380,7 +207,7 @@ public class ReportGenerator {
 
         StringBuilder table = new StringBuilder();
 
-        table.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
+        table.append("<p style=\"page-break-after: always;\">&#xA0;</p>\n");
         outputTableHeader(table);
 
         for(int i = 0; i < Math.max(column1.size(), column2.size()); i++) {
@@ -396,7 +223,7 @@ public class ReportGenerator {
             if( pageRow == 35 ) {
                 pageRow = 0;
                 table.append("</table>\n");
-                table.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
+                table.append("<p style=\"page-break-after: always;\">&#xA0;</p>\n");
                 outputTableHeader(table);
             }
         }
@@ -428,18 +255,7 @@ public class ReportGenerator {
         }
     }
 
-    private String createCategoryLog(Category category) {
-
-        return "<svg\n" +
-                "     width   = \"100%\"\n" +
-                "     height  = \"100%\"\n" +
-                "     viewBox = \"0 0 120 120\"\n" +
-                "     xmlns   = \"http://www.w3.org/2000/svg\">\n" +
-                "    <circle cx='60' cy='52' r='44' style=\"stroke:#006600; fill:#" + category.getColour() + ";\"></circle>\";\n" +
-                "</svg>";
-    }
-
-    private void crateCategoryImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
+    private void createCategoryImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
         for(Transaction nextTransactions: transactions) {
             // Is there already a png for this account?
             String pngFilename = workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png";
@@ -450,7 +266,8 @@ public class ReportGenerator {
                 File svgFile = new File(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg");
                 try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
 
-                    svgWriter.write(createCategoryLog(nextTransactions.getCategory()));
+                    ScalableVectorGraphics categorySvg = new CategorySvg(nextTransactions.getCategory());
+                    svgWriter.write(categorySvg.getSvgAsString());
                     svgWriter.close();
 
                     // Create a PNG from SVG
@@ -618,7 +435,7 @@ public class ReportGenerator {
             body.append("<!-- TOTALS -->");
 
             for(int i = 0; i < 12; i++) {
-                body.append("<p style=\"page-break-after: always;\">&nbsp;</p>\n");
+                body.append("<p style=\"page-break-after: always;\">&#xA0;</p>\n");
                 body.append("<!-- TITLE ").append(i).append(" -->");
                 body.append("<!-- PIE ").append(i).append(" -->");
                 body.append("<!-- TOTALS ").append(i).append(" -->");
@@ -649,7 +466,7 @@ public class ReportGenerator {
         createAccountImages(applicationProperties.getReportWorking(),transactions);
 
         LOG.info("Create the images for categories.");
-        crateCategoryImages(applicationProperties.getReportWorking(),transactions);
+        createCategoryImages(applicationProperties.getReportWorking(),transactions);
     }
 
     private String addReportToTemplate(String template, String specific, int year, int month) throws IOException, TranscoderException {
