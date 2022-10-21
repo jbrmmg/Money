@@ -12,8 +12,6 @@ public class CategorySvg extends ScalableVectorGraphics {
     private static final String ATTRIBUTE_STYLE = "style";
 
     public CategorySvg(Category category) {
-        super(false);
-
         Namespace svgNamespace = Namespace.getNamespace(NAMESPACE);
 
         Element circle = new Element(ELEMENT_CIRCLE, svgNamespace)

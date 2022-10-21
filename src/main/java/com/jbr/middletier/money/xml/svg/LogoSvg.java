@@ -100,8 +100,6 @@ public class LogoSvg extends ScalableVectorGraphics {
     }
 
     public LogoSvg(LogoDefinition logoDefinition) {
-        super(false);
-
         Namespace svgNamespace = Namespace.getNamespace(NAMESPACE);
 
         CSSWriterSettings settings = new CSSWriterSettings(ECSSVersion.CSS30, false);

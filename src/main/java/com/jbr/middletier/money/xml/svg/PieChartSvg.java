@@ -85,7 +85,7 @@ public class PieChartSvg extends ScalableVectorGraphics {
         return new Element(ELEMENT_TEXT, svgNamespace)
                 .setAttribute(ATTRIBUTE_ID,id + "-txt")
                 .setAttribute(ATTRIBUTE_FILL, "#" + textColour)
-                .setAttribute(ATTRIBUTE_FONT_SIZE, String.valueOf(textSize) + "px")
+                .setAttribute(ATTRIBUTE_FONT_SIZE, textSize + "px")
                 .setAttribute(ATTRIBUTE_TEXT_ANCHOR, textAnchorEnd ? "end" : "start")
                 .setAttribute(ATTRIBUTE_X, sixDP.format(x))
                 .setAttribute(ATTRIBUTE_Y, sixDP.format(y))
@@ -94,8 +94,6 @@ public class PieChartSvg extends ScalableVectorGraphics {
     }
 
     public PieChartSvg(List<Transaction> transactions) {
-        super(true);
-
         Namespace svgNamespace = Namespace.getNamespace(NAMESPACE);
 
         Element background = new Element(ELEMENT_CIRCLE, svgNamespace)

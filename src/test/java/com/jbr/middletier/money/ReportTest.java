@@ -1,8 +1,5 @@
 package com.jbr.middletier.money;
 
-import com.helger.css.ECSSVersion;
-import com.helger.css.decl.*;
-import com.helger.css.reader.CSSReader;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
@@ -33,7 +30,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.*;
@@ -73,39 +69,6 @@ public class ReportTest extends Support {
 
             statementRepository.save(statement);
         }
-    }
-
-    private void checkCSS(String cssValue) {
-        Map<String,Map<String,CssAssertHelper.CssAssertHelperData>> expected = new HashMap<>();
-        CssAssertHelper.expectCssBuilder(expected,"body", "font-family", "Arial,Helvetica,sans-serif", true);
-        CssAssertHelper.expectCssBuilder(expected,"body", "font-size","12px", true);
-        CssAssertHelper.expectCssBuilder(expected,"h1", "font-weight","bolder", true);
-        CssAssertHelper.expectCssBuilder(expected,"h1", "font-size","24px", true);
-        CssAssertHelper.expectCssBuilder(expected,"h2", "font-weight","bold", true);
-        CssAssertHelper.expectCssBuilder(expected,"h2", "font-size","14px", true);
-        CssAssertHelper.expectCssBuilder(expected,"table", "border-spacing","0", true);
-        CssAssertHelper.expectCssBuilder(expected,"td", "font-size","10px", true);
-        CssAssertHelper.expectCssBuilder(expected,"td", "white-space","nowrap", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.date", "text-align","right", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.description", "white-space","nowrap", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.description", "font-size","8px", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.amount", "color","#000000", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.amount", "text-align","right", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.amount-debit", "color","#FF0000", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.center-column", "border-right","2px solid darkblue", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.center-column", "width","10px", true);
-        CssAssertHelper.expectCssBuilder(expected,"th.total-column", "padding-left","30px", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "border-top","2px solid black", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "padding-top","4px", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "font-size","14px", true);
-        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "font-weight","bold", true);
-        CssAssertHelper.expectCssBuilder(expected,"img.pie", "display","block", true);
-        CssAssertHelper.expectCssBuilder(expected,"img.pie", "margin-left","auto", true);
-        CssAssertHelper.expectCssBuilder(expected,"img.pie", "margin-right","auto", true);
-
-        CascadingStyleSheet css = CSSReader.readFromString(cssValue, StandardCharsets.UTF_8, ECSSVersion.CSS30);
-
-        CssAssertHelper.checkCss(css,expected);
     }
 
     @Test
@@ -212,7 +175,7 @@ public class ReportTest extends Support {
 
         Element style = head.getChild("style");
         Assert.assertNotNull(style);
-        checkCSS(style.getValue());
+        CssAssertHelper.checkReportCSS(style.getValue());
 
         Element body = root.getChild("body");
         Assert.assertNotNull(body);

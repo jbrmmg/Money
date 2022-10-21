@@ -85,7 +85,7 @@ public class HtmlTableAssertHelper {
 
     private static void checkTableHeaderRow(Element row, List<HtmlTableAssertHelperData> expected) {
         List<Element> columns = row.getChildren("th");
-        Assert.assertEquals(columns.size(),expected.size());
+        Assert.assertEquals(expected.size(),columns.size());
 
         for(int i = 0; i < columns.size(); i++) {
             expected.get(i).checkElement(columns.get(i));
