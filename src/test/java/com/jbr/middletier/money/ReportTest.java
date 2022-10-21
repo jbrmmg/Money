@@ -1,5 +1,8 @@
 package com.jbr.middletier.money;
 
+import com.helger.css.ECSSVersion;
+import com.helger.css.decl.*;
+import com.helger.css.reader.CSSReader;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
@@ -10,6 +13,8 @@ import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.ArchiveOrReportRequestDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.utils.CssAssertHelper;
+import com.jbr.middletier.money.utils.HtmlTableAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
@@ -28,9 +33,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -67,6 +73,39 @@ public class ReportTest extends Support {
 
             statementRepository.save(statement);
         }
+    }
+
+    private void checkCSS(String cssValue) {
+        Map<String,Map<String,CssAssertHelper.CssAssertHelperData>> expected = new HashMap<>();
+        CssAssertHelper.expectCssBuilder(expected,"body", "font-family", "Arial,Helvetica,sans-serif", true);
+        CssAssertHelper.expectCssBuilder(expected,"body", "font-size","12px", true);
+        CssAssertHelper.expectCssBuilder(expected,"h1", "font-weight","bolder", true);
+        CssAssertHelper.expectCssBuilder(expected,"h1", "font-size","24px", true);
+        CssAssertHelper.expectCssBuilder(expected,"h2", "font-weight","bold", true);
+        CssAssertHelper.expectCssBuilder(expected,"h2", "font-size","14px", true);
+        CssAssertHelper.expectCssBuilder(expected,"table", "border-spacing","0", true);
+        CssAssertHelper.expectCssBuilder(expected,"td", "font-size","10px", true);
+        CssAssertHelper.expectCssBuilder(expected,"td", "white-space","nowrap", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.date", "text-align","right", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.description", "white-space","nowrap", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.description", "font-size","8px", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.amount", "color","#000000", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.amount", "text-align","right", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.amount-debit", "color","#FF0000", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.center-column", "border-right","2px solid darkblue", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.center-column", "width","10px", true);
+        CssAssertHelper.expectCssBuilder(expected,"th.total-column", "padding-left","30px", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "border-top","2px solid black", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "padding-top","4px", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "font-size","14px", true);
+        CssAssertHelper.expectCssBuilder(expected,"td.total-row", "font-weight","bold", true);
+        CssAssertHelper.expectCssBuilder(expected,"img.pie", "display","block", true);
+        CssAssertHelper.expectCssBuilder(expected,"img.pie", "margin-left","auto", true);
+        CssAssertHelper.expectCssBuilder(expected,"img.pie", "margin-right","auto", true);
+
+        CascadingStyleSheet css = CSSReader.readFromString(cssValue, StandardCharsets.UTF_8, ECSSVersion.CSS30);
+
+        CssAssertHelper.checkCss(css,expected);
     }
 
     @Test
@@ -173,9 +212,86 @@ public class ReportTest extends Support {
 
         Element style = head.getChild("style");
         Assert.assertNotNull(style);
-        //TODO check the CSS
+        checkCSS(style.getValue());
 
         Element body = root.getChild("body");
-        Assert.assertNotNull(root.getChild("body"));
+        Assert.assertNotNull(body);
+
+        List<Element> headers = body.getChildren("h1");
+        Assert.assertEquals(1, headers.size());
+        Assert.assertEquals("January 2010", headers.get(0).getText());
+
+        List<Element> images = body.getChildren("img");
+        Assert.assertEquals(1, images.size());
+        Assert.assertEquals("pie", images.get(0).getAttribute("class").getValue());
+        Assert.assertEquals("400px", images.get(0).getAttribute("height").getValue());
+        Assert.assertEquals("400px", images.get(0).getAttribute("width").getValue());
+        Assert.assertTrue(images.get(0).getAttribute("src").getValue().contains("pie-"));
+
+        List<Element> tables = body.getChildren("table");
+        Assert.assertEquals(2, tables.size());
+
+        List<List<HtmlTableAssertHelper.HtmlTableAssertHelperData>> expected = new ArrayList<>();
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Previous Month", "total-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"House", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-220.04","amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"0.00", "amount");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/FDG.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Grocery", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-84.12", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"0.00", "amount");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"Total", "total-row");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"-304.16", "total-row amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"0.00", "total-row amount");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"", "");
+        HtmlTableAssertHelper.checkTable(tables.get(0),expected);
+
+        expected = new ArrayList<>();
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Date", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Description", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Amount", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Date", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Description", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Amount", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"01-Jan2010", "date");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/AMEX.png");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Testing", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-10.02", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "center-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"02-Jan2010", "date");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/AMEX.png");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Testing 1", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-210.02", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "center-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"02-Jan2010", "date");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/AMEX.png");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/FDG.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Testing 2", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-84.12", "amount amount-debit");
+        HtmlTableAssertHelper.checkTable(tables.get(1),expected);
+
+        List<Element> paragraphs = body.getChildren("p");
+        Assert.assertEquals(1,  paragraphs.size());
+        Assert.assertEquals("page-break-after: always;", paragraphs.get(0).getAttribute("style").getValue());
     }
 }

@@ -10,6 +10,7 @@ import com.jbr.middletier.money.data.LogoDefinition;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.LogoDefinitionRepository;
 import com.jbr.middletier.money.manager.LogoManager;
+import com.jbr.middletier.money.utils.CssAssertHelper;
 import com.jbr.middletier.money.xml.svg.CategorySvg;
 import com.jbr.middletier.money.xml.svg.PieChartSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
@@ -30,10 +31,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
@@ -44,71 +42,8 @@ public class LogoTest {
     @Autowired
     private LogoDefinitionRepository logoDefinitionRepository;
 
-    private void checkRectFill(CSSStyleRule rule, String colour) {
-        Assert.assertEquals(1, rule.getDeclarationCount());
-        Assert.assertEquals("#" + colour, Objects.requireNonNull(rule.getDeclarationAtIndex(0)).getExpressionAsCSSString());
-        Assert.assertEquals("fill", Objects.requireNonNull(rule.getDeclarationAtIndex(0)).getProperty());
-    }
-
-    private void checkText(CSSStyleRule rule, int textSize, String colour) {
-        Assert.assertEquals(7, rule.getDeclarationCount());
-        boolean fontWeightFound = false;
-        boolean fontSizeFound = false;
-        boolean fontFamilyFound = false;
-        boolean lineHeightFound = false;
-        boolean textAlignFound = false;
-        boolean textAnchorFound = false;
-        boolean fillFound = false;
-        for(int i = 0; i < rule.getDeclarationCount(); i++) {
-            CSSDeclaration declaration = rule.getDeclarationAtIndex(i);
-            switch(Objects.requireNonNull(declaration).getProperty()) {
-                case "font-weight":
-                    Assert.assertEquals("bold", declaration.getExpressionAsCSSString());
-                    fontWeightFound = true;
-                    break;
-                case "font-size":
-                    Assert.assertEquals(textSize + "px", declaration.getExpressionAsCSSString());
-                    fontSizeFound = true;
-                    break;
-                case "font-family":
-                    Assert.assertEquals("Arial", declaration.getExpressionAsCSSString());
-                    fontFamilyFound = true;
-                    break;
-                case "line-height":
-                    Assert.assertEquals("125%", declaration.getExpressionAsCSSString());
-                    lineHeightFound = true;
-                    break;
-                case "text-align":
-                    Assert.assertEquals("center", declaration.getExpressionAsCSSString());
-                    textAlignFound = true;
-                    break;
-                case "text-anchor":
-                    Assert.assertEquals("middle", declaration.getExpressionAsCSSString());
-                    textAnchorFound = true;
-                    break;
-                case "fill":
-                    Assert.assertEquals("#" + colour, declaration.getExpressionAsCSSString());
-                    fillFound = true;
-                    break;
-                default:
-                    Assert.fail();
-            }
-        }
-        Assert.assertTrue(fontWeightFound);
-        Assert.assertTrue(fontSizeFound);
-        Assert.assertTrue(fontFamilyFound);
-        Assert.assertTrue(lineHeightFound);
-        Assert.assertTrue(textAlignFound);
-        Assert.assertTrue(textAnchorFound);
-        Assert.assertTrue(fillFound);
-    }
-
     private void checkCss(List<Content> styleContent, int textSize, String textColour, String fillColour, String borderColour, String borderColour2)  {
         boolean found = false;
-        boolean tspanCssFound = false;
-        boolean rectAmCssFound = false;
-        boolean rectAmBorderCssFound = false;
-        boolean rectAmBorder2CssFound = false;
         for(Content next: styleContent) {
             if(next instanceof CDATA) {
                 found = true;
@@ -117,45 +52,24 @@ public class LogoTest {
 
                 CascadingStyleSheet css = CSSReader.readFromString(styleSheet.getValue(), StandardCharsets.UTF_8, ECSSVersion.CSS30);
 
-                for(CSSStyleRule nextRule : Objects.requireNonNull(css).getAllStyleRules()) {
-                    CSSSelector selector = nextRule.getSelectorAtIndex(0);
+                Map<String, Map<String, CssAssertHelper.CssAssertHelperData>> expected = new HashMap<>();
+                // Check text
+                CssAssertHelper.expectCssBuilder(expected,"tspan.am", "font-weight", "bold", true);
+                CssAssertHelper.expectCssBuilder(expected,"tspan.am", "font-size", textSize + "px", true);
+                CssAssertHelper.expectCssBuilder(expected,"tspan.am", "font-family", "Arial", true);
+                CssAssertHelper.expectCssBuilder(expected,"tspan.am", "line-height", "125%", true);
+                CssAssertHelper.expectCssBuilder(expected,"tspan.am", "text-align", "center", true);
+                CssAssertHelper.expectCssBuilder(expected,"tspan.am", "text-anchor", "middle", true);
+                CssAssertHelper.expectCssBuilder(expected,"tspan.am", "fill", "#" + textColour, true);
+                CssAssertHelper.expectCssBuilder(expected,"rect.am", "fill","#" + fillColour, true);
+                CssAssertHelper.expectCssBuilder(expected,"rect.amborder", "fill","#" + borderColour, true);
+                CssAssertHelper.expectCssBuilder(expected,"rect.amborder2", "fill","#" + borderColour2, true);
 
-                    Assert.assertEquals(2, Objects.requireNonNull(selector).getMemberCount());
 
-                    CSSSelectorSimpleMember member = (CSSSelectorSimpleMember) selector.getMemberAtIndex(0);
-                    CSSSelectorSimpleMember member2 = (CSSSelectorSimpleMember) selector.getMemberAtIndex(1);
-
-                    String selectorName = Objects.requireNonNull(member).getValue() + Objects.requireNonNull(member2).getValue();
-
-                    switch(selectorName) {
-                        case "tspan.am":
-                            checkText(nextRule, textSize, textColour);
-                            tspanCssFound = true;
-                            break;
-                        case "rect.am":
-                            checkRectFill(nextRule, fillColour);
-                            rectAmCssFound = true;
-                            break;
-                        case "rect.amborder":
-                            checkRectFill(nextRule, borderColour);
-                            rectAmBorderCssFound = true;
-                            break;
-                        case "rect.amborder2":
-                            Assert.assertNotNull(borderColour2);
-                            checkRectFill(nextRule, borderColour2);
-                            rectAmBorder2CssFound = true;
-                            break;
-                        default:
-                            Assert.fail();
-                    }
-                }
+                CssAssertHelper.checkCss(css,expected);
             }
         }
         Assert.assertTrue(found);
-        Assert.assertTrue(tspanCssFound);
-        Assert.assertTrue(rectAmCssFound);
-        Assert.assertTrue(rectAmBorderCssFound);
-        Assert.assertTrue(rectAmBorder2CssFound);
     }
 
     private void checkRect(Element rectangle, int width, int height, int x, int y) {
