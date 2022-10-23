@@ -12,7 +12,10 @@ import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.LogoManager;
+import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
+import com.jbr.middletier.money.xml.html.ReportHtml;
 import com.jbr.middletier.money.xml.svg.CategorySvg;
 import com.jbr.middletier.money.xml.svg.PieChartSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
@@ -20,7 +23,6 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
@@ -36,7 +38,6 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 public class ReportGenerator {
@@ -48,6 +49,7 @@ public class ReportGenerator {
     private final LogoManager logoManager;
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
+    private final AccountTransactionManager accountTransactionManager;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
@@ -55,13 +57,15 @@ public class ReportGenerator {
                            ApplicationProperties applicationProperties,
                            LogoManager logoManager,
                            StatementRepository statementRepository,
-                           AccountRepository accountRepository ) {
+                           AccountRepository accountRepository,
+                           AccountTransactionManager accountTransactionManager) {
         this.transactionRepository = transactionRepository;
         this.resourceLoader = resourceLoader;
         this.applicationProperties = applicationProperties;
         this.logoManager = logoManager;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
+        this.accountTransactionManager = accountTransactionManager;
     }
 
     private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
@@ -419,37 +423,6 @@ public class ReportGenerator {
         }
     }
 
-    private String getTemplate(boolean year) throws IOException {
-        Resource resource = resourceLoader.getResource("classpath:html/report.html");
-        InputStream is = resource.getInputStream();
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader reader = new BufferedReader(isr);
-
-        String template = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-
-        StringBuilder body = new StringBuilder();
-
-        if(year) {
-            body.append("<!-- TITLE -->");
-            body.append("<!-- PIE -->");
-            body.append("<!-- TOTALS -->");
-
-            for(int i = 0; i < 12; i++) {
-                body.append("<p style=\"page-break-after: always;\">&#xA0;</p>\n");
-                body.append("<!-- TITLE ").append(i).append(" -->");
-                body.append("<!-- PIE ").append(i).append(" -->");
-                body.append("<!-- TOTALS ").append(i).append(" -->");
-            }
-        } else {
-            body.append("<!-- TITLE -->");
-            body.append("<!-- PIE -->");
-            body.append("<!-- TOTALS -->");
-            body.append("<!-- TABLE -->");
-        }
-
-        return template.replace("<!--BODY-->", body.toString());
-    }
-
     private void generatePDF() throws IOException, DocumentException {
         // Generate a PDF?
         Document document = new Document();
@@ -523,16 +496,32 @@ public class ReportGenerator {
         LOG.info("Generate report");
 
         createWorkingDirectories();
+        List<Transaction> transactions = transactionRepository.findByStatementIdYearAndStatementIdMonth(year,month);
+
+        int previousMonth = month - 1;
+        int previousYear = year;
+
+        if(month == 1) {
+            previousMonth = 12;
+            previousYear--;
+        }
+        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear,previousMonth);
 
         File htmlFile = new File(applicationProperties.getHtmlFilename());
         try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
+            HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
+                    accountTransactionManager.categoryCompare(transactions, previousTransactionList),
+                    LocalDate.of(year,month,1),
+                    applicationProperties.getReportWorking());
+//            String template = getTemplate(false);
+//            // TODO programatically create the HTML.
+//            template = addReportToTemplate(template, "", year, month);
 
-            String template = getTemplate(false);
-            // TODO programatically create the HTML.
-            template = addReportToTemplate(template, "", year, month);
-
-            writer2.println(template);
+            writer2.println(reportHtml.getHtmlAsString());
         }
+
+        createImages(transactions);
+        createPieChart(transactions,"");
 
         generatePDF();
 
@@ -555,7 +544,7 @@ public class ReportGenerator {
         try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
 
             // Get the file template.
-            String template = getTemplate(true);
+            String template = "";//getTemplate(true);
 
             template = template.replace("<!-- TITLE -->", "<h1>" + year + " Summary</h1>");
 

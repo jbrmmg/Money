@@ -9,6 +9,7 @@ import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.TransactionWindowDTO;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.util.CategoryComparison;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -257,12 +258,12 @@ public class AccountTransactionManager {
     private Transaction internalCreateTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
         // Check the account and category are valid.
         Optional<Account> account = accountRepository.findById(transaction.getAccount().getId());
-        if(!account.isPresent()) {
+        if(account.isEmpty()) {
             throw new InvalidAccountIdException(transaction.getAccount());
         }
 
         Optional<Category> category = categoryRepository.findById(transaction.getCategory().getId());
-        if(!category.isPresent()) {
+        if(category.isEmpty()) {
             throw new InvalidCategoryIdException(transaction.getCategory());
         }
 
@@ -316,7 +317,7 @@ public class AccountTransactionManager {
 
         // Category must be Transfer on both transactions
         Optional<Category> transfer = categoryRepository.findById("TRF");
-        if(!transfer.isPresent()) {
+        if(transfer.isEmpty()) {
             throw new InvalidTransactionException("Cannot find the transfer category");
         }
 
@@ -359,7 +360,7 @@ public class AccountTransactionManager {
                 if(toBeSaved.size() == 1) {
                     Optional<Category> category = categoryRepository.findById(transaction.getCategory().getId());
 
-                    if(!category.isPresent()) {
+                    if(category.isEmpty()) {
                         throw new InvalidCategoryIdException(transaction.getCategory().getId());
                     }
 
@@ -388,5 +389,39 @@ public class AccountTransactionManager {
         }
 
         throw new InvalidTransactionIdException(transaction.getId());
+    }
+
+    public Map<String, CategoryComparison> categoryCompare(List<Transaction> transactions, List<Transaction> previousTransactions) {
+        Map<String, CategoryComparison> result = new HashMap<>();
+
+        for(Transaction nextTransaction: transactions) {
+            // Has this category already been seen?
+            CategoryComparison categoryComparison;
+            if(result.containsKey(nextTransaction.getCategory().getId())) {
+                categoryComparison = result.get(nextTransaction.getCategory().getId());
+            } else {
+                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
+                result.put(nextTransaction.getCategory().getId(),categoryComparison);
+            }
+
+            // Update the details on the category.
+            categoryComparison.incrementThisMonth(nextTransaction.getAmount().getValue());
+        }
+
+        for(Transaction nextTransaction: previousTransactions) {
+            // Has this category already been seen?
+            CategoryComparison categoryComparison;
+            if(result.containsKey(nextTransaction.getCategory().getId())) {
+                categoryComparison = result.get(nextTransaction.getCategory().getId());
+            } else {
+                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
+                result.put(nextTransaction.getCategory().getId(),categoryComparison);
+            }
+
+            // Update the details on the category.
+            categoryComparison.incrementPreviousMonth(nextTransaction.getAmount().getValue());
+        }
+
+        return result;
     }
 }

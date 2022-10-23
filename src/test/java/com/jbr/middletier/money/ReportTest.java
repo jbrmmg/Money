@@ -110,7 +110,7 @@ public class ReportTest extends Support {
         transaction.setCategory(category);
         transaction.setDate(LocalDate.of(2010,1,2));
         transaction.setAmount(-84.12);
-        transaction.setDescription("Testing 2");
+        transaction.setDescription("This is a much longer description test!!");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")
                         .content(this.json(Collections.singletonList(transaction)))
@@ -152,6 +152,8 @@ public class ReportTest extends Support {
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.svg").toPath()));
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.png").toPath()));
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.svg").toPath()));
+        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/pie-.png").toPath()));
+        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/pie.svg").toPath()));
         Assert.assertTrue(Files.exists(htmlFile.toPath()));
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf").toPath()));
 
@@ -200,14 +202,14 @@ public class ReportTest extends Support {
         HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Previous Month", "total-column");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"House", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-220.04","amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/FDG.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Grocery", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-84.12", "amount amount-debit");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"0.00", "amount");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/FDG.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Grocery", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-84.12", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"House", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-220.04","amount amount-debit");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"0.00", "amount");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"", "");
@@ -237,20 +239,20 @@ public class ReportTest extends Support {
         HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "center-column");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"02-Jan2010", "date");
         HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/AMEX.png");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Testing 1", "description");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-210.02", "amount amount-debit");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "center-column");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/FDG.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"This is a much longerdescription test!!", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-84.12", "amount amount-debit");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"02-Jan2010", "date");
         HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/AMEX.png");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/FDG.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Testing 2", "description");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-84.12", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Testing 1", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-210.02", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "center-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
         HtmlTableAssertHelper.checkTable(tables.get(1),expected);
 
         List<Element> paragraphs = body.getChildren("p");

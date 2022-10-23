@@ -30,7 +30,7 @@ public class FinancialAmount {
     }
 
     public static String internalToString(double value) {
-        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         return decimalFormat.format(value);
     }
 
