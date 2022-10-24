@@ -2,6 +2,7 @@ package com.jbr.middletier.money.config;
 
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -72,6 +73,23 @@ public class ApplicationProperties {
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
+
+        Converter<FinancialAmount,Double> financialAmountDoubleConverter = new AbstractConverter<>() {
+            @Override
+            protected Double convert(FinancialAmount financialAmount) {
+                return financialAmount.getValue();
+            }
+        };
+
+        Converter<Double,FinancialAmount> doubleFinancialAmount = new AbstractConverter<>() {
+            @Override
+            protected FinancialAmount convert(Double value) {
+                return new FinancialAmount(value);
+            }
+        };
+
+        modelMapper.addConverter(financialAmountDoubleConverter);
+        modelMapper.addConverter(doubleFinancialAmount);
 
         modelMapper.createTypeMap(Account.class, AccountDTO.class);
         modelMapper.createTypeMap(AccountDTO.class, Account.class);
