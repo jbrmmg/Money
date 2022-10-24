@@ -11,9 +11,7 @@ import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.LogoManager;
-import com.jbr.middletier.money.util.CategoryComparison;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
 import com.jbr.middletier.money.xml.html.ReportHtml;
 import com.jbr.middletier.money.xml.svg.CategorySvg;
@@ -46,21 +44,18 @@ public class ReportGenerator {
     private final LogoManager logoManager;
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
-    private final AccountTransactionManager accountTransactionManager;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
                            ApplicationProperties applicationProperties,
                            LogoManager logoManager,
                            StatementRepository statementRepository,
-                           AccountRepository accountRepository,
-                           AccountTransactionManager accountTransactionManager) {
+                           AccountRepository accountRepository) {
         this.transactionRepository = transactionRepository;
         this.applicationProperties = applicationProperties;
         this.logoManager = logoManager;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
-        this.accountTransactionManager = accountTransactionManager;
     }
 
     private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
@@ -78,13 +73,13 @@ public class ReportGenerator {
         TranscoderInput inputSvgImage = new TranscoderInput(svgUriInput);
         //Step-2: Define OutputStream to PNG Image and attach to TranscoderOutput
         OutputStream pngOstream = Files.newOutputStream(Paths.get(pngFilename));
-        TranscoderOutput output_png_image = new TranscoderOutput(pngOstream);
+        TranscoderOutput outputPngImage = new TranscoderOutput(pngOstream);
         // Step-3: Create PNGTranscoder and define hints if required
         PNGTranscoder myConverter = new PNGTranscoder();
         myConverter.addTranscodingHint(PNGTranscoder.KEY_WIDTH,width);
         myConverter.addTranscodingHint(PNGTranscoder.KEY_HEIGHT,height);
         // Step-4: Convert and Write output
-        myConverter.transcode(inputSvgImage, output_png_image);
+        myConverter.transcode(inputSvgImage, outputPngImage);
         // Step 5- close / flush Output Stream
         pngOstream.flush();
         pngOstream.close();
@@ -93,12 +88,11 @@ public class ReportGenerator {
     private void createAccountImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
         for(Transaction nextTransactions: transactions) {
             // Is there already a png for this account?
-            String pngFilename = workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png";
-            File pngFile = new File(pngFilename);
+            File pngFile = new File(workingDirectory,nextTransactions.getAccount().getId() + ".png");
 
             if(!pngFile.exists()) {
                 // Create an SVG for the account.
-                File svgFile = new File(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg");
+                File svgFile = new File(workingDirectory, nextTransactions.getAccount().getId() + ".svg");
                 try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
                     svgWriter.write(logoManager.getSvgLogoForAccount(nextTransactions.getAccount().getId(),false).getSvgAsString());
                 }
@@ -115,24 +109,22 @@ public class ReportGenerator {
     private void createCategoryImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
         for(Transaction nextTransactions: transactions) {
             // Is there already a png for this account?
-            String pngFilename = workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png";
-            File pngFile = new File(pngFilename);
+            File pngFile = new File(workingDirectory,nextTransactions.getCategory().getId() + ".png");
 
             if(!pngFile.exists()) {
                 // Create an SVG for the account.
-                File svgFile = new File(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg");
+                File svgFile = new File(workingDirectory, nextTransactions.getCategory().getId() + ".svg");
                 try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
 
                     ScalableVectorGraphics categorySvg = new CategorySvg(nextTransactions.getCategory());
                     svgWriter.write(categorySvg.getSvgAsString());
-                    svgWriter.close();
-
-                    // Create a PNG from SVG
-                    createPngFromSvg(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg",
-                            workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png",
-                            100,
-                            100);
                 }
+
+                // Create a PNG from SVG
+                createPngFromSvg(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg",
+                        workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png",
+                        100,
+                        100);
             }
         }
     }
