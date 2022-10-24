@@ -278,27 +278,15 @@ public class ReportGenerator {
         int activeAccounts;
     }
 
-    @SuppressWarnings("RedundantCast")
-    @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
-    public void regularReport() throws DocumentException, IOException, TranscoderException {
-        // If this is enabled, then generate reports.
-        if(!applicationProperties.getReportEnabled()) {
-            return;
-        }
-
-        Iterable<Account> accounts = accountRepository.findAll();
-        int activeAccounts = 0;
-        // TODO - Add active dates to account so it can be tracked for period.
-        for(Account ignored : accounts) activeAccounts++;
-
-        Map<Long,MonthStatus> monthStatusMap = new HashMap<>();
+    public Map<Integer,MonthStatus> getMonthStatusMap(int activeAccounts) {
+        Map<Integer,MonthStatus> monthStatusMap = new HashMap<>();
 
         // Make sure reports have been generated where all statements are locked.
         Iterable<Statement> allStatements = statementRepository.findAll();
         for(Statement nextStatement: allStatements) {
             if(nextStatement.getLocked()) {
                 // What is the ID?
-                long statementId = (long)(nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth());
+                Integer statementId = (nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth());
                 MonthStatus nextMonthStatus;
 
                 if(monthStatusMap.containsKey(statementId)) {
@@ -319,8 +307,22 @@ public class ReportGenerator {
             }
         }
 
+        return monthStatusMap;
+    }
+
+    @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
+    public void regularReport() throws DocumentException, IOException, TranscoderException {
+        // If this is enabled, then generate reports.
+        if(!applicationProperties.getReportEnabled()) {
+            return;
+        }
+
+        List<Account> accounts = new ArrayList<>();
+        accountRepository.findAll().forEach(accounts::add);
+        // TODO - Add active dates to account so it can be tracked for period.
+
         // Check that all the statements have a report.
-        for(MonthStatus nextMonthStatus: monthStatusMap.values()) {
+        for(MonthStatus nextMonthStatus: getMonthStatusMap(accounts.size()).values()) {
             // Is this a complete month?
             if((nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) &&
                     (nextMonthStatus.lockedStatementCount == nextMonthStatus.activeAccounts) ){
