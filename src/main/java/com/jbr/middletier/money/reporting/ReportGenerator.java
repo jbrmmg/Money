@@ -17,6 +17,7 @@ import com.jbr.middletier.money.xml.html.ReportHtml;
 import com.jbr.middletier.money.xml.svg.CategorySvg;
 import com.jbr.middletier.money.xml.svg.PieChartSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
+import org.apache.batik.transcoder.SVGAbstractTranscoder;
 import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,8 +77,8 @@ public class ReportGenerator {
         TranscoderOutput outputPngImage = new TranscoderOutput(pngOstream);
         // Step-3: Create PNGTranscoder and define hints if required
         PNGTranscoder myConverter = new PNGTranscoder();
-        myConverter.addTranscodingHint(PNGTranscoder.KEY_WIDTH,width);
-        myConverter.addTranscodingHint(PNGTranscoder.KEY_HEIGHT,height);
+        myConverter.addTranscodingHint(SVGAbstractTranscoder.KEY_WIDTH,width);
+        myConverter.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT,height);
         // Step-4: Convert and Write output
         myConverter.transcode(inputSvgImage, outputPngImage);
         // Step 5- close / flush Output Stream
@@ -329,11 +330,9 @@ public class ReportGenerator {
                     generateReport(nextMonthStatus.year,nextMonthStatus.month);
                 }
 
-                if(nextMonthStatus.month == 12) {
-                    if (!Files.exists(Paths.get(getYearFilename(true,nextMonthStatus.year)))) {
-                        // Generate the annual report.
-                        generateAnnualReport(nextMonthStatus.year);
-                    }
+                if(nextMonthStatus.month == 12 && !Files.exists(Paths.get(getYearFilename(true,nextMonthStatus.year)))) {
+                    // Generate the annual report.
+                    generateAnnualReport(nextMonthStatus.year);
                 }
             }
         }
