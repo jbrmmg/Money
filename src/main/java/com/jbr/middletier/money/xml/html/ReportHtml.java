@@ -15,22 +15,28 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ReportHtml extends HyperTextMarkupLanguage {
     private static final String BODY = "body";
 
+    public enum ReportType { ANNUAL, MONTH }
+
     private final List<Transaction> transactions;
-    private final Map<String, CategoryComparison> comparisons;
+    private final List<Transaction> previousTransactions;
     private final LocalDate reportDate;
     private final String workingDirectory;
+    private final ReportType type;
 
-    public ReportHtml(List<Transaction> transactions, Map<String, CategoryComparison> comparisons, LocalDate reportDate, String workingDirectory) {
+    public ReportHtml(List<Transaction> transactions, List<Transaction> previousTransactions, LocalDate reportDate, String workingDirectory, ReportType type) {
         super(Map.of("&amp;#xA0;","&#xA0;","&lt;br/&gt;","<br/>"));
         this.transactions = transactions;
         this.transactions.sort(Comparator.comparing(Transaction::getDate));
-        this.comparisons = comparisons;
+        this.previousTransactions = previousTransactions;
+        this.previousTransactions.sort(Comparator.comparing(Transaction::getDate));
         this.reportDate = reportDate;
         this.workingDirectory = workingDirectory;
+        this.type = type;
     }
 
     private CascadingStyleSheet generateCSS() {
@@ -241,7 +247,15 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         return comparisonRow;
     }
 
-    private Element getComparisonTable() {
+    private String getPreviousTitle(boolean month) {
+        if(month) {
+            return "Previous Month";
+        }
+
+        return "Previous Year";
+    }
+
+    private Element getComparisonTable(List<Transaction> transactions, List<Transaction> previousTransactions,  boolean month) {
         Element result = new Element("table");
 
         // Add the header.
@@ -249,13 +263,15 @@ public class ReportHtml extends HyperTextMarkupLanguage {
                 .addContent(new Element("th"))
                 .addContent(new Element("th"))
                 .addContent(new Element("th").setAttribute("class","total-column").setText("Current Spend"))
-                .addContent(new Element("th").setAttribute("class","total-column").setText("Previous Month"))
+                .addContent(new Element("th").setAttribute("class","total-column").setText(getPreviousTitle(month)))
                 .addContent(new Element("th").setAttribute("class","total-column").setText("Change in Spend")));
+
+        Map<String,CategoryComparison> comparisons = CategoryComparison.categoryCompare(transactions,previousTransactions);
 
         // Add the categories
         FinancialAmount totalThis = new FinancialAmount();
         FinancialAmount totalPrevious = new FinancialAmount();
-        for(Map.Entry<String,CategoryComparison> next : this.comparisons.entrySet()) {
+        for(Map.Entry<String,CategoryComparison> next : comparisons.entrySet()) {
             result.addContent(getComparisonRow(next.getKey(),next.getValue()));
             totalThis.increment(next.getValue().getThisMonth());
             totalPrevious.increment(next.getValue().getPreviousMonth());
@@ -290,8 +306,7 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         return result;
     }
 
-    @Override
-    protected Element getBody() {
+    private Element getMonthReportBody() {
         Element titleText = new Element("h1")
                 .addContent(DateTimeFormatter.ofPattern("MMMM yyyy").format(this.reportDate));
 
@@ -308,8 +323,64 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         return new Element(BODY)
                 .addContent(titleText)
                 .addContent(pie)
-                .addContent(getComparisonTable())
+                .addContent(getComparisonTable(this.transactions, this.previousTransactions, true))
                 .addContent(pageBreak)
                 .addContent(getTransactionsTable());
+    }
+
+    private List<Transaction> filterTransactions(List<Transaction> transactions, int month) {
+        return transactions
+                .stream()
+                .filter(t -> t.getStatement().getId().getMonth() == month)
+                .collect(Collectors.toList());
+    }
+
+    private Element getAnnualReportBody() {
+        Element titleText = new Element("h1")
+                .addContent(DateTimeFormatter.ofPattern("yyyy").format(this.reportDate) + " Summary");
+
+        Element pie = new Element("img")
+                .setAttribute("class", "pie")
+                .setAttribute("height", "400px")
+                .setAttribute("width", "400px")
+                .setAttribute("src", this.workingDirectory + "/pie-yr.png");
+
+        Element body = new Element(BODY)
+                .addContent(titleText)
+                .addContent(pie)
+                .addContent(getComparisonTable(this.transactions, this.previousTransactions,false));
+
+        for(int i = 0; i < 12; i++) {
+            body.addContent(new Element("p")
+                    .setAttribute("style", "page-break-after: always;")
+                    .setText("&#xA0;"));
+            body.addContent(new Element("h1")
+                    .addContent(DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of(this.reportDate.getYear(),i + 1,1))));
+            body.addContent(new Element("img")
+                    .setAttribute("class", "pie")
+                    .setAttribute("height", "400px")
+                    .setAttribute("width", "400px")
+                    .setAttribute("src", this.workingDirectory + "/pie-" + i + ".png"));
+
+            List<Transaction> currentMonth = filterTransactions(this.transactions, i+1);
+            List<Transaction> previousMonth;
+            if(i == 0) {
+                previousMonth =filterTransactions(this.previousTransactions, 12);
+            } else {
+                previousMonth =filterTransactions(this.transactions, i);
+            }
+            body.addContent(getComparisonTable(currentMonth, previousMonth,true));
+        }
+
+        return body;
+    }
+
+    @Override
+    protected Element getBody() {
+        if(this.type == ReportType.MONTH) {
+            return getMonthReportBody();
+        }
+
+        return getAnnualReportBody();
     }
 }

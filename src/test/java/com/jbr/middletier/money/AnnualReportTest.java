@@ -12,7 +12,6 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.modelmapper.ModelMapper;
@@ -62,7 +61,6 @@ public class AnnualReportTest extends Support {
     }
 
     @Test
-    @Ignore("HTML generation needs checking")
     public void testReport() throws Exception {
         cleanUp();
 
@@ -71,8 +69,6 @@ public class AnnualReportTest extends Support {
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 
         // Create some transactions
-        // TODO add transactions so that pie can be checked.
-
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
         CategoryDTO category = new CategoryDTO();
@@ -231,12 +227,12 @@ public class AnnualReportTest extends Support {
         HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"House", "");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"0.00","amount");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"10.02", "amount");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-100.00%", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-100%", "amount amount-debit");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Total", "total-row");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"0.00", "total-row amount");
         HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"10.02", "total-row amount");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-100.00%", "total-row amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-100%", "total-row amount amount-debit");
         HtmlTableAssertHelper.checkTable(tables.get(2),expected);
 
         expected = new ArrayList<>();

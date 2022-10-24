@@ -6,7 +6,6 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
@@ -14,6 +13,7 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.LogoManager;
+import com.jbr.middletier.money.util.CategoryComparison;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
 import com.jbr.middletier.money.xml.html.ReportHtml;
 import com.jbr.middletier.money.xml.svg.CategorySvg;
@@ -23,7 +23,6 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.apache.batik.transcoder.image.PNGTranscoder;
@@ -34,7 +33,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -44,7 +42,6 @@ public class ReportGenerator {
     private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
 
     private final TransactionRepository transactionRepository;
-    private final ResourceLoader resourceLoader;
     private final ApplicationProperties applicationProperties;
     private final LogoManager logoManager;
     private final StatementRepository statementRepository;
@@ -53,14 +50,12 @@ public class ReportGenerator {
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
-                           ResourceLoader resourceLoader,
                            ApplicationProperties applicationProperties,
                            LogoManager logoManager,
                            StatementRepository statementRepository,
                            AccountRepository accountRepository,
                            AccountTransactionManager accountTransactionManager) {
         this.transactionRepository = transactionRepository;
-        this.resourceLoader = resourceLoader;
         this.applicationProperties = applicationProperties;
         this.logoManager = logoManager;
         this.statementRepository = statementRepository;
@@ -93,148 +88,6 @@ public class ReportGenerator {
         // Step 5- close / flush Output Stream
         pngOstream.flush();
         pngOstream.close();
-    }
-
-    private int getSplitIndex(String description) {
-        // Split the description, have a maximum of 30 chars on the first line.
-
-        // If less description 20 characters then leave as is.
-        if(description.length() <= 20) {
-            return 0;
-        }
-
-        // Is there a space that is after 15 and before 30 then use it as the split.
-        String middleOfString = description.substring(15,Math.min(description.length(),30));
-        if(middleOfString.contains(" ")) {
-            return 15 + middleOfString.indexOf(" ");
-        }
-
-        // If we are still here, and the description is less than 30 then do not split.
-        if(description.length() <= 30) {
-            return 0;
-        }
-
-        // Split after 29 (negative so that a dash is added).
-        return -29;
-    }
-
-    private void getRowForTransaction(StringBuilder table, Transaction nextTransaction) {
-        if(nextTransaction == null) {
-            table.append("<td/>");
-            table.append("<td/>");
-            table.append("<td/>");
-            table.append("<td/>");
-            table.append("<td/>");
-            return;
-        }
-
-        DecimalFormat df = new DecimalFormat("#,###.00");
-
-        // Date
-        table.append("<td class=\"date\">");
-        table.append(DateTimeFormatter.ofPattern("dd-MMM").format(nextTransaction.getDate())).append("<br/>");
-        table.append(DateTimeFormatter.ofPattern("yyyy").format(nextTransaction.getDate()));
-        table.append("</td>\n");
-
-        // Account
-        table.append("<td>");
-        table.append("<img height=\"25px\" width=\"25px\" src=\"").append(applicationProperties.getReportWorking()).append(nextTransaction.getAccount().getId()).append(".png\"/>");
-        table.append("</td>\n");
-
-        // Category
-        table.append("<td>");
-        table.append("<img height=\"25px\" width=\"25px\" src=\"").append(applicationProperties.getReportWorking()).append(nextTransaction.getCategory().getId()).append(".png\"/>");
-        table.append("</td>\n");
-
-        // Description, split into 2 (if greater than 20 chars).
-        String description1 = nextTransaction.getDescription();
-        String description2 = "";
-        int splitIndex = getSplitIndex(description1);
-        boolean addDash = false;
-
-        if(splitIndex < 0) {
-            addDash = true;
-            splitIndex *= -1;
-        }
-
-        // Situations
-        if(splitIndex > 0) {
-            description2 = description1.substring(splitIndex).trim();
-            description1 = description1.substring(0,splitIndex);
-
-            if(addDash) {
-                description1 = description1 + "-";
-            }
-        }
-
-        table.append("<td class=\"description\">");
-        table.append(description1).append("<br/>");
-        table.append(description2);
-        table.append("</td>\n");
-
-        // Amount
-        if(nextTransaction.getAmount().getValue() < 0) {
-            table.append("<td class=\"amount amount-debit\">");
-        } else {
-            table.append("<td class=\"amount\">");
-        }
-        table.append(df.format(nextTransaction.getAmount().getValue()));
-        table.append("</td>\n");
-    }
-
-    private void outputTableHeader(StringBuilder table) {
-        table.append("<table>\n");
-
-        table.append("<tr>\n");
-        table.append("<th>Date</th>\n");
-        table.append("<th></th>\n");
-        table.append("<th></th>\n");
-        table.append("<th>Description</th>\n");
-        table.append("<th>Amount</th>\n");
-        table.append("<th/>");
-        table.append("<th>Date</th>\n");
-        table.append("<th></th>\n");
-        table.append("<th></th>\n");
-        table.append("<th>Description</th>\n");
-        table.append("<th>Amount</th>\n");
-        table.append("</tr>\n");
-    }
-
-    private String createTransactionTable(List<Transaction> transactions) {
-        // Split into pages, first page can hold 19, then following pages can hold 36
-        int pageRow = 0;
-
-
-        int transactionSize = transactions.size();
-        List<Transaction> column1 = new ArrayList<>(transactions.subList(0, (transactionSize) / 2));
-        List<Transaction> column2 = new ArrayList<>(transactions.subList((transactionSize) / 2, transactionSize));
-
-        StringBuilder table = new StringBuilder();
-
-        table.append("<p style=\"page-break-after: always;\">&#xA0;</p>\n");
-        outputTableHeader(table);
-
-        for(int i = 0; i < Math.max(column1.size(), column2.size()); i++) {
-            table.append("<tr>\n");
-            getRowForTransaction(table,i < column1.size() ? column1.get(i) : null);
-            table.append("<td class=\"center-column\"/>");
-            getRowForTransaction(table,i < column2.size() ? column2.get(i) : null);
-            table.append("</tr>\n");
-
-            pageRow++;
-
-            // Do we need a page break?
-            if( pageRow == 35 ) {
-                pageRow = 0;
-                table.append("</table>\n");
-                table.append("<p style=\"page-break-after: always;\">&#xA0;</p>\n");
-                outputTableHeader(table);
-            }
-        }
-
-        table.append("</table>\n");
-
-        return table.toString();
     }
 
     private void createAccountImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
@@ -284,132 +137,6 @@ public class ReportGenerator {
         }
     }
 
-    static class CategoryComparison implements Comparable<CategoryComparison> {
-        public Category category;
-        double thisMonth;
-        double previousMonth;
-
-        CategoryComparison(Category category) {
-            this.category = category;
-            this.thisMonth = 0;
-            this.previousMonth = 0;
-        }
-
-        double getPercentageChange() {
-            return ( ( this.thisMonth - this.previousMonth ) / this.previousMonth ) * 100.0;
-        }
-
-        @Override
-        public int compareTo(CategoryComparison categoryComparison) {
-            return Double.compare(this.thisMonth,categoryComparison.thisMonth);
-        }
-    }
-
-    private String getAmountClass(double amount) {
-        return amount >= 0 ? "amount" : "amount amount-debit";
-    }
-
-    private String createComparisonTable(List<Transaction> transactions, List<Transaction> previousTransactions, boolean year) {
-        StringBuilder result = new StringBuilder();
-
-        Map<String,CategoryComparison> comparisons = new HashMap<>();
-
-        for(Transaction nextTransaction: transactions) {
-            // Has this category already been seen?
-            CategoryComparison categoryComparison;
-            if(comparisons.containsKey(nextTransaction.getCategory().getId())) {
-                categoryComparison = comparisons.get(nextTransaction.getCategory().getId());
-            } else {
-                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
-                comparisons.put(nextTransaction.getCategory().getId(),categoryComparison);
-            }
-
-            // Update the details on the category.
-            categoryComparison.thisMonth += nextTransaction.getAmount().getValue();
-        }
-
-        for(Transaction nextTransaction: previousTransactions) {
-            // Has this category already been seen?
-            CategoryComparison categoryComparison;
-            if(comparisons.containsKey(nextTransaction.getCategory().getId())) {
-                categoryComparison = comparisons.get(nextTransaction.getCategory().getId());
-            } else {
-                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
-                comparisons.put(nextTransaction.getCategory().getId(),categoryComparison);
-            }
-
-            // Update the details on the category.
-            categoryComparison.previousMonth += nextTransaction.getAmount().getValue();
-        }
-
-        result.append("<table>\n");
-        result.append("<tr>\n");
-        result.append("<th/>\n");
-        result.append("<th/>\n");
-        result.append("<th class=\"total-column\">Current Spend</th>\n");
-        result.append("<th class=\"total-column\">Previous ").append(year ? "Year" : "Month").append("</th>\n");
-        result.append("<th class=\"total-column\">Change in Spend</th>\n");
-        result.append("</tr>\n");
-
-        double totalSpending = 0.0;
-        double previousTotalSpending = 0.0;
-        DecimalFormat df = new DecimalFormat("#,##0.00");
-
-        List<CategoryComparison> categories = new ArrayList<>(comparisons.values());
-        Collections.sort(categories);
-
-        for(CategoryComparison nextComparison: categories) {
-            if(Boolean.FALSE.equals(nextComparison.category.getExpense())) {
-                continue;
-            }
-
-            result.append("<tr>");
-            LOG.info("-----------------------------------------------------------------------------");
-            LOG.info(nextComparison.category.getId());
-            LOG.info(Double.toString(nextComparison.thisMonth));
-            LOG.info(Double.toString(nextComparison.previousMonth));
-            LOG.info(Double.toString(nextComparison.getPercentageChange()));
-
-            result.append("<td>\n");
-            result.append("<img height=\"25px\" width=\"25px\" src=\"").append(applicationProperties.getReportWorking()).append(nextComparison.category.getId()).append(".png\"/>\n");
-            result.append("</td>\n");
-            result.append("<td>").append(nextComparison.category.getName()).append("</td>\n");
-            result.append("<td class=\"").append(getAmountClass(nextComparison.thisMonth)).append("\">").append(df.format(nextComparison.thisMonth)).append("</td>\n");
-            result.append("<td class=\"").append(getAmountClass(nextComparison.previousMonth)).append("\">").append(df.format(nextComparison.previousMonth)).append("</td>\n");
-
-            if(nextComparison.previousMonth != 0.0 && nextComparison.getPercentageChange() != 0.0) {
-                result.append("<td class=\"").append(getAmountClass(nextComparison.getPercentageChange())).append("\">").append(df.format(nextComparison.getPercentageChange())).append("%</td>\n");
-            } else {
-                result.append("<td/>\n");
-            }
-
-            result.append("</tr>\n");
-            totalSpending += nextComparison.thisMonth;
-            previousTotalSpending += nextComparison.previousMonth;
-        }
-
-        result.append("<tr>\n");
-        result.append("<td/>\n");
-        result.append("<td class=\"total-row\">Total</td>\n");
-        result.append("<td class=\"total-row ").append(getAmountClass(totalSpending)).append("\">").append(df.format(totalSpending)).append("</td>\n");
-        result.append("<td class=\"total-row ").append(getAmountClass(previousTotalSpending)).append("\">").append(df.format(previousTotalSpending)).append("</td>\n");
-
-        double totalPercentageChange = 0.0;
-        if (previousTotalSpending != 0.0) {
-            totalPercentageChange = ((totalSpending - previousTotalSpending) / previousTotalSpending) * 100.0;
-        }
-        if(previousTotalSpending != 0.0 && totalPercentageChange != 0.0) {
-            result.append("<td class=\"total-row ").append(getAmountClass(totalPercentageChange)).append("\">").append(df.format(totalPercentageChange)).append("%</td>\n");
-        } else {
-            result.append("<td/>\n");
-        }
-        result.append("</tr>\n");
-
-        result.append("</table>\n");
-
-        return result.toString();
-    }
-
     private void createWorkingDirectories() {
         // Does the working directory exist?
         if(!Files.exists(Paths.get(applicationProperties.getReportWorking()))) {
@@ -442,44 +169,6 @@ public class ReportGenerator {
         createCategoryImages(applicationProperties.getReportWorking(),transactions);
     }
 
-    private String addReportToTemplate(String template, String specific, int year, int month) throws IOException, TranscoderException {
-        // Get all the transactions for the specified statement.
-        List<Transaction> transactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(year,month);
-
-        String titleMarker =  specific.length() > 0 ? "<!-- TITLE " + specific + " -->" : "<!-- TITLE -->";
-        String pieMarker = specific.length() > 0 ? "<!-- PIE " + specific + " -->" : "<!-- PIE -->";
-        String tableMarker = specific.length() > 0 ? "<!-- TABLE " + specific + " -->" : "<!-- TABLE -->";
-        String totalsMarker = specific.length() > 0 ? "<!-- TOTALS " + specific + " -->" : "<!-- TOTALS -->";
-
-        template = template.replace(titleMarker, "<h1>" + DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of(year,month,1)) + "</h1>");
-
-        LOG.info("Create pie chart.");
-        createPieChart(transactionList,specific);
-        template = template.replace(pieMarker, "<img class=\"pie\" height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie-" + specific + ".png" + "\"/>");
-
-        LOG.info("Create table.");
-        transactionList.sort(
-                Comparator.comparing(Transaction::getDate)
-        );
-        template = template.replace(tableMarker, createTransactionTable(transactionList));
-
-        // Get the previous month
-        int previousMonth = month - 1;
-        int previousYear = year;
-
-        if(month == 1) {
-            previousMonth = 12;
-            previousYear--;
-        }
-        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear,previousMonth);
-        template = template.replace(totalsMarker, createComparisonTable(transactionList,previousTransactionList,false));
-
-        createImages(transactionList);
-        createImages(previousTransactionList);
-
-        return template;
-    }
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void copyFile(String source,
                           String destinationPath,
@@ -510,17 +199,16 @@ public class ReportGenerator {
         File htmlFile = new File(applicationProperties.getHtmlFilename());
         try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
             HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
-                    accountTransactionManager.categoryCompare(transactions, previousTransactionList),
+                    previousTransactionList,
                     LocalDate.of(year,month,1),
-                    applicationProperties.getReportWorking());
-//            String template = getTemplate(false);
-//            // TODO programatically create the HTML.
-//            template = addReportToTemplate(template, "", year, month);
+                    applicationProperties.getReportWorking(),
+                    ReportHtml.ReportType.MONTH);
 
             writer2.println(reportHtml.getHtmlAsString());
         }
 
         createImages(transactions);
+        createImages(previousTransactionList);
         createPieChart(transactions,"");
 
         generatePDF();
@@ -535,36 +223,29 @@ public class ReportGenerator {
         LOG.info("Generate annual report");
 
         // Get all the transactions for the specified statement.
-        List<Transaction> transactionList = transactionRepository.findByStatementIdYear(year);
+        List<Transaction> transactions = transactionRepository.findByStatementIdYear(year);
+        List<Transaction> previoustransactions = transactionRepository.findByStatementIdYear(year - 1);
 
         createWorkingDirectories();
 
         File htmlFile = new File(applicationProperties.getHtmlFilename());
-        List<Transaction> previousTransactionList;
         try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
+            HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
+                    previoustransactions,
+                    LocalDate.of(year,1,1),
+                    applicationProperties.getReportWorking(),
+                    ReportHtml.ReportType.ANNUAL);
 
-            // Get the file template.
-            String template = "";//getTemplate(true);
-
-            template = template.replace("<!-- TITLE -->", "<h1>" + year + " Summary</h1>");
-
-            LOG.info("Create pie chart.");
-            createPieChart(transactionList, "yr");
-            template = template.replace("<!-- PIE -->", "<img class=\"pie\" height=\"400px\" width=\"400px\" src=\"" + applicationProperties.getReportWorking() + "/pie-yr.png" + "\"/>");
-
-            LOG.info("Insert totals");
-            previousTransactionList = transactionRepository.findByStatementIdYear(year - 1);
-            template = template.replace("<!-- TOTALS -->", createComparisonTable(transactionList, previousTransactionList, true));
-
-            for (int i = 0; i < 12; i++) {
-                template = addReportToTemplate(template, Integer.toString(i), year, i + 1);
-            }
-
-            writer2.println(template);
+            writer2.println(reportHtml.getHtmlAsString());
         }
 
-        createImages(transactionList);
-        createImages(previousTransactionList);
+        createImages(transactions);
+        createImages(previoustransactions);
+        createPieChart(transactions,"yr");
+
+        for(int i = 0; i < 12; i++) {
+            createPieChart(transactions, String.valueOf(i));
+        }
 
         // Generate a PDF?
         generatePDF();

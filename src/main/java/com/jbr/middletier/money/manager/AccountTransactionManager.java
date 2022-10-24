@@ -390,38 +390,4 @@ public class AccountTransactionManager {
 
         throw new InvalidTransactionIdException(transaction.getId());
     }
-
-    public Map<String, CategoryComparison> categoryCompare(List<Transaction> transactions, List<Transaction> previousTransactions) {
-        Map<String, CategoryComparison> result = new HashMap<>();
-
-        for(Transaction nextTransaction: transactions) {
-            // Has this category already been seen?
-            CategoryComparison categoryComparison;
-            if(result.containsKey(nextTransaction.getCategory().getId())) {
-                categoryComparison = result.get(nextTransaction.getCategory().getId());
-            } else {
-                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
-                result.put(nextTransaction.getCategory().getId(),categoryComparison);
-            }
-
-            // Update the details on the category.
-            categoryComparison.incrementThisMonth(nextTransaction.getAmount().getValue());
-        }
-
-        for(Transaction nextTransaction: previousTransactions) {
-            // Has this category already been seen?
-            CategoryComparison categoryComparison;
-            if(result.containsKey(nextTransaction.getCategory().getId())) {
-                categoryComparison = result.get(nextTransaction.getCategory().getId());
-            } else {
-                categoryComparison = new CategoryComparison(nextTransaction.getCategory());
-                result.put(nextTransaction.getCategory().getId(),categoryComparison);
-            }
-
-            // Update the details on the category.
-            categoryComparison.incrementPreviousMonth(nextTransaction.getAmount().getValue());
-        }
-
-        return result;
-    }
 }
