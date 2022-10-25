@@ -216,7 +216,7 @@ public class ReportTest extends Support {
     }
 
     @Test
-    public void htmlReportTestTransactionTable() throws IOException, ParserConfigurationException, SAXException {
+    public void htmlReportTestTransactionTablex() throws IOException, ParserConfigurationException, SAXException {
         List<Transaction> transactions = standardReportTestData();
 
         // Setup a list of previous transactions.
