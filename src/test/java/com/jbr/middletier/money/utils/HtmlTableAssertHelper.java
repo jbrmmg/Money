@@ -60,8 +60,6 @@ public class HtmlTableAssertHelper {
             expected.add(new ArrayList<>());
         }
 
-        Assert.assertTrue(line < expected.size());
-
         List<HtmlTableAssertHelperData> valueList = expected.get(line);
         valueList.add(data);
     }
