@@ -191,7 +191,7 @@ public class ReportTest extends Support {
         List<Element> tables = body.getChildren("table");
         Assert.assertEquals(2, tables.size());
 
-        List<List<HtmlTableHelper.HtmlTableAssertHelperData>> expected = new ArrayList<>();
+        List<List<HtmlTableHelper.HtmlTableHelperData>> expected = new ArrayList<>();
         HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
         HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
         HtmlTableHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
@@ -235,7 +235,7 @@ public class ReportTest extends Support {
         List<Element> tables = body.getChildren("table");
         Assert.assertEquals(2, tables.size());
 
-        List<List<HtmlTableHelper.HtmlTableAssertHelperData>> expected = new ArrayList<>();
+        List<List<HtmlTableHelper.HtmlTableHelperData>> expected = new ArrayList<>();
         HtmlTableHelper.expectTableBuliderText(expected, 0,"Date", "");
         HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
         HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
