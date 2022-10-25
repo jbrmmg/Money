@@ -7,7 +7,6 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.utils.CssAssertHelper;
-import com.jbr.middletier.money.utils.HtmlTableHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
@@ -20,6 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.xml.sax.InputSource;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -27,9 +29,8 @@ import java.io.File;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Iterator;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,130 +138,28 @@ public class AnnualReportTest extends Support {
 
         Document domDocument = new DOMBuilder().build(document);
         Element root = domDocument.getRootElement();
-
-        Assert.assertEquals("html", root.getName());
         Element head = root.getChild("head");
-        Assert.assertNotNull(head);
-
-        Element title = head.getChild("title");
-        Assert.assertNotNull(title);
-        Assert.assertEquals("Report", title.getText());
-
         Element style = head.getChild("style");
         Assert.assertNotNull(style);
         CssAssertHelper.checkReportCSS(style.getValue());
 
-        Element body = root.getChild("body");
-        Assert.assertNotNull(body);
+        // Get the expected html
+        File expectedFile = new File("./src/test/resources/expected/html2.xml");
+        String expected = new String(Files.readAllBytes(expectedFile.toPath()));
 
-        List<Element> headers = body.getChildren("h1");
-        Assert.assertEquals(13, headers.size());
-        Assert.assertEquals("2010 Summary", headers.get(0).getText());
-        Assert.assertEquals("January 2010", headers.get(1).getText());
-        Assert.assertEquals("February 2010", headers.get(2).getText());
-        Assert.assertEquals("March 2010", headers.get(3).getText());
-        Assert.assertEquals("April 2010", headers.get(4).getText());
-        Assert.assertEquals("May 2010", headers.get(5).getText());
-        Assert.assertEquals("June 2010", headers.get(6).getText());
-        Assert.assertEquals("July 2010", headers.get(7).getText());
-        Assert.assertEquals("August 2010", headers.get(8).getText());
-        Assert.assertEquals("September 2010", headers.get(9).getText());
-        Assert.assertEquals("October 2010", headers.get(10).getText());
-        Assert.assertEquals("November 2010", headers.get(11).getText());
-        Assert.assertEquals("December 2010", headers.get(12).getText());
+        // Get the difference.
+        Diff htmlDiff = DiffBuilder.compare(expected).withTest(html).ignoreWhitespace().build();
 
-        List<Element> images = body.getChildren("img");
-        Assert.assertEquals(13, images.size());
-        for(Element next : images) {
-            Assert.assertEquals("pie", next.getAttribute("class").getValue());
-            Assert.assertEquals("400px", next.getAttribute("height").getValue());
-            Assert.assertEquals("400px", next.getAttribute("width").getValue());
-            Assert.assertTrue(next.getAttribute("src").getValue().contains("pie-"));
+        // Only the CSS should be different (this is checked separately).
+        Iterator<Difference> iterator = htmlDiff.getDifferences().iterator();
+        Difference expectedDifferent = null;
+        int differenceCount = 0;
+        while (iterator.hasNext()) {
+            expectedDifferent = iterator.next();
+            differenceCount++;
         }
-
-        List<Element> tables = body.getChildren("table");
-        Assert.assertEquals(13, tables.size());
-
-        List<List<HtmlTableHelper.HtmlTableHelperData>> expected = new ArrayList<>();
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Previous Year", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"House", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"10.02","amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"0.00", "amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"Total", "total-row");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"10.02", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"0.00", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(0),expected));
-
-        expected = new ArrayList<>();
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Previous Month", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"House", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"10.02","amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"0.00", "amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"Total", "total-row");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"10.02", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"0.00", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(1),expected));
-
-        expected = new ArrayList<>();
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Previous Month", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"House", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"0.00","amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"10.02", "amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"-100%", "amount amount-debit");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"Total", "total-row");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"0.00", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"10.02", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 2,"-100%", "total-row amount amount-debit");
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(2),expected));
-
-        expected = new ArrayList<>();
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Previous Month", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"", "");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"Total", "total-row");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"0.00", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"0.00", "total-row amount");
-        HtmlTableHelper.expectTableBuliderText(expected, 1,"", "");
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(3),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(4),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(5),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(6),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(7),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(8),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(9),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(10),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(11),expected));
-        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(12),expected));
-
-        List<Element> paragraphs = body.getChildren("p");
-        Assert.assertEquals(12,  paragraphs.size());
-        for(Element next : paragraphs) {
-            Assert.assertEquals("page-break-after: always;", next.getAttribute("style").getValue());
-        }
+        Assert.assertEquals(1,differenceCount);
+        Assert.assertNotNull(expectedDifferent);
+        Assert.assertEquals("/html[1]/head[1]/style[1]/text()[1]",expectedDifferent.getComparison().getControlDetails().getXPath());
     }
 }

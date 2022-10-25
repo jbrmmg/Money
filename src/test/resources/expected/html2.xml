@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="uk">
+    <head>
+        <title>Report</title>
+        <style>/*
+            * THIS FILE IS GENERATED - DO NOT EDIT
+            */
+            @page { margin:10pt; }
+
+            body {
+            font-size:12px;
+            font-family:Arial, Helvetica, sans-serif;
+            }
+
+            h1 {
+            font-size:24px;
+            font-weight:bolder;
+            }
+
+            h2 {
+            font-size:14px;
+            font-weight:bold;
+            }
+
+            table { border-spacing:0; }
+
+            td {
+            font-size:10px;
+            white-space:nowrap;
+            }
+
+            td.date { text-align:right; }
+
+            td.description {
+            font-size:8px;
+            white-space:nowrap;
+            }
+
+            td.amount {
+            color:#000000;
+            text-align:right;
+            }
+
+            td.amount-debit { color:#FF0000; }
+
+            td.center-column {
+            border-right:2px solid darkblue;
+            width:10px;
+            }
+
+            th.total-column { padding-left:30px; }
+
+            td.total-row {
+            font-size:14px;
+            font-weight:bold;
+            border-top:2px solid black;
+            padding-top:4px;
+            }
+
+            img.pie {
+            margin-right:auto;
+            margin-left:auto;
+            display:block;
+            }</style>
+    </head>
+    <body>
+        <h1>2010 Summary</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-yr.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Year</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/HSE.png" />
+                </td>
+                <td>House</td>
+                <td class="amount">10.02</td>
+                <td class="amount">0.00</td>
+                <td />
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">10.02</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>January 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-0.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/HSE.png" />
+                </td>
+                <td>House</td>
+                <td class="amount">10.02</td>
+                <td class="amount">0.00</td>
+                <td />
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">10.02</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>February 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-1.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/HSE.png" />
+                </td>
+                <td>House</td>
+                <td class="amount">0.00</td>
+                <td class="amount">10.02</td>
+                <td class="amount amount-debit">-100%</td>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">10.02</td>
+                <td class="total-row amount amount-debit">-100%</td>
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>March 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-2.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>April 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-3.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>May 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-4.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>June 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-5.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>July 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-6.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>August 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-7.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>September 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-8.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>October 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-9.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>November 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-10.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <h1>December 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-11.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount">0.00</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+    </body>
+</html>
