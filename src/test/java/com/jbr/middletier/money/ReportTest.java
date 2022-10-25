@@ -12,6 +12,8 @@ import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.utils.CssAssertHelper;
 import com.jbr.middletier.money.utils.HtmlTableAssertHelper;
+import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
+import com.jbr.middletier.money.xml.html.ReportHtml;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
@@ -25,10 +27,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.time.LocalDate;
@@ -69,6 +74,202 @@ public class ReportTest extends Support {
 
             statementRepository.save(statement);
         }
+    }
+
+    private List<Transaction> standardReportTestData() throws IOException {
+        // Clean up
+        deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
+        deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
+
+        // Setup a list of transactions with the bare minimum required.
+        Account account = new Account();
+        account.setId("AMEX");
+        Category category = new Category();
+        category.setId("HSE");
+        category.setName("House");
+
+        List<Transaction> transactions = new ArrayList<>();
+        Transaction transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(2010,1,1));
+        transaction.setAmount(-10.02);
+        transaction.setDescription("Testing");
+        transactions.add(transaction);
+
+        transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(2010,1,2));
+        transaction.setAmount(-210.02);
+        transaction.setDescription("Testing 1");
+        transactions.add(transaction);
+
+        category = new Category();
+        category.setId("FDG");
+        category.setName("Grocery");
+        transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setDate(LocalDate.of(2010,1,2));
+        transaction.setAmount(-84.12);
+        transaction.setDescription("This is a much longer description test!!");
+        transactions.add(transaction);
+
+        return transactions;
+    }
+
+    private Element getRoot(String html) throws ParserConfigurationException, IOException, SAXException {
+        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        InputSource is = new InputSource();
+        is.setCharacterStream(new StringReader(html));
+        org.w3c.dom.Document  document = db.parse(is);
+        Document domDocument = new DOMBuilder().build(document);
+        return domDocument.getRootElement();
+    }
+
+    @Test
+    public void htmlReportTestHeaderAndPie() throws IOException, ParserConfigurationException, SAXException {
+        List<Transaction> transactions = standardReportTestData();
+
+        // Setup a list of previous transactions.
+        List<Transaction> previousTransactions = new ArrayList<>();
+
+        HyperTextMarkupLanguage html = new ReportHtml(transactions,
+                previousTransactions,
+                LocalDate.of(2010,1,1),
+                applicationProperties.getReportWorking(),
+                ReportHtml.ReportType.MONTH );
+
+        // Check the html.
+        Element root = getRoot(html.getHtmlAsString());
+
+        Assert.assertEquals("html", root.getName());
+        Element head = root.getChild("head");
+        Assert.assertNotNull(head);
+
+        Element title = head.getChild("title");
+        Assert.assertNotNull(title);
+        Assert.assertEquals("Report", title.getText());
+
+        Element style = head.getChild("style");
+        Assert.assertNotNull(style);
+        CssAssertHelper.checkReportCSS(style.getValue());
+
+        Element body = root.getChild("body");
+        Assert.assertNotNull(body);
+
+        List<Element> headers = body.getChildren("h1");
+        Assert.assertEquals(1, headers.size());
+        Assert.assertEquals("January 2010", headers.get(0).getText());
+
+        List<Element> images = body.getChildren("img");
+        Assert.assertEquals(1, images.size());
+        Assert.assertEquals("pie", images.get(0).getAttribute("class").getValue());
+        Assert.assertEquals("400px", images.get(0).getAttribute("height").getValue());
+        Assert.assertEquals("400px", images.get(0).getAttribute("width").getValue());
+        Assert.assertTrue(images.get(0).getAttribute("src").getValue().contains("pie-"));
+    }
+
+    @Test
+    public void htmlReportTestComparisonTable() throws IOException, ParserConfigurationException, SAXException {
+        List<Transaction> transactions = standardReportTestData();
+
+        // Setup a list of previous transactions.
+        List<Transaction> previousTransactions = new ArrayList<>();
+
+        HyperTextMarkupLanguage html = new ReportHtml(transactions,
+                previousTransactions,
+                LocalDate.of(2010,1,1),
+                applicationProperties.getReportWorking(),
+                ReportHtml.ReportType.MONTH );
+
+        // Check the html.
+        Element root = getRoot(html.getHtmlAsString());
+        Element body = root.getChild("body");
+
+        List<Element> tables = body.getChildren("table");
+        Assert.assertEquals(2, tables.size());
+
+        List<List<HtmlTableAssertHelper.HtmlTableAssertHelperData>> expected = new ArrayList<>();
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Previous Month", "total-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/FDG.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Grocery", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-84.12", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"0.00", "amount");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"House", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-220.04","amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"0.00", "amount");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"Total", "total-row");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"-304.16", "total-row amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"0.00", "total-row amount");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"", "");
+        HtmlTableAssertHelper.checkTable(tables.get(0),expected);
+    }
+
+    @Test
+    public void htmlReportTestTransactionTable() throws IOException, ParserConfigurationException, SAXException {
+        List<Transaction> transactions = standardReportTestData();
+
+        // Setup a list of previous transactions.
+        List<Transaction> previousTransactions = new ArrayList<>();
+
+        HyperTextMarkupLanguage html = new ReportHtml(transactions,
+                previousTransactions,
+                LocalDate.of(2010,1,1),
+                applicationProperties.getReportWorking(),
+                ReportHtml.ReportType.MONTH );
+
+        // Check the html.
+        Element root = getRoot(html.getHtmlAsString());
+        Element body = root.getChild("body");
+
+        List<Element> tables = body.getChildren("table");
+        Assert.assertEquals(2, tables.size());
+
+        List<List<HtmlTableAssertHelper.HtmlTableAssertHelperData>> expected = new ArrayList<>();
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Date", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Description", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Amount", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Date", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Description", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Amount", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"01-Jan2010", "date");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/AMEX.png");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Testing", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-10.02", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "center-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"02-Jan2010", "date");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/AMEX.png");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/FDG.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"This is a much longerdescription test!!", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-84.12", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"02-Jan2010", "date");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/AMEX.png");
+        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/HSE.png");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Testing 1", "description");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-210.02", "amount amount-debit");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "center-column");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
+        HtmlTableAssertHelper.checkTable(tables.get(1),expected);
     }
 
     @Test
@@ -158,102 +359,9 @@ public class ReportTest extends Support {
         Assert.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf").toPath()));
 
         // Check the HTML file.
-        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        InputSource is = new InputSource();
         String html = new String(Files.readAllBytes(htmlFile.toPath()));
-        is.setCharacterStream(new StringReader(html));
-        org.w3c.dom.Document  document = db.parse(is);
-
-        Document domDocument = new DOMBuilder().build(document);
-        Element root = domDocument.getRootElement();
-
-        Assert.assertEquals("html", root.getName());
-        Element head = root.getChild("head");
-        Assert.assertNotNull(head);
-
-        Element title = head.getChild("title");
-        Assert.assertNotNull(title);
-        Assert.assertEquals("Report", title.getText());
-
-        Element style = head.getChild("style");
-        Assert.assertNotNull(style);
-        CssAssertHelper.checkReportCSS(style.getValue());
-
+        Element root = getRoot(html);
         Element body = root.getChild("body");
-        Assert.assertNotNull(body);
-
-        List<Element> headers = body.getChildren("h1");
-        Assert.assertEquals(1, headers.size());
-        Assert.assertEquals("January 2010", headers.get(0).getText());
-
-        List<Element> images = body.getChildren("img");
-        Assert.assertEquals(1, images.size());
-        Assert.assertEquals("pie", images.get(0).getAttribute("class").getValue());
-        Assert.assertEquals("400px", images.get(0).getAttribute("height").getValue());
-        Assert.assertEquals("400px", images.get(0).getAttribute("width").getValue());
-        Assert.assertTrue(images.get(0).getAttribute("src").getValue().contains("pie-"));
-
-        List<Element> tables = body.getChildren("table");
-        Assert.assertEquals(2, tables.size());
-
-        List<List<HtmlTableAssertHelper.HtmlTableAssertHelperData>> expected = new ArrayList<>();
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Current Spend", "total-column");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Previous Month", "total-column");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Change in Spend", "total-column");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/FDG.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Grocery", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-84.12", "amount amount-debit");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"0.00", "amount");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"House", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-220.04","amount amount-debit");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"0.00", "amount");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"Total", "total-row");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"-304.16", "total-row amount amount-debit");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"0.00", "total-row amount");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 3,"", "");
-        HtmlTableAssertHelper.checkTable(tables.get(0),expected);
-
-        expected = new ArrayList<>();
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Date", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Description", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Amount", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Date", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Description", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 0,"Amount", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"01-Jan2010", "date");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/AMEX.png");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"Testing", "description");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-10.02", "amount amount-debit");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"", "center-column");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"02-Jan2010", "date");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/AMEX.png");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 1,25, 25, "./target/testfiles/PdnReport/FDG.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"This is a much longerdescription test!!", "description");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 1,"-84.12", "amount amount-debit");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"02-Jan2010", "date");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/AMEX.png");
-        HtmlTableAssertHelper.expectTableBuliderImage(expected, 2,25, 25, "./target/testfiles/PdnReport/HSE.png");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"Testing 1", "description");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"-210.02", "amount amount-debit");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "center-column");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableAssertHelper.checkTable(tables.get(1),expected);
 
         List<Element> paragraphs = body.getChildren("p");
         Assert.assertEquals(1,  paragraphs.size());
