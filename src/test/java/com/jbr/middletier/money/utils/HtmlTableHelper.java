@@ -7,7 +7,7 @@ import org.junit.Assert;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HtmlTableAssertHelper {
+public class HtmlTableHelper {
     public static abstract class HtmlTableAssertHelperData {
         public abstract void checkElement(Element element);
     }
