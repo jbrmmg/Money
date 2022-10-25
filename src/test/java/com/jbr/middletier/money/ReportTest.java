@@ -212,7 +212,7 @@ public class ReportTest extends Support {
         HtmlTableHelper.expectTableBuliderText(expected, 3,"-304.16", "total-row amount amount-debit");
         HtmlTableHelper.expectTableBuliderText(expected, 3,"0.00", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 3,"", "");
-        HtmlTableHelper.checkTable(tables.get(0),expected);
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(0),expected));
     }
 
     @Test
@@ -269,7 +269,7 @@ public class ReportTest extends Support {
         HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableHelper.checkTable(tables.get(1),expected);
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(1),expected));
     }
 
     @Test

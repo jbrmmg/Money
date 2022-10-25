@@ -197,7 +197,7 @@ public class AnnualReportTest extends Support {
         HtmlTableHelper.expectTableBuliderText(expected, 2,"10.02", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"0.00", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableHelper.checkTable(tables.get(0),expected);
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(0),expected));
 
         expected = new ArrayList<>();
         HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
@@ -215,7 +215,7 @@ public class AnnualReportTest extends Support {
         HtmlTableHelper.expectTableBuliderText(expected, 2,"10.02", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"0.00", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"", "");
-        HtmlTableHelper.checkTable(tables.get(1),expected);
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(1),expected));
 
         expected = new ArrayList<>();
         HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
@@ -233,7 +233,7 @@ public class AnnualReportTest extends Support {
         HtmlTableHelper.expectTableBuliderText(expected, 2,"0.00", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"10.02", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 2,"-100%", "total-row amount amount-debit");
-        HtmlTableHelper.checkTable(tables.get(2),expected);
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(2),expected));
 
         expected = new ArrayList<>();
         HtmlTableHelper.expectTableBuliderText(expected, 0,"", "");
@@ -246,16 +246,16 @@ public class AnnualReportTest extends Support {
         HtmlTableHelper.expectTableBuliderText(expected, 1,"0.00", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 1,"0.00", "total-row amount");
         HtmlTableHelper.expectTableBuliderText(expected, 1,"", "");
-        HtmlTableHelper.checkTable(tables.get(3),expected);
-        HtmlTableHelper.checkTable(tables.get(4),expected);
-        HtmlTableHelper.checkTable(tables.get(5),expected);
-        HtmlTableHelper.checkTable(tables.get(6),expected);
-        HtmlTableHelper.checkTable(tables.get(7),expected);
-        HtmlTableHelper.checkTable(tables.get(8),expected);
-        HtmlTableHelper.checkTable(tables.get(9),expected);
-        HtmlTableHelper.checkTable(tables.get(10),expected);
-        HtmlTableHelper.checkTable(tables.get(11),expected);
-        HtmlTableHelper.checkTable(tables.get(12),expected);
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(3),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(4),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(5),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(6),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(7),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(8),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(9),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(10),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(11),expected));
+        Assert.assertTrue(HtmlTableHelper.checkTable(tables.get(12),expected));
 
         List<Element> paragraphs = body.getChildren("p");
         Assert.assertEquals(12,  paragraphs.size());

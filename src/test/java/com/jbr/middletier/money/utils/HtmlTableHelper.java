@@ -2,14 +2,59 @@ package com.jbr.middletier.money.utils;
 
 import org.jdom2.Attribute;
 import org.jdom2.Element;
-import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class HtmlTableHelper {
+    private static final Logger LOG = LoggerFactory.getLogger(HtmlTableHelper.class);
+
+    private static class CompareResult {
+        private boolean result;
+
+        public CompareResult() {
+            result = true;
+        }
+
+        public void fail() {
+            result = false;
+        }
+
+        public boolean getResult() {
+            return result;
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
     public static abstract class HtmlTableAssertHelperData {
-        public abstract void checkElement(Element element);
+        protected void assertText(CompareResult result, String expected, String actual, String log) {
+            if(!expected.equals(actual)) {
+                result.fail();
+                LOG.warn("Unexpected text difference {} {} {}", expected, actual, log);
+            }
+        }
+        protected void assertInteger(CompareResult result, int expected, int actual, String log) {
+            if(expected != actual) {
+                result.fail();
+                LOG.warn("Unexpected number difference {} {} {}", expected, actual, log);
+            }
+        }
+        protected void assertNull(CompareResult result, Object shouldBeNull, String log) {
+            if(shouldBeNull != null) {
+                result.fail();
+                LOG.warn("Expected value not null {}", log);
+            }
+        }
+        protected void assertNotNull(CompareResult result, Object shouldNoBeNull, String log) {
+            if(shouldNoBeNull == null) {
+                result.fail();
+                LOG.warn("Expected value null {}", log);
+            }
+        }
+
+        public abstract void checkElement(CompareResult result, Element element);
     }
 
     private static class HtmlTableAssertHelperDataText extends HtmlTableAssertHelperData {
@@ -22,14 +67,16 @@ public class HtmlTableHelper {
         }
 
         @Override
-        public void checkElement(Element element) {
-            Assert.assertEquals(this.text,element.getText());
+        public void checkElement(CompareResult result, Element element) {
+            assertText(result,this.text, element.getText(),"Text Check");
             Attribute classAttribute = element.getAttribute("class");
             if(this.className.length() > 0) {
-                Assert.assertNotNull(classAttribute);
-                Assert.assertEquals(this.className,classAttribute.getValue());
+                assertNotNull(result,classAttribute,"class attribute");
+                if(classAttribute != null) {
+                    assertText(result, this.className, classAttribute.getValue(), "Class Check");
+                }
             } else {
-                Assert.assertNull(classAttribute);
+                assertNull(result,classAttribute,"class attribute (2)");
             }
         }
     }
@@ -46,12 +93,12 @@ public class HtmlTableHelper {
         }
 
         @Override
-        public void checkElement(Element element) {
+        public void checkElement(CompareResult result, Element element) {
             List<Element> images = element.getChildren("img");
-            Assert.assertEquals(1, images.size());
-            Assert.assertEquals(height + "px", images.get(0).getAttribute("height").getValue());
-            Assert.assertEquals(width + "px", images.get(0).getAttribute("width").getValue());
-            Assert.assertEquals(this.path, images.get(0).getAttribute("src").getValue());
+            assertInteger(result, 1, images.size(), "Image Count");
+            assertText(result, height + "px", images.get(0).getAttribute("height").getValue(), "height");
+            assertText(result, width + "px", images.get(0).getAttribute("width").getValue(), "width");
+            assertText(result, this.path, images.get(0).getAttribute("src").getValue(), "source path");
         }
     }
 
@@ -72,34 +119,49 @@ public class HtmlTableHelper {
         internalExpectTableBuilder(expected,line,new HtmlTableAssertHelperDataImage(height,width,imagePath));
     }
 
-    private static void checkTableRow(Element row, List<HtmlTableAssertHelperData> expected) {
+    private static void checkTableRow(CompareResult result, Element row, List<HtmlTableAssertHelperData> expected) {
         List<Element> columns = row.getChildren("td");
-        Assert.assertEquals(expected.size(),columns.size());
+        if(expected.size() != columns.size()) {
+            LOG.warn("Table row, column difference");
+            result.fail();
+            return;
+        }
 
         for(int i = 0; i < columns.size(); i++) {
-            expected.get(i).checkElement(columns.get(i));
+            expected.get(i).checkElement(result, columns.get(i));
         }
     }
 
-    private static void checkTableHeaderRow(Element row, List<HtmlTableAssertHelperData> expected) {
+    private static void checkTableHeaderRow(CompareResult result, Element row, List<HtmlTableAssertHelperData> expected) {
         List<Element> columns = row.getChildren("th");
-        Assert.assertEquals(expected.size(),columns.size());
+        if(expected.size() != columns.size()) {
+            LOG.warn("Header row, column difference");
+            result.fail();
+            return;
+        }
 
         for(int i = 0; i < columns.size(); i++) {
-            expected.get(i).checkElement(columns.get(i));
+            expected.get(i).checkElement(result, columns.get(i));
         }
     }
 
-    public static void checkTable(Element table, List<List<HtmlTableAssertHelperData>> expected) {
+    public static boolean checkTable(Element table, List<List<HtmlTableAssertHelperData>> expected) {
+        CompareResult result = new CompareResult();
+
         List<Element> rows = table.getChildren("tr");
-        Assert.assertEquals(expected.size(),rows.size());
+        if(expected.size() != rows.size()) {
+            LOG.warn("Row Size difference");
+            return false;
+        }
 
         for(int i = 0; i < rows.size(); i++) {
             if(i == 0) {
-                checkTableHeaderRow(rows.get(i), expected.get(i));
+                checkTableHeaderRow(result, rows.get(i), expected.get(i));
             } else {
-                checkTableRow(rows.get(i), expected.get(i));
+                checkTableRow(result, rows.get(i), expected.get(i));
             }
         }
+
+        return result.getResult();
     }
 }
