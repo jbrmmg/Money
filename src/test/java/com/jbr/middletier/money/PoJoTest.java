@@ -32,6 +32,11 @@ public class PoJoTest {
         Assert.assertEquals("FCFCFC",accountDTO.getColour());
         Assert.assertEquals("Testing",accountDTO.getName());
         Assert.assertEquals("Cheese",accountDTO.getImagePrefix());
+
+        // Compare to non-accountDTO should always be false;
+        @SuppressWarnings("EqualsBetweenInconvertibleTypes")
+        boolean test = account.equals("Test");
+        Assert.assertFalse(test);
     }
 
     @Test
