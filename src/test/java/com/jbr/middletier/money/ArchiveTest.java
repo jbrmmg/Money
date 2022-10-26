@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Collections;
 
@@ -69,7 +70,6 @@ public class ArchiveTest extends Support {
     }
 
     @Test
-    @Ignore("HTML generation needs checking")
     public void testReport() throws Exception {
         cleanUp();
 
@@ -78,7 +78,6 @@ public class ArchiveTest extends Support {
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 
         // Create some transactions
-        // TODO add transactions so that pie can be checked.
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
         CategoryDTO category = new CategoryDTO();
@@ -151,5 +150,6 @@ public class ArchiveTest extends Support {
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
+        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf").toPath()));
     }
 }
