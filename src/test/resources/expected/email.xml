@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uk">
+    <head>
+        <title>Email</title>
+        <style>/*
+            * THIS FILE IS GENERATED - DO NOT EDIT
+            */
+            body {
+            font-family:"Courier New", Courier, monospace;
+            font-size:10px;
+            }
+
+            th {
+            text-align:left;
+            border-bottom:2px solid black;
+            }
+
+            description { padding:2px 4px 0 0; }
+
+            .date { padding:2px 4px 0 0; }
+
+            .amount { padding:2px 0 0 0; }
+
+            .db { color:#FF0000; }
+
+            .amount-data { text-align:right; }</style>
+    </head>
+    <body>
+        <p>Credit card transactions up to today.</p>
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Account</th>
+                <th>Description</th>
+                <th>Amount</th>
+            </tr>
+            <tr>
+                <td class="date" />
+                <td class="description" />
+                <td class="description" />
+                <td class="description">Brought Forward</td>
+                <td class="amount amount-data db">10.02</td>
+            </tr>
+            <tr>
+                <td class="date">03/Jan</td>
+                <td class="description">House</td>
+                <td class="description">BANK</td>
+                <td class="description">Test</td>
+                <td class="amount amount-data">192.92</td>
+            </tr>
+            <tr>
+                <td class="date">12/Jan</td>
+                <td class="description">House</td>
+                <td class="description">BANK</td>
+                <td class="description">Test</td>
+                <td class="amount amount-data db">312.92</td>
+            </tr>
+            <tr>
+                <td class="date" />
+                <td class="description" />
+                <td class="description" />
+                <td class="description">Carried Forward</td>
+                <td class="amount amount-data db">130.02</td>
+            </tr>
+        </table>
+    </body>
+</html>

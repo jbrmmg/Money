@@ -18,10 +18,17 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.io.ResourceLoader;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class EmailTest {
@@ -46,7 +53,7 @@ public class EmailTest {
     }
 
     @Test
-    public void test() throws ParseException {
+    public void testEmailFormat() throws ParseException, IOException {
         FinancialAmount start = new FinancialAmount(-10.02);
         FinancialAmount end = new FinancialAmount(103.02);
         List<TransactionDTO> transactions = new ArrayList<>();
@@ -77,11 +84,24 @@ public class EmailTest {
         transactions.add(transaction);
 
         HyperTextMarkupLanguage email = new EmailHtml(start,transactions);
-        String f = email.getHtmlAsString();
-        Assert.assertEquals(1693, f.length());
+        String emailHtml = email.getHtmlAsString();
+        Assert.assertEquals(1693, emailHtml.length());
 
-        //TODO perform a much better check here (see the report test).
+        // Get the expected html
+        File expectedFile = new File("./src/test/resources/expected/email.xml");
+        String expected = new String(Files.readAllBytes(expectedFile.toPath()));// Get the difference.
+        Diff htmlDiff = DiffBuilder.compare(expected).withTest(emailHtml).ignoreWhitespace().build();
 
-        System.out.println(f);
+        // Only the CSS should be different (this is checked separately).
+        Iterator<Difference> iterator = htmlDiff.getDifferences().iterator();
+        Difference expectedDifferent = null;
+        int differenceCount = 0;
+        while (iterator.hasNext()) {
+            expectedDifferent = iterator.next();
+            differenceCount++;
+        }
+        Assert.assertEquals(1,differenceCount);
+        Assert.assertNotNull(expectedDifferent);
+        Assert.assertEquals("/html[1]/head[1]/style[1]/text()[1]",expectedDifferent.getComparison().getControlDetails().getXPath());
     }
 }
