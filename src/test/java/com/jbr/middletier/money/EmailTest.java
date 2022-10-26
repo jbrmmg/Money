@@ -1,21 +1,19 @@
 package com.jbr.middletier.money;
 
-import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.reporting.EmailGenerator;
 import com.jbr.middletier.money.util.FinancialAmount;
-import com.jbr.middletier.money.util.TransportWrapper;
 import com.jbr.middletier.money.xml.html.EmailHtml;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.modelmapper.ModelMapper;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.Difference;
@@ -27,26 +25,22 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
-public class EmailTest {
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = MiddleTier.class)
+@WebAppConfiguration
+public class EmailTest extends Support {
     @Test
-    @Ignore("This test is not yet ready.")
-    public void testEmail() {
-        TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
-        StatementRepository statementRepository = Mockito.mock(StatementRepository.class);
-        AccountRepository accountRepository = Mockito.mock(AccountRepository.class);
-        TransportWrapper transportWrapper = Mockito.mock(TransportWrapper.class);
-        ModelMapper modelMapper = Mockito.mock(ModelMapper.class);
-
-        EmailGenerator emailGenerator = new EmailGenerator(
-                transactionRepository,
-                statementRepository,
-                accountRepository,
-                transportWrapper,
-                modelMapper);
-        Assert.assertNotNull(emailGenerator);
-
-        //emailGenerator.generateReport("a@b.com", "a@b.com", "user", "host", "pwd", 1);
+    public void testEmail() throws Exception {
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/email?host=blah&password=fake")
+                        .contentType(getContentType()))
+                .andExpect(status().isFailedDependency())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertEquals("Failed to send the message", error);
     }
 
     @Test
