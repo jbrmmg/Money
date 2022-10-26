@@ -35,7 +35,7 @@ public class PoJoTest {
 
         // Compare to non-accountDTO should always be false;
         @SuppressWarnings("EqualsBetweenInconvertibleTypes")
-        boolean test = account.equals("Test");
+        boolean test = accountDTO.equals("Test");
         Assert.assertFalse(test);
     }
 
