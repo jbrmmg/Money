@@ -1,7 +1,6 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
@@ -17,7 +16,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
-import org.springframework.core.io.ResourceLoader;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.Difference;
@@ -25,7 +23,6 @@ import org.xmlunit.diff.Difference;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,7 +31,7 @@ import java.util.List;
 public class EmailTest {
     @Test
     @Ignore("This test is not yet ready.")
-    public void testEmail() throws Exception {
+    public void testEmail() {
         TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
         StatementRepository statementRepository = Mockito.mock(StatementRepository.class);
         AccountRepository accountRepository = Mockito.mock(AccountRepository.class);
@@ -53,9 +50,8 @@ public class EmailTest {
     }
 
     @Test
-    public void testEmailFormat() throws ParseException, IOException {
+    public void testEmailFormat() throws IOException {
         FinancialAmount start = new FinancialAmount(-10.02);
-        FinancialAmount end = new FinancialAmount(103.02);
         List<TransactionDTO> transactions = new ArrayList<>();
 
         AccountDTO account = new AccountDTO();
