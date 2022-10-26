@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.dto;
 
-@SuppressWarnings("unused")
 public class ReconcileUpdateDTO {
     private int id;
     private String categoryId;

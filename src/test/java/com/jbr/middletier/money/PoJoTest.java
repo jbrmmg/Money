@@ -348,4 +348,29 @@ public class PoJoTest {
         Assert.assertEquals(LocalDate.of(2022,10,13), reconciliation.getDate());
         Assert.assertEquals("HSE", reconciliation.getCategory().getId());
     }
+
+    @Test
+    public void DateRangeDTO() {
+        DateRangeDTO dateRange = new DateRangeDTO("2010-05-03","2010-06-21");
+        Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
+        Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
+    }
+
+    @Test
+    public void ArchiveOrReportRequestDTO() {
+        ArchiveOrReportRequestDTO archiveOrReportRequest = new ArchiveOrReportRequestDTO(2010,5);
+        Assert.assertEquals(2010, archiveOrReportRequest.getYear());
+        Assert.assertEquals(5, archiveOrReportRequest.getMonth());
+    }
+
+    @Test
+    public void ReconcileUpdateDTO() {
+        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setId(1);
+        reconcileUpdate.setType("Blah");
+        reconcileUpdate.setCategoryId("FSE");
+        Assert.assertEquals(1, reconcileUpdate.getId());
+        Assert.assertEquals("Blah", reconcileUpdate.getType());
+        Assert.assertEquals("FSE", reconcileUpdate.getCategoryId());
+    }
 }
