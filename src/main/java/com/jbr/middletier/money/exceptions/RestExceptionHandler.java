@@ -1,5 +1,7 @@
 package com.jbr.middletier.money.exceptions;
 
+import com.itextpdf.text.DocumentException;
+import org.apache.batik.transcoder.TranscoderException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -7,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.io.IOException;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
@@ -84,6 +88,21 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(EmailGenerationException.class)
     protected ResponseEntity<Object> handleEmailException(EmailGenerationException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "Email generation failed.", ex));
+    }
+
+    @ExceptionHandler(TranscoderException.class)
+    protected ResponseEntity<Object> handleTranscoderException(TranscoderException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "Report failed, transcoder failure.", ex));
+    }
+
+    @ExceptionHandler(DocumentException.class)
+    protected ResponseEntity<Object> handleTranscoderException(DocumentException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "Report failed, document exception.", ex));
+    }
+
+    @ExceptionHandler(IOException.class)
+    protected ResponseEntity<Object> handleTranscoderException(IOException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "IO Exception.", ex));
     }
 
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {

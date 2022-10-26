@@ -7,6 +7,7 @@ public class AccountDTO implements Comparable<AccountDTO> {
     private String name;
     private String imagePrefix;
     private String colour;
+    private Boolean closed;
 
     public String getId() {
         return id;
@@ -38,6 +39,14 @@ public class AccountDTO implements Comparable<AccountDTO> {
 
     public void setColour(String colour) {
         this.colour = colour;
+    }
+
+    public Boolean getClosed() {
+        return closed;
+    }
+
+    public void setClosed(Boolean closed) {
+        this.closed = closed;
     }
 
     @Override

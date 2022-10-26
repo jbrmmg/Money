@@ -37,7 +37,6 @@ public class ArchiveAndReportController {
 
     @PostMapping(path="/int/money/transaction/report")
     public @ResponseBody StatusDTO report(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
-        //TODO check the exceptions
         LOG.info("Report Controller - request report.");
         reportGenerator.generateReport(report.getYear(),report.getMonth());
 
@@ -46,7 +45,6 @@ public class ArchiveAndReportController {
 
     @PostMapping(path="/int/money/transaction/annualreport")
     public @ResponseBody StatusDTO annualReport(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
-        //TODO check the exceptions
         LOG.info("Report Controller - request report (Annual).");
         reportGenerator.generateAnnualReport(report.getYear());
 

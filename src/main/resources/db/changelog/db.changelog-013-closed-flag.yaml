@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 12
+      author: jason
+      changes:
+
+        - addColumn:
+            tableName: account
+            columns:
+              - column:
+                  name: closed
+                  type: boolean
+                  valueBoolean: false

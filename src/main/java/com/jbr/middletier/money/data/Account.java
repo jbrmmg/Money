@@ -33,6 +33,9 @@ public class Account implements Serializable {
     @Column(name="colour")
     private String colour;
 
+    @Column(name="closed")
+    private Boolean closed;
+
     public String getId() {
         return id;
     }
@@ -56,4 +59,12 @@ public class Account implements Serializable {
     }
 
     public void setColour(String colour) { this.colour = colour; }
+
+    public Boolean getClosed() {
+        return closed;
+    }
+
+    public void setClosed(Boolean closed) {
+        this.closed = closed;
+    }
 }

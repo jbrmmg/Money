@@ -7,6 +7,7 @@ import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.reconciliation.MatchInformation;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -179,15 +179,12 @@ public class ReconciliationManager {
         return matchData(lastAccount);
     }
 
-    private void logTransactionData(String type, int id, LocalDate date, Category category, double amount) {
-        //TODO use financial amount here
-        DecimalFormat df = new DecimalFormat("#,##0.00");
-
+    private void logTransactionData(String type, int id, LocalDate date, Category category, FinancialAmount amount) {
         String logData = type + " - " +
                 id + " " +
                 date + " " +
                 (category == null ? "" : category.getName()) + " " +
-                df.format(amount);
+                amount.toString();
 
         LOG.debug(logData);
     }
@@ -208,7 +205,7 @@ public class ReconciliationManager {
                         nextReconciliationData.getId(),
                         nextReconciliationData.getDate(),
                         nextReconciliationData.getCategory(),
-                        nextReconciliationData.getAmount() );
+                        new FinancialAmount(nextReconciliationData.getAmount()) );
             }
 
             for (Transaction nextTransaction : transactions) {
@@ -216,7 +213,7 @@ public class ReconciliationManager {
                         nextTransaction.getId(),
                         nextTransaction.getDate(),
                         nextTransaction.getCategory(),
-                        nextTransaction.getAmount().getValue() );
+                        nextTransaction.getAmount() );
             }
         }
 
@@ -281,7 +278,6 @@ public class ReconciliationManager {
             }
         }
 
-        //noinspection unchecked
         Collections.sort(result);
 
         // Update the opening balance information.
@@ -394,7 +390,7 @@ public class ReconciliationManager {
 
         Optional<Account> account = accountRepository.findById(accountId);
 
-        if(!account.isPresent()) {
+        if(account.isEmpty()) {
             throw new InvalidAccountIdException("Invalid account id." + accountId);
         }
 

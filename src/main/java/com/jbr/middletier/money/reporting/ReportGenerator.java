@@ -318,8 +318,11 @@ public class ReportGenerator {
         }
 
         List<Account> accounts = new ArrayList<>();
-        accountRepository.findAll().forEach(accounts::add);
-        // TODO - Add active dates to account so it can be tracked for period.
+        accountRepository.findAll().forEach(a -> {
+            if(!a.getClosed()) {
+                accounts.add(a);
+            }
+        });
 
         // Check that all the statements have a report.
         for(MonthStatus nextMonthStatus: getMonthStatusMap(accounts.size()).values()) {
