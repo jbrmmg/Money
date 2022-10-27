@@ -153,6 +153,8 @@ public class Regular {
         return this.id;
     }
 
+    public void setId(Integer id) {this.id = id;}
+
     public Account getAccount() {
         return this.account;
     }

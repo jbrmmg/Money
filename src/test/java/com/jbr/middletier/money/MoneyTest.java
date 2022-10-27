@@ -149,7 +149,7 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void externalTranasactionTest() throws Exception {
+    public void externalTransactionTest() throws Exception {
         cleanUp();
 
         AccountDTO account = new AccountDTO();
@@ -341,12 +341,12 @@ public class MoneyTest extends Support {
         LocalDate testDate = LocalDate.now();
 
         Optional<Category> category = categoryRepository.findById("FDG");
-        if(!category.isPresent()) {
+        if(category.isEmpty()) {
             throw new Exception("Cannot find the category FDG");
         }
 
         Optional<Account> account = accountRepository.findById("BANK");
-        if(!account.isPresent()) {
+        if(account.isEmpty()) {
             throw new Exception("Cannot find the account BANK");
         }
 
@@ -457,16 +457,16 @@ public class MoneyTest extends Support {
         }
 
         Optional<Category> category = categoryRepository.findById("FDG");
-        if(!category.isPresent()) {
+        if(category.isEmpty()) {
             throw new Exception("Cannot find the category FDG");
         }
 
         Optional<Account> account = accountRepository.findById("BANK");
-        if(!account.isPresent()) {
+        if(account.isEmpty()) {
             throw new Exception("Cannot find the account BANK");
         }
 
-        // Setup a rule that will move the date to after the weekend.
+        // Set up a rule that will move the date to after the weekend.
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
@@ -503,16 +503,16 @@ public class MoneyTest extends Support {
         }
 
         Optional<Category> category = categoryRepository.findById("FDG");
-        if(!category.isPresent()) {
+        if(category.isEmpty()) {
             throw new Exception("Cannot find the category FDG");
         }
 
         Optional<Account> account = accountRepository.findById("BANK");
-        if(!account.isPresent()) {
+        if(account.isEmpty()) {
             throw new Exception("Cannot find the account BANK");
         }
 
-        // Setup a rule that will move the date to after the weekend.
+        // Set up a rule that will move the date to after the weekend.
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
@@ -563,17 +563,17 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void testLoadReconcilationDataJLP() throws Exception {
+    public void testLoadReconciliationDataJLP() throws Exception {
         testReconciliationData("test.JLP.csv","JLPC",19, -7110.34);
     }
 
     @Test
-    public void testLoadReconcilationDataAMEX() throws Exception {
+    public void testLoadReconciliationDataAMEX() throws Exception {
         testReconciliationData("test.AMEX.csv","AMEX",15, -132.64);
     }
 
     @Test
-    public void testLoadReconcilationDataBank() throws Exception {
+    public void testLoadReconciliationDataBank() throws Exception {
         testReconciliationData("test.FirstDirect.csv","BANK",18, -1004.52);
     }
 
