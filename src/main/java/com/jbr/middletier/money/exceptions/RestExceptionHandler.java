@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -103,6 +104,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(IOException.class)
     protected ResponseEntity<Object> handleTranscoderException(IOException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "IO Exception.", ex));
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    protected ResponseEntity<Object> handleFileNotFound(FileNotFoundException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"File not found", ex));
     }
 
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
