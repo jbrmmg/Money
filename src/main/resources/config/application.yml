@@ -39,6 +39,7 @@ money:
     report-enabled: false
     archive-schedule: 0 0 4 1-10 2 ?
     archive-enabled: false
+    smtp-port: 25
 
 management:
     endpoint:

@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.reporting;
 
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
@@ -30,18 +31,21 @@ public class EmailGenerator {
     private final AccountRepository accountRepository;
     private final TransportWrapper transportWrapper;
     private final ModelMapper modelMapper;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
     public EmailGenerator(TransactionRepository transactionRepository,
                           StatementRepository statementRepository,
                           AccountRepository accountRepository,
                           TransportWrapper transportWrapper,
-                          ModelMapper modelMapper) {
+                          ModelMapper modelMapper,
+                          ApplicationProperties applicationProperties) {
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
         this.transportWrapper = transportWrapper;
         this.modelMapper = modelMapper;
+        this.applicationProperties = applicationProperties;
     }
 
     public void generateReport( String to,
@@ -131,7 +135,7 @@ public class EmailGenerator {
             properties.put("mail.smtp.auth", "true");
             properties.put("mail.smtp.starttls.enable", "true");
             properties.put("mail.smtp.host", host);
-            properties.put("mail.smtp.port", "25");
+            properties.put("mail.smtp.port", this.applicationProperties.getSmtpPort());
 
             Session session = Session.getInstance(properties,
                     new javax.mail.Authenticator() {
@@ -151,7 +155,9 @@ public class EmailGenerator {
             EmailHtml html = new EmailHtml(startAmount,emailTransactions);
             message.setContent(html.getHtmlAsString(), "text/html");
 
-            transportWrapper.setEmail(message);
+            if(!host.equals(applicationProperties.getIgnoreEmailHost())) {
+                transportWrapper.setEmail(message);
+            }
 
             LOG.info("email sent.");
         } catch (MessagingException e) {

@@ -33,6 +33,8 @@ money:
     report-share: ./target/testfiles/MoneyReports/
     report-working: ./target/testfiles/PdnReport/
     reconcile-file-location: src/test/resources/reconciliation
+    ignore-email-host: ignore.do.not.send
+    smtp-port: 25
 
 logging:
     level:

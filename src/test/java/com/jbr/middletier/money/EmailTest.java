@@ -43,6 +43,13 @@ public class EmailTest extends Support {
     }
 
     @Test
+    public void testEmail2() throws Exception {
+        getMockMvc().perform(post("/jbr/int/money/email?host=ignore.do.not.send&password=fake")
+                        .contentType(getContentType()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     public void testEmailFormat() throws IOException {
         FinancialAmount start = new FinancialAmount(-10.02);
         List<TransactionDTO> transactions = new ArrayList<>();
