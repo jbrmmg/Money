@@ -115,7 +115,7 @@ public class ReconciliationTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(put("/jbr/ext/money/reconciliation/auto")
+        getMockMvc().perform(put("/jbr/int/money/reconciliation/auto")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -148,7 +148,7 @@ public class ReconciliationTest extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(6)));
 
-        getMockMvc().perform(delete("/jbr/ext/money/reconciliation/clear")
+        getMockMvc().perform(delete("/jbr/int/money/reconciliation/clear")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -183,7 +183,7 @@ public class ReconciliationTest extends Support {
         reconcileUpdate.setCategoryId("FDG");
         reconcileUpdate.setId(2);
 
-        getMockMvc().perform(put("/jbr/ext/money/reconciliation/update")
+        getMockMvc().perform(put("/jbr/int/money/reconciliation/update")
                         .content(this.json(reconcileUpdate))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());

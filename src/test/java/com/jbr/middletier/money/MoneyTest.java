@@ -232,7 +232,7 @@ public class MoneyTest extends Support {
             ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
             reconcileRequest.setId(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
-            getMockMvc().perform(put("/jbr/ext/money/reconcile")
+            getMockMvc().perform(put("/jbr/int/money/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
