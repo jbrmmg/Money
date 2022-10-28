@@ -26,7 +26,7 @@ public class ReconciliationFileTest {
     @Test
     public void testFilesAvailable() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
-        Assert.assertEquals(5, files.size());
+        Assert.assertEquals(6, files.size());
     }
 
     private void testReconcilationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {
@@ -62,7 +62,7 @@ public class ReconciliationFileTest {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO amexFile = null;
         for(ReconciliationFileDTO next : files) {
-            if(next.getFilename().toLowerCase().contains("amex")) {
+            if(next.getFilename().toLowerCase().contains("amex.csv")) {
                 amexFile = next;
             }
         }
