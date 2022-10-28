@@ -128,7 +128,7 @@ public class MoneyTest extends Support {
             updateTransaction.setAmount(1283.21);
 
             assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
-            getMockMvc().perform(put("/jbr/int/money/transaction")
+            getMockMvc().perform(put("/jbr/ext/money/transaction")
                     .content(this.json(updateTransaction))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -299,7 +299,7 @@ public class MoneyTest extends Support {
                 .andExpect(jsonPath("$[0].amount", is(1.23)))
                 .andExpect(jsonPath("$", hasSize(1)));
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=JLPC")
+        getMockMvc().perform(get("/jbr/int/money/transaction?type=UN&account=JLPC")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(3.45)))
