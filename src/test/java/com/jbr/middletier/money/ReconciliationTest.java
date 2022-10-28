@@ -3,6 +3,7 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dataaccess.ReconciliationRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.junit.Assert;
@@ -16,9 +17,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.util.Objects;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,6 +37,7 @@ public class ReconciliationTest extends Support {
     @Before
     public void cleanUp() {
         transactionRepository.deleteAll();
+        reconciliationRepository.deleteAll();
     }
 
     @Test
@@ -67,7 +68,7 @@ public class ReconciliationTest extends Support {
         ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
 
         fileManager.getFiles().forEach(f -> {
-            if(f.getFilename().contains("test.AMEX.csv")) {
+            if(f.getFilename().contains("test.AMEX.match.csv")) {
                 reconciliationFile.setFilename(f.getFilename());
             }
         });
@@ -76,13 +77,115 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)));
+                .andExpect(jsonPath("$", hasSize(6)));
 
         getMockMvc().perform(get("/jbr/int/money/match?account=AMEX")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(15)));
-        //TODO - do more testing.
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[*].description", containsInAnyOrder("3CPAYMENT*PRET A MANGER LONDON", "3CPAYMENT*PRET A MANGER LONDON", "AUDIBLE UK ADBL.CO/PYMT")));
+
+        getMockMvc().perform(get("/jbr/ext/money/match?account=AMEX")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[*].description", containsInAnyOrder("3CPAYMENT*PRET A MANGER LONDON", "3CPAYMENT*PRET A MANGER LONDON", "AUDIBLE UK ADBL.CO/PYMT")));
+    }
+
+    @Test
+    public void testAutoReconcile() throws Exception {
+        ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
+
+        fileManager.getFiles().forEach(f -> {
+            if(f.getFilename().contains("test.AMEX.match.csv")) {
+                reconciliationFile.setFilename(f.getFilename());
+            }
+        });
+
+        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(6)));
+
+        getMockMvc().perform(put("/jbr/ext/money/reconciliation/auto")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk());
+
+        getMockMvc().perform(put("/jbr/ext/money/reconciliation/auto")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testClearReconcile() throws Exception {
+        ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
+
+        fileManager.getFiles().forEach(f -> {
+            if(f.getFilename().contains("test.AMEX.match.csv")) {
+                reconciliationFile.setFilename(f.getFilename());
+            }
+        });
+
+        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(6)));
+
+        getMockMvc().perform(delete("/jbr/ext/money/reconciliation/clear")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk());
+
+        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(6)));
+
+        getMockMvc().perform(delete("/jbr/ext/money/reconciliation/clear")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testUpdate() throws Exception {
+        ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
+
+        fileManager.getFiles().forEach(f -> {
+            if(f.getFilename().contains("test.AMEX.match.csv")) {
+                reconciliationFile.setFilename(f.getFilename());
+            }
+        });
+
+        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+                        .content(this.json(reconciliationFile))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(6)));
+
+        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setCategoryId("FSE");
+        reconcileUpdate.setId(1);
+
+        getMockMvc().perform(put("/jbr/ext/money/reconciliation/update")
+                        .content(this.json(reconcileUpdate))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk());
+
+        reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setCategoryId("FDG");
+        reconcileUpdate.setId(2);
+
+        getMockMvc().perform(put("/jbr/ext/money/reconciliation/update")
+                        .content(this.json(reconcileUpdate))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk());
     }
 }
