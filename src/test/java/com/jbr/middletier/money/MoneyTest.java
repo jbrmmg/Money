@@ -431,7 +431,7 @@ public class MoneyTest extends Support {
         regularCtrl.generateRegularPayments();
 
         // Check that we have 1 transaction.
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=BANK&category=FDG")
+        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&category=FDG")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].amount", containsInAnyOrder(10.0, 12.0)))
