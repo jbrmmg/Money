@@ -5,7 +5,9 @@ import com.jbr.middletier.money.dataaccess.ReconciliationRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
+import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
+import com.jbr.middletier.money.manager.ReconciliationManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import java.io.IOException;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.*;
@@ -30,9 +33,12 @@ public class ReconciliationTest extends Support {
     private TransactionRepository transactionRepository;
     @Autowired
     private ReconciliationRepository reconciliationRepository;
-
     @Autowired
     private ReconciliationFileManager fileManager;
+    @Autowired
+    private ReconciliationManager reconciliationManager;
+    @Autowired
+    private ReconciliationFileManager reconciliationFileManager;
 
     @Before
     public void cleanUp() {
@@ -121,8 +127,7 @@ public class ReconciliationTest extends Support {
                 .andExpect(status().isOk());
     }
 
-    @Test
-    public void testClearReconcile() throws Exception {
+    private ReconciliationFileDTO getReconcileFile() {
         ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
 
         fileManager.getFiles().forEach(f -> {
@@ -130,6 +135,13 @@ public class ReconciliationTest extends Support {
                 reconciliationFile.setFilename(f.getFilename());
             }
         });
+
+        return reconciliationFile;
+    }
+
+    @Test
+    public void testClearReconcile() throws Exception {
+        ReconciliationFileDTO reconciliationFile = getReconcileFile();
 
         getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
                         .content(this.json(reconciliationFile))
@@ -187,5 +199,42 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconcileUpdate))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testInvalidAccountId() {
+        try {
+            this.reconciliationManager.matchImpl("XXXX");
+            Assert.fail();
+        } catch(InvalidAccountIdException ex) {
+            Assert.assertEquals("Cannot find account with id Invalid account id.XXXX", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testSetCategoryUpdate() throws IOException {
+        // load the file.
+        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+
+        final int[] id = {0};
+        this.reconciliationRepository.findAll().forEach(r -> {
+            if(r.getDescription().equals("3CPAYMENT*PRET A MANGER LONDON X")) {
+                id[0] = r.getId();
+            }
+        });
+
+        // Set the category
+        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setId(id[0]);
+        reconcileUpdate.setType("rec");
+        reconcileUpdate.setCategoryId("HSE");
+        this.reconciliationManager.processReconcileUpdate(reconcileUpdate);
+
+        this.reconciliationRepository.findAll().forEach(r -> {
+            if(r.getDescription().equals("3CPAYMENT*PRET A MANGER LONDON X")) {
+                Assert.assertEquals("HSE", r.getCategory().getId());
+            }
+        });
     }
 }
