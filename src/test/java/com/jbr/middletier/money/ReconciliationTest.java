@@ -243,6 +243,133 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
+    public void testSetTransactionCategoryUpdate() {
+        Account account = new Account();
+        account.setId("AMEX");
+
+        Category category = new Category();
+        category.setId("HSE");
+
+        Transaction testTransaction = new Transaction();
+        testTransaction.setAccount(account);
+        testTransaction.setCategory(category);
+        testTransaction.setAmount(10);
+        testTransaction.setDate(LocalDate.of(2010,5,1));
+        this.transactionRepository.save(testTransaction);
+
+        // Set the category
+        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setId(testTransaction.getId());
+        reconcileUpdate.setType("trn");
+        reconcileUpdate.setCategoryId("FDG");
+        this.reconciliationManager.processReconcileUpdate(reconcileUpdate);
+
+        this.transactionRepository.findAll().forEach(t -> {
+            if(t.getId() == testTransaction.getId()) {
+                Assert.assertEquals("FDG", t.getCategory().getId());
+            }
+        });
+    }
+
+    @Test
+    public void testSetTransactionCategoryUpdate2() {
+        Account account = new Account();
+        account.setId("AMEX");
+
+        Category category = new Category();
+        category.setId("HSE");
+
+        Transaction testTransaction = new Transaction();
+        testTransaction.setAccount(account);
+        testTransaction.setCategory(category);
+        testTransaction.setAmount(10);
+        testTransaction.setDate(LocalDate.of(2010,5,1));
+        this.transactionRepository.save(testTransaction);
+
+        // Set the category
+        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setId(testTransaction.getId() + 1);
+        reconcileUpdate.setType("trn");
+        reconcileUpdate.setCategoryId("FDG");
+        this.reconciliationManager.processReconcileUpdate(reconcileUpdate);
+
+        this.transactionRepository.findAll().forEach(t -> {
+            if(t.getId() == testTransaction.getId()) {
+                Assert.assertEquals("HSE", t.getCategory().getId());
+            }
+        });
+    }
+
+    @Test
+    public void testSetTransactionCategoryUpdate3() {
+        Account account = new Account();
+        account.setId("AMEX");
+
+        Category category = new Category();
+        category.setId("HSE");
+
+        Transaction testTransaction = new Transaction();
+        testTransaction.setAccount(account);
+        testTransaction.setCategory(category);
+        testTransaction.setAmount(10);
+        testTransaction.setDate(LocalDate.of(2010,5,1));
+        this.transactionRepository.save(testTransaction);
+
+        // Set the category
+        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setId(testTransaction.getId());
+        reconcileUpdate.setType("trn");
+        reconcileUpdate.setCategoryId("XXXX");
+        this.reconciliationManager.processReconcileUpdate(reconcileUpdate);
+
+        this.transactionRepository.findAll().forEach(t -> {
+            if(t.getId() == testTransaction.getId()) {
+                Assert.assertEquals("HSE", t.getCategory().getId());
+            }
+        });
+    }
+
+    @Test
+    public void testSetTransactionCategoryUpdate4() {
+        Account account = new Account();
+        account.setId("AMEX");
+
+        Category category = new Category();
+        category.setId("TRF");
+
+        Transaction testTransaction = new Transaction();
+        testTransaction.setAccount(account);
+        testTransaction.setCategory(category);
+        testTransaction.setAmount(10);
+        testTransaction.setDate(LocalDate.of(2010,5,1));
+        this.transactionRepository.save(testTransaction);
+
+        Transaction testTransactionOpposite = new Transaction();
+        testTransactionOpposite.setAccount(account);
+        testTransactionOpposite.setCategory(category);
+        testTransactionOpposite.setAmount(-10);
+        testTransactionOpposite.setDate(LocalDate.of(2010,5,1));
+        testTransactionOpposite.setOppositeTransactionId(testTransaction.getId());
+        this.transactionRepository.save(testTransactionOpposite);
+
+        testTransaction.setOppositeTransactionId(testTransaction.getId());
+        this.transactionRepository.save(testTransaction);
+
+        // Set the category
+        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
+        reconcileUpdate.setId(testTransaction.getId());
+        reconcileUpdate.setType("trn");
+        reconcileUpdate.setCategoryId("FDG");
+        this.reconciliationManager.processReconcileUpdate(reconcileUpdate);
+
+        this.transactionRepository.findAll().forEach(t -> {
+            if(t.getId() == testTransaction.getId()) {
+                Assert.assertEquals("TRF", t.getCategory().getId());
+            }
+        });
+    }
+
+    @Test
     public void testSetCategoryUpdateInvalidCategory() throws IOException {
         // load the file.
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
