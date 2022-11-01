@@ -7,7 +7,6 @@ import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.reconciliation.MatchInformation;
-import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,16 +178,6 @@ public class ReconciliationManager {
         return matchData(lastAccount);
     }
 
-    private void logTransactionData(String type, int id, LocalDate date, Category category, FinancialAmount amount) {
-        String logData = type + " - " +
-                id + " " +
-                date + " " +
-                (category == null ? "" : category.getName()) + " " +
-                amount.toString();
-
-        LOG.debug(logData);
-    }
-
     private List<MatchData> matchData(Account account) {
         // Attempt to match the reconciliation with the data in the account specified.
 
@@ -197,25 +186,6 @@ public class ReconciliationManager {
 
         // Get all the reconciliation data.
         List<ReconciliationData> reconciliationData = reconciliationRepository.findAllByOrderByDateAsc();
-
-        // Log the data.
-        if(LOG.isDebugEnabled()) {
-            for (ReconciliationData nextReconciliationData : reconciliationData) {
-                logTransactionData("Reconcile Data",
-                        nextReconciliationData.getId(),
-                        nextReconciliationData.getDate(),
-                        nextReconciliationData.getCategory(),
-                        new FinancialAmount(nextReconciliationData.getAmount()) );
-            }
-
-            for (Transaction nextTransaction : transactions) {
-                logTransactionData("Transaction",
-                        nextTransaction.getId(),
-                        nextTransaction.getDate(),
-                        nextTransaction.getCategory(),
-                        nextTransaction.getAmount() );
-            }
-        }
 
         // Create a map for transactions.
         Map<Integer, MatchInformation> trnMatches = new HashMap<>();

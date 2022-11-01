@@ -15,6 +15,7 @@ import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.exceptions.MultipleUnlockedStatementException;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
+import com.jbr.middletier.money.reconciliation.MatchData;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +27,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -242,20 +244,26 @@ public class ReconciliationTest extends Support {
         });
     }
 
-    @Test
-    public void testSetTransactionCategoryUpdate() {
+    private Transaction createTransaction(String accountId, String categoryId, double amount, LocalDate date) {
         Account account = new Account();
-        account.setId("AMEX");
+        account.setId(accountId);
 
         Category category = new Category();
-        category.setId("HSE");
+        category.setId(categoryId);
 
         Transaction testTransaction = new Transaction();
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
-        testTransaction.setAmount(10);
-        testTransaction.setDate(LocalDate.of(2010,5,1));
-        this.transactionRepository.save(testTransaction);
+        testTransaction.setAmount(amount);
+        testTransaction.setDate(date);
+
+        return this.transactionRepository.save(testTransaction);
+    }
+
+    @Test
+    public void testSetTransactionCategoryUpdate() {
+        Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
+//        this.transactionRepository.save(testTransaction);
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -273,18 +281,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate2() {
-        Account account = new Account();
-        account.setId("AMEX");
-
-        Category category = new Category();
-        category.setId("HSE");
-
-        Transaction testTransaction = new Transaction();
-        testTransaction.setAccount(account);
-        testTransaction.setCategory(category);
-        testTransaction.setAmount(10);
-        testTransaction.setDate(LocalDate.of(2010,5,1));
-        this.transactionRepository.save(testTransaction);
+        Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -302,18 +299,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate3() {
-        Account account = new Account();
-        account.setId("AMEX");
-
-        Category category = new Category();
-        category.setId("HSE");
-
-        Transaction testTransaction = new Transaction();
-        testTransaction.setAccount(account);
-        testTransaction.setCategory(category);
-        testTransaction.setAmount(10);
-        testTransaction.setDate(LocalDate.of(2010,5,1));
-        this.transactionRepository.save(testTransaction);
+        Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -331,29 +317,15 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate4() {
-        Account account = new Account();
-        account.setId("AMEX");
+        Transaction testTransaction = createTransaction("AMEX", "TRF", 10, LocalDate.of(2010,5,1));
 
-        Category category = new Category();
-        category.setId("TRF");
+        Transaction testTransactionOpposite = createTransaction("AMEX", "TRF", -10, LocalDate.of(2010,5,1));
 
-        Transaction testTransaction = new Transaction();
-        testTransaction.setAccount(account);
-        testTransaction.setCategory(category);
-        testTransaction.setAmount(10);
-        testTransaction.setDate(LocalDate.of(2010,5,1));
+        testTransaction.setOppositeTransactionId(testTransactionOpposite.getId());
         this.transactionRepository.save(testTransaction);
 
-        Transaction testTransactionOpposite = new Transaction();
-        testTransactionOpposite.setAccount(account);
-        testTransactionOpposite.setCategory(category);
-        testTransactionOpposite.setAmount(-10);
-        testTransactionOpposite.setDate(LocalDate.of(2010,5,1));
         testTransactionOpposite.setOppositeTransactionId(testTransaction.getId());
         this.transactionRepository.save(testTransactionOpposite);
-
-        testTransaction.setOppositeTransactionId(testTransaction.getId());
-        this.transactionRepository.save(testTransaction);
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -419,20 +391,15 @@ public class ReconciliationTest extends Support {
 
         // Create a second unlocked statement.
         Statement duplicate = new Statement();
-        AtomicReference<Statement> unlocked = new AtomicReference<>();
-        this.statementRepository.findAll().forEach(s -> {
-            if(s.getId().getAccount().getId().equalsIgnoreCase("AMEX") && !s.getLocked()) {
-               unlocked.set(s);
-            }
-        });
+        Statement unlocked = getUnlockedStatement("AMEX");
+
         duplicate.setOpenBalance(0);
         duplicate.setLocked(false);
-        Assert.assertNotNull(unlocked.get());
-        duplicate.setId(unlocked.get().getId());
-        duplicate.getId().setMonth(unlocked.get().getId().getMonth()+1);
+        duplicate.setId(unlocked.getId());
+        duplicate.getId().setMonth(unlocked.getId().getMonth()+1);
         if(duplicate.getId().getMonth() > 12) {
             duplicate.getId().setMonth(1);
-            duplicate.getId().setYear(unlocked.get().getId().getYear()+1);
+            duplicate.getId().setYear(unlocked.getId().getYear()+1);
         }
         this.statementRepository.save(duplicate);
 
@@ -458,5 +425,69 @@ public class ReconciliationTest extends Support {
         }
 
         this.statementRepository.delete(duplicate);
+    }
+
+    private Statement getUnlockedStatement(String accountId) {
+        AtomicReference<Statement> unlocked = new AtomicReference<>();
+        this.statementRepository.findAll().forEach(s -> {
+            if(s.getId().getAccount().getId().equalsIgnoreCase(accountId) && !s.getLocked()) {
+                unlocked.set(s);
+            }
+        });
+        Assert.assertNotNull(unlocked.get());
+        return unlocked.get();
+    }
+
+    @Test
+    public void testMatchExactly() throws IOException, InvalidAccountIdException {
+        // load the file.
+        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+
+        // Find the statement that is not locked.
+        Statement unlocked = getUnlockedStatement("BANK");
+
+        // Create a transaction
+        Transaction testTransaction = createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
+        testTransaction.setStatement(unlocked);
+        this.transactionRepository.save(testTransaction);
+
+        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        int setCategory = 0;
+        int none = 0;
+        for(MatchData next : matchData) {
+            if(next.getForwardAction().equalsIgnoreCase("NONE")) {
+                none++;
+            } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
+                setCategory++;
+            }
+        }
+        Assert.assertEquals(2,setCategory);
+        Assert.assertEquals(1,none);
+        Assert.assertEquals(3,matchData.size());
+    }
+
+    @Test
+    public void testMatchExactlyPlusRecon() throws IOException, InvalidAccountIdException {
+        // load the file.
+        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+
+        // Create a transaction
+        createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
+
+        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        int setCategory = 0;
+        int reconcile = 0;
+        for(MatchData next : matchData) {
+            if(next.getForwardAction().equalsIgnoreCase("RECONCILE")) {
+                reconcile++;
+            } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
+                setCategory++;
+            }
+        }
+        Assert.assertEquals(2,setCategory);
+        Assert.assertEquals(1,reconcile);
+        Assert.assertEquals(3,matchData.size());
     }
 }
