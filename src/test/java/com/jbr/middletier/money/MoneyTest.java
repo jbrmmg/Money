@@ -9,6 +9,7 @@ import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
+import com.jbr.middletier.money.util.TransactionString;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -602,5 +603,10 @@ public class MoneyTest extends Support {
         ServiceHealthIndicator healthIndicator = new ServiceHealthIndicator(mockRepository,applicationProperties);
         Health health = healthIndicator.health();
         Assert.assertEquals(Status.DOWN, health.getStatus());
+    }
+
+    @Test
+    public void testTransactionString() {
+        Assert.assertEquals("20100522120.32", TransactionString.formattedTransactionString(LocalDate.of(2010,5,22),120.32));
     }
 }
