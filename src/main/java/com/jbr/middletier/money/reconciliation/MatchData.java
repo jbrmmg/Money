@@ -166,6 +166,19 @@ public class MatchData implements Comparable<MatchData> {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd").format(this.reconciliationDate);
     }
 
+    public boolean transactionMatch(Transaction transaction, int withinDays) {
+        // If the amount does not match then there is no match.
+        double epsilon = 0.001d;
+        if(Math.abs(this.reconciliationAmount - transaction.getAmount().getValue()) > epsilon) {
+            return false;
+        }
+
+        // Transaction Date must be within the number of days of the reconciliation date.
+        LocalDate startDate = this.reconciliationDate.minusDays(withinDays);
+        LocalDate endDate = this.reconciliationDate.plusDays(withinDays);
+        return transaction.getDate().isAfter(startDate) && transaction.getDate().isBefore(endDate);
+    }
+
     public String getForwardAction() {
         return forwardActionType.toString();
     }

@@ -6,14 +6,12 @@ import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.reconciliation.MatchData;
-import com.jbr.middletier.money.reconciliation.MatchInformation;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -119,58 +117,6 @@ public class ReconciliationManager {
         }
     }
 
-    private void checkReconciliationData(ReconciliationData nextReconciliationData, Iterable<Transaction> transactions, Map<Integer, MatchInformation> trnMatches, MatchData matchData, List<ReconciliationData> repeats) {
-        // Remember the best potential match.
-        long bestDaysAway = -1;
-        MatchInformation bestTrnMatch = null;
-
-        // Do any existing transactions match? Or close match (amount)
-        for(Transaction nextTransaction : transactions) {
-            // Create match information.
-            if(!trnMatches.containsKey(nextTransaction.getId())) {
-                trnMatches.put(nextTransaction.getId(), new MatchInformation());
-            }
-            MatchInformation trnMatch = trnMatches.get(nextTransaction.getId());
-            trnMatch.setTransaction(nextTransaction);
-
-            // Is this transaction already exactly matched?
-            if(trnMatch.exactMatch()) {
-                continue;
-            }
-
-            // Is this an exact match?
-            if(nextReconciliationData.toString().equals(nextTransaction.toString())) {
-                trnMatch.setReconciliationData(nextReconciliationData);
-                trnMatch.setDaysAway(0);
-                matchData.matchTransaction(nextTransaction);
-                return;
-            }
-
-            // Does the amount match?
-            long difference = nextReconciliationData.closeMatch(nextTransaction);
-            if((difference == -1) || (difference >= 4)) {
-                continue;
-            }
-
-            // Set details of the match.
-            if ((!trnMatch.closeMatch() || trnMatch.getDaysAway() > difference) && (( bestDaysAway == -1 )  || (difference < bestDaysAway))) {
-                bestDaysAway = difference;
-                bestTrnMatch = trnMatch;
-            }
-        }
-
-        // If there was a good match, the use it.
-        if(bestTrnMatch != null) {
-            // If the transaction was already matched, then need to repeat the search.
-            if (bestTrnMatch.getReconciliationData() != null) {
-                repeats.add(bestTrnMatch.getReconciliationData());
-            }
-
-            bestTrnMatch.setDaysAway(bestDaysAway);
-            bestTrnMatch.setReconciliationData(nextReconciliationData);
-        }
-    }
-
     private List<MatchData> matchFromLastData() {
         if (lastAccount == null)
             return new ArrayList<>();
@@ -178,74 +124,62 @@ public class ReconciliationManager {
         return matchData(lastAccount);
     }
 
+    private void innerLookForMatches(boolean reconciled, int daysAway, List<MatchData> result, List<Transaction> transactions) {
+        // For each result, look for a transaction that matches based on the reconciled status and days away.
+        for(MatchData next : result) {
+            // If this is already reconciled to a transaction skip it.
+            if(next.getTransaction() != null) {
+                continue;
+            }
+
+            for(Transaction nextTransaction : transactions) {
+                // Skip transactions that do not match the criteria.
+                if(nextTransaction.reconciled() != reconciled) {
+                    continue;
+                }
+
+                // Check if this reconciles record matches the transaction
+                if(next.transactionMatch(nextTransaction,daysAway)) {
+                    next.matchTransaction(nextTransaction);
+
+                    // remove from the list.
+                    transactions.remove(nextTransaction);
+                    return;
+                }
+            }
+        }
+    }
+
+    private void lookForMatches(boolean reconciled, List<MatchData> result, List<Transaction> transactions) {
+        for(int i = 0; i < 3; i ++) {
+            innerLookForMatches(reconciled,i,result,transactions);
+        }
+    }
+
     private List<MatchData> matchData(Account account) {
         // Attempt to match the reconciliation with the data in the account specified.
 
         // Get all transactions that are 'unlocked' on the account.
-        Iterable<Transaction> transactions = transactionRepository.findAll(Specification.where(notLocked()).and(accountIs(account)), Sort.by(Sort.Direction.ASC, "date", "amount"));
+        List<Transaction> transactions = transactionRepository.findAll(Specification.where(notLocked()).and(accountIs(account)), Sort.by(Sort.Direction.ASC, "date", "amount"));
 
         // Get all the reconciliation data.
         List<ReconciliationData> reconciliationData = reconciliationRepository.findAllByOrderByDateAsc();
 
-        // Create a map for transactions.
-        Map<Integer, MatchInformation> trnMatches = new HashMap<>();
-
-        // Create a match data map.
-        Map<Integer,Integer> matchDataMap = new HashMap<>();
-
         // Create the match data.
         List<MatchData> result = new ArrayList<>();
-        List<ReconciliationData> repeats = new ArrayList<>();
 
-        LOG.info("Matching data");
-        for(ReconciliationData nextReconciliationData : reconciliationData) {
-            // Create a match data for this item.
-            MatchData newMatchData = new MatchData(nextReconciliationData, account);
-            matchDataMap.put(nextReconciliationData.getId(),result.size());
-            result.add(newMatchData);
-
-            // Check this instance.
-            checkReconciliationData(nextReconciliationData, transactions, trnMatches, newMatchData, repeats);
+        // Create a result for each reconciliation data.
+        for(ReconciliationData next : reconciliationData) {
+            result.add(new MatchData(next, account));
         }
 
-        // Repeat if necessary.
-        while(!repeats.isEmpty()) {
-            List<ReconciliationData> prevRepeats = repeats;
-            repeats = new ArrayList<>();
+        // Build up those reconciliations that match (first with reconciled then with un-reconciled).
+        lookForMatches(true, result, transactions);
+        lookForMatches(false, result, transactions);
 
-            for (ReconciliationData nextReconciliationData : prevRepeats) {
-                checkReconciliationData(nextReconciliationData, transactions, trnMatches, result.get(matchDataMap.get(nextReconciliationData.getId())), repeats);
-            }
-        }
-
-        // Update the result with any partial matches.
-        LOG.info("Matching partial data");
-        for(MatchInformation nextMatchInfo : trnMatches.values()) {
-            if(nextMatchInfo.closeMatch()) {
-                // Get the match data index.
-                int matchDataIndex = matchDataMap.get(nextMatchInfo.getReconciliationData().getId());
-
-                // Get the Match Data.
-                MatchData matchData = result.get(matchDataIndex);
-
-                // Set the close match transaction.
-                matchData.matchTransaction(nextMatchInfo.getTransaction());
-            }
-        }
-
-        // Add a list of any reconciled transaction that is not matched.
-        LOG.info("Add reconciled transactions not matched");
-        for (Transaction nextTransaction : transactions ) {
-            if(nextTransaction.getStatement() != null)  {
-                if(trnMatches.containsKey(nextTransaction.getId())){
-                    MatchInformation matchInformation = trnMatches.get(nextTransaction.getId());
-                    if(matchInformation.getReconciliationData() == null) {
-                        result.add(new MatchData(nextTransaction));
-                    }
-                } else {
-                    result.add(new MatchData(nextTransaction));
-                }
-            }
+        // For any transactions remaining, create a match entry.
+        for(Transaction next : transactions) {
+            result.add(new MatchData(next));
         }
 
         Collections.sort(result);
