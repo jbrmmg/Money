@@ -378,4 +378,27 @@ public class PoJoTest {
         Assert.assertEquals("Blah", reconcileUpdate.getType());
         Assert.assertEquals("FSE", reconcileUpdate.getCategoryId());
     }
+
+    @Test
+    public void TestReconcileFormat() {
+        ReconcileFormat format = new ReconcileFormat();
+        format.setDateFormat("dd-mmm-yyyy");
+        format.setAmountInColumn(1);
+        format.setDateColumn(2);
+        format.setId("TEST");
+        format.setFirstLine(2);
+        format.setReverse(true);
+        format.setHeaderLine("Testing");
+        format.setAmountOutColumn(2);
+        format.setDescriptionColumn(4);
+        Assert.assertEquals("dd-mmm-yyyy",format.getDateFormat());
+        Assert.assertEquals(1,format.getAmountInColumn().intValue());
+        Assert.assertEquals(2,format.getDateColumn().intValue());
+        Assert.assertEquals("TEST",format.getId());
+        Assert.assertEquals(2,format.getFirstLine().intValue());
+        Assert.assertTrue(format.getReverse());
+        Assert.assertEquals("Testing",format.getHeaderLine());
+        Assert.assertEquals(2,format.getAmountOutColumn().intValue());
+        Assert.assertEquals(4,format.getDescriptionColumn().intValue());
+    }
 }

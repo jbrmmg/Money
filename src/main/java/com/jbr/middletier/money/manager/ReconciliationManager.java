@@ -66,15 +66,9 @@ public class ReconciliationManager {
         }
     }
 
-    public void autoReconcileData() throws EmptyMatchDataException, InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public void autoReconcileData() throws InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
-
-        //noinspection ConstantConditions
-        if(matchData == null) {
-            LOG.info("Null match data, doing nothing");
-            throw new EmptyMatchDataException();
-        }
 
         // Process the data.
         for (MatchData next : matchData ) {

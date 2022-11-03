@@ -83,14 +83,14 @@ public class ReconciliationController {
     }
 
     @PutMapping(path="/ext/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, InvalidTransactionException {
+    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, InvalidTransactionException {
         LOG.info("Auto Reconciliation Data (ext) ");
         reconciliationManager.autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path="/int/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, EmptyMatchDataException, InvalidTransactionException {
+    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, InvalidTransactionException {
         return reconcileDataExt();
     }
 
