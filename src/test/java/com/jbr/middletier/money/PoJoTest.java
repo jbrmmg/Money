@@ -5,6 +5,7 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.schedule.AdjustmentType;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -400,5 +401,12 @@ public class PoJoTest {
         Assert.assertEquals("Testing",format.getHeaderLine());
         Assert.assertEquals(2,format.getAmountOutColumn().intValue());
         Assert.assertEquals(4,format.getDescriptionColumn().intValue());
+    }
+
+    @Test
+    public void testFinancialAmountToDouble() {
+        Double test = 290.2;
+        FinancialAmount financialAmount = modelMapper.map(test,FinancialAmount.class);
+        Assert.assertEquals(290.2,financialAmount.getValue(),0.001);
     }
 }
