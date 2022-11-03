@@ -29,9 +29,6 @@ public class ReconciliationData {
     @Column(name="amount")
     private double amount;
 
-    public ReconciliationData() {
-    }
-
     @Override
     public String toString() {
         return TransactionString.formattedTransactionString(this.date,this.amount);
