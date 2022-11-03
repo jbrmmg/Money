@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by jason on 07/03/17.
  */
-@SuppressWarnings("unused")
+
 @Entity
 @Table(name="Statement")
 public class Statement {

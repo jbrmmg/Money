@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.dto;
 
-@SuppressWarnings("unused")
 public class ReconciliationFileDTO {
     private String filename;
 
