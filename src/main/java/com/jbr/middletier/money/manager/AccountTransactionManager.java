@@ -7,9 +7,7 @@ import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.dto.TransactionWindowDTO;
 import com.jbr.middletier.money.exceptions.*;
-import com.jbr.middletier.money.util.CategoryComparison;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -46,31 +44,6 @@ public class AccountTransactionManager {
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.modelMapper = modelMapper;
-    }
-
-    private void getTransactionsInWindow(TransactionWindowDTO result, Account account, LocalDate end) {
-        // Get the account balance at the start date.
-        result.setStartBalance(getBalanceAt(account,result.getStart()));
-
-        Pageable page = Pageable.ofSize(10);
-        List<Transaction> transactions = this.transactionRepository.findByAccountAndDateBeforeOrderByDateDesc(account,result.getStart().plusDays(1), page);
-        for(Transaction next : transactions) {
-            if(next.getDate().equals(result.getStart())) {
-                LOG.info("{} {}-{}",next.getId(),next.getStatement().getId().getMonth(),next.getStatement().getId().getYear());
-            }
-        }
-    }
-
-    public TransactionWindowDTO getTransactionsInWindow(LocalDate start, LocalDate end) {
-        TransactionWindowDTO result = new TransactionWindowDTO();
-        result.setStart(start);
-
-        // Perform on each account
-        for(Account next : accountRepository.findAll()) {
-            getTransactionsInWindow(result, next, end);
-        }
-
-        return result;
     }
 
     public FinancialAmount getBalanceAt(Account account, LocalDate asAtStartOf) {
