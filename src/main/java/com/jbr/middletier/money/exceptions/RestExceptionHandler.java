@@ -111,6 +111,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"File not found", ex));
     }
 
+    @ExceptionHandler(InvalidTransactionException.class)
+    protected ResponseEntity<Object> handleInvalidTransaction(InvalidTransactionException ex) {
+        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Invalid Transaction", ex));
+    }
+
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError,apiError.getStatus());
     }
