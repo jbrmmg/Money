@@ -46,29 +46,6 @@ public class AccountTransactionManager {
         this.modelMapper = modelMapper;
     }
 
-    public FinancialAmount getBalanceAt(Account account, LocalDate asAtStartOf) {
-        Map<String,Statement> possibleStatements = new HashMap<>();
-
-        // Find the earliest statement with the transactions we are interested in.
-        boolean keepLooking = true;
-        Pageable page = Pageable.ofSize(10);
-        while(keepLooking) {
-            for (Transaction next : transactionRepository.findByAccountAndDateBeforeOrderByDateDesc(account, asAtStartOf.plusDays(1), page)) {
-                if (next.getDate().equals(asAtStartOf)) {
-                    if ((next.getStatement() != null) && (!possibleStatements.containsKey(next.getStatement().getId().toString()))) {
-                        possibleStatements.put(next.getStatement().getId().toString(),next.getStatement());
-                    }
-                } else {
-                    keepLooking = false;
-                }
-            }
-        }
-
-        // If no statements were found.
-
-        return new FinancialAmount(0);
-    }
-
     public FinancialAmount getFinalBalanceForStatement(Statement statement) {
         List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
                 statement.getId().getAccount(),
