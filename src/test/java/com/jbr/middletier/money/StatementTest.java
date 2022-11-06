@@ -6,6 +6,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -304,5 +305,24 @@ public class StatementTest extends Support {
                 statementRepository.delete(next);
             }
         }
+    }
+
+    @Test
+    public void testException() {
+        AccountDTO account = new AccountDTO();
+        account.setId("AMEX");
+
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccount(account);
+        statementId.setMonth(1);
+        statementId.setYear(2010);
+
+        StatementDTO statement = new StatementDTO();
+        statement.setId(statementId);
+        statement.setLocked(false);
+        statement.setOpenBalance(100);
+
+        InvalidStatementIdException test = new InvalidStatementIdException(statement);
+        Assert.assertEquals("Cannot find statement with id AMEX.201001", test.getMessage());
     }
 }
