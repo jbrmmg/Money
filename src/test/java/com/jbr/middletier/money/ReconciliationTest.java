@@ -490,4 +490,28 @@ public class ReconciliationTest extends Support {
         Assert.assertEquals(1,reconcile);
         Assert.assertEquals(3,matchData.size());
     }
+
+    @Test
+    public void testMatchMoreTransactions()  throws IOException, InvalidAccountIdException {
+        // load the file.
+        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+
+        // Create a transaction
+        createTransaction("BANK", "HSE", -36, LocalDate.of(2022,10,10));
+
+        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        int setCategory = 0;
+        int unreconcile = 0;
+        for(MatchData next : matchData) {
+            if(next.getForwardAction().equalsIgnoreCase("UNRECONCILE")) {
+                unreconcile++;
+            } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
+                setCategory++;
+            }
+        }
+        Assert.assertEquals(3,setCategory);
+        Assert.assertEquals(1,unreconcile);
+        Assert.assertEquals(4,matchData.size());
+    }
 }
