@@ -409,4 +409,25 @@ public class PoJoTest {
         FinancialAmount financialAmount = modelMapper.map(test,FinancialAmount.class);
         Assert.assertEquals(290.2,financialAmount.getValue(),0.001);
     }
+
+    @Test
+    public void testStatementId() {
+        Account account = new Account();
+        account.setId("AMEX");
+
+        StatementId statementId = new StatementId(account,2010, 1);
+        StatementId previous = StatementId.getPreviousId(statementId);
+        Assert.assertEquals(2009, previous.getYear().intValue());
+        Assert.assertEquals(12, previous.getMonth().intValue());
+
+        statementId = new StatementId(account,2010, 12);
+        StatementId next = StatementId.getNextId(statementId);
+        Assert.assertEquals(2011, next.getYear().intValue());
+        Assert.assertEquals(1, next.getMonth().intValue());
+
+        String text = next.toString();
+        Assert.assertEquals(text.hashCode(),next.hashCode());
+
+        Assert.assertNotEquals(statementId,next);
+    }
 }

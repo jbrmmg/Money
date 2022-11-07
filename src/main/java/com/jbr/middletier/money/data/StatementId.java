@@ -30,7 +30,7 @@ public class StatementId implements Serializable {
         this.year = year;
     }
 
-    static StatementId getNextId(StatementId sourceId) {
+    public static StatementId getNextId(StatementId sourceId) {
         StatementId result = new StatementId();
 
         result.account = sourceId.account;
