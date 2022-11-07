@@ -61,11 +61,88 @@ public class ArchiveTest extends Support {
     }
 
     @Test
-    public void testSchedule() {
+    public void testSchedule() throws Exception {
+        applicationProperties.setArchiveEnabled(true);
+
+        Statement testStatement = null;
+        int count = 0;
+        for(Statement next : statementRepository.findAll()) {
+            count++;
+
+            if(next.getId().getAccount().getId().equals("AMEX") &&
+                next.getId().getYear() == 2010 &&
+                next.getId().getMonth() == 1) {
+                testStatement = next;
+            }
+        }
+        Assert.assertNotEquals(0,count);
+        Assert.assertNotNull(testStatement);
+
+        // Create a transaction that will be deleted.
+        Category category = new Category();
+        category.setId("HSE");
+
+        Account account = new Account();
+        account.setId("AMEX");
+
+        Transaction transaction = new Transaction();
+        transaction.setAmount(10);
+        transaction.setDate(LocalDate.of(2010,1,1));
+        transaction.setDescription("Testing");
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setStatement(testStatement);
+        transactionRepository.save(transaction);
+
+        // Clear the directories.
+        deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
+        deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
+
+        File directory = new File(applicationProperties.getReportShare() + "/2010/");
+        directory.mkdirs();
+        File file = new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-February-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-March-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-April-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-May-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-June-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-July-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-August-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-September-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-October-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-November-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+        file = new File(applicationProperties.getReportShare() + "/2010/Report-December-2010.pdf");
+        Assert.assertTrue(file.createNewFile());
+
         archiveManager.scheduledArchive();
-        // Make sure the test gets here.
-        // TODO add more checkds.
-        Assert.assertTrue(true);
+
+        // Statements should be deleted
+        count = 0;
+        for(Statement ignored : statementRepository.findAll()) {
+            count++;
+        }
+        Assert.assertEquals(0,count);
+
+        count = 0;
+        for(Transaction ingnored : transactionRepository.findAll()) {
+            count++;
+        }
+        Assert.assertEquals(0,count);
+
+        applicationProperties.setArchiveEnabled(false);
     }
 
     @Test
