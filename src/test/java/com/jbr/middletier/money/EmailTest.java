@@ -181,7 +181,7 @@ public class EmailTest extends Support {
                     expectedDifferent = iterator.next();
                     differenceCount++;
                 }
-                Assert.assertEquals(1,differenceCount);
+                Assert.assertEquals(2,differenceCount);
                 Assert.assertNotNull(expectedDifferent);
             } catch (IOException e) {
                 Assert.fail();
