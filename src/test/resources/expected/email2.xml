@@ -40,21 +40,28 @@
                 <td class="description" />
                 <td class="description" />
                 <td class="description">Brought Forward</td>
-                <td class="amount amount-data">0.00</td>
+                <td class="amount amount-data">10.00</td>
             </tr>
             <tr>
                 <td class="date">variable</td>
                 <td class="description">House</td>
                 <td class="description">AMEX</td>
-                <td class="description">Testing</td>
-                <td class="amount amount-data">10.00</td>
+                <td class="description">Testing 3</td>
+                <td class="amount amount-data">5.00</td>
+            </tr>
+            <tr>
+                <td class="date">variable</td>
+                <td class="description">House</td>
+                <td class="description">AMEX</td>
+                <td class="description">Testing 2</td>
+                <td class="amount amount-data">20.00</td>
             </tr>
             <tr>
                 <td class="date" />
                 <td class="description" />
                 <td class="description" />
                 <td class="description">Carried Forward</td>
-                <td class="amount amount-data">10.00</td>
+                <td class="amount amount-data">35.00</td>
             </tr>
         </table>
     </body>

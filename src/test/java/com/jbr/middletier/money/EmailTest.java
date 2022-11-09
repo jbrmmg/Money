@@ -2,10 +2,8 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.control.AccountController;
+import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
@@ -22,6 +20,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -47,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 @ActiveProfiles(value="emailtest")
 public class EmailTest extends Support {
+    private static final Logger LOG = LoggerFactory.getLogger(EmailTest.class);
 
     @Autowired
     public TransactionRepository transactionRepository;
@@ -129,38 +130,64 @@ public class EmailTest extends Support {
 
     @Test
     public void testEmail3() throws EmailGenerationException, IOException {
+        transactionRepository.deleteAll();
+        statementRepository.deleteAll();
+
         deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 
-        // Create a transaction to report.
-        Statement testStatement = null;
-        int count = 0;
-        for(Statement next : statementRepository.findAll()) {
-            count++;
+        // Setup two statements
+        Account account = new Account();
+        account.setId("AMEX");
+        StatementId currentId = new StatementId();
+        currentId.setAccount(account);
+        currentId.setYear(2010);
+        currentId.setMonth(1);
+        Statement current = new Statement();
+        current.setId(currentId);
+        current.setLocked(true);
+        current.setOpenBalance(0);
+        statementRepository.save(current);
 
-            if(next.getId().getAccount().getId().equals("AMEX") &&
-                    next.getId().getYear() == 2010 &&
-                    next.getId().getMonth() == 1) {
-                testStatement = next;
-            }
-        }
-        Assert.assertNotEquals(0,count);
-        Assert.assertNotNull(testStatement);
+        StatementId nextId = new StatementId();
+        nextId.setAccount(account);
+        nextId.setYear(2010);
+        nextId.setMonth(2);
+        Statement next = new Statement();
+        next.setId(nextId);
+        next.setLocked(false);
+        next.setOpenBalance(10);
+        statementRepository.save(next);
 
         // Create a transaction that will be deleted.
         Category category = new Category();
         category.setId("HSE");
 
-        Account account = new Account();
-        account.setId("AMEX");
-
         Transaction transaction = new Transaction();
         transaction.setAmount(10);
-        transaction.setDate(LocalDate.now().plusDays(-7));
+        transaction.setDate(LocalDate.now().plusDays(-30));
         transaction.setDescription("Testing");
         transaction.setAccount(account);
         transaction.setCategory(category);
-        transaction.setStatement(testStatement);
+        transaction.setStatement(current);
+        transactionRepository.save(transaction);
+
+        transaction = new Transaction();
+        transaction.setAmount(20);
+        transaction.setDate(LocalDate.now().plusDays(-7));
+        transaction.setDescription("Testing 2");
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setStatement(next);
+        transactionRepository.save(transaction);
+
+        transaction = new Transaction();
+        transaction.setAmount(5);
+        transaction.setDate(LocalDate.now().plusDays(-6));
+        transaction.setDescription("Testing 3");
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        transaction.setStatement(next);
         transactionRepository.save(transaction);
 
         TransportWrapper testWrapper = message -> {
@@ -179,9 +206,10 @@ public class EmailTest extends Support {
                 int differenceCount = 0;
                 while (iterator.hasNext()) {
                     expectedDifferent = iterator.next();
+                    LOG.info(expectedDifferent.getComparison().getControlDetails().getXPath());
                     differenceCount++;
                 }
-                Assert.assertEquals(2,differenceCount);
+                Assert.assertEquals(3,differenceCount);
                 Assert.assertNotNull(expectedDifferent);
             } catch (IOException e) {
                 Assert.fail();
