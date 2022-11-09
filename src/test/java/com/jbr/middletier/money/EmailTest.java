@@ -227,12 +227,13 @@ public class EmailTest extends Support {
         testGenerator.generateReport("a", "b", "blah", "testing", "", 4);
 
         // Re-instate the standard statements.
+        transactionRepository.deleteAll();
         statementRepository.deleteAll();
         for(Account nextAccount : accountRepository.findAll()) {
             StatementId nextStatementId = new StatementId();
-            nextId.setAccount(nextAccount);
-            nextId.setYear(2010);
-            nextId.setMonth(1);
+            nextStatementId.setAccount(nextAccount);
+            nextStatementId.setYear(2010);
+            nextStatementId.setMonth(1);
             Statement nextStatement = new Statement();
             nextStatement.setId(nextStatementId);
             nextStatement.setOpenBalance(0);
