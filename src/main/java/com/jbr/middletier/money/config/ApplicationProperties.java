@@ -22,7 +22,6 @@ public class ApplicationProperties {
     private boolean archiveEnabled;
     private String reconcileFileLocation;
     private Integer smtpPort;
-    private String ignoreEmailHost;
 
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
 
@@ -78,14 +77,6 @@ public class ApplicationProperties {
 
     public void setSmtpPort(Integer smtpPort) {
         this.smtpPort = smtpPort;
-    }
-
-    public String getIgnoreEmailHost() {
-        return ignoreEmailHost;
-    }
-
-    public void setIgnoreEmailHost(String ignoreEmailHost) {
-        this.ignoreEmailHost = ignoreEmailHost;
     }
 
     @Bean

@@ -155,9 +155,7 @@ public class EmailGenerator {
             EmailHtml html = new EmailHtml(startAmount,emailTransactions);
             message.setContent(html.getHtmlAsString(), "text/html");
 
-            if(!host.equals(applicationProperties.getIgnoreEmailHost())) {
-                transportWrapper.setEmail(message);
-            }
+            transportWrapper.sendEmail(message);
 
             LOG.info("email sent.");
         } catch (MessagingException e) {
