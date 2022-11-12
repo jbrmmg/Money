@@ -1,5 +1,10 @@
 package com.jbr.middletier.money;
 
+import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.data.Statement;
+import com.jbr.middletier.money.data.StatementId;
+import com.jbr.middletier.money.dataaccess.AccountRepository;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -76,5 +81,21 @@ public class Support {
 
     public MockMvc getMockMvc() {
         return this.mockMvc;
+    }
+
+    public void reinstateStatements(StatementRepository statementRepository, AccountRepository accountRepository) {
+        statementRepository.deleteAll();
+        for(Account nextAccount : accountRepository.findAll()) {
+            StatementId nextStatementId = new StatementId();
+            nextStatementId.setAccount(nextAccount);
+            nextStatementId.setYear(2010);
+            nextStatementId.setMonth(1);
+            Statement nextStatement = new Statement();
+            nextStatement.setId(nextStatementId);
+            nextStatement.setOpenBalance(0);
+            nextStatement.setLocked(false);
+
+            statementRepository.save(nextStatement);
+        }
     }
 }
