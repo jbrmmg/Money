@@ -1,6 +1,6 @@
 spring:
     datasource:
-        url: ${db.dev.money.server}?autoReconnect=true&useSSL=false
+        url: ${db.dev.money.server}?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
         username: ${db.dev.money.user}
         password: ${db.dev.money.password}
 
