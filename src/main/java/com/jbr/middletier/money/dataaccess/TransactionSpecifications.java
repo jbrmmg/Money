@@ -49,7 +49,7 @@ public class TransactionSpecifications {
         // Get the statement id
         return (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.and(
                 criteriaBuilder.equal(root.get(STATEMENT).get(ID).get(YEAR),statementDate.getYear()),
-                criteriaBuilder.equal(root.get(STATEMENT).get(ID).get(MONTH),statementDate.getMonth()) );
+                criteriaBuilder.equal(root.get(STATEMENT).get(ID).get(MONTH),statementDate.getMonthValue()) );
     }
 
     public static Specification<Transaction> statementIsNull() {

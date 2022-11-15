@@ -188,6 +188,11 @@ public class AccountTransactionManager {
                                                 List<String> categoryIds,
                                                 List<String> accountIds,
                                                 boolean sortAscending) throws InvalidTransactionSearchException {
+        if(type == TransactionRequestType.TRT_UNKNOWN) {
+            // Just return an empty list.
+            return new ArrayList<>();
+        }
+
         Sort transactionSort = Sort.by(Sort.Direction.DESC,"date", "account", "amount");
 
         if(sortAscending) {
@@ -330,10 +335,25 @@ public class AccountTransactionManager {
 
         // Get the transaction.
         Optional<Transaction> existingTransaction = transactionRepository.findById(transaction.getId());
+        Optional<Transaction> oppositeTransaction = Optional.empty();
+        boolean oppositeLocked = false;
 
-        if(existingTransaction.isPresent() && !existingTransaction.get().reconciled()) {
+        // Is there an opposite?
+        if(existingTransaction.get().getOppositeTransactionId() != null) {
+            oppositeTransaction = transactionRepository.findById(existingTransaction.get().getOppositeTransactionId());
+
+            if(oppositeTransaction.isPresent() && oppositeTransaction.get().reconciled()) {
+                oppositeLocked = true;
+            }
+        }
+
+        if(existingTransaction.isPresent() && !existingTransaction.get().reconciled() && !oppositeLocked) {
             // If the transaction is not reconciled then it can be deleted.
             transactionRepository.deleteById(transaction.getId());
+
+            if(oppositeTransaction.isPresent()) {
+                transactionRepository.deleteById(oppositeTransaction.get().getId());
+            }
             return new ArrayList<>();
         }
 

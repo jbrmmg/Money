@@ -4,7 +4,8 @@ public enum TransactionRequestType {
     TRT_UNRECONCILED("UN"),
     TRT_RECONCILED("RC"),
     TRT_ALL("AL"),
-    TRT_UNLOCKED("UL");
+    TRT_UNLOCKED("UL"),
+    TRT_UNKNOWN("XX");
 
     private final String type;
 
