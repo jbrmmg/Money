@@ -17,11 +17,11 @@ public class StatementId implements Serializable {
     private Account account;
 
     @NotNull
-    @Column(name="month")
+    @Column(name="\"month\"")
     private Integer month;
 
     @NotNull
-    @Column(name="year")
+    @Column(name="\"year\"")
     private Integer year;
 
     public StatementId(Account account, int year, int month) {
@@ -30,7 +30,7 @@ public class StatementId implements Serializable {
         this.year = year;
     }
 
-    static StatementId getNextId(StatementId sourceId) {
+    public static StatementId getNextId(StatementId sourceId) {
         StatementId result = new StatementId();
 
         result.account = sourceId.account;

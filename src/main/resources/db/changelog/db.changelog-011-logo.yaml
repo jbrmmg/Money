@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 11
+      author: jason
+      changes:
+
+        - createTable:
+            tableName: logo_definition
+            columns:
+              - column:
+                  name: id
+                  type: char(5)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: font_size
+                  type: int
+              - column:
+                  name: y
+                  type: int
+              - column:
+                  name: fill_colour
+                  type: char(6)
+              - column:
+                  name: border_colour
+                  type: char(6)
+              - column:
+                  name: text_colour
+                  type: char(6)
+              - column:
+                  name: logo_text
+                  type: varchar(3)
+              - column:
+                  name: second_border
+                  type: boolean
+              - column:
+                  name: border_two_colour
+                  type: char(6)
+
+        - loadData:
+            tableName: logo_definition
+            file: /db/changelog/db.logo.data.csv

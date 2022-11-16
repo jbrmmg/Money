@@ -1,14 +1,14 @@
 package com.jbr.middletier.money.data;
 
+import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name="Regular")
@@ -43,44 +43,19 @@ public class Regular {
 
     @Column(name="start")
     @NotNull
-    private Date start;
+    private LocalDate start;
 
     @Column(name="last_created")
-    private Date lastCreated;
+    private LocalDate lastCreated;
 
     @Column(name="description")
     @Size(max=40)
     private String description;
 
-    final static private Logger LOG = LoggerFactory.getLogger(Regular.class);
-    private static SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
+    private static final Logger LOG = LoggerFactory.getLogger(Regular.class);
 
-    private Date removeTime(Date dateTime) {
-        // Force the date to be midday.
-        Calendar cal = Calendar.getInstance(); // locale-specific
-        cal.setTime(dateTime);
-        cal.set(Calendar.HOUR_OF_DAY, 12);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        return cal.getTime();
-    }
-
-    public class CannotDetermineNextDateException extends Exception {
-        CannotDetermineNextDateException(String message)  {
-            super(message);
-        }
-    }
-
-    private Date addFrequency ( Date fromDate ) throws CannotDetermineNextDateException {
-        String fromDateString = "<not set>";
-
+    private LocalDate addFrequency ( LocalDate fromDate ) throws CannotDetermineNextDateException {
         try {
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(removeTime(fromDate));
-
             // Frequency is a number plus a letter, eg. 20D = 20 days.
             String unit = this.frequency.substring(frequency.length() - 1);
 
@@ -92,76 +67,66 @@ public class Regular {
 
             switch (unit) {
                 case "D":
-                    LOG.info("Day x " + count);
-                    calendar.add(Calendar.DATE, count);
-                    break;
+                    LOG.info("Day x {}", count);
+                    return fromDate.plusDays(count);
 
                 case "W":
-                    LOG.info("Week x " + count);
-                    calendar.add(Calendar.DATE, count * 7);
-                    break;
+                    LOG.info("Week x {}", count);
+                    return fromDate.plusWeeks(count);
 
                 case "M":
-                    LOG.info("Month x " + count);
-                    calendar.add(Calendar.MONTH, count);
-                    break;
+                    LOG.info("Month x {}", count);
+                    return fromDate.plusMonths(count);
 
                 case "Y":
-                    LOG.info("Year x " + count);
-                    calendar.add(Calendar.YEAR, count);
-                    break;
+                    LOG.info("Year x {}", count);
+                    return fromDate.plusYears(count);
 
                 default:
-                    throw new CannotDetermineNextDateException("Unexpected frequency unit - " + unit );
+                    throw new CannotDetermineNextDateException("Unexpected frequency unit - {}" + unit);
             }
-
-            LOG.info("Add Frequency Date: " + loggingSDF.format(calendar.getTime()));
-
-            return calendar.getTime();
         } catch (CannotDetermineNextDateException ex) {
             throw ex;
         } catch( Exception ex) {
-            throw new CannotDetermineNextDateException("Unexpected exception while adding frequency - " + fromDateString + " " + this.frequency);
+            throw new CannotDetermineNextDateException("Unexpected exception while adding frequency - " + fromDate + " " + this.frequency);
         }
     }
 
-    public Date getStart() {
-        return removeTime(this.start);
+    public LocalDate getStart() {
+        return this.start;
     }
 
-    public void setStart(Date start) {
+    public void setStart(LocalDate start) {
         this.start = start;
     }
 
-    private Date getLastDate() {
+    public LocalDate getLastDate() {
         if(this.lastCreated == null) {
             return null;
         }
 
-        return removeTime(this.lastCreated);
+        return this.lastCreated;
     }
 
-    public void setLastDate(Date lastDate) {
+    public void setLastDate(LocalDate lastDate) {
         this.lastCreated = lastDate;
     }
 
-    public boolean isNextDateToday(Date useToday) throws CannotDetermineNextDateException {
+    public boolean isNextDateToday(LocalDate useToday) throws CannotDetermineNextDateException {
         // Is the next date today?
-        Date today = removeTime(useToday);
-        return today.equals(getNextDate(today));
-
+        return useToday.equals(getNextDate(useToday));
     }
 
-    private boolean isDateTodayOrFuture(Date today, Date fromDate) {
+    private boolean isDateTodayOrFuture(LocalDate today, LocalDate fromDate) {
         // Is it today?
         if(today.equals(fromDate)) {
             return true;
         }
 
-        return today.before(fromDate);
+        return today.isBefore(fromDate);
     }
 
-    private Date internalNextDate(Date today, Date fromDate) throws CannotDetermineNextDateException {
+    private LocalDate internalNextDate(LocalDate today, LocalDate fromDate) throws CannotDetermineNextDateException {
         while(!isDateTodayOrFuture(today, fromDate)) {
             fromDate = addFrequency(fromDate);
         }
@@ -169,9 +134,7 @@ public class Regular {
         return fromDate;
     }
 
-    public  Date getNextDate(Date today) throws CannotDetermineNextDateException {
-        today = removeTime(today);
-
+    public LocalDate getNextDate(LocalDate today) throws CannotDetermineNextDateException {
         // If the last date is not set then use the start date, otherwise use the next date (add 1 frequency to the last date)
         if(this.getLastDate() == null) {
             return internalNextDate(today, getStart());
@@ -189,6 +152,8 @@ public class Regular {
     public Integer getId() {
         return this.id;
     }
+
+    public void setId(Integer id) {this.id = id;}
 
     public Account getAccount() {
         return this.account;
@@ -218,11 +183,11 @@ public class Regular {
 
     public void setDescription(String description) { this.description = description; }
 
-    public String getWeekendAdj() {
-        return this.weekendAdj;
+    public AdjustmentType getWeekendAdj() {
+        return AdjustmentType.getAdjustmentType(this.weekendAdj);
     }
 
-    public void setWeekendAdj(String weekendAdj) {
-        this.weekendAdj = weekendAdj;
+    public void setWeekendAdj(AdjustmentType weekendAdj) {
+        this.weekendAdj = weekendAdj.getTypeName();
     }
 }

@@ -18,7 +18,7 @@ import java.util.List;
 
 @Component
 public class ServiceHealthIndicator implements HealthIndicator {
-    final static private Logger LOG = LoggerFactory.getLogger(ServiceHealthIndicator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceHealthIndicator.class);
 
     private final ApplicationProperties applicationProperties;
 
@@ -36,11 +36,11 @@ public class ServiceHealthIndicator implements HealthIndicator {
     public Health health() {
         try {
             List<Category> categoryList = (List<Category>) categoryRepository.findAll();
-            LOG.info(String.format("Check Database %s.", categoryList.size()));
+            LOG.info("Check Database {}.", categoryList.size());
 
             return Health.up().withDetail("service", this.applicationProperties.getServiceName()).withDetail("Category Types",categoryList.size()).build();
-        } catch (Exception ignored) {
-
+        } catch (Exception ex) {
+            LOG.info("Exception ignored", ex);
         }
 
         return Health.down().withDetail("service", this.applicationProperties.getServiceName()).build();

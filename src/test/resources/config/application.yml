@@ -13,6 +13,7 @@ spring:
                 enabled: false
 
     liquibase:
+        change-log: classpath:/db/changelog/db.changelog-master-dbg.yaml
         contexts: default
 
     jpa:
@@ -29,6 +30,10 @@ money:
     report-enabled: false
     archive-schedule: 0 0 4 20-31 1 ?
     archive-enabled: false
+    report-share: ./target/testfiles/MoneyReports/
+    report-working: ./target/testfiles/PdnReport/
+    reconcile-file-location: src/test/resources/reconciliation
+    smtp-port: 25
 
 logging:
     level:

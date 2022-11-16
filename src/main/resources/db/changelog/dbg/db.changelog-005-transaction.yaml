@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: jason
+      changes:
+
+        - createTable:
+            tableName: transaction
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account
+                  type: char(4)
+              - column:
+                  name: category
+                  type: char(3)
+              - column:
+                  name: date
+                  type: datetime
+              - column:
+                  name: amount
+                  type: decimal(10,2)
+              - column:
+                  name: statement_month
+                  type: int
+              - column:
+                  name: statement_year
+                  type: int
+              - column:
+                  name: oppositeid
+                  type: int
+              - column:
+                  name: description
+                  type: varchar(40)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_category_trn
+            baseTableName: transaction
+            baseColumnNames: category
+            referencedTableName: category
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            constraintName: fk_account_trn
+            baseTableName: transaction
+            baseColumnNames: account
+            referencedTableName: account
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            constraintName: fk_statement_trn
+            baseTableName: transaction
+            baseColumnNames: account, statement_month, statement_year
+            referencedTableName: statement
+            referencedColumnNames: account, month, year
+

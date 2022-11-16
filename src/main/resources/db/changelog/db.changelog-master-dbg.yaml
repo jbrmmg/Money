@@ -1,0 +1,43 @@
+databaseChangeLog:
+
+  - include:
+      file: /db/changelog/db.changelog-001-account.yaml
+
+  - include:
+      file: /db/changelog/dbg/db.changelog-002-category.yaml
+
+  - include:
+      file: /db/changelog/dbg/db.changelog-003-reconciliationData.yaml
+
+  - include:
+      file: /db/changelog/dbg/db.changelog-004-statement.yaml
+
+  - include:
+      file: /db/changelog/dbg/db.changelog-005-transaction.yaml
+
+  - include:
+      file: /db/changelog/dbg/db.changelog-006-regular.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-007-accounts.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-008-categories.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-009-statements.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-999-dbgdata.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-010-add-deleted-flag.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-011-logo.yaml
+
+  - include:
+      file: /db/changelog/dbg/db.changelog-012-reconcile-format.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-013-closed-flag.yaml

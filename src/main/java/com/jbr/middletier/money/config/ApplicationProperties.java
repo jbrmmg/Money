@@ -1,13 +1,17 @@
 package com.jbr.middletier.money.config;
 
+import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.modelmapper.*;
 
 @Configuration
 @ConfigurationProperties(prefix="money")
 public class ApplicationProperties {
     private String serviceName;
-    private String webLogUrl;
     private String reportWorking;
     private String reportShare;
     private String regularSchedule;
@@ -16,10 +20,10 @@ public class ApplicationProperties {
     private boolean reportEnabled;
     private String archiveSchedule;
     private boolean archiveEnabled;
+    private String reconcileFileLocation;
+    private Integer smtpPort;
 
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
-
-    public void setWebLogUrl(String webLogUrl) { this.webLogUrl = webLogUrl; }
 
     public void setReportWorking(String reportWorking) { this.reportWorking = reportWorking; }
 
@@ -38,8 +42,6 @@ public class ApplicationProperties {
     public void setArchiveEnabled(Boolean archiveEnabled) { this.archiveEnabled = archiveEnabled; }
 
     public String getServiceName() { return this.serviceName; }
-
-    public String getWebLogUrl() { return this.webLogUrl; }
 
     public String getReportWorking() { return this.reportWorking; }
 
@@ -60,4 +62,57 @@ public class ApplicationProperties {
     public String getPDFFilename() { return getReportWorking() + "/Report.pdf"; }
 
     public String getHtmlFilename() { return getReportWorking() + "/Report.html"; }
+
+    public String getReconcileFileLocation() {
+        return reconcileFileLocation;
+    }
+
+    public void setReconcileFileLocation(String reconcileFileLocation) {
+        this.reconcileFileLocation = reconcileFileLocation;
+    }
+
+    public Integer getSmtpPort() {
+        return smtpPort;
+    }
+
+    public void setSmtpPort(Integer smtpPort) {
+        this.smtpPort = smtpPort;
+    }
+
+    @Bean
+    public ModelMapper modelMapper() {
+        ModelMapper modelMapper = new ModelMapper();
+
+        Converter<FinancialAmount,Double> financialAmountDoubleConverter = new AbstractConverter<>() {
+            @Override
+            protected Double convert(FinancialAmount financialAmount) {
+                return financialAmount.getValue();
+            }
+        };
+
+        Converter<Double,FinancialAmount> doubleFinancialAmount = new AbstractConverter<>() {
+            @Override
+            protected FinancialAmount convert(Double value) {
+                return new FinancialAmount(value);
+            }
+        };
+
+        modelMapper.addConverter(financialAmountDoubleConverter);
+        modelMapper.addConverter(doubleFinancialAmount);
+
+        modelMapper.createTypeMap(Account.class, AccountDTO.class);
+        modelMapper.createTypeMap(AccountDTO.class, Account.class);
+        modelMapper.createTypeMap(Category.class, CategoryDTO.class);
+        modelMapper.createTypeMap(CategoryDTO.class, Category.class);
+        modelMapper.createTypeMap(StatementId.class, StatementIdDTO.class);
+        modelMapper.createTypeMap(StatementIdDTO.class, StatementId.class);
+        modelMapper.createTypeMap(Statement.class, StatementDTO.class);
+        modelMapper.createTypeMap(StatementDTO.class, Statement.class);
+        modelMapper.createTypeMap(Transaction.class, TransactionDTO.class);
+        modelMapper.createTypeMap(TransactionDTO.class, Transaction.class);
+        modelMapper.createTypeMap(Regular.class,RegularDTO.class);
+        modelMapper.createTypeMap(RegularDTO.class, Regular.class);
+
+        return modelMapper;
+    }
 }

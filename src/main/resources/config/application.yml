@@ -27,15 +27,19 @@ spring:
         change-log: classpath:/db/changelog/db.changelog-master.yaml
         contexts: default
 
+    mvc:
+        pathmatch:
+            matching-strategy: ant_path_matcher
+
 money:
     service-name: middletier-money-dbg
-    web-log-url: http://localhost:10001/jbr/int/log/data
     regular-schedule: 0 30 2 * * ?
     regular-enabled: false
     report-schedule: 0 0 4 1-10 * ?
     report-enabled: false
     archive-schedule: 0 0 4 1-10 2 ?
     archive-enabled: false
+    smtp-port: 25
 
 management:
     endpoint:

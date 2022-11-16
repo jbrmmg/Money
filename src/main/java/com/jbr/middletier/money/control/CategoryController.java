@@ -1,20 +1,17 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.OkStatus;
-import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.exceptions.CannotUpdateSystemCategory;
+import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
+import com.jbr.middletier.money.manager.CategoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Optional;
+import java.util.List;
 
 /**
  * Created by jason on 08/02/17.
@@ -22,90 +19,46 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/jbr")
 public class CategoryController {
-    final static private Logger LOG = LoggerFactory.getLogger(CategoryController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CategoryController.class);
 
-    private final
-    CategoryRepository categoryRepository;
+    private final CategoryManager categoryManager;
 
     @Autowired
-    public CategoryController(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    public CategoryController(CategoryManager categoryManager) {
+        this.categoryManager = categoryManager;
     }
 
-    @ExceptionHandler(Exception.class)
-    public void handleException(HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value());
-    }
-
-    @RequestMapping(path="/ext/money/categories", method= RequestMethod.GET)
-    public @ResponseBody
-    Iterable<Category>  getExtCategories() {
+    @GetMapping(path="/ext/money/categories")
+    public @ResponseBody List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
-        return categoryRepository.findAllByOrderBySortAsc();
+
+        return categoryManager.getCategories();
     }
 
-    @RequestMapping(path="/int/money/categories", method= RequestMethod.GET)
-    public @ResponseBody
-    Iterable<Category>  getIntCategories() {
+    @GetMapping(path="/int/money/categories")
+    public @ResponseBody List<CategoryDTO>  getIntCategories() {
         LOG.info("Request Categories.");
-        return categoryRepository.findAllByOrderBySortAsc();
+        return this.getExtCategories();
     }
 
-    @RequestMapping(path="/int/money/categories",method=RequestMethod.POST)
-    public @ResponseBody Iterable<Category> createCategory(@RequestBody Category category) throws Exception {
-        LOG.info("Create a new account - " + category.getId());
+    @PostMapping(path="/int/money/categories")
+    public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CategoryAlreadyExistsException {
+        LOG.info("Create a new account - {}", category.getId());
 
-        // Is there an account with this ID?
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-        if(existingCategory.isPresent()) {
-            throw new Exception(category.getId() + " already exists");
-        }
-
-        categoryRepository.save(category);
-
-        return categoryRepository.findAll();
+        return categoryManager.createCategory(category);
     }
 
-    @RequestMapping(path="/int/money/categories",method=RequestMethod.PUT)
-    public @ResponseBody Iterable<Category> updateCategory(@RequestBody Category category) throws Exception {
-        LOG.info("Update an account - " + category.getId());
+    @PutMapping(path="/int/money/categories")
+    public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, CannotUpdateSystemCategory {
+        LOG.info("Update an account - {}", category.getId());
 
-        // Is there an account with this ID?
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-        if(existingCategory.isPresent()) {
-            if(existingCategory.get().getSystemUse()) {
-                throw new Exception(category.getId() + " cannot update system use category.");
-            }
-            existingCategory.get().setColour(category.getColour());
-            existingCategory.get().setName(category.getName());
-            existingCategory.get().setGroup(category.getGroup());
-            existingCategory.get().setRestricted(category.getRestricted());
-            existingCategory.get().setSort(category.getSort());
-            existingCategory.get().setExpense(category.getExpense());
-
-            categoryRepository.save(existingCategory.get());
-        } else {
-            throw new Exception(category.getId() + " cannot find category.");
-        }
-
-        return categoryRepository.findAll();
+        return categoryManager.updateCategory(category);
     }
 
-    @RequestMapping(path="/int/money/categories",method=RequestMethod.DELETE)
-    public @ResponseBody OkStatus deleteAccount(@RequestBody Category category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
-        LOG.info("Delete account " + category.getId());
+    @DeleteMapping(path="/int/money/categories")
+    public @ResponseBody List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
+        LOG.info("Delete account {}", category.getId());
 
-        // Is there an account with this ID?
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-        if(existingCategory.isPresent()) {
-            if(existingCategory.get().getSystemUse()) {
-                throw new DeleteSystemCategoryException(category);
-            }
-
-            categoryRepository.delete(existingCategory.get());
-            return OkStatus.getOkStatus();
-        }
-
-        throw new InvalidCategoryIdException(category);
+        return categoryManager.deleteCategory(category);
     }
 }

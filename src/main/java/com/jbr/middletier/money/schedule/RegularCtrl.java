@@ -5,15 +5,14 @@ import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.manage.WebLogManager;
+import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 
 @Component
 public class RegularCtrl {
@@ -23,56 +22,48 @@ public class RegularCtrl {
 
     private final ApplicationProperties applicationProperties;
 
-    private final WebLogManager webLogManager;
-
-    final static private Logger LOG = LoggerFactory.getLogger(RegularCtrl.class);
-
-    private static SimpleDateFormat loggingSDF = new SimpleDateFormat("dd-MM-yyyy");
+    private static final Logger LOG = LoggerFactory.getLogger(RegularCtrl.class);
 
     @Autowired
     public RegularCtrl(RegularRepository regularRepository,
                        TransactionRepository tranasactionRepository,
-                       WebLogManager webLogManager,
                        ApplicationProperties applicationProperties ) {
         this.regularRepository = regularRepository;
         this.tranasactionRepository = tranasactionRepository;
-        this.webLogManager = webLogManager;
         this.applicationProperties = applicationProperties;
     }
 
-    private Date adjustDate(Date transactionDate, String adjustment) {
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.setTime(transactionDate);
-
-        int adjustmentAmt = 0;
+    private LocalDate adjustDate(LocalDate transactionDate, AdjustmentType adjustment) {
+        int adjustmentAmt;
         switch(adjustment) {
-            case "FW":
+            case AT_FORWARD:
                 adjustmentAmt = 1;
                 break;
-            case "BW":
+            case AT_BACKWARD:
                 adjustmentAmt = -1;
                 break;
+            default:
+                adjustmentAmt = 0;
         }
 
         if(adjustmentAmt != 0) {
-            while( (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) || (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) ) {
-                calendar.add(Calendar.DATE,adjustmentAmt);
+            while( (transactionDate.getDayOfWeek() == DayOfWeek.SUNDAY) || (transactionDate.getDayOfWeek() == DayOfWeek.SATURDAY) ) {
+                transactionDate = transactionDate.plusDays(adjustmentAmt);
             }
 
-            LOG.info("Date has been adjusted " + adjustment + " " + loggingSDF.format(calendar.getTime()));
+            LOG.info("Date has been adjusted {} {}", adjustment, transactionDate);
         }
 
-        return calendar.getTime();
+        return transactionDate;
     }
 
-    private void processRegular(Date today, Regular nextRegular) {
+    private void processRegular(LocalDate today, Regular nextRegular) {
         try {
             // If the next date is today, then create a transaction.
             if (nextRegular.isNextDateToday(today)) {
 
-                Date saveDate = nextRegular.getNextDate(today);
-                Date transactionDate = adjustDate(saveDate,nextRegular.getWeekendAdj());
+                LocalDate saveDate = nextRegular.getNextDate(today);
+                LocalDate transactionDate = adjustDate(saveDate,nextRegular.getWeekendAdj());
 
                 LOG.info("Create new transaction");
                 Transaction regularPayment = new Transaction(nextRegular.getAccount(), nextRegular.getCategory(), transactionDate, nextRegular.getAmount(), nextRegular.getDescription());
@@ -81,28 +72,24 @@ public class RegularCtrl {
                 // Update the regular payment.
                 nextRegular.setLastDate(saveDate);
                 regularRepository.save(nextRegular);
-
-                webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Regular payment - " + nextRegular.getDescription() );
             }
-        } catch( Regular.CannotDetermineNextDateException ex) {
-            LOG.error("Cannot determine the next payemnt." + ex.getMessage());
-            webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR,"Process Regular - " + ex);
+        } catch( CannotDetermineNextDateException ex) {
+            LOG.error("Cannot determine the next payemnt.", ex);
         } catch ( Exception ex) {
-            LOG.error("Failed to process regular payment.",ex);
-            webLogManager.postWebLog(WebLogManager.webLogLevel.ERROR,"Process Regular - " + ex);
+            LOG.error("Failed to process regular payment.", ex);
         }
     }
 
-    public void generateRegularPayments(Date forDate) {
+    public void generateRegularPayments(LocalDate forDate) {
         // Generate for date.
-        LOG.info("Generate as of: " + loggingSDF.format(forDate));
+        LOG.info("Generate as of: {}", forDate);
 
         // Process the regular payments.
         Iterable<Regular> regularPayments = regularRepository.findAll();
 
         // Go through each payment.
         for(Regular nextRegular : regularPayments) {
-            LOG.info("Process next regular payment " + nextRegular.getId() + " " + nextRegular.getAccount() + " " + nextRegular.getCategory() + " " + nextRegular.getAmount());
+            LOG.info("Process next regular payment {} {} {} {}", nextRegular.getId(), nextRegular.getAccount().getId(), nextRegular.getCategory().getId(), nextRegular.getAmount());
             processRegular(forDate, nextRegular);
         }
     }
@@ -115,10 +102,9 @@ public class RegularCtrl {
         }
 
         // Generate for today.
-        Date today = new Date();
+        LocalDate today = LocalDate.now();
 
-        LOG.info("TODAY: " + loggingSDF.format(today));
-        webLogManager.postWebLog(WebLogManager.webLogLevel.INFO,"Checking Regular - " + loggingSDF.format(today));
-        generateRegularPayments(new Date());
+        LOG.info("TODAY: {}", today);
+        generateRegularPayments(today);
     }
 }

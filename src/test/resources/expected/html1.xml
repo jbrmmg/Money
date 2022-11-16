@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="uk">
+    <head>
+        <title>Report</title>
+        <style>/*
+* THIS FILE IS GENERATED - DO NOT EDIT
+*/
+@page { margin:10pt; }
+
+body {
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:12px;
+}
+
+h1 {
+  font-weight:bolder;
+  font-size:24px;
+}
+
+h2 {
+  font-weight:bold;
+  font-size:14px;
+}
+
+table { border-spacing:0; }
+
+td {
+  white-space:nowrap;
+  font-size:10px;
+}
+
+td.date { text-align:right; }
+
+td.description {
+  white-space:nowrap;
+  font-size:8px;
+}
+
+td.amount {
+  text-align:right;
+  color:#000000;
+}
+
+td.amount-debit { color:#FF0000; }
+
+td.center-column {
+  width:10px;
+  border-right:2px solid darkblue;
+}
+
+th.total-column { padding-left:30px; }
+
+td.total-row {
+  padding-top:4px;
+  border-top:2px solid black;
+  font-weight:bold;
+  font-size:14px;
+}
+
+img.pie {
+  margin-right:auto;
+  display:block;
+  margin-left:auto;
+}</style>
+    </head>
+    <body>
+        <h1>January 2010</h1>
+        <img class="pie" height="400px" width="400px" src="./target/testfiles/PdnReport//pie-.png" />
+        <table>
+            <tr>
+                <th />
+                <th />
+                <th class="total-column">Current Spend</th>
+                <th class="total-column">Previous Month</th>
+                <th class="total-column">Change in Spend</th>
+            </tr>
+            <tr>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/FDG.png" />
+                </td>
+                <td>Grocery</td>
+                <td class="amount amount-debit">-84.12</td>
+                <td class="amount">0.00</td>
+                <td />
+            </tr>
+            <tr>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/HSE.png" />
+                </td>
+                <td>House</td>
+                <td class="amount amount-debit">-220.04</td>
+                <td class="amount">0.00</td>
+                <td />
+            </tr>
+            <tr>
+                <td />
+                <td class="total-row">Total</td>
+                <td class="total-row amount amount-debit">-304.16</td>
+                <td class="total-row amount">0.00</td>
+                <td />
+            </tr>
+        </table>
+        <p style="page-break-after: always;">&#xA0;</p>
+        <table>
+            <tr>
+                <th>Date</th>
+                <th />
+                <th />
+                <th>Description</th>
+                <th>Amount</th>
+                <th />
+                <th>Date</th>
+                <th />
+                <th />
+                <th>Description</th>
+                <th>Amount</th>
+            </tr>
+            <tr>
+                <td class="date">01-Jan<br/>2010</td>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/AMEX.png" />
+                </td>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/HSE.png" />
+                </td>
+                <td class="description">Testing</td>
+                <td class="amount amount-debit">-10.02</td>
+                <td class="center-column" />
+                <td class="date">02-Jan<br/>2010</td>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/AMEX.png" />
+                </td>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/FDG.png" />
+                </td>
+                <td class="description">This is a much longer<br/>description test!!</td>
+                <td class="amount amount-debit">-84.12</td>
+            </tr>
+            <tr>
+                <td class="date">02-Jan<br/>2010</td>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/AMEX.png" />
+                </td>
+                <td>
+                    <img height="25px" width="25px" src="./target/testfiles/PdnReport/HSE.png" />
+                </td>
+                <td class="description">Testing 1</td>
+                <td class="amount amount-debit">-210.02</td>
+                <td class="center-column" />
+                <td />
+                <td />
+                <td />
+                <td />
+                <td />
+            </tr>
+        </table>
+    </body>
+</html>

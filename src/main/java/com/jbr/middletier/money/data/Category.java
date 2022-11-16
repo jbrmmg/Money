@@ -10,7 +10,6 @@ import javax.validation.constraints.Size;
 /**
  * Created by jason on 04/03/17.
  */
-@SuppressWarnings("unused")
 @Entity
 @Table(name="Category")
 public class Category {
@@ -48,17 +47,11 @@ public class Category {
     @Column(name="systemUse")
     private Boolean systemUse;
 
-    protected  Category() {}
-
     public String getId() {
         return this.id;
     }
 
     public void setId(String id) { this.id = id; }
-
-    public String getSource() {
-        return this.name;
-    }
 
     public Long getSort() {
         return this.sort;

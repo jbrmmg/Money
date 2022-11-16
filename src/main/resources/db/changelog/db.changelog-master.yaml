@@ -33,4 +33,11 @@ databaseChangeLog:
   - include:
       file: /db/changelog/db.changelog-010-add-deleted-flag.yaml
 
+  - include:
+      file: /db/changelog/db.changelog-011-logo.yaml
 
+  - include:
+      file: /db/changelog/db.changelog-012-reconcile-format.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-013-closed-flag.yaml

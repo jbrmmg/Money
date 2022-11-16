@@ -4,12 +4,6 @@ spring:
         username: ${db.pdn.money.user}
         password: ${db.pdn.money.password}
 
-    boot:
-        admin:
-            client:
-                url: ${spring.admin.clienturl}
-
-
     application:
         name: Middle Tier Money
 
@@ -17,23 +11,25 @@ spring:
       console:
         enabled: false
 
-logging.file: /var/log/jbr/MiddleTier-MoneyDB-PDN.log
 logging:
     file:
-        max-history: 3
-        max-size: 100MB
+        name: /var/log/jbr/MiddleTier-MoneyDB-PDN.log
+    logback:
+        rollingpolicy:
+            max-file-size: 100MB
+            max-history: 3
 
 server:
     port: 12017
 
 money:
     service-name: middletier-money
-    web-log-url: http://localhost:12001/jbr/int/log/data
     report-share: /media/Shared/Documents/PDF/MoneyReports
     report-working: /home/jason/Working/PdnReport/
     regular-enabled: true
     report-enabled: true
     archive-enabled: true
+    reconcile-file-location: /home/jason/Downloads
 
 info:
     app:

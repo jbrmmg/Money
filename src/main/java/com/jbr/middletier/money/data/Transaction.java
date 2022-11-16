@@ -1,12 +1,13 @@
 package com.jbr.middletier.money.data;
 
+import com.jbr.middletier.money.util.FinancialAmount;
+import com.jbr.middletier.money.util.TransactionString;
 import org.hibernate.annotations.*;
 
 import javax.persistence.*;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
  * Created by jason on 07/03/17.
@@ -28,7 +29,7 @@ public class Transaction {
     private Category category;
 
     @Column(name="date")
-    private Date date;
+    private LocalDate date;
 
     @Column(name="amount")
     private double amount;
@@ -50,26 +51,15 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction (Account account, Category category, Date date, double amount, String description) {
+    public Transaction (Account account, Category category, LocalDate date, double amount, String description) {
         this.account = account;
         this.category = category;
-
         this.date = date;
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(this.date);
-        calendar.set(Calendar.HOUR_OF_DAY,12);
-        calendar.set(Calendar.MINUTE,0);
-        calendar.set(Calendar.SECOND,0);
-        calendar.set(Calendar.MILLISECOND,0);
-        this.date = calendar.getTime();
-
         this.amount = amount;
-
         this.description = description;
     }
 
-    public static final String TransactionDateFormat = "yyyy-MM-dd";
+    public static final String TRANSACTION_DATE_FORMAT = "yyyy-MM-dd";
 
     public int getId() {
         return id;
@@ -79,7 +69,7 @@ public class Transaction {
         return this.account;
     }
 
-    public double getAmount() { return this.amount; }
+    public FinancialAmount getAmount() { return new FinancialAmount(this.amount); }
 
     public void setAmount(double amount) {
         this.amount = amount;
@@ -118,5 +108,32 @@ public class Transaction {
         return this.oppositeId;
     }
 
-    public Date getDate() { return this.date; }
+    public LocalDate getDate() { return this.date; }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+
+        if (!(o instanceof Transaction)) {
+            return false;
+        }
+
+        Transaction transaction = (Transaction) o;
+
+        return this.toString().equals(transaction.toString());
+    }
+
+    @Override
+    public String toString() {
+        return TransactionString.formattedTransactionString(this.date,this.amount);
+    }
 }

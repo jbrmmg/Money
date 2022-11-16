@@ -1,0 +1,194 @@
+databaseChangeLog:
+  - changeSet:
+      id: 12
+      author: jason
+      changes:
+
+        - createTable:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: id
+                  type: varchar(5)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: header_line
+                  type: varchar(200)
+              - column:
+                  name: first_line
+                  type: int
+              - column:
+                  name: date_column
+                  type: int
+              - column:
+                  name: date_format
+                  type: varchar(20)
+              - column:
+                  name: description_column
+                  type: int
+              - column:
+                  name: amount_in_column
+                  type: int
+              - column:
+                  name: amount_out_column
+                  type: int
+              - column:
+                  name: reverse
+                  type: boolean
+
+        - insert:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: id
+                  value: amex
+              - column:
+                  name: header_line
+                  value: "Date,Description,Card Member,Account #,Amount"
+              - column:
+                  name: first_line
+                  value: 1
+              - column:
+                  name: date_column
+                  value: 0
+              - column:
+                  name: date_format
+                  value: "dd/MM/yyyy"
+              - column:
+                  name: description_column
+                  value: 1
+              - column:
+                  name: amount_in_column
+                  value: 4
+              - column:
+                  name: amount_out_column
+                  value: 4
+              - column:
+                  name: reverse
+                  valueBoolean: true
+
+        - insert:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: id
+                  value: fd
+              - column:
+                  name: header_line
+                  value: "Date,Description,Amount,Balance"
+              - column:
+                  name: first_line
+                  value: 1
+              - column:
+                  name: date_column
+                  value: 0
+              - column:
+                  name: date_format
+                  value: "dd/MM/yyyy"
+              - column:
+                  name: description_column
+                  value: 1
+              - column:
+                  name: amount_in_column
+                  value: 2
+              - column:
+                  name: amount_out_column
+                  value: 2
+              - column:
+                  name: reverse
+                  valueBoolean: false
+
+        - insert:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: id
+                  value: jlp
+              - column:
+                  name: header_line
+                  value: "Date Processed,Description,Amount,"
+              - column:
+                  name: first_line
+                  value: 1
+              - column:
+                  name: date_column
+                  value: 0
+              - column:
+                  name: date_format
+                  value: "dd-MMM-yyyy"
+              - column:
+                  name: description_column
+                  value: 1
+              - column:
+                  name: amount_in_column
+                  value: 2
+              - column:
+                  name: amount_out_column
+                  value: 2
+              - column:
+                  name: reverse
+                  valueBoolean: true
+
+        - insert:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: id
+                  value: jlp2
+              - column:
+                  name: header_line
+                  value: "Date,Description,Amount(GBP)"
+              - column:
+                  name: first_line
+                  value: 1
+              - column:
+                  name: date_column
+                  value: 0
+              - column:
+                  name: date_format
+                  value: "dd/MM/yyyy"
+              - column:
+                  name: description_column
+                  value: 1
+              - column:
+                  name: amount_in_column
+                  value: 2
+              - column:
+                  name: amount_out_column
+                  value: 2
+              - column:
+                  name: reverse
+                  valueBoolean: true
+
+        - insert:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: id
+                  value: nwde
+              - column:
+                  name: header_line
+                  value: "\"Date\",\"Transactions\",\"Location\",\"Paid out\",\"Paid in\""
+              - column:
+                  name: first_line
+                  value: 5
+              - column:
+                  name: date_column
+                  value: 0
+              - column:
+                  name: date_format
+                  value: "dd MMM yyyy"
+              - column:
+                  name: description_column
+                  value: 1
+              - column:
+                  name: amount_in_column
+                  value: 4
+              - column:
+                  name: amount_out_column
+                  value: 3
+              - column:
+                  name: reverse
+                  valueBoolean: false
