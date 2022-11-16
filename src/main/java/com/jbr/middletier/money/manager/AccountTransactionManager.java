@@ -339,7 +339,7 @@ public class AccountTransactionManager {
         boolean oppositeLocked = false;
 
         // Is there an opposite?
-        if(existingTransaction.get().getOppositeTransactionId() != null) {
+        if(existingTransaction.isPresent() && existingTransaction.get().getOppositeTransactionId() != null) {
             oppositeTransaction = transactionRepository.findById(existingTransaction.get().getOppositeTransactionId());
 
             if(oppositeTransaction.isPresent() && oppositeTransaction.get().reconciled()) {
@@ -351,9 +351,7 @@ public class AccountTransactionManager {
             // If the transaction is not reconciled then it can be deleted.
             transactionRepository.deleteById(transaction.getId());
 
-            if(oppositeTransaction.isPresent()) {
-                transactionRepository.deleteById(oppositeTransaction.get().getId());
-            }
+            oppositeTransaction.ifPresent(value -> transactionRepository.deleteById(value.getId()));
             return new ArrayList<>();
         }
 
