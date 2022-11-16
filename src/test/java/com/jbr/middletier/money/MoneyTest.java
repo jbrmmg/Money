@@ -27,10 +27,8 @@ import java.io.File;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
+
 import static java.lang.Math.abs;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -254,13 +252,22 @@ public class MoneyTest extends Support {
 
         // Delete the transactions.
         transactions = transactionRepository.findAll();
+        List<Integer> deletedIds = new ArrayList<>();
         for(Transaction nextTransaction : transactions) {
-            // Delete this item.
-            TransactionDTO nextTransactionDTO = modelMapper.map(nextTransaction,TransactionDTO.class);
-            getMockMvc().perform(delete("/jbr/ext/money/transaction")
-                    .content(this.json(nextTransactionDTO))
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk());
+            if(!deletedIds.contains(nextTransaction.getId())) {
+                // Delete this item.
+                TransactionDTO nextTransactionDTO = modelMapper.map(nextTransaction, TransactionDTO.class);
+                getMockMvc().perform(delete("/jbr/ext/money/transaction")
+                                .content(this.json(nextTransactionDTO))
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk());
+
+                // Add to the list.
+                deletedIds.add(nextTransactionDTO.getId());
+                if (nextTransactionDTO.getOppositeTransactionId() != null) {
+                    deletedIds.add(nextTransactionDTO.getOppositeTransactionId());
+                }
+            }
         }
     }
 
