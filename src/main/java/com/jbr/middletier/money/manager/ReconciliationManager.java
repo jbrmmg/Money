@@ -126,7 +126,12 @@ public class ReconciliationManager {
                 continue;
             }
 
-            for(Transaction nextTransaction : transactions) {
+            boolean found = false;
+            int index = 0;
+            while(!found && index < transactions.size()) {
+                Transaction nextTransaction = transactions.get(index);
+                index++;
+
                 // Skip transactions that do not match the criteria.
                 if(nextTransaction.reconciled() != reconciled) {
                     continue;
@@ -138,7 +143,7 @@ public class ReconciliationManager {
 
                     // remove from the list.
                     transactions.remove(nextTransaction);
-                    return;
+                    found = true;
                 }
             }
         }
@@ -171,9 +176,11 @@ public class ReconciliationManager {
         lookForMatches(true, result, transactions);
         lookForMatches(false, result, transactions);
 
-        // For any transactions remaining, create a match entry.
+        // For any transactions that are reconciled remaining, create a match entry.
         for(Transaction next : transactions) {
-            result.add(new MatchData(next));
+            if(next.reconciled()) {
+                result.add(new MatchData(next));
+            }
         }
 
         Collections.sort(result);
