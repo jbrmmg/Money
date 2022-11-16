@@ -497,8 +497,12 @@ public class ReconciliationTest extends Support {
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
+        Statement unlocked = getUnlockedStatement("BANK");
+
         // Create a transaction
-        createTransaction("BANK", "HSE", -36, LocalDate.of(2022,10,10));
+        Transaction transaction = createTransaction("BANK", "HSE", -36, LocalDate.of(2022,10,10));
+        transaction.setStatement(unlocked);
+        this.transactionRepository.save(transaction);
 
         List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
         int setCategory = 0;

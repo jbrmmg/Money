@@ -1,7 +1,7 @@
 logging:
   level:
     ROOT: INFO
-    com.jbr.middletier: DEBUG
+#    com.jbr.middletier: DEBUG
 
 spring:
   datasource:
@@ -13,12 +13,6 @@ spring:
     contexts:
     enabled: false
 
-  jpa:
-    properties:
-      hibernate:
-        format_sql: true
-    show-sql: true
-
 server:
   port: 13017
 
@@ -27,6 +21,7 @@ money:
   report-share: /home/jason/Working/DbgReportShare/
   report-schedule: 0 23 * * * ?
   report-enabled: true
+  reconcile-file-location: /home/jason/Downloads
 
 info:
   app:
