@@ -10,9 +10,7 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
-import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
-import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
-import com.jbr.middletier.money.exceptions.MultipleUnlockedStatementException;
+import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.reconciliation.MatchData;
@@ -492,7 +490,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchMoreTransactions()  throws IOException, InvalidAccountIdException {
+    public void testMatchMoreTransactions() throws IOException, InvalidAccountIdException {
         // load the file.
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
@@ -517,5 +515,33 @@ public class ReconciliationTest extends Support {
         Assert.assertEquals(3,setCategory);
         Assert.assertEquals(1,unreconcile);
         Assert.assertEquals(4,matchData.size());
+    }
+
+    @Test
+    public void testAutomaticRec() throws IOException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidTransactionIdException, InvalidTransactionException {
+        // load the file.
+        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+
+        // Create a transaction
+        createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
+        createTransaction("BANK", "HSE", -0.9, LocalDate.of(2022,10,11));
+        createTransaction("BANK", "HSE", -7.99, LocalDate.of(2022,10,10));
+
+        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        int reconcile = 0;
+        for(MatchData next : matchData) {
+            if(next.getForwardAction().equalsIgnoreCase("RECONCILE")) {
+                reconcile++;
+            }
+        }
+        Assert.assertEquals(3,reconcile);
+        Assert.assertEquals(3,matchData.size());
+
+        this.reconciliationManager.autoReconcileData();
+
+        for(Transaction next : this.transactionRepository.findAll()) {
+            Assert.assertTrue(next.reconciled());
+        }
     }
 }
