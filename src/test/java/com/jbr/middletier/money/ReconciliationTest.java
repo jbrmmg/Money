@@ -523,25 +523,31 @@ public class ReconciliationTest extends Support {
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
-        // Create a transaction
-        createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
-        createTransaction("BANK", "HSE", -0.9, LocalDate.of(2022,10,11));
-        createTransaction("BANK", "HSE", -7.99, LocalDate.of(2022,10,10));
-
         List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
         int reconcile = 0;
         for(MatchData next : matchData) {
-            if(next.getForwardAction().equalsIgnoreCase("RECONCILE")) {
+            if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
                 reconcile++;
             }
+
+            ReconcileUpdateDTO reconcileUpdateDTO = new ReconcileUpdateDTO();
+            reconcileUpdateDTO.setCategoryId("HSE");
+            reconcileUpdateDTO.setType("rec");
+            reconcileUpdateDTO.setId(next.getId());
+            this.reconciliationManager.processReconcileUpdate(reconcileUpdateDTO);
         }
         Assert.assertEquals(3,reconcile);
         Assert.assertEquals(3,matchData.size());
 
         this.reconciliationManager.autoReconcileData();
+        this.reconciliationManager.autoReconcileData();
 
+        int count = 0;
         for(Transaction next : this.transactionRepository.findAll()) {
             Assert.assertTrue(next.reconciled());
+            Assert.assertEquals("HSE", next.getCategory().getId());
+            count++;
         }
+        Assert.assertEquals(3, count);
     }
 }
