@@ -26,7 +26,7 @@ public class ReconciliationFileTest {
     @Test
     public void testFilesAvailable() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
-        Assert.assertEquals(6, files.size());
+        Assert.assertEquals(7, files.size());
     }
 
     private void testReconcilationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {

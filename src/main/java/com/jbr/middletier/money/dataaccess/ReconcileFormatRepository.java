@@ -8,4 +8,6 @@ import java.util.List;
 @Repository
 public interface ReconcileFormatRepository extends CrudRepository<ReconcileFormat,String> {
     List<ReconcileFormat> findAllByHeaderLine(String headerLine);
+
+    List<ReconcileFormat> findByHeaderLineIsNull();
 }

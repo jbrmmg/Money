@@ -581,6 +581,11 @@ public class MoneyTest extends Support {
     }
 
     @Test
+    public void testLoadReconciliationDataBARC() throws Exception {
+        testReconciliationData("test.BARC.csv","BARC",1, -4.40);
+    }
+
+    @Test
     public void testLoadReconciliationDataBank() throws Exception {
         testReconciliationData("test.FirstDirect.csv","BANK",18, -1004.52);
     }

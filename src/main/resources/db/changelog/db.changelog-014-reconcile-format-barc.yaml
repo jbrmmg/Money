@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 14
+      author: jason
+      changes:
+
+        - insert:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: id
+                  value: barc
+              - column:
+                  name: header_line
+                  value: null
+              - column:
+                  name: first_line
+                  value: 0
+              - column:
+                  name: date_column
+                  value: 0
+              - column:
+                  name: date_format
+                  value: "dd MMM yy"
+              - column:
+                  name: description_column
+                  value: 1
+              - column:
+                  name: amount_in_column
+                  value: 5
+              - column:
+                  name: amount_out_column
+                  value: 6
+              - column:
+                  name: reverse
+                  valueBoolean: false
