@@ -2,12 +2,12 @@ package com.jbr.middletier.money.reconciliation;
 
 import com.jbr.middletier.money.data.ReconcileFormat;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
+import com.jbr.middletier.money.manager.ReconcileFileLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 
 public class FileFormatDescription {
     private static final Logger LOG = LoggerFactory.getLogger(FileFormatDescription.class);
@@ -20,6 +20,10 @@ public class FileFormatDescription {
             LOG.info("Found format with id {}", next.getId());
             this.reconcileFormat = next;
         }
+    }
+
+    public FileFormatDescription(ReconcileFormat format) {
+        this.reconcileFormat = format;
     }
 
     public FileFormatDescription() {
@@ -94,16 +98,16 @@ public class FileFormatDescription {
         return quoted;
     }
 
-    private String getColumnValue(int index, List<String> columns) throws FileFormatException {
-        if(index < columns.size()) {
-            return unQuote(columns.get(index).trim());
+    private String getColumnValue(int index, ReconcileFileLine line) throws FileFormatException {
+        if(index < line.getColumns().size()) {
+            return unQuote(line.getColumns().get(index).trim());
         }
 
         throw new FileFormatException("Required index out of range");
     }
 
-    public LocalDate getDate(List<String> columns) throws FileFormatException {
-        String value = getColumnValue(getDateColumn(),columns);
+    public LocalDate getDate(ReconcileFileLine line) throws FileFormatException {
+        String value = getColumnValue(getDateColumn(),line);
 
         LocalDate result;
         try {
@@ -115,8 +119,8 @@ public class FileFormatDescription {
         return result;
     }
 
-    private double internalGetAmount(List<String> columns, int index) throws FileFormatException {
-        String value = getColumnValue(index,columns).replace(",","").replace("£","");
+    private double internalGetAmount(ReconcileFileLine line, int index) throws FileFormatException {
+        String value = getColumnValue(index,line).replace(",","").replace("£","");
         if(value.trim().length() == 0) {
             return 0;
         }
@@ -136,22 +140,22 @@ public class FileFormatDescription {
         return numericValue;
     }
 
-    private double internalGetSplitAmount(List<String> columns) throws FileFormatException {
-        double inAmount = internalGetAmount(columns,getAmountInColumn());
-        double outAmount = internalGetAmount(columns,getAmountOutColumn()) * -1;
+    private double internalGetSplitAmount(ReconcileFileLine line) throws FileFormatException {
+        double inAmount = internalGetAmount(line,getAmountInColumn());
+        double outAmount = internalGetAmount(line,getAmountOutColumn()) * -1;
 
         return inAmount + outAmount;
     }
 
-    public double getAmount(List<String> columns) throws FileFormatException {
+    public double getAmount(ReconcileFileLine line) throws FileFormatException {
         if(getSingleAmount()) {
-            return internalGetAmount(columns,getAmountInColumn());
+            return internalGetAmount(line,getAmountInColumn());
         }
 
-        return internalGetSplitAmount(columns);
+        return internalGetSplitAmount(line);
     }
 
-    public String getDescription(List<String> columns) throws FileFormatException {
-        return getColumnValue(getDescriptionColumn(),columns);
+    public String getDescription(ReconcileFileLine line) throws FileFormatException {
+        return getColumnValue(getDescriptionColumn(),line);
     }
 }

@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
+import com.jbr.middletier.money.data.ReconcileFormat;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Controller;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,8 +53,8 @@ public class ReconciliationFileManager {
         return result;
     }
 
-    private List<String> readContents(File transactionFile) throws IOException {
-        List<String> result = new ArrayList<>();
+    private List<ReconcileFileLine> readContents(File transactionFile) throws IOException {
+        List<ReconcileFileLine> result = new ArrayList<>();
 
         try(Stream<String> stream = Files.lines(transactionFile.toPath())) {
             stream.forEach(s -> {
@@ -62,63 +66,64 @@ public class ReconciliationFileManager {
                     s = s.replace("\t", " ");
                 }
 
-                s = s.trim();
-
-                result.add(s);
+                result.add(new ReconcileFileLine(s.trim()));
             });
         }
 
         return result;
     }
 
-    private FileFormatDescription determineFileFormat(List<String> contents) {
+    private boolean validFormattedDate(String dateFormat, String dateValue) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
+            LocalDate.parse(dateValue,formatter);
+        } catch (DateTimeParseException invalid) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private FileFormatDescription determineFileFormat(List<ReconcileFileLine> contents) {
         // The first line before the transactions indicates the structure of the file.
-        for(String nextLine : contents) {
-            FileFormatDescription format = new FileFormatDescription(reconcileFormatRepository, nextLine);
+        for(ReconcileFileLine nextLine : contents) {
+            FileFormatDescription format = new FileFormatDescription(reconcileFormatRepository, nextLine.getLine());
             if(format.getValid()) {
                 return format;
+            }
+        }
+
+        // Cannot be determinded on the title line, does it match formats that have no title?
+        if(contents.size() > 0) {
+            for (ReconcileFormat next : reconcileFormatRepository.findByHeaderLineIsNull()) {
+                ReconcileFileLine firstLine = contents.get(0);
+
+                if(validFormattedDate(next.getDateFormat(),firstLine.getColumns().get(next.getDateColumn()))) {
+                    return new FileFormatDescription(next);
+                }
             }
         }
 
         return new FileFormatDescription();
     }
 
-    private List<String> getColumms(String line) {
-        List<String> result = new ArrayList<>();
-        int start = 0;
-        boolean inQuotes = false;
-        for (int current = 0; current < line.length(); current++) {
-            if (line.charAt(current) == '\"') inQuotes = !inQuotes; // toggle state
-            else if (line.charAt(current) == ',' && !inQuotes) {
-                result.add(line.substring(start, current));
-                start = current + 1;
-            }
-        }
-        result.add(line.substring(start));
-
-        return result;
-    }
-
-    private TransactionDTO processLine(FileFormatDescription format, String line) {
-        // Split the string into columns (CSV).
-        List<String> columns = getColumms(line);
-
+    private TransactionDTO processLine(FileFormatDescription format, ReconcileFileLine line) {
         try {
             // We need to get 3 things from the line; date, description and amount.
             TransactionDTO result = new TransactionDTO();
-            result.setDate(format.getDate(columns));
-            result.setAmount(format.getAmount(columns));
-            result.setDescription(format.getDescription(columns));
+            result.setDate(format.getDate(line));
+            result.setAmount(format.getAmount(line));
+            result.setDescription(format.getDescription(line));
 
             return result;
         } catch (FileFormatException ex) {
             // The line is ignored if it cannot be processes.
-            LOG.warn("Line is ignored {} {}", line, ex.getMessage());
+            LOG.warn("Line is ignored {} {}", line.getLine(), ex.getMessage());
             return null;
         }
     }
 
-    private List<TransactionDTO> processFile(FileFormatDescription format, List<String> contents) {
+    private List<TransactionDTO> processFile(FileFormatDescription format, List<ReconcileFileLine> contents) {
         LOG.info("Process file with format {}", format);
 
         List<TransactionDTO> result = new ArrayList<>();
@@ -129,7 +134,7 @@ public class ReconciliationFileManager {
 
         // Process the contents starting at the first line.
         int line = 0;
-        for(String nextLine : contents) {
+        for(ReconcileFileLine nextLine : contents) {
             if(line < format.getFirstLine()) {
                 line++;
                 continue;
@@ -156,7 +161,7 @@ public class ReconciliationFileManager {
         }
 
         // Read the file into a list of strings.
-        List<String> contents = readContents(transactionFile);
+        List<ReconcileFileLine> contents = readContents(transactionFile);
 
         // Determine the file format
         FileFormatDescription formatDescription = determineFileFormat(contents);

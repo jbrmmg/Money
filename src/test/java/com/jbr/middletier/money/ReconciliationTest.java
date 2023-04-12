@@ -10,9 +10,7 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
-import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
-import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
-import com.jbr.middletier.money.exceptions.MultipleUnlockedStatementException;
+import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.reconciliation.MatchData;
@@ -96,7 +94,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(6)));
+                .andExpect(jsonPath("$", hasSize(7)));
 
         getMockMvc().perform(get("/jbr/int/money/match?account=AMEX")
                         .content(this.json(reconciliationFile))
@@ -120,7 +118,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(6)));
+                .andExpect(jsonPath("$", hasSize(7)));
 
         getMockMvc().perform(put("/jbr/ext/money/reconciliation/auto")
                         .content(this.json(reconciliationFile))
@@ -153,7 +151,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(6)));
+                .andExpect(jsonPath("$", hasSize(7)));
 
         getMockMvc().perform(delete("/jbr/ext/money/reconciliation/clear")
                         .content(this.json(reconciliationFile))
@@ -164,7 +162,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(6)));
+                .andExpect(jsonPath("$", hasSize(7)));
 
         getMockMvc().perform(delete("/jbr/int/money/reconciliation/clear")
                         .content(this.json(reconciliationFile))
@@ -186,7 +184,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(6)));
+                .andExpect(jsonPath("$", hasSize(7)));
 
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
         reconcileUpdate.setCategoryId("FSE");
@@ -492,7 +490,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchMoreTransactions()  throws IOException, InvalidAccountIdException {
+    public void testMatchMoreTransactions() throws IOException, InvalidAccountIdException {
         // load the file.
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
@@ -517,5 +515,39 @@ public class ReconciliationTest extends Support {
         Assert.assertEquals(3,setCategory);
         Assert.assertEquals(1,unreconcile);
         Assert.assertEquals(4,matchData.size());
+    }
+
+    @Test
+    public void testAutomaticRec() throws IOException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidTransactionIdException, InvalidTransactionException {
+        // load the file.
+        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+
+        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        int reconcile = 0;
+        for(MatchData next : matchData) {
+            if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
+                reconcile++;
+            }
+
+            ReconcileUpdateDTO reconcileUpdateDTO = new ReconcileUpdateDTO();
+            reconcileUpdateDTO.setCategoryId("HSE");
+            reconcileUpdateDTO.setType("rec");
+            reconcileUpdateDTO.setId(next.getId());
+            this.reconciliationManager.processReconcileUpdate(reconcileUpdateDTO);
+        }
+        Assert.assertEquals(3,reconcile);
+        Assert.assertEquals(3,matchData.size());
+
+        this.reconciliationManager.autoReconcileData();
+        this.reconciliationManager.autoReconcileData();
+
+        int count = 0;
+        for(Transaction next : this.transactionRepository.findAll()) {
+            Assert.assertTrue(next.reconciled());
+            Assert.assertEquals("HSE", next.getCategory().getId());
+            count++;
+        }
+        Assert.assertEquals(3, count);
     }
 }
