@@ -109,6 +109,11 @@ public class ReconciliationFileManager {
 
     private TransactionDTO processLine(FileFormatDescription format, ReconcileFileLine line) {
         try {
+            LOG.info("Process Line");
+            for(String next : line.getColumns()) {
+                LOG.info("Next {}",next);
+            }
+            LOG.info("Format {}", format.getValid());
             // We need to get 3 things from the line; date, description and amount.
             TransactionDTO result = new TransactionDTO();
             result.setDate(format.getDate(line));

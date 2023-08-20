@@ -7,7 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 public class FileFormatDescription {
     private static final Logger LOG = LoggerFactory.getLogger(FileFormatDescription.class);
@@ -111,7 +113,12 @@ public class FileFormatDescription {
 
         LocalDate result;
         try {
-            result = LocalDate.parse(value,DateTimeFormatter.ofPattern(getDateFormat()));
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                    .parseCaseInsensitive()
+                    .appendPattern(getDateFormat())
+                    .toFormatter(Locale.ENGLISH);
+
+            result = LocalDate.parse(value,formatter);
         } catch (DateTimeParseException ex) {
             throw new FileFormatException("Cannot convert the string to a date " + ex.getMessage());
         }
