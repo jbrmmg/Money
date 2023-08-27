@@ -151,6 +151,14 @@ public class FileFormatDescription {
         double inAmount = internalGetAmount(line,getAmountInColumn());
         double outAmount = internalGetAmount(line,getAmountOutColumn()) * -1;
 
+        if(inAmount < 0) {
+            inAmount *= -1;
+        }
+
+        if(outAmount > 0) {
+            outAmount *= -1;
+        }
+
         return inAmount + outAmount;
     }
 
@@ -163,6 +171,7 @@ public class FileFormatDescription {
     }
 
     public String getDescription(ReconcileFileLine line) throws FileFormatException {
-        return getColumnValue(getDescriptionColumn(),line);
+        String description = getColumnValue(getDescriptionColumn(),line).trim();
+        return description.substring(0, Math.min(description.length(), 40));
     }
 }

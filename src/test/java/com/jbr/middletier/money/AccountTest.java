@@ -21,7 +21,7 @@ public class AccountTest extends Support {
     @Test
     public void getAccountTest() throws Exception {
         // Get accounts (external), check that both categories are returned and in the correct order..
-        getMockMvc().perform(get("/jbr/ext/money/accounts/"))
+        getMockMvc().perform(get("/jbr/ext/money/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))
                 .andExpect(jsonPath("$[1].id", is("BANK")))
@@ -29,7 +29,7 @@ public class AccountTest extends Support {
                 .andExpect(jsonPath("$[3].id", is("NWDE")));
 
         // Get accounts (internal), check that both categories are returned and in the correct order..
-        getMockMvc().perform(get("/jbr/int/money/accounts/"))
+        getMockMvc().perform(get("/jbr/int/money/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))
                 .andExpect(jsonPath("$[1].id", is("BANK")))
