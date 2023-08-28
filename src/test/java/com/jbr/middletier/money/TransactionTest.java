@@ -7,6 +7,7 @@ import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -37,7 +38,7 @@ public class TransactionTest extends Support {
     private AccountTransactionManager accountTransactionManager;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private DtoComplexModelMapper modelMapper;
 
     @Before
     public void cleanUp() {

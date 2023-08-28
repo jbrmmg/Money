@@ -4,9 +4,9 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransactionString;
 import org.hibernate.annotations.*;
 
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 
 /**

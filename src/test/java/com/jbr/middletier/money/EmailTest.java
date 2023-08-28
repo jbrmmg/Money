@@ -9,6 +9,7 @@ import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.reporting.EmailGenerator;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -57,7 +58,7 @@ public class EmailTest extends Support {
     @Autowired
     public ApplicationProperties applicationProperties;
     @Autowired
-    public ModelMapper modelMapper;
+    public DtoComplexModelMapper modelMapper;
 
     @Test
     public void testEmail() throws Exception {

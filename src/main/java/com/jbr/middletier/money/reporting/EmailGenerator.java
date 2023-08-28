@@ -6,11 +6,11 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransportWrapper;
 import com.jbr.middletier.money.xml.html.EmailHtml;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class EmailGenerator {
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
     private final TransportWrapper transportWrapper;
-    private final ModelMapper modelMapper;
+    private final DtoComplexModelMapper modelMapper;
     private final ApplicationProperties applicationProperties;
 
     @Autowired
@@ -38,7 +38,7 @@ public class EmailGenerator {
                           StatementRepository statementRepository,
                           AccountRepository accountRepository,
                           TransportWrapper transportWrapper,
-                          ModelMapper modelMapper,
+                          DtoComplexModelMapper modelMapper,
                           ApplicationProperties applicationProperties) {
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;

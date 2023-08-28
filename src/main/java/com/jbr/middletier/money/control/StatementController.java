@@ -56,7 +56,7 @@ public class StatementController {
 
     @DeleteMapping(path="/int/money/statement")
     public @ResponseBody Iterable<StatementDTO> deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatement, InvalidAccountIdException, CannotDeleteLastStatement {
-        LOG.info("Delete an account - {}", statement.getId());
+        LOG.info("Delete an account - {} {} {}", statement.getAccountId(), statement.getMonth(), statement.getYear());
 
         return this.statementManager.deleteStatement(statement);
     }

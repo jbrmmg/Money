@@ -3,9 +3,9 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.InvalidRegularIdException;
 import com.jbr.middletier.money.exceptions.RegularAlreadyExistsException;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +20,10 @@ public class RegularPaymentManager {
     private static final Logger LOG = LoggerFactory.getLogger(RegularPaymentManager.class);
 
     private final RegularRepository regularRepository;
-    private final ModelMapper modelMapper;
+    private final DtoComplexModelMapper modelMapper;
 
     @Autowired
-    public RegularPaymentManager(RegularRepository regularRepository, ModelMapper modelMapper) {
+    public RegularPaymentManager(RegularRepository regularRepository, DtoComplexModelMapper modelMapper) {
         this.regularRepository = regularRepository;
         this.modelMapper = modelMapper;
     }

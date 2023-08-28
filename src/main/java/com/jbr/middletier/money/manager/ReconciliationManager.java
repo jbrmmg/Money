@@ -4,6 +4,8 @@ import com.jbr.middletier.money.control.TransactionController;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.modelmapper.ModelMapper;
@@ -30,7 +32,8 @@ public class ReconciliationManager {
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final TransactionController transactionController;
-    private final ModelMapper modelMapper;
+    private final DtoBasicModelMapper basicModelMapper;
+    private final DtoComplexModelMapper complexModelMapper;
     private Account lastAccount;
 
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
@@ -39,14 +42,16 @@ public class ReconciliationManager {
                                  TransactionRepository transactionRepository,
                                  StatementRepository statementRepository,
                                  TransactionController transactionController,
-                                 ModelMapper modelMapper) {
+                                 DtoBasicModelMapper basicModelMapper,
+                                 DtoComplexModelMapper complexModelMapper) {
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
         this.transactionController = transactionController;
-        this.modelMapper = modelMapper;
+        this.basicModelMapper = basicModelMapper;
+        this.complexModelMapper = complexModelMapper;
         this.lastAccount = null;
     }
 
@@ -60,7 +65,7 @@ public class ReconciliationManager {
         List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(fileResponse);
 
         for(TransactionDTO next : transactions) {
-            ReconciliationData newReconciliationData = modelMapper.map(next,ReconciliationData.class);
+            ReconciliationData newReconciliationData = complexModelMapper.map(next,ReconciliationData.class);
 
             reconciliationRepository.save(newReconciliationData);
         }
@@ -77,8 +82,8 @@ public class ReconciliationManager {
                 if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.CREATE.toString())) {
                     TransactionDTO newTransaction = new TransactionDTO();
 
-                    newTransaction.setAccount(modelMapper.map(next.getAccount(), AccountDTO.class));
-                    newTransaction.setCategory(modelMapper.map(next.getCategory(), CategoryDTO.class));
+                    newTransaction.setAccount(basicModelMapper.map(next.getAccount(), AccountDTO.class));
+                    newTransaction.setCategory(basicModelMapper.map(next.getCategory(), CategoryDTO.class));
 
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Transaction.TRANSACTION_DATE_FORMAT);
                     newTransaction.setDate(LocalDate.parse(next.getDate(),formatter));

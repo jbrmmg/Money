@@ -1,8 +1,6 @@
 package com.jbr.middletier.money.config;
 
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.util.FinancialAmount;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -79,40 +77,9 @@ public class ApplicationProperties {
         this.smtpPort = smtpPort;
     }
 
-    @Bean
-    public ModelMapper modelMapper() {
-        ModelMapper modelMapper = new ModelMapper();
-
-        Converter<FinancialAmount,Double> financialAmountDoubleConverter = new AbstractConverter<>() {
-            @Override
-            protected Double convert(FinancialAmount financialAmount) {
-                return financialAmount.getValue();
-            }
-        };
-
-        Converter<Double,FinancialAmount> doubleFinancialAmount = new AbstractConverter<>() {
-            @Override
-            protected FinancialAmount convert(Double value) {
-                return new FinancialAmount(value);
-            }
-        };
-
-        modelMapper.addConverter(financialAmountDoubleConverter);
-        modelMapper.addConverter(doubleFinancialAmount);
-
-        modelMapper.createTypeMap(Account.class, AccountDTO.class);
-        modelMapper.createTypeMap(AccountDTO.class, Account.class);
-        modelMapper.createTypeMap(Category.class, CategoryDTO.class);
-        modelMapper.createTypeMap(CategoryDTO.class, Category.class);
-        modelMapper.createTypeMap(StatementId.class, StatementIdDTO.class);
-        modelMapper.createTypeMap(StatementIdDTO.class, StatementId.class);
-        modelMapper.createTypeMap(Statement.class, StatementDTO.class);
-        modelMapper.createTypeMap(StatementDTO.class, Statement.class);
-        modelMapper.createTypeMap(Transaction.class, TransactionDTO.class);
-        modelMapper.createTypeMap(TransactionDTO.class, Transaction.class);
-        modelMapper.createTypeMap(Regular.class,RegularDTO.class);
-        modelMapper.createTypeMap(RegularDTO.class, Regular.class);
-
-        return modelMapper;
-    }
+    //TODO remove this
+//    @Bean
+//    public ModelMapper modelMapper() {
+//        return new DtoComplexModelMapper();
+//    }
 }

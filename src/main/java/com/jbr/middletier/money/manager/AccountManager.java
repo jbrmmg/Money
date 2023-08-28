@@ -3,9 +3,9 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
+import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
 import com.jbr.middletier.money.exceptions.AccountAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -16,11 +16,11 @@ import java.util.Optional;
 
 @Controller
 public class AccountManager {
-    private final ModelMapper modelMapper;
+    private final DtoBasicModelMapper modelMapper;
     private final AccountRepository accountRepository;
 
     @Autowired
-    public AccountManager(ModelMapper modelMapper, AccountRepository accountRepository) {
+    public AccountManager(DtoBasicModelMapper modelMapper, AccountRepository accountRepository) {
         this.modelMapper = modelMapper;
         this.accountRepository = accountRepository;
     }
@@ -34,6 +34,10 @@ public class AccountManager {
         Collections.sort(result);
 
         return result;
+    }
+
+    public Account findAccountById(String id) {
+        return accountRepository.findById(id).orElse(null);
     }
 
     public List<AccountDTO> createAccount(AccountDTO account) throws AccountAlreadyExistsException {

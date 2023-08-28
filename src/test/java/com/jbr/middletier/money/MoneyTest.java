@@ -6,6 +6,7 @@ import com.jbr.middletier.money.config.DefaultProfileUtil;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
@@ -72,7 +73,7 @@ public class MoneyTest extends Support {
     ServiceHealthIndicator serviceHealthIndicator;
 
     @Autowired
-    ModelMapper modelMapper;
+    DtoComplexModelMapper modelMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -224,7 +225,7 @@ public class MoneyTest extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1280.32, -1280.32)));
 
-        // Reconcile the transaction..
+        // Reconcile the transaction.
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             assertFalse(nextTransaction.reconciled());
@@ -237,7 +238,7 @@ public class MoneyTest extends Support {
                     .andExpect(status().isOk());
         }
 
-        // Un-reconcile the transaction..
+        // Un-reconcile the transaction.
         transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             assertTrue(nextTransaction.reconciled());

@@ -3,6 +3,7 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
 import com.jbr.middletier.money.exceptions.CannotUpdateSystemCategory;
 import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;
 import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
@@ -17,9 +18,9 @@ import java.util.Optional;
 @Controller
 public class CategoryManager {
     private final CategoryRepository categoryRepository;
-    private final ModelMapper modelMapper;
+    private final DtoBasicModelMapper modelMapper;
 
-    public CategoryManager(CategoryRepository categoryRepository, ModelMapper modelMapper) {
+    public CategoryManager(CategoryRepository categoryRepository, DtoBasicModelMapper modelMapper) {
         this.categoryRepository = categoryRepository;
         this.modelMapper = modelMapper;
     }
@@ -31,6 +32,10 @@ public class CategoryManager {
         }
 
         return result;
+    }
+
+    public Category findCategoryById(String id) {
+        return categoryRepository.findById(id).orElse(null);
     }
 
     public List<CategoryDTO> createCategory(CategoryDTO category) throws CategoryAlreadyExistsException {

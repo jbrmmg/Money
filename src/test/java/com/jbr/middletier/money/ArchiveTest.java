@@ -7,6 +7,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
 import com.jbr.middletier.money.manager.ArchiveManager;
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class ArchiveTest extends Support {
     private ArchiveManager archiveManager;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private DtoBasicModelMapper modelMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();

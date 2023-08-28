@@ -6,6 +6,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
 import com.jbr.middletier.money.utils.CssAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -49,7 +50,7 @@ public class AnnualReportTest extends Support {
     private StatementRepository statementRepository;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private DtoBasicModelMapper modelMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();

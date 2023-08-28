@@ -10,6 +10,7 @@ import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.ArchiveOrReportRequestDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
 import com.jbr.middletier.money.utils.CssAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -57,7 +58,7 @@ public class ReportTest extends Support {
     private ApplicationProperties applicationProperties;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private DtoBasicModelMapper modelMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();

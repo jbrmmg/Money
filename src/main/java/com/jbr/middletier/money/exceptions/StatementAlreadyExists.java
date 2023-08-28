@@ -4,6 +4,6 @@ import com.jbr.middletier.money.dto.StatementDTO;
 
 public class StatementAlreadyExists extends Exception {
     public StatementAlreadyExists(StatementDTO statement) {
-        super("Statement already exists - " + statement.getId().toString());
+        super("Statement already exists - " + statement.getAccountId() + " " + statement.getMonth() + " " + statement.getYear());
     }
 }

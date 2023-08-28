@@ -6,10 +6,11 @@ import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.data.Transaction;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDate;
+import java.util.List;
 
 public class TransactionSpecifications {
     private static final String STATEMENT = "statement";
@@ -25,7 +26,7 @@ public class TransactionSpecifications {
         // Prevent implicit public constructor
     }
 
-    public static Specification<Transaction> accountIn(Iterable<Account> account) {
+    public static Specification<Transaction> accountIn(List<Account> account) {
         // Account id in a list of values.
         return (root, criteriaQuery, criteriaBuilder) -> {
             final Path<String> accountList = root.get(ACCOUNT);
@@ -33,7 +34,7 @@ public class TransactionSpecifications {
         };
     }
 
-    public static Specification<Transaction> categoryIn(Iterable<Category> category) {
+    public static Specification<Transaction> categoryIn(List<Category> category) {
         // Category id in a list of values.
         return (root, criteriaQuery, criteriaBuilder) -> {
             final Path<String> categoryList = root.get(CATEGORY);
@@ -71,11 +72,10 @@ public class TransactionSpecifications {
     public static Specification<Transaction> notLocked() {
         // locked is true (Y)
         return (root, criteriaQuery, criteriaBuilder) -> {
-            root.join(STATEMENT, JoinType.LEFT);
             Predicate noStatement = criteriaBuilder.and(
-                    criteriaBuilder.isNull(root.get(STATEMENT).get(ID).get(YEAR)),
-                    criteriaBuilder.isNull(root.get(STATEMENT).get(ID).get(MONTH)) );
-            Predicate notLocked = criteriaBuilder.equal(root.get(STATEMENT).get(LOCKED),false);
+                    criteriaBuilder.isNull(root.join(STATEMENT, JoinType.LEFT).get(ID).get(YEAR)),
+                    criteriaBuilder.isNull(root.join(STATEMENT, JoinType.LEFT).get(ID).get(MONTH)) );
+            Predicate notLocked = criteriaBuilder.equal(root.join(STATEMENT, JoinType.LEFT).get(LOCKED),false);
             return criteriaBuilder.or(noStatement,notLocked);
         };
     }

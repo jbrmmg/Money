@@ -4,6 +4,6 @@ import com.jbr.middletier.money.dto.StatementDTO;
 
 public class CannotDeleteLockedStatement extends Exception {
     public CannotDeleteLockedStatement(StatementDTO statement) {
-        super("Cannot delete locked statement " + statement.getId());
+        super("Cannot delete locked statement " + statement.getAccountId() + " " + statement.getMonth() + " " + statement.getYear());
     }
 }
