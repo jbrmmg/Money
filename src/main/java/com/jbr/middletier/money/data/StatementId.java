@@ -78,14 +78,11 @@ public class StatementId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-
         if (o == this) return true;
 
-        if (!(o instanceof StatementId)) {
+        if (!(o instanceof StatementId statementId)) {
             return false;
         }
-
-        StatementId statementId = (StatementId)o;
 
         return this.toString().equalsIgnoreCase(statementId.toString());
     }

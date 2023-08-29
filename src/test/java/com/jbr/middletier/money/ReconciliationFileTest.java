@@ -3,6 +3,7 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,14 +37,15 @@ public class ReconciliationFileTest {
 
         double totalIn = 0.0;
         double totalOut = 0.0;
-        LocalDate earliestDate = transactions.get(0).getDate();
-        LocalDate latestDate = transactions.get(0).getDate();
+        LocalDate earliestDate = DtoComplexModelMapper.stringLocalDateConverter.convert(transactions.get(0).getDate());
+        LocalDate latestDate = DtoComplexModelMapper.stringLocalDateConverter.convert(transactions.get(0).getDate());
         for(TransactionDTO next : transactions) {
-            if(next.getDate().isBefore(earliestDate)) {
-                earliestDate = next.getDate();
+            LocalDate transactionDate = DtoComplexModelMapper.stringLocalDateConverter.convert(next.getDate());
+            if(transactionDate.isBefore(earliestDate)) {
+                earliestDate = transactionDate;
             }
-            if(next.getDate().isAfter((latestDate))) {
-                latestDate = next.getDate();
+            if(transactionDate.isAfter((latestDate))) {
+                latestDate = transactionDate;
             }
             if(next.getAmount() > 0) {
                 totalIn += next.getAmount();

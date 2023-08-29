@@ -7,7 +7,7 @@ import org.modelmapper.AbstractConverter;
 import java.util.Optional;
 
 public class StringAccountConverter extends AbstractConverter<String, Account> {
-    AccountManager accountManager;
+    private final AccountManager accountManager;
 
     public StringAccountConverter(AccountManager accountManager) {
         this.accountManager = accountManager;

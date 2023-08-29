@@ -22,11 +22,11 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
         this.year = year;
     }
 
-    public String getAccount() {
+    public String getAccountId() {
         return accountId;
     }
 
-    public void setAccount(String accountId) {
+    public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
 

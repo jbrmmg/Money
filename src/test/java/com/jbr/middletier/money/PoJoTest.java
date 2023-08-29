@@ -28,13 +28,13 @@ public class PoJoTest {
     @Test
     public void accountToDTO() {
         Account account = new Account();
-        account.setId("XXXX");
-        account.setColour("FCFCFC");
+        account.setId("CHEESE");
+        account.setColour("BLACK");
         account.setImagePrefix("Cheese");
         account.setName("Testing");
         AccountDTO accountDTO = basicModelMapper.map(account, AccountDTO.class);
-        Assert.assertEquals("XXXX", accountDTO.getId());
-        Assert.assertEquals("FCFCFC",accountDTO.getColour());
+        Assert.assertEquals("CHEESE", accountDTO.getId());
+        Assert.assertEquals("BLACK",accountDTO.getColour());
         Assert.assertEquals("Testing",accountDTO.getName());
         Assert.assertEquals("Cheese",accountDTO.getImagePrefix());
 
@@ -47,13 +47,13 @@ public class PoJoTest {
     @Test
     public void accountFromDTO() {
         AccountDTO accountDTO = new AccountDTO();
-        accountDTO.setId("XXXX");
-        accountDTO.setColour("FCFCFC");
+        accountDTO.setId("HOPE");
+        accountDTO.setColour("BLUE");
         accountDTO.setImagePrefix("Cheese");
         accountDTO.setName("Testing");
         Account account = basicModelMapper.map(accountDTO,Account.class);
-        Assert.assertEquals("XXXX", account.getId());
-        Assert.assertEquals("FCFCFC",account.getColour());
+        Assert.assertEquals("HOPE", account.getId());
+        Assert.assertEquals("BLUE",account.getColour());
         Assert.assertEquals("Testing",account.getName());
         Assert.assertEquals("Cheese",account.getImagePrefix());
     }
@@ -61,8 +61,8 @@ public class PoJoTest {
     @Test
     public void categoryToDTO() {
         Category category = new Category();
-        category.setId("XYZ");
-        category.setColour("FAFAFA");
+        category.setId("HOTEL");
+        category.setColour("WHITE");
         category.setName("Test");
         category.setExpense(true);
         category.setGroup("GRP");
@@ -70,8 +70,8 @@ public class PoJoTest {
         category.setSort(100L);
         category.setSystemUse(true);
         CategoryDTO categoryDTO = basicModelMapper.map(category, CategoryDTO.class);
-        Assert.assertEquals("XYZ",categoryDTO.getId());
-        Assert.assertEquals("FAFAFA",categoryDTO.getColour());
+        Assert.assertEquals("HOTEL",categoryDTO.getId());
+        Assert.assertEquals("WHITE",categoryDTO.getColour());
         Assert.assertEquals("Test",categoryDTO.getName());
         Assert.assertTrue(categoryDTO.getExpense());
         Assert.assertEquals("GRP",categoryDTO.getGroup());
@@ -83,8 +83,8 @@ public class PoJoTest {
     @Test
     public void categoryFromDTO() {
         CategoryDTO categoryDTO = new CategoryDTO();
-        categoryDTO.setId("XYZ");
-        categoryDTO.setColour("FAFAFA");
+        categoryDTO.setId("AROSE");
+        categoryDTO.setColour("PINK");
         categoryDTO.setName("Test");
         categoryDTO.setExpense(true);
         categoryDTO.setGroup("GRP");
@@ -92,8 +92,8 @@ public class PoJoTest {
         categoryDTO.setSort(100L);
         categoryDTO.setSystemUse(true);
         Category category = basicModelMapper.map(categoryDTO, Category.class);
-        Assert.assertEquals("XYZ",category.getId());
-        Assert.assertEquals("FAFAFA",category.getColour());
+        Assert.assertEquals("AROSE",category.getId());
+        Assert.assertEquals("PINK",category.getColour());
         Assert.assertEquals("Test",category.getName());
         Assert.assertTrue(category.getExpense());
         Assert.assertEquals("GRP",category.getGroup());
@@ -103,73 +103,107 @@ public class PoJoTest {
     }
 
     @Test
+    public void statementIdToDTO() {
+        Account account = new Account();
+        account.setId("FLIP");
+
+        StatementId statementId = new StatementId();
+        statementId.setAccount(account);
+        statementId.setMonth(10);
+        statementId.setYear(2003);
+
+        StatementIdDTO statementIdDTO = complexModelMapper.map(statementId,StatementIdDTO.class);
+        Assert.assertEquals("FLIP",statementIdDTO.getAccountId());
+        Assert.assertEquals(10,statementIdDTO.getMonth().intValue());
+        Assert.assertEquals(2003,statementIdDTO.getYear().intValue());
+    }
+
+    public void statementIdFromDTO() {
+        StatementIdDTO statementIdDTO = new StatementIdDTO("BANK", 7, 2019);
+        StatementId statementId = complexModelMapper.map(statementIdDTO,StatementId.class);
+        Assert.assertEquals("BANK",statementId.getAccount().getId());
+        Assert.assertEquals(7,statementId.getMonth().intValue());
+        Assert.assertEquals(2019,statementId.getYear().intValue());
+    }
+
+    @Test
+    public void compareStatementIdDTO() {
+        StatementIdDTO lhs = new StatementIdDTO("BANK",5, 2011);
+        Assert.assertEquals(0,lhs.compareTo(new StatementIdDTO("bank",5,2011)));
+        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("a", 5, 2011)));
+        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 4, 2011)));
+        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 5, 2010)));
+        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("clown", 5, 2011)));
+        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 6, 2011)));
+        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 5, 2012)));
+
+        Assert.assertEquals(lhs, new StatementIdDTO("bank", 5, 2011));
+
+        Assert.assertEquals(lhs.hashCode(),new StatementIdDTO("bank",5,2011).hashCode());
+
+        Assert.assertEquals("BANK.201105", lhs.toString());
+    }
+
+    @Test
+    public void compareStatementId() {
+        Account account1 = new Account();
+        account1.setId("BANK");
+
+        Account account2 = new Account();
+        account2.setId("a");
+
+        Account account3 = new Account();
+        account3.setId("clown");
+
+        StatementId lhs = new StatementId(account1,5, 2011);
+        Assert.assertEquals(lhs, new StatementId(account1,5,2011));
+        Assert.assertNotEquals(lhs, new StatementId(account2, 5, 2011));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 4, 2011));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 5, 2010));
+        Assert.assertNotEquals(lhs, new StatementId(account3, 5, 2011));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 6, 2011));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 5, 2012));
+
+        Assert.assertEquals(lhs.hashCode(),new StatementIdDTO("bank",5,2011).hashCode());
+
+        Assert.assertEquals("BANK.201105", lhs.toString());
+    }
+
+    @Test
     public void statementToDTO() {
         Account account = new Account();
-        account.setId("XXXX");
+        account.setId("BARCLAY");
         Statement statement = new Statement(account,1,2022,101.23,true);
         StatementDTO statementDTO = complexModelMapper.map(statement,StatementDTO.class);
-        //Assert.assertEquals("XXXX",statementDTO.getId().getAccount().getId());
-        //Assert.assertEquals(1,statementDTO.getId().getMonth().intValue());
-        //Assert.assertEquals(2022,statementDTO.getId().getYear().intValue());
+        Assert.assertEquals("BARCLAY",statementDTO.getAccountId());
+        Assert.assertEquals(1,statementDTO.getMonth().intValue());
+        Assert.assertEquals(2022,statementDTO.getYear().intValue());
         Assert.assertTrue(statementDTO.getLocked());
         Assert.assertEquals(101.23,statementDTO.getOpenBalance(),0.001);
     }
 
     @Test
     public void statementFromDTO() {
-        AccountDTO accountDTO = new AccountDTO();
-        accountDTO.setId("XXXY");
         StatementDTO statementDTO = new StatementDTO();
-        StatementIdDTO statementIdDTO = new StatementIdDTO();
-        statementIdDTO.setAccount(accountDTO);
-        statementIdDTO.setMonth(2);
-        statementIdDTO.setYear(2021);
-        statementDTO.setId(statementIdDTO);
+        statementDTO.setAccountId("BANK");
+        statementDTO.setMonth(2);
+        statementDTO.setYear(2021);
         statementDTO.setLocked(true);
         statementDTO.setOpenBalance(102.12);
         Statement statement = complexModelMapper.map(statementDTO,Statement.class);
-        Assert.assertEquals("XXXY",statement.getId().getAccount().getId());
+        Assert.assertEquals("BANK",statement.getId().getAccount().getId());
         Assert.assertEquals(2,statement.getId().getMonth().intValue());
         Assert.assertEquals(2021,statement.getId().getYear().intValue());
         Assert.assertTrue(statement.getLocked());
         Assert.assertEquals(102.12,statement.getOpenBalance().getValue(),0.001);
-
-        StatementIdDTO statementIdDTO2 = new StatementIdDTO();
-        statementIdDTO2.setAccount(accountDTO);
-        statementIdDTO2.setMonth(2);
-        statementIdDTO2.setYear(2021);
-        Assert.assertEquals(0, statementIdDTO.compareTo(statementIdDTO2));
-
-        statementIdDTO2.setYear(2020);
-        Assert.assertEquals(1, statementIdDTO.compareTo(statementIdDTO2));
-
-        //noinspection EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
-        Assert.assertNotEquals(true, statementIdDTO.equals(Double.valueOf(21.2)));
-
-        StatementDTO statementDTO2 = new StatementDTO();
-        statementDTO2.setId(statementIdDTO2);
-        statementIdDTO2.setYear(2021);
-        statementIdDTO2.setMonth(2);
-
-        //noinspection SimplifiableAssertion
-        Assert.assertEquals(true, statementDTO.equals(statementDTO2));
-        //noinspection SimplifiableAssertion
-        Assert.assertEquals(true, statementDTO.getId().equals(statementDTO2.getId()));
-
-        statementIdDTO2.setMonth(3);
-        Assert.assertNotEquals(true, statementDTO.equals(statementDTO2));
-        Assert.assertNotEquals(true, statementDTO.getId().equals(statementDTO2.getId()));
-
-        //noinspection EqualsBetweenInconvertibleTypes,EqualsReplaceableByObjectsCall,UnnecessaryBoxing
-        Assert.assertNotEquals(true, statementDTO.equals(Double.valueOf(21.2)));
     }
 
     @Test
     public void transactionToDTO() {
         Account account = new Account();
-        account.setId("XXXW");
+        account.setId("FLIP");
         Category category = new Category();
-        category.setId("XYZ");
+        category.setId("FLOP");
         Statement statement = new Statement(account,1,2022,101.23,true);
         Transaction transaction = new Transaction();
         transaction.setAccount(account);
@@ -179,11 +213,10 @@ public class PoJoTest {
         transaction.setAmount(1.29);
         transaction.setDescription("Testing");
         TransactionDTO transactionDTO = complexModelMapper.map(transaction, TransactionDTO.class);
-        Assert.assertEquals("XXXW",transactionDTO.getAccount().getId());
-        Assert.assertEquals("XYZ",transactionDTO.getCategory().getId());
-        Assert.assertEquals("XXXW",transactionDTO.getStatement().getId().getAccount().getId());
-        Assert.assertEquals(2022,transactionDTO.getStatement().getId().getYear().intValue());
-        Assert.assertEquals(1,transactionDTO.getStatement().getId().getMonth().intValue());
+        Assert.assertEquals("FLIP",transactionDTO.getAccountId());
+        Assert.assertEquals("FLOP",transactionDTO.getCategoryId());
+        Assert.assertEquals(2022,transactionDTO.getStatementYear().intValue());
+        Assert.assertEquals(1,transactionDTO.getStatementMonth().intValue());
         Assert.assertEquals(92,transactionDTO.getOppositeTransactionId().intValue());
         Assert.assertEquals(1.29,transactionDTO.getAmount(),0.001);
         Assert.assertEquals("Testing",transactionDTO.getDescription());
@@ -191,27 +224,18 @@ public class PoJoTest {
 
     @Test
     public void transactionFromDTO() {
-        AccountDTO accountDTO = new AccountDTO();
-        accountDTO.setId("XXXW");
-        CategoryDTO categoryDTO = new CategoryDTO();
-        categoryDTO.setId("XYZ");
-        StatementDTO statementDTO = new StatementDTO();
-        StatementIdDTO statementIdDTO = new StatementIdDTO();
-        statementIdDTO.setAccount(accountDTO);
-        statementIdDTO.setYear(2021);
-        statementIdDTO.setMonth(8);
-        statementDTO.setId(statementIdDTO);
         TransactionDTO transactionDTO = new TransactionDTO();
-        transactionDTO.setAccount(accountDTO);
-        transactionDTO.setCategory(categoryDTO);
-        transactionDTO.setStatement(statementDTO);
+        transactionDTO.setAccountId("BANK");
+        transactionDTO.setCategoryId("HSE");
+        transactionDTO.setStatementMonth(8);
+        transactionDTO.setStatementYear(2021);
         transactionDTO.setOppositeTransactionId(92);
         transactionDTO.setAmount(1.29);
         transactionDTO.setDescription("Testing");
         Transaction transaction = complexModelMapper.map(transactionDTO, Transaction.class);
-        Assert.assertEquals("XXXW",transaction.getAccount().getId());
-        Assert.assertEquals("XYZ",transaction.getCategory().getId());
-        Assert.assertEquals("XXXW",transaction.getStatement().getId().getAccount().getId());
+        Assert.assertEquals("BANK",transaction.getAccount().getId());
+        Assert.assertEquals("HSE",transaction.getCategory().getId());
+        Assert.assertEquals("BANK",transaction.getStatement().getId().getAccount().getId());
         Assert.assertEquals(2021,transaction.getStatement().getId().getYear().intValue());
         Assert.assertEquals(8,transaction.getStatement().getId().getMonth().intValue());
         Assert.assertEquals(92,transaction.getOppositeTransactionId().intValue());
@@ -270,15 +294,15 @@ public class PoJoTest {
     @Test
     public void testAccountCompare() {
         AccountDTO account = new AccountDTO();
-        account.setId("ACFE");
+        account.setId("FLIP");
 
         AccountDTO account2 = new AccountDTO();
-        account2.setId("ACFE");
+        account2.setId("flip");
 
         Assert.assertEquals(account,account2);
 
         AccountDTO account3 = new AccountDTO();
-        account3.setId("BCFE");
+        account3.setId("FLOP");
 
         Assert.assertEquals(-1, account.compareTo(account3));
         Assert.assertEquals(1, account3.compareTo(account));
@@ -286,7 +310,7 @@ public class PoJoTest {
         Assert.assertEquals(account2, account);
         Assert.assertNotEquals(account3, account);
         Assert.assertEquals(account.hashCode(),account2.hashCode());
-        Assert.assertEquals("ACFE [null]", account.toString());
+        Assert.assertEquals("FLIP [null]", account.toString());
     }
 
     @Test
@@ -321,13 +345,8 @@ public class PoJoTest {
 
     @Test
     public void lockStatementRequest() {
-        StatementIdDTO statementId = new StatementIdDTO();
-        AccountDTO account = new AccountDTO();
-        account.setId("AMEX");
-        statementId.setAccount(account);
-        statementId.setYear(2021);
-        statementId.setMonth(3);
-        Assert.assertEquals("AMEX", statementId.getAccount().getId());
+        StatementIdDTO statementId = new StatementIdDTO("AMEX",3,2021);
+        Assert.assertEquals("AMEX", statementId.getAccountId());
         Assert.assertEquals(2021, statementId.getYear().intValue());
         Assert.assertEquals(3, statementId.getMonth().intValue());
         statementId.setMonth(32);
@@ -335,18 +354,12 @@ public class PoJoTest {
 
     @Test
     public void TransactionToReconciliationData() {
-        AccountDTO account = new AccountDTO();
-        account.setId("AMEX");
-
-        CategoryDTO category = new CategoryDTO();
-        category.setId("HSE");
-
         TransactionDTO transaction = new TransactionDTO();
         transaction.setDescription("Test");
-        transaction.setDate(LocalDate.of(2022,10,13));
+        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(2022,10,13)));
         transaction.setAmount(29.2);
-        transaction.setAccount(account);
-        transaction.setCategory(category);
+        transaction.setAccountId("AMEX");
+        transaction.setCategoryId("HSE");
 
         ReconciliationData reconciliation = complexModelMapper.map(transaction,ReconciliationData.class);
         Assert.assertEquals("Test", reconciliation.getDescription());

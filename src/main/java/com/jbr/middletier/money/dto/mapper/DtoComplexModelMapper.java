@@ -28,9 +28,17 @@ public class DtoComplexModelMapper extends ModelMapper {
         this.addConverter(stringLocalDateConverter);
         this.addConverter(new AdjustmentTypeStringConverter());
         this.addConverter(new StringAdjustmentTypeConverter());
+        this.addConverter(new StatementFromDTO(accountManager));
 
-        this.createTypeMap(Statement.class, StatementDTO.class);
-        this.createTypeMap(StatementDTO.class, Statement.class);
+        // Statement mapper.
+        TypeMap<Statement,StatementDTO> statementMapper = this.createTypeMap(Statement.class, StatementDTO.class);
+        statementMapper.addMappings(
+                mapper -> mapper.map(src -> src.getId().getYear(), StatementDTO::setYear)
+        );
+        statementMapper.addMappings(
+                mapper -> mapper.map(src -> src.getId().getMonth(), StatementDTO::setMonth)
+        );
+
         this.createTypeMap(Transaction.class, TransactionDTO.class);
         this.createTypeMap(TransactionDTO.class, Transaction.class);
         this.createTypeMap(Regular.class,RegularDTO.class);

@@ -6,11 +6,11 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
+import com.jbr.middletier.money.manager.AccountManager;
+import com.jbr.middletier.money.manager.AccountTransactionManager;
+import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.reporting.EmailGenerator;
 import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransportWrapper;
@@ -19,7 +19,6 @@ import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +58,12 @@ public class EmailTest extends Support {
     public ApplicationProperties applicationProperties;
     @Autowired
     public DtoComplexModelMapper modelMapper;
+    @Autowired
+    public AccountTransactionManager accountTransactionManager;
+    @Autowired
+    public StatementManager statementManager;
+    @Autowired
+    public AccountManager accountManager;
 
     @Test
     public void testEmail() throws Exception {
@@ -79,17 +84,16 @@ public class EmailTest extends Support {
     @Test
     public void testEmailFormat() throws IOException {
         FinancialAmount start = new FinancialAmount(-10.02);
-        List<TransactionDTO> transactions = new ArrayList<>();
+        List<Transaction> transactions = new ArrayList<>();
 
-        AccountDTO account = new AccountDTO();
+        Account account = new Account();
         account.setId("BANK");
 
-        CategoryDTO category = new CategoryDTO();
+        Category category = new Category();
         category.setId("HSE");
         category.setName("House");
 
-        TransactionDTO transaction = new TransactionDTO();
-        transaction.setId(1);
+        Transaction transaction = new Transaction();
         transaction.setDescription("Test");
         transaction.setCategory(category);
         transaction.setAmount(192.92);
@@ -97,8 +101,7 @@ public class EmailTest extends Support {
         transaction.setAccount(account);
         transactions.add(transaction);
 
-        transaction = new TransactionDTO();
-        transaction.setId(1);
+        transaction = new Transaction();
         transaction.setDescription("Test");
         transaction.setCategory(category);
         transaction.setAmount(-312.92);
@@ -217,11 +220,10 @@ public class EmailTest extends Support {
         };
 
         EmailGenerator testGenerator = new EmailGenerator(
-                transactionRepository,
-                statementRepository,
-                accountRepository,
+                accountTransactionManager,
+                statementManager,
+                accountManager,
                 testWrapper,
-                modelMapper,
                 applicationProperties);
 
         testGenerator.generateReport("a", "b", "blah", "testing", "", 4);

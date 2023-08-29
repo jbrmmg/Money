@@ -5,7 +5,6 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
@@ -71,10 +70,7 @@ public class TransactionTest extends Support {
 
         TransactionDTO updateTransaction = modelMapper.map(testTransaction,TransactionDTO.class);
 
-        CategoryDTO invalidCategory = new CategoryDTO();
-        invalidCategory.setId("XXX");
-
-        updateTransaction.setCategory(invalidCategory);
+        updateTransaction.setCategoryId("XXX");
 
         try {
             accountTransactionManager.updateTransaction(updateTransaction);
