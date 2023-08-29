@@ -6,7 +6,7 @@ import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
@@ -31,17 +31,17 @@ public class AccountTransactionManager {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
-    private final DtoComplexModelMapper complexModelMapper;
+    private final TransactionMapper transactionMapper;
 
     @Autowired
     public AccountTransactionManager(AccountRepository accountRepository,
                                      CategoryRepository categoryRepository,
                                      TransactionRepository transactionRepository,
-                                     DtoComplexModelMapper complexModelMapper) {
+                                     TransactionMapper transactionMapper) {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
-        this.complexModelMapper = complexModelMapper;
+        this.transactionMapper = transactionMapper;
     }
 
     public FinancialAmount getFinalBalanceForStatement(Statement statement) {
@@ -214,14 +214,14 @@ public class AccountTransactionManager {
         LOG.debug("Iterate over transactions");
         for(Transaction transaction : transactionRepository.findAll(specification, transactionSort)) {
             LOG.debug("Transaction {}", transaction.getId());
-            result.add(complexModelMapper.map(transaction,TransactionDTO.class));
+            result.add(transactionMapper.map(transaction,TransactionDTO.class));
         }
 
         return result;
     }
 
     private Transaction internalCreateTransaction(TransactionDTO transaction) throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
-        Transaction newTransaction =  complexModelMapper.map(transaction,Transaction.class);
+        Transaction newTransaction =  transactionMapper.map(transaction,Transaction.class);
 
         // Check the account and category are valid.
         if(newTransaction.getAccount() == null) {
@@ -240,7 +240,7 @@ public class AccountTransactionManager {
 
         Transaction newTransaction = internalCreateTransaction(transaction);
 
-        result.add(complexModelMapper.map(newTransaction,TransactionDTO.class));
+        result.add(transactionMapper.map(newTransaction,TransactionDTO.class));
         return result;
     }
 
@@ -250,7 +250,7 @@ public class AccountTransactionManager {
 
         // Save the 'from' transaction and update the opposite id on the 'to'
         List<TransactionDTO> result = new ArrayList<>();
-        result.add(complexModelMapper.map(fromTransaction,TransactionDTO.class));
+        result.add(transactionMapper.map(fromTransaction,TransactionDTO.class));
         to.setOppositeTransactionId(fromTransaction.getId());
 
         // Save the 'to' transaction and update the 'from' transaction.
@@ -304,7 +304,7 @@ public class AccountTransactionManager {
             List<TransactionDTO> result = new ArrayList<>();
             List<Transaction> toBeSaved = new ArrayList<>();
 
-            result.add(complexModelMapper.map(existingTransaction.get(),TransactionDTO.class));
+            result.add(transactionMapper.map(existingTransaction.get(),TransactionDTO.class));
             toBeSaved.add(existingTransaction.get());
 
             // Is there an opposite transaction?
@@ -312,7 +312,7 @@ public class AccountTransactionManager {
                 Optional<Transaction> oppositeTransaction = transactionRepository.findById(existingTransaction.get().getOppositeTransactionId());
 
                 if(oppositeTransaction.isPresent()) {
-                    result.add(complexModelMapper.map(oppositeTransaction.get(), TransactionDTO.class));
+                    result.add(transactionMapper.map(oppositeTransaction.get(), TransactionDTO.class));
                     toBeSaved.add(oppositeTransaction.get());
                 }
             }

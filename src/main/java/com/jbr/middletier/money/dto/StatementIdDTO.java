@@ -14,6 +14,9 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
     @Max(9999)
     Integer year;
 
+    public StatementIdDTO() {
+    }
+
     public StatementIdDTO(String accountId,
                           Integer month,
                           Integer year) {

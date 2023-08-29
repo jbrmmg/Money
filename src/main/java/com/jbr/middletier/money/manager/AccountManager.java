@@ -3,7 +3,7 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
+import com.jbr.middletier.money.dto.mapper.AccountMapper;
 import com.jbr.middletier.money.exceptions.CreateAccountException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ public class AccountManager extends AbstractManager<
         CreateAccountException,
         UpdateDeleteAccountException> {
     @Autowired
-    public AccountManager(DtoBasicModelMapper modelMapper, AccountRepository accountRepository)  {
+    public AccountManager(AccountMapper modelMapper, AccountRepository accountRepository)  {
         super(AccountDTO.class,Account.class,modelMapper,accountRepository);
     }
 

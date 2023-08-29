@@ -4,7 +4,7 @@ import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.RegularMapper;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,7 +30,7 @@ public class RegularTest extends Support {
     private RegularRepository regularRepository;
 
     @Autowired
-    private DtoComplexModelMapper modelMapper;
+    private RegularMapper regularMapper;
 
     @Before
     public void cleanup() {
@@ -84,7 +84,7 @@ public class RegularTest extends Support {
     public void testUpdate() throws Exception {
         RegularDTO updateRegular = createTestRegular("BANK", "FDG", "BW", 122.39, "Testing 2", "1M");
 
-        Regular savedRegular = regularRepository.save(modelMapper.map(updateRegular,Regular.class));
+        Regular savedRegular = regularRepository.save(regularMapper.map(updateRegular,Regular.class));
 
         updateRegular.setId(savedRegular.getId());
         updateRegular.setDescription("Testing 3");
@@ -106,7 +106,7 @@ public class RegularTest extends Support {
     public void testDelete() throws Exception {
         RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M");
 
-        Regular savedRegular = regularRepository.save(modelMapper.map(deleteRegular,Regular.class));
+        Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
 
         deleteRegular.setId(savedRegular.getId());
 
@@ -121,7 +121,7 @@ public class RegularTest extends Support {
     public void testInvalidException() throws Exception {
         RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M");
 
-        Regular savedRegular = regularRepository.save(modelMapper.map(deleteRegular,Regular.class));
+        Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
 
         deleteRegular.setId(savedRegular.getId() + 1);
 
@@ -137,7 +137,7 @@ public class RegularTest extends Support {
     public void testAlreadyExist() throws Exception {
         RegularDTO createRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M");
 
-        Regular savedRegular = regularRepository.save(modelMapper.map(createRegular,Regular.class));
+        Regular savedRegular = regularRepository.save(regularMapper.map(createRegular,Regular.class));
 
         createRegular.setId(savedRegular.getId());
 

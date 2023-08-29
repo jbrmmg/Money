@@ -6,7 +6,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,16 +36,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(value="statement")
 public class StatementTest extends Support {
     @Autowired
-    private
-    TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository;
 
     @Autowired
-    private
-    StatementRepository statementRepository;
+    private StatementRepository statementRepository;
 
     @Autowired
-    private
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private UtilityMapper utilityMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -68,7 +68,7 @@ public class StatementTest extends Support {
 
         TransactionDTO transaction1 = new TransactionDTO();
         transaction1.setAccountId("BANK");
-        transaction1.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(1968,5,24)));
+        transaction1.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
         transaction1.setAmount(1280.32);
 
         TransactionDTO transaction2 = new TransactionDTO();

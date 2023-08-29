@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.config;
 
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

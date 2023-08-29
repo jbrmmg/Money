@@ -6,7 +6,7 @@ import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -36,7 +36,7 @@ public class TransactionTest extends Support {
     private AccountTransactionManager accountTransactionManager;
 
     @Autowired
-    private DtoComplexModelMapper modelMapper;
+    private TransactionMapper transactionMapper;
 
     @Before
     public void cleanUp() {
@@ -68,7 +68,7 @@ public class TransactionTest extends Support {
 
         testTransaction = transactionRepository.save(testTransaction);
 
-        TransactionDTO updateTransaction = modelMapper.map(testTransaction,TransactionDTO.class);
+        TransactionDTO updateTransaction = transactionMapper.map(testTransaction,TransactionDTO.class);
 
         updateTransaction.setCategoryId("XXX");
 

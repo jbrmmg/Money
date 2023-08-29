@@ -6,7 +6,8 @@ import com.jbr.middletier.money.config.DefaultProfileUtil;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
@@ -71,7 +72,10 @@ public class MoneyTest extends Support {
     ServiceHealthIndicator serviceHealthIndicator;
 
     @Autowired
-    DtoComplexModelMapper modelMapper;
+    UtilityMapper utilityMapper;
+
+    @Autowired
+    TransactionMapper transactionMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -104,7 +108,7 @@ public class MoneyTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("FDW");
-        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(1968,5,24)));
+        transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
         transaction.setAmount(1280.32);
         transaction.setDescription("Test transaction");
 
@@ -118,7 +122,7 @@ public class MoneyTest extends Support {
         // Amend the transaction.
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
-            TransactionDTO updateTransaction = modelMapper.map(nextTransaction,TransactionDTO.class);
+            TransactionDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
             updateTransaction.setAmount(1283.21);
 
             assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
@@ -131,7 +135,7 @@ public class MoneyTest extends Support {
         // Delete the transaction.
         transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
-            TransactionDTO deleteTransaction = modelMapper.map(nextTransaction,TransactionDTO.class);
+            TransactionDTO deleteTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
 
             // Delete this item.
             assertEquals(1283.21,nextTransaction.getAmount().getValue(),0.001);
@@ -149,7 +153,7 @@ public class MoneyTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("FDG");
-        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(1968,5,24)));
+        transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
         transaction.setAmount(1280.32);
         transaction.setDescription("Test transaction");
 
@@ -166,7 +170,7 @@ public class MoneyTest extends Support {
 
         Transaction nextTransaction = transactions.iterator().next();
         assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
-        TransactionDTO updateTransaction = modelMapper.map(nextTransaction,TransactionDTO.class);
+        TransactionDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
         updateTransaction.setAmount(1283.21);
 
         assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
@@ -178,7 +182,7 @@ public class MoneyTest extends Support {
         // Delete the transactions.
         transactions = transactionRepository.findAll();
         for(Transaction nextTransactionToDelete : transactions) {
-            TransactionDTO deleteTransaction = modelMapper.map(nextTransaction,TransactionDTO.class);
+            TransactionDTO deleteTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
 
             // Delete this item.
             assertEquals(1283.21, abs(nextTransactionToDelete.getAmount().getValue()),0.001);
@@ -196,12 +200,12 @@ public class MoneyTest extends Support {
 
         TransactionDTO transaction1 = new TransactionDTO();
         transaction1.setAccountId("BANK");
-        transaction1.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(1968,5,24)));
+        transaction1.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
         transaction1.setAmount(1280.32);
 
         TransactionDTO transaction2 = new TransactionDTO();
         transaction2.setAccountId("AMEX");
-        transaction2.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(1968,5,24)));
+        transaction2.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
 
         // Set-up a transaction.
         getMockMvc().perform(post("/jbr/ext/money/transaction")
@@ -242,7 +246,7 @@ public class MoneyTest extends Support {
         for(Transaction nextTransaction : transactions) {
             if(!deletedIds.contains(nextTransaction.getId())) {
                 // Delete this item.
-                TransactionDTO nextTransactionDTO = modelMapper.map(nextTransaction, TransactionDTO.class);
+                TransactionDTO nextTransactionDTO = transactionMapper.map(nextTransaction, TransactionDTO.class);
                 getMockMvc().perform(delete("/jbr/ext/money/transaction")
                                 .content(this.json(nextTransactionDTO))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -265,7 +269,7 @@ public class MoneyTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("FDG");
-        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(1968,5,24)));
+        transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
         transaction.setAmount(1.23);
 
         // Create transactions in each account.
@@ -475,7 +479,7 @@ public class MoneyTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
-                .andExpect(jsonPath("$[0].date", startsWith(DtoComplexModelMapper.localDateStringConverter.convert(testDate))))
+                .andExpect(jsonPath("$[0].date", startsWith(utilityMapper.map(testDate,String.class))))
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
@@ -521,7 +525,7 @@ public class MoneyTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
-                .andExpect(jsonPath("$[0].date", startsWith(DtoComplexModelMapper.localDateStringConverter.convert(testDate))))
+                .andExpect(jsonPath("$[0].date", startsWith(utilityMapper.map(testDate,String.class))))
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 

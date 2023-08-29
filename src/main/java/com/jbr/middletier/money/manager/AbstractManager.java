@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.*;
@@ -8,11 +8,11 @@ import java.util.*;
 public abstract class AbstractManager<O,E,I,R extends CrudRepository<O, I>,AddException extends Throwable,UpdateDeleteException extends Throwable> {
     private final Class<E> externalClass;
     private final Class<O> internalClass;
-    private final DtoBasicModelMapper modelMapper;
+    private final ModelMapper modelMapper;
     private final R repository;
     private final Map<I,O> cache;
 
-    public AbstractManager(Class<E> externalClass, Class<O> internalClass, DtoBasicModelMapper modelMapper, R repository) {
+    public AbstractManager(Class<E> externalClass, Class<O> internalClass, ModelMapper modelMapper, R repository) {
         this.externalClass = externalClass;
         this.internalClass = internalClass;
         this.modelMapper = modelMapper;

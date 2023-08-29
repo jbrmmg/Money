@@ -3,11 +3,10 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.StatementId;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.dto.StatementIdDTO;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.StatementMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
@@ -25,22 +24,19 @@ public class StatementManager {
     private static final Logger LOG = LoggerFactory.getLogger(StatementManager.class);
 
     private final StatementRepository statementRepository;
-    private final AccountRepository accountRepository;
-    private final AccountTransactionManager accountTransactionManager;
-    private final DtoComplexModelMapper complexModelMapper;
+    private final AccountManager accountManager;
+    private final StatementMapper statementMapper;
 
     public StatementManager(StatementRepository statementRepository,
-                            AccountRepository accountRepository,
-                            AccountTransactionManager accountTransactionManager,
-                            DtoComplexModelMapper complexModelMapper) {
+                            AccountManager accountManager,
+                            StatementMapper statementMapper) {
         this.statementRepository = statementRepository;
-        this.accountRepository = accountRepository;
-        this.accountTransactionManager = accountTransactionManager;
-        this.complexModelMapper = complexModelMapper;
+        this.accountManager = accountManager;
+        this.statementMapper = statementMapper;
     }
 
     private Account getAccount(StatementDTO statement) throws UpdateDeleteAccountException {
-        Statement internalStatement = complexModelMapper.map(statement,Statement.class);
+        Statement internalStatement = statementMapper.map(statement,Statement.class);
 
         if(internalStatement.getId() == null) {
             throw new UpdateDeleteAccountException("Null (Statement Id)");
@@ -50,7 +46,7 @@ public class StatementManager {
             throw new UpdateDeleteAccountException("Null");
         }
 
-        Optional<Account> account = accountRepository.findById(internalStatement.getId().getAccount().getId());
+        Optional<Account> account = accountManager.getIfValid(internalStatement.getId().getAccount().getId());
         if(account.isEmpty()) {
             throw new UpdateDeleteAccountException(internalStatement.getId().getAccount().getId());
         }
@@ -76,7 +72,7 @@ public class StatementManager {
         List<StatementDTO> statementList = new ArrayList<>();
         for(Statement nextStatement : statementRepository.findAllByOrderByIdAccountAsc()){
             if(returnStatement(nextStatement,accountId,locked)) {
-                statementList.add(complexModelMapper.map(nextStatement, StatementDTO.class));
+                statementList.add(statementMapper.map(nextStatement, StatementDTO.class));
             }
         }
 
@@ -86,11 +82,11 @@ public class StatementManager {
         return statementList;
     }
 
-    public Iterable<StatementDTO> statementLock(StatementIdDTO request) throws InvalidStatementIdException, StatementAlreadyLockedException {
+    public Iterable<StatementDTO> statementLock(StatementIdDTO request, AccountTransactionManager accountTransactionManager) throws InvalidStatementIdException, StatementAlreadyLockedException {
         LOG.info("Request statement lock.");
 
         // Get the internal representation.
-        StatementId statementId = complexModelMapper.map(request,StatementId.class);
+        StatementId statementId = statementMapper.map(request,StatementId.class);
 
         // Load the statement to be locked.
         Optional<Statement> statement = statementRepository.findById(statementId);
@@ -130,24 +126,24 @@ public class StatementManager {
             throw new StatementAlreadyExists(statements.get(0));
         }
 
-        Statement newStatement = complexModelMapper.map(statement,Statement.class);
+        Statement newStatement = statementMapper.map(statement,Statement.class);
         this.statementRepository.save(newStatement);
 
         return getStatements(account.getId(),null);
     }
 
     @Transactional
-    public void deleteStatementTransaction(StatementDTO last, StatementDTO penultimate) {
+    public void deleteStatementTransaction(StatementDTO last, StatementDTO penultimate, AccountTransactionManager accountTransactionManager) {
         penultimate.setLocked(false);
-        statementRepository.save(complexModelMapper.map(penultimate,Statement.class));
+        statementRepository.save(statementMapper.map(penultimate,Statement.class));
 
-        accountTransactionManager.removeTransactionsFromStatement(complexModelMapper.map(last,Statement.class));
+        accountTransactionManager.removeTransactionsFromStatement(statementMapper.map(last,Statement.class));
 
-        statementRepository.delete(complexModelMapper.map(last,Statement.class));
+        statementRepository.delete(statementMapper.map(last,Statement.class));
     }
 
     @Transactional
-    public void internalDeleteStatement(StatementDTO statement, List<StatementDTO> statements) throws InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
+    public void internalDeleteStatement(StatementDTO statement, List<StatementDTO> statements, AccountTransactionManager accountTransactionManager) throws InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
         // Only the last statement in the list can be deleted
         if(statements.isEmpty()) {
             LOG.warn("There are no statements for the account.");
@@ -175,22 +171,36 @@ public class StatementManager {
         }
 
         // Remove any transactions from this statement.
-        deleteStatementTransaction(last, penultimate);
+        deleteStatementTransaction(last, penultimate, accountTransactionManager);
     }
 
     @Transactional
-    public Iterable<StatementDTO> deleteStatement(StatementDTO statement) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
+    public Iterable<StatementDTO> deleteStatement(StatementDTO statement, AccountTransactionManager accountTransactionManager) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
         Account account = getAccount(statement);
 
         // Get the statements currently available for this account.
         List<StatementDTO> statements = getStatements(account.getId(),null);
 
         // Perform the delete
-        internalDeleteStatement(statement, statements);
+        internalDeleteStatement(statement, statements, accountTransactionManager);
         return statements;
     }
 
     public List<Statement> getLatestStatementInternal(Account account) {
         return statementRepository.findByIdAccountAndLocked(account, false);
+    }
+
+    public Optional<Statement> getStatement(Account account, Integer month, Integer year) {
+        // If there is no year or month then return null.
+        if(month == null || year == null) {
+            return Optional.empty();
+        }
+
+        StatementId id = new StatementId();
+        id.setAccount(account);
+        id.setMonth(month);
+        id.setYear(year);
+
+        return statementRepository.findById(id);
     }
 }

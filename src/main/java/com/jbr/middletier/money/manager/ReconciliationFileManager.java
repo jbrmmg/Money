@@ -6,7 +6,7 @@ import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
 import org.slf4j.Logger;
@@ -29,14 +29,14 @@ public class ReconciliationFileManager {
 
     private final ApplicationProperties applicationProperties;
     private final ReconcileFormatRepository reconcileFormatRepository;
-    private final DtoComplexModelMapper modelMapper;
+    private final TransactionMapper transactionMapper;
 
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
                                      ReconcileFormatRepository reconcileFormatRepository,
-                                     DtoComplexModelMapper modelMapper) {
+                                     TransactionMapper transactionMapper) {
         this.applicationProperties = applicationProperties;
         this.reconcileFormatRepository = reconcileFormatRepository;
-        this.modelMapper = modelMapper;
+        this.transactionMapper = transactionMapper;
     }
 
     public List<ReconciliationFileDTO> getFiles() {
@@ -151,7 +151,7 @@ public class ReconciliationFileManager {
             }
 
             // Process this line.
-            TransactionDTO transaction = this.modelMapper.map(processLine(format, nextLine), TransactionDTO.class);
+            TransactionDTO transaction = this.transactionMapper.map(processLine(format, nextLine), TransactionDTO.class);
             if(transaction != null) {
                 result.add(transaction);
             }

@@ -4,7 +4,8 @@ import com.jbr.middletier.money.control.TransactionController;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.slf4j.Logger;
@@ -28,7 +29,8 @@ public class ReconciliationManager {
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final TransactionController transactionController;
-    private final DtoComplexModelMapper complexModelMapper;
+    private final TransactionMapper transactionMapper;
+    private final UtilityMapper utilityMapper;
     private Account lastAccount;
 
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
@@ -37,14 +39,16 @@ public class ReconciliationManager {
                                  TransactionRepository transactionRepository,
                                  StatementRepository statementRepository,
                                  TransactionController transactionController,
-                                 DtoComplexModelMapper complexModelMapper) {
+                                 TransactionMapper transactionMapper,
+                                 UtilityMapper utilityMapper) {
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
         this.transactionController = transactionController;
-        this.complexModelMapper = complexModelMapper;
+        this.transactionMapper = transactionMapper;
+        this.utilityMapper = utilityMapper;
         this.lastAccount = null;
     }
 
@@ -58,7 +62,7 @@ public class ReconciliationManager {
         List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(fileResponse);
 
         for(TransactionDTO next : transactions) {
-            ReconciliationData newReconciliationData = complexModelMapper.map(next,ReconciliationData.class);
+            ReconciliationData newReconciliationData = transactionMapper.map(next,ReconciliationData.class);
 
             reconciliationRepository.save(newReconciliationData);
         }
@@ -166,7 +170,7 @@ public class ReconciliationManager {
 
         // Create a result for each reconciliation data.
         for(ReconciliationData next : reconciliationData) {
-            result.add(new MatchData(next, account));
+            result.add(new MatchData(utilityMapper, next, account));
         }
 
         // Build up those reconciliations that match (first with reconciled then with un-reconciled).
@@ -176,7 +180,7 @@ public class ReconciliationManager {
         // For any transactions that are reconciled remaining, create a match entry.
         for(Transaction next : transactions) {
             if(next.reconciled()) {
-                result.add(new MatchData(next));
+                result.add(new MatchData(utilityMapper, next));
             }
         }
 

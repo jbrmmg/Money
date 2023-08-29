@@ -7,8 +7,8 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
+import com.jbr.middletier.money.dto.mapper.StatementMapper;
 import com.jbr.middletier.money.utils.CssAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -55,7 +55,10 @@ public class ReportTest extends Support {
     private ApplicationProperties applicationProperties;
 
     @Autowired
-    private DtoBasicModelMapper modelMapper;
+    private UtilityMapper utilityMapper;
+
+    @Autowired
+    private StatementMapper statementMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -83,7 +86,7 @@ public class ReportTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(2010,1,1)));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
         transaction.setAmount(-10.02);
         transaction.setDescription("Testing");
 
@@ -92,7 +95,7 @@ public class ReportTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(2010,1,2)));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,2),String.class));
         transaction.setAmount(-210.02);
         transaction.setDescription("Testing 1");
 
@@ -102,7 +105,7 @@ public class ReportTest extends Support {
                 .andExpect(status().isOk());
 
         transaction.setCategoryId("FDG");
-        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(2010,1,2)));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,2),String.class));
         transaction.setAmount(-84.12);
         transaction.setDescription("This is a much longer description test!!");
 
@@ -117,7 +120,7 @@ public class ReportTest extends Support {
         statement.setYear(2010);
         // Add the transaction to statement
         for(Transaction next : transactionRepository.findAll()) {
-            next.setStatement(modelMapper.map(statement,Statement.class));
+            next.setStatement(statementMapper.map(statement,Statement.class));
             transactionRepository.save(next);
         }
 

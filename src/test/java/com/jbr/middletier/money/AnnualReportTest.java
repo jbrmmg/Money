@@ -6,7 +6,8 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.StatementMapper;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.utils.CssAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -49,7 +50,10 @@ public class AnnualReportTest extends Support {
     private StatementRepository statementRepository;
 
     @Autowired
-    private DtoComplexModelMapper modelMapper;
+    private UtilityMapper utilityMapper;
+
+    @Autowired
+    private StatementMapper statementMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -73,7 +77,7 @@ public class AnnualReportTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setDate(DtoComplexModelMapper.localDateStringConverter.convert(LocalDate.of(2010,1,1)));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
         transaction.setAmount(10.02);
         transaction.setDescription("Testing");
 
@@ -90,7 +94,7 @@ public class AnnualReportTest extends Support {
 
         // Add the transaction to statement
         for(Transaction next : transactionRepository.findAll()) {
-            next.setStatement(modelMapper.map(statement,Statement.class));
+            next.setStatement(statementMapper.map(statement,Statement.class));
             transactionRepository.save(next);
         }
 

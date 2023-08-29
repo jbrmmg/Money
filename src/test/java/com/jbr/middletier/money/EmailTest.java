@@ -6,7 +6,6 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -56,8 +55,6 @@ public class EmailTest extends Support {
     public StatementRepository statementRepository;
     @Autowired
     public ApplicationProperties applicationProperties;
-    @Autowired
-    public DtoComplexModelMapper modelMapper;
     @Autowired
     public AccountTransactionManager accountTransactionManager;
     @Autowired
