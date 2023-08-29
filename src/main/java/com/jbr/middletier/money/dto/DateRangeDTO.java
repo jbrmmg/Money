@@ -1,27 +1,16 @@
 package com.jbr.middletier.money.dto;
 
-import com.jbr.middletier.money.data.Transaction;
-
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+
 
 public class DateRangeDTO {
     private final LocalDate from;
     private final LocalDate to;
 
-    private LocalDate getDate(String dateString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Transaction.TRANSACTION_DATE_FORMAT);
-
-        if(dateString == null) {
-            return null;
-        }
-
-        return LocalDate.parse(dateString,formatter);
-    }
-
     public DateRangeDTO(String from, String to) {
-        this.from = getDate(from);
-        this.to = getDate(to);
+        this.from = DtoComplexModelMapper.stringLocalDateConverter.convert(from);
+        this.to = DtoComplexModelMapper.stringLocalDateConverter.convert(to);
     }
 
     public LocalDate getFrom() {

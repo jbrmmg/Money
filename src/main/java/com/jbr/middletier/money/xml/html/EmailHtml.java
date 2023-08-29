@@ -4,9 +4,9 @@ import com.helger.css.ECSSVersion;
 import com.helger.css.decl.*;
 import com.helger.css.writer.CSSWriter;
 import com.helger.css.writer.CSSWriterSettings;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.data.Category;
+import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.jdom2.Element;
 import org.jdom2.Text;
@@ -25,7 +25,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
     private static final String DESCRIPTION = "description";
 
     private final FinancialAmount start;
-    private final List<TransactionDTO> transactions;
+    private final List<Transaction> transactions;
 
     private CSSStyleRule getDateRule() {
         CSSStyleRule fillRule = new CSSStyleRule();
@@ -187,7 +187,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         return result.addContent(new Text(DateTimeFormatter.ofPattern("dd/MMM").format(date)));
     }
 
-    private Element getAccountColumn(AccountDTO account) {
+    private Element getAccountColumn(Account account) {
         Element result = createTdElement()
                 .setAttribute(CLASS,DESCRIPTION);
 
@@ -198,7 +198,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         return result.addContent(new Text(account.getId()));
     }
 
-    private Element getCategoryColumn(CategoryDTO category) {
+    private Element getCategoryColumn(Category category) {
         Element result = createTdElement()
                 .setAttribute(CLASS,DESCRIPTION);
 
@@ -221,7 +221,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
                 .addContent(new Text(amount.toAbsString()));
     }
 
-    private Element createRow(LocalDate date, CategoryDTO category, AccountDTO account, String description, FinancialAmount amount) {
+    private Element createRow(LocalDate date, Category category, Account account, String description, FinancialAmount amount) {
         return new Element(TABLE_ROW)
                 .addContent(getDateColumn(date))
                 .addContent(getCategoryColumn(category))
@@ -230,12 +230,12 @@ public class EmailHtml extends HyperTextMarkupLanguage {
                 .addContent(getAmountColumn(amount));
     }
 
-    private Element createRow(TransactionDTO transaction) {
+    private Element createRow(Transaction transaction) {
         return createRow(transaction.getDate(),
                 transaction.getCategory(),
                 transaction.getAccount(),
                 transaction.getDescription(),
-                transaction.getFinancialAmount());
+                transaction.getAmount());
     }
 
     protected Element getBody() {
@@ -269,7 +269,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
         FinancialAmount endBalance = this.start;
         table.addContent(createRow(null, null, null, "Brought Forward", this.start));
-        for(TransactionDTO next : this.transactions) {
+        for(Transaction next : this.transactions) {
             table.addContent(createRow(next));
             endBalance.increment(next.getAmount());
         }
@@ -280,7 +280,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
                 .addContent(table);
     }
 
-    public EmailHtml(FinancialAmount startBalance, List<TransactionDTO> transactions) {
+    public EmailHtml(FinancialAmount startBalance, List<Transaction> transactions) {
         super();
 
         this.start = startBalance;

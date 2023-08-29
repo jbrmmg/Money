@@ -4,6 +4,8 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.manager.AccountManager;
 import org.modelmapper.AbstractConverter;
 
+import java.util.Optional;
+
 public class StringAccountConverter extends AbstractConverter<String, Account> {
     AccountManager accountManager;
 
@@ -13,6 +15,6 @@ public class StringAccountConverter extends AbstractConverter<String, Account> {
 
     @Override
     protected Account convert(String s) {
-        return accountManager.findAccountById(s);
+        return accountManager.getIfValid(s).orElse(null);
     }
 }

@@ -12,6 +12,6 @@ public class StringCategoryConverter extends AbstractConverter<String, Category>
     }
     @Override
     protected Category convert(String s) {
-        return categoryManager.findCategoryById(s);
+        return categoryManager.getIfValid(s).orElse(null);
     }
 }

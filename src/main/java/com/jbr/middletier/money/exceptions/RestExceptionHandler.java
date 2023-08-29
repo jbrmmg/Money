@@ -16,28 +16,23 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-    @ExceptionHandler(AccountAlreadyExistsException.class)
-    protected ResponseEntity<Object> handleBackupAlreadyExist(AccountAlreadyExistsException ex) {
+    @ExceptionHandler(CreateAccountException.class)
+    protected ResponseEntity<Object> handleBackupAlreadyExist(CreateAccountException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Account already exists", ex));
     }
 
-    @ExceptionHandler(InvalidAccountIdException.class)
-    protected ResponseEntity<Object> handleBackupAlreadyExist(InvalidAccountIdException ex) {
+    @ExceptionHandler(UpdateDeleteAccountException.class)
+    protected ResponseEntity<Object> handleBackupAlreadyExist(UpdateDeleteAccountException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"Account id invalid", ex));
     }
 
-    @ExceptionHandler(CategoryAlreadyExistsException.class)
-    protected ResponseEntity<Object> handleCateogryAlreadyExist(CategoryAlreadyExistsException ex) {
+    @ExceptionHandler(CreateCategoryException.class)
+    protected ResponseEntity<Object> handleCateogryAlreadyExist(CreateCategoryException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Category already exists", ex));
     }
 
-    @ExceptionHandler(DeleteSystemCategoryException.class)
-    protected ResponseEntity<Object> handlDeleteSystemCategory(DeleteSystemCategoryException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Cannot delete system category", ex));
-    }
-
-    @ExceptionHandler(InvalidCategoryIdException.class)
-    protected ResponseEntity<Object> handleInvalidCategoryId(InvalidCategoryIdException ex) {
+    @ExceptionHandler(UpdateDeleteCategoryException.class)
+    protected ResponseEntity<Object> handleInvalidCategoryId(UpdateDeleteCategoryException ex) {
         return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"Category id invalid", ex));
     }
 
@@ -49,11 +44,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(StatementAlreadyExists.class)
     protected ResponseEntity<Object> handleStatementAlreadyExists(StatementAlreadyExists ex) {
         return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Statement already exists", ex));
-    }
-
-    @ExceptionHandler(CannotUpdateSystemCategory.class)
-    protected ResponseEntity<Object> handleCannotUpdateSystemCategory(CannotUpdateSystemCategory ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FORBIDDEN,"Cannot update system category", ex));
     }
 
     @ExceptionHandler(StatementAlreadyLockedException.class)

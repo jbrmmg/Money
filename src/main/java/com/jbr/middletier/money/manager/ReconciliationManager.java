@@ -4,19 +4,15 @@ import com.jbr.middletier.money.control.TransactionController;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
 import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.reconciliation.MatchData;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.accountIs;
@@ -32,7 +28,6 @@ public class ReconciliationManager {
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final TransactionController transactionController;
-    private final DtoBasicModelMapper basicModelMapper;
     private final DtoComplexModelMapper complexModelMapper;
     private Account lastAccount;
 
@@ -42,7 +37,6 @@ public class ReconciliationManager {
                                  TransactionRepository transactionRepository,
                                  StatementRepository statementRepository,
                                  TransactionController transactionController,
-                                 DtoBasicModelMapper basicModelMapper,
                                  DtoComplexModelMapper complexModelMapper) {
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
@@ -50,7 +44,6 @@ public class ReconciliationManager {
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
         this.transactionController = transactionController;
-        this.basicModelMapper = basicModelMapper;
         this.complexModelMapper = complexModelMapper;
         this.lastAccount = null;
     }
@@ -71,7 +64,7 @@ public class ReconciliationManager {
         }
     }
 
-    public void autoReconcileData() throws InvalidCategoryIdException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public void autoReconcileData() throws UpdateDeleteCategoryException, UpdateDeleteAccountException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
 
@@ -82,11 +75,10 @@ public class ReconciliationManager {
                 if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.CREATE.toString())) {
                     TransactionDTO newTransaction = new TransactionDTO();
 
-                    newTransaction.setAccount(basicModelMapper.map(next.getAccount(), AccountDTO.class));
-                    newTransaction.setCategory(basicModelMapper.map(next.getCategory(), CategoryDTO.class));
+                    newTransaction.setAccountId(next.getAccount().getId());
+                    newTransaction.setCategoryId(next.getCategory().getId());
 
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Transaction.TRANSACTION_DATE_FORMAT);
-                    newTransaction.setDate(LocalDate.parse(next.getDate(),formatter));
+                    newTransaction.setDate(next.getDate());
 
                     newTransaction.setAmount(next.getAmount());
                     newTransaction.setDescription(next.getDescription());
@@ -97,10 +89,10 @@ public class ReconciliationManager {
                     // Reconcile the transaction
                     reconcile(next.getTransaction().getId(),true);
                 }
-            } catch (InvalidCategoryIdException ex) {
+            } catch (UpdateDeleteCategoryException ex) {
                 LOG.error("Invalid Category Id exception.");
                 throw ex;
-            } catch (InvalidAccountIdException ex) {
+            } catch (UpdateDeleteAccountException ex) {
                 LOG.error("Invalid Account Id exception.");
                 throw ex;
             } catch (MultipleUnlockedStatementException ex) {
@@ -296,12 +288,12 @@ public class ReconciliationManager {
         throw new InvalidTransactionIdException(transactionId);
     }
 
-    public List<MatchData> matchImpl(String accountId) throws InvalidAccountIdException {
+    public List<MatchData> matchImpl(String accountId) throws UpdateDeleteAccountException {
 
         Optional<Account> account = accountRepository.findById(accountId);
 
         if(account.isEmpty()) {
-            throw new InvalidAccountIdException("Invalid account id." + accountId);
+            throw new UpdateDeleteAccountException("Invalid account id." + accountId);
         }
 
         lastAccount = account.get();

@@ -29,6 +29,14 @@ public class FinancialAmount {
         return this.value < 0.0;
     }
 
+    public boolean isGreaterThan(FinancialAmount rhs) {
+        return this.value > rhs.value;
+    }
+
+    public boolean isLessThan(FinancialAmount rhs) {
+        return this.value < rhs.value;
+    }
+
     public static String internalToString(double value) {
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         return decimalFormat.format(value);

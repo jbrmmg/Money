@@ -72,25 +72,25 @@ public class ReconciliationController {
     }
 
     @GetMapping(path="/ext/money/match")
-    public @ResponseBody List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
+    public @ResponseBody List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws UpdateDeleteAccountException {
         LOG.info("External match data - reconciliation data with reconciled transactions");
         return reconciliationManager.matchImpl(accountId);
     }
 
     @GetMapping(path="/int/money/match")
-    public @ResponseBody List<MatchData> matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws InvalidAccountIdException {
+    public @ResponseBody List<MatchData> matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws UpdateDeleteAccountException {
         return matchExt(accountId);
     }
 
     @PutMapping(path="/ext/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, InvalidTransactionException {
+    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionIdException, InvalidTransactionException {
         LOG.info("Auto Reconciliation Data (ext) ");
         reconciliationManager.autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path="/int/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionIdException, InvalidTransactionException {
+    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionIdException, InvalidTransactionException {
         return reconcileDataExt();
     }
 

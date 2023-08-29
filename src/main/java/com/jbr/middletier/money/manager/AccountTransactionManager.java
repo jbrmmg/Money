@@ -4,10 +4,8 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.dto.mapper.DtoBasicModelMapper;
 import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -33,19 +31,16 @@ public class AccountTransactionManager {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
-    private final DtoBasicModelMapper basicModelMapper;
     private final DtoComplexModelMapper complexModelMapper;
 
     @Autowired
     public AccountTransactionManager(AccountRepository accountRepository,
                                      CategoryRepository categoryRepository,
                                      TransactionRepository transactionRepository,
-                                     DtoBasicModelMapper basicModelMapper,
                                      DtoComplexModelMapper complexModelMapper) {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
-        this.basicModelMapper = basicModelMapper;
         this.complexModelMapper = complexModelMapper;
     }
 
@@ -225,22 +220,22 @@ public class AccountTransactionManager {
         return result;
     }
 
-    private Transaction internalCreateTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
+    private Transaction internalCreateTransaction(TransactionDTO transaction) throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
         Transaction newTransaction =  complexModelMapper.map(transaction,Transaction.class);
 
         // Check the account and category are valid.
         if(newTransaction.getAccount() == null) {
-            throw new InvalidAccountIdException(transaction.getAccountId());
+            throw new UpdateDeleteAccountException(transaction.getAccountId());
         }
 
         if(newTransaction.getCategory() == null) {
-            throw new InvalidCategoryIdException(transaction.getCategoryId());
+            throw new UpdateDeleteCategoryException(transaction.getCategoryId());
         }
 
         return transactionRepository.save(newTransaction);
     }
 
-    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
+    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
         List<TransactionDTO> result = new ArrayList<>();
 
         Transaction newTransaction = internalCreateTransaction(transaction);
@@ -250,7 +245,7 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidCategoryIdException, InvalidAccountIdException {
+    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         Transaction fromTransaction = internalCreateTransaction(from);
 
         // Save the 'from' transaction and update the opposite id on the 'to'
@@ -268,7 +263,7 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException, InvalidCategoryIdException, InvalidAccountIdException {
+    public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException, UpdateDeleteCategoryException, UpdateDeleteAccountException {
         if(transaction.size() == 1) {
             return createIndividualTransaction(transaction.get(0));
         }
@@ -302,7 +297,7 @@ public class AccountTransactionManager {
         return createTransferTransaction(from,to);
     }
 
-    public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         // Find the transaction.
         Optional<Transaction> existingTransaction = transactionRepository.findById(transaction.getId());
         if(existingTransaction.isPresent()) {
@@ -331,7 +326,7 @@ public class AccountTransactionManager {
                     Optional<Category> category = categoryRepository.findById(transaction.getCategoryId());
 
                     if(category.isEmpty()) {
-                        throw new InvalidCategoryIdException(transaction.getCategoryId());
+                        throw new UpdateDeleteCategoryException(transaction.getCategoryId());
                     }
 
                     next.setCategory(category.get());
@@ -372,5 +367,12 @@ public class AccountTransactionManager {
         }
 
         throw new InvalidTransactionIdException(transaction.getId());
+    }
+
+    public List<Transaction> getInternalTransactionsForStatement(Account account, StatementId statementId) {
+        return transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
+                account,
+                statementId.getYear(),
+                statementId.getMonth());
     }
 }

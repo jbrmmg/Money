@@ -8,14 +8,13 @@ import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
-import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
+import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -80,7 +79,7 @@ public class TransactionTest extends Support {
         try {
             accountTransactionManager.updateTransaction(updateTransaction);
             Assert.fail();
-        } catch (InvalidCategoryIdException ex) {
+        } catch (UpdateDeleteCategoryException ex) {
             Assert.assertEquals("Cannot find category with id XXX", ex.getMessage());
         }
     }

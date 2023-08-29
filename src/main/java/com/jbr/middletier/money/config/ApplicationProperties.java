@@ -76,10 +76,4 @@ public class ApplicationProperties {
     public void setSmtpPort(Integer smtpPort) {
         this.smtpPort = smtpPort;
     }
-
-    //TODO remove this
-//    @Bean
-//    public ModelMapper modelMapper() {
-//        return new DtoComplexModelMapper();
-//    }
 }

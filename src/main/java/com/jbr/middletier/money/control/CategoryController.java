@@ -1,10 +1,8 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.exceptions.CannotUpdateSystemCategory;
-import com.jbr.middletier.money.exceptions.CategoryAlreadyExistsException;
-import com.jbr.middletier.money.exceptions.DeleteSystemCategoryException;
-import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
+import com.jbr.middletier.money.exceptions.CreateCategoryException;
+import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.manager.CategoryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +30,7 @@ public class CategoryController {
     public @ResponseBody List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
 
-        return categoryManager.getCategories();
+        return categoryManager.getAll();
     }
 
     @GetMapping(path="/int/money/categories")
@@ -42,23 +40,23 @@ public class CategoryController {
     }
 
     @PostMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CategoryAlreadyExistsException {
+    public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CreateCategoryException {
         LOG.info("Create a new account - {}", category.getId());
 
-        return categoryManager.createCategory(category);
+        return categoryManager.create(category);
     }
 
     @PutMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, CannotUpdateSystemCategory {
+    public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
         LOG.info("Update an account - {}", category.getId());
 
-        return categoryManager.updateCategory(category);
+        return categoryManager.update(category);
     }
 
     @DeleteMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws InvalidCategoryIdException, DeleteSystemCategoryException {
+    public @ResponseBody List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
         LOG.info("Delete account {}", category.getId());
 
-        return categoryManager.deleteCategory(category);
+        return categoryManager.delete(category);
     }
 }

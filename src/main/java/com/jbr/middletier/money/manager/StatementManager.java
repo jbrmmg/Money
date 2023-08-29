@@ -39,20 +39,20 @@ public class StatementManager {
         this.complexModelMapper = complexModelMapper;
     }
 
-    private Account getAccount(StatementDTO statement) throws InvalidAccountIdException {
+    private Account getAccount(StatementDTO statement) throws UpdateDeleteAccountException {
         Statement internalStatement = complexModelMapper.map(statement,Statement.class);
 
         if(internalStatement.getId() == null) {
-            throw new InvalidAccountIdException("Null (Statement Id)");
+            throw new UpdateDeleteAccountException("Null (Statement Id)");
         }
 
         if(internalStatement.getId().getAccount() == null) {
-            throw new InvalidAccountIdException("Null");
+            throw new UpdateDeleteAccountException("Null");
         }
 
         Optional<Account> account = accountRepository.findById(internalStatement.getId().getAccount().getId());
         if(account.isEmpty()) {
-            throw new InvalidAccountIdException(internalStatement.getId().getAccount().getId());
+            throw new UpdateDeleteAccountException(internalStatement.getId().getAccount().getId());
         }
 
         return account.get();
@@ -118,7 +118,7 @@ public class StatementManager {
         return getStatements(statementId.getAccount().getId(),null);
     }
 
-    public Iterable<StatementDTO> createStatement(StatementDTO statement) throws InvalidAccountIdException, StatementAlreadyExists {
+    public Iterable<StatementDTO> createStatement(StatementDTO statement) throws UpdateDeleteAccountException, StatementAlreadyExists {
         Account account = getAccount(statement);
 
         // Get the statements currently available for this account.
@@ -179,7 +179,7 @@ public class StatementManager {
     }
 
     @Transactional
-    public Iterable<StatementDTO> deleteStatement(StatementDTO statement) throws InvalidAccountIdException, InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
+    public Iterable<StatementDTO> deleteStatement(StatementDTO statement) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
         Account account = getAccount(statement);
 
         // Get the statements currently available for this account.
@@ -188,5 +188,9 @@ public class StatementManager {
         // Perform the delete
         internalDeleteStatement(statement, statements);
         return statements;
+    }
+
+    public List<Statement> getLatestStatementInternal(Account account) {
+        return statementRepository.findByIdAccountAndLocked(account, false);
     }
 }

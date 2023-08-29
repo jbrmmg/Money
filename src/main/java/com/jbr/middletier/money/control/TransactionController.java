@@ -54,22 +54,22 @@ public class TransactionController {
     }
 
     @PostMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionException {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PostMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionException {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PutMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> updateTransactionExt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public @ResponseBody Iterable<TransactionDTO> updateTransactionExt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 
     @PutMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> updateTransactionInt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public @ResponseBody Iterable<TransactionDTO> updateTransactionInt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 

@@ -2,9 +2,11 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.ReconcileFormat;
+import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
 import org.slf4j.Logger;
@@ -27,11 +29,14 @@ public class ReconciliationFileManager {
 
     private final ApplicationProperties applicationProperties;
     private final ReconcileFormatRepository reconcileFormatRepository;
+    private final DtoComplexModelMapper modelMapper;
 
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
-                                     ReconcileFormatRepository reconcileFormatRepository) {
+                                     ReconcileFormatRepository reconcileFormatRepository,
+                                     DtoComplexModelMapper modelMapper) {
         this.applicationProperties = applicationProperties;
         this.reconcileFormatRepository = reconcileFormatRepository;
+        this.modelMapper = modelMapper;
     }
 
     public List<ReconciliationFileDTO> getFiles() {
@@ -107,7 +112,7 @@ public class ReconciliationFileManager {
         return new FileFormatDescription();
     }
 
-    private TransactionDTO processLine(FileFormatDescription format, ReconcileFileLine line) {
+    private Transaction processLine(FileFormatDescription format, ReconcileFileLine line) {
         try {
             LOG.info("Process Line");
             for(String next : line.getColumns()) {
@@ -115,7 +120,7 @@ public class ReconciliationFileManager {
             }
             LOG.info("Format {}", format.getValid());
             // We need to get 3 things from the line; date, description and amount.
-            TransactionDTO result = new TransactionDTO();
+            Transaction result = new Transaction();
             result.setDate(format.getDate(line));
             result.setAmount(format.getAmount(line));
             result.setDescription(format.getDescription(line));
@@ -146,7 +151,7 @@ public class ReconciliationFileManager {
             }
 
             // Process this line.
-            TransactionDTO transaction = processLine(format, nextLine);
+            TransactionDTO transaction = this.modelMapper.map(processLine(format, nextLine), TransactionDTO.class);
             if(transaction != null) {
                 result.add(transaction);
             }

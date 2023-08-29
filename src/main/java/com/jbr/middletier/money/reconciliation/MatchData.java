@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.ReconciliationData;
 import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -163,7 +164,7 @@ public class MatchData implements Comparable<MatchData> {
     public Account getAccount() { return this.account; }
 
     public String getDate() {
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd").format(this.reconciliationDate);
+        return DtoComplexModelMapper.localDateStringConverter.convert(this.reconciliationDate);
     }
 
     public boolean transactionMatch(Transaction transaction, int withinDays) {

@@ -7,6 +7,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.DtoComplexModelMapper;
+import com.jbr.middletier.money.dto.mapper.converter.LocalDateStringConverter;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
@@ -496,7 +497,7 @@ public class MoneyTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
-                .andExpect(jsonPath("$[0].date", startsWith(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(testDate))))
+                .andExpect(jsonPath("$[0].date", startsWith(DtoComplexModelMapper.localDateStringConverter.convert(testDate))))
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
@@ -542,7 +543,7 @@ public class MoneyTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].amount", is(10.0)))
-                .andExpect(jsonPath("$[0].date", startsWith(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(testDate))))
+                .andExpect(jsonPath("$[0].date", startsWith(DtoComplexModelMapper.localDateStringConverter.convert(testDate))))
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 

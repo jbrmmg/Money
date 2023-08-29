@@ -8,12 +8,12 @@ import com.jbr.middletier.money.manager.CategoryManager;
 import org.modelmapper.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.Locale;
 
 @Controller
 public class DtoComplexModelMapper extends ModelMapper {
+
+    public static final LocalDateStringConverter localDateStringConverter = new LocalDateStringConverter();
+    public static final StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
 
     // Perform more complex model mapping - where it's not simple.
     @Autowired
@@ -24,8 +24,8 @@ public class DtoComplexModelMapper extends ModelMapper {
         this.addConverter(new StringAccountConverter(accountManager));
         this.addConverter(new CategoryStringConverter());
         this.addConverter(new StringCategoryConverter(categoryManager));
-        this.addConverter(new LocalDateStringConverter());
-        this.addConverter(new StringLocalDateConverter());
+        this.addConverter(localDateStringConverter);
+        this.addConverter(stringLocalDateConverter);
         this.addConverter(new AdjustmentTypeStringConverter());
         this.addConverter(new StringAdjustmentTypeConverter());
 
