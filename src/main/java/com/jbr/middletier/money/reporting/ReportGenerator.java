@@ -310,7 +310,7 @@ public class ReportGenerator {
 
         List<Account> accounts = new ArrayList<>();
         accountRepository.findAll().forEach(a -> {
-            if(!a.getClosed()) {
+            if(Boolean.FALSE.equals(a.getClosed())) {
                 accounts.add(a);
             }
         });

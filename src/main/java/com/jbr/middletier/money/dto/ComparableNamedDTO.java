@@ -6,6 +6,9 @@ public class ComparableNamedDTO implements Comparable<ComparableNamedDTO> {
     private String id;
     private String name;
 
+    protected ComparableNamedDTO() {
+    }
+
     public String getId() {
         return id;
     }

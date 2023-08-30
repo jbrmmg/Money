@@ -43,7 +43,7 @@ public class CategoryManager extends AbstractManager<
     @Override
     void validateUpdateOrDelete(Category instance, boolean update) throws UpdateDeleteCategoryException {
         // Cannot update or delete system categories
-        if(instance.getSystemUse()) {
+        if(Boolean.TRUE.equals(instance.getSystemUse())) {
             throw new UpdateDeleteCategoryException(instance.getId(),"You cannot " + (update ? "update" : "delete") + " this category as it is used by system.", HttpStatus.FORBIDDEN);
         }
 

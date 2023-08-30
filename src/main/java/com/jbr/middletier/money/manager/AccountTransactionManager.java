@@ -187,9 +187,13 @@ public class AccountTransactionManager {
                 LOG.info("Get Transaction - unlocked");
                 return getUnlockedTransactions(accounts, categories);
             }
+            case TRT_UNKNOWN -> {
+                LOG.info("Get Transaction - unknown");
+                throw new IllegalStateException("Should never get here as all Enum values are catered for.");
+            }
         }
 
-        throw new IllegalStateException("Should never get here as all Enum values are catered for.");
+        return null;
     }
 
     public List<TransactionDTO> getTransactions(TransactionRequestType type,
