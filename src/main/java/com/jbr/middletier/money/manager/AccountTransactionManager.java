@@ -216,7 +216,7 @@ public class AccountTransactionManager {
 
         List<TransactionDTO> result = new ArrayList<>();
         LOG.debug("Iterate over transactions");
-        for(Transaction transaction : transactionRepository.findAll(specification, transactionSort)) {
+        for(Transaction transaction : transactionRepository.findAll(Objects.requireNonNull(specification), transactionSort)) {
             LOG.debug("Transaction {}", transaction.getId());
             result.add(transactionMapper.map(transaction,TransactionDTO.class));
         }
