@@ -85,6 +85,6 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
 
     @Override
     public String toString() {
-        return this.accountId + "." + String.format("%04d", this.year) + String.format("%02d", this.month);
+        return this.accountId.toUpperCase() + "." + String.format("%04d", this.year) + String.format("%02d", this.month);
     }
 }

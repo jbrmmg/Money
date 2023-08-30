@@ -3,8 +3,11 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.*;
+import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
+import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.junit.Assert;
@@ -35,6 +38,12 @@ public class PoJoTest {
 
     @Autowired
     private UtilityMapper utilityMapper;
+
+    @Autowired
+    private AccountManager accountManager;
+
+    @Autowired
+    private StatementRepository statementRepository;
 
     @Test
     public void accountToDTO() {
@@ -141,12 +150,12 @@ public class PoJoTest {
     public void compareStatementIdDTO() {
         StatementIdDTO lhs = new StatementIdDTO("BANK",5, 2011);
         Assert.assertEquals(0,lhs.compareTo(new StatementIdDTO("bank",5,2011)));
-        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("a", 5, 2011)));
-        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 4, 2011)));
-        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 5, 2010)));
-        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("clown", 5, 2011)));
-        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 6, 2011)));
-        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 5, 2012)));
+        Assert.assertEquals(-31,lhs.compareTo(new StatementIdDTO("a", 5, 2011)));
+        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 4, 2011)));
+        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 5, 2010)));
+        Assert.assertEquals(-33,lhs.compareTo(new StatementIdDTO("clown", 5, 2011)));
+        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 6, 2011)));
+        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 5, 2012)));
 
         Assert.assertEquals(lhs, new StatementIdDTO("bank", 5, 2011));
 
@@ -166,18 +175,21 @@ public class PoJoTest {
         Account account3 = new Account();
         account3.setId("clown");
 
-        StatementId lhs = new StatementId(account1,5, 2011);
-        Assert.assertEquals(lhs, new StatementId(account1,5,2011));
-        Assert.assertNotEquals(lhs, new StatementId(account2, 5, 2011));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 4, 2011));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 5, 2010));
-        Assert.assertNotEquals(lhs, new StatementId(account3, 5, 2011));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 6, 2011));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 5, 2012));
+        StatementId lhs = new StatementId(account1,2011, 5);
+        Assert.assertEquals(lhs, new StatementId(account1,2011,5));
+        Assert.assertNotEquals(lhs, new StatementId(account2, 2011, 5));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 2011, 4));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 2010, 5));
+        Assert.assertNotEquals(lhs, new StatementId(account3, 2011, 5));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 2011, 6));
+        Assert.assertNotEquals(lhs, new StatementId(account1, 2012, 5));
 
-        Assert.assertEquals(lhs.hashCode(),new StatementIdDTO("bank",5,2011).hashCode());
+        Account account1a = new Account();
+        account1a.setId("bank");
 
-        Assert.assertEquals("BANK.201105", lhs.toString());
+        Assert.assertEquals(lhs.hashCode(),new StatementId(account1a,2011,5).hashCode());
+
+        Assert.assertEquals("BANK201105", lhs.toString());
     }
 
     @Test
@@ -261,7 +273,20 @@ public class PoJoTest {
     }
 
     @Test
-    public void transactionFromDTO() {
+    public void transactionFromDTO() throws UpdateDeleteAccountException {
+        Account account = accountManager.get("BANK");
+
+        Statement testStatement = new Statement();
+        StatementId testStatementId = new StatementId();
+        testStatementId.setAccount(account);
+        testStatementId.setMonth(8);
+        testStatementId.setYear(2021);
+        testStatement.setId(testStatementId);
+        testStatement.setOpenBalance(0);
+        testStatement.setLocked(false);
+
+        statementRepository.save(testStatement);
+
         TransactionDTO transactionDTO = new TransactionDTO();
         transactionDTO.setAccountId("BANK");
         transactionDTO.setCategoryId("HSE");
@@ -279,6 +304,8 @@ public class PoJoTest {
         Assert.assertEquals(92,transaction.getOppositeTransactionId().intValue());
         Assert.assertEquals(1.29,transaction.getAmount().getValue(),0.001);
         Assert.assertEquals("Testing",transaction.getDescription());
+
+        statementRepository.delete(testStatement);
     }
 
     @Test
@@ -342,8 +369,8 @@ public class PoJoTest {
         AccountDTO account3 = new AccountDTO();
         account3.setId("FLOP");
 
-        Assert.assertEquals(-1, account.compareTo(account3));
-        Assert.assertEquals(1, account3.compareTo(account));
+        Assert.assertEquals(-6, account.compareTo(account3));
+        Assert.assertEquals(6, account3.compareTo(account));
 
         Assert.assertEquals(account2, account);
         Assert.assertNotEquals(account3, account);

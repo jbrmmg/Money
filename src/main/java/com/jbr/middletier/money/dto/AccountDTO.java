@@ -70,7 +70,7 @@ public class AccountDTO implements Comparable<AccountDTO> {
 
     @Override
     public int hashCode() {
-        return this.getId().hashCode();
+        return this.getId().toUpperCase().hashCode();
     }
 
     @Override
