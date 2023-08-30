@@ -3,6 +3,7 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,6 +24,9 @@ public class ReconciliationFileTest {
     @Autowired
     ReconciliationFileManager reconciliationFileManager;
 
+    @Autowired
+    private UtilityMapper utilityMapper;
+
     @Test
     public void testFilesAvailable() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
@@ -36,14 +40,15 @@ public class ReconciliationFileTest {
 
         double totalIn = 0.0;
         double totalOut = 0.0;
-        LocalDate earliestDate = transactions.get(0).getDate();
-        LocalDate latestDate = transactions.get(0).getDate();
+        LocalDate earliestDate = utilityMapper.map(transactions.get(0).getDate(),LocalDate.class);
+        LocalDate latestDate = utilityMapper.map(transactions.get(0).getDate(),LocalDate.class);
         for(TransactionDTO next : transactions) {
-            if(next.getDate().isBefore(earliestDate)) {
-                earliestDate = next.getDate();
+            LocalDate transactionDate = utilityMapper.map(next.getDate(),LocalDate.class);
+            if(transactionDate.isBefore(earliestDate)) {
+                earliestDate = transactionDate;
             }
-            if(next.getDate().isAfter((latestDate))) {
-                latestDate = next.getDate();
+            if(transactionDate.isAfter((latestDate))) {
+                latestDate = transactionDate;
             }
             if(next.getAmount() > 0) {
                 totalIn += next.getAmount();

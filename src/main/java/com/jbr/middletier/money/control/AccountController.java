@@ -1,8 +1,8 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.exceptions.AccountAlreadyExistsException;
-import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
+import com.jbr.middletier.money.exceptions.CreateAccountException;
+import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.LogoManager;
 import org.slf4j.Logger;
@@ -24,7 +24,6 @@ import java.util.List;
 @RequestMapping("/jbr")
 public class AccountController {
     private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
-
 
     private final LogoManager logoManager;
 
@@ -56,31 +55,31 @@ public class AccountController {
     public @ResponseBody List<AccountDTO> getExtAccounts() {
         LOG.info("Request Accounts (ext).");
 
-        return accountManager.getAccounts();
+        return accountManager.getAll();
     }
 
     @GetMapping(path="/int/money/accounts")
     public @ResponseBody List<AccountDTO>  getIntAccounts() {
         LOG.info("Request Accounts (int).");
 
-        return accountManager.getAccounts();
+        return accountManager.getAll();
     }
 
     @PostMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws AccountAlreadyExistsException {
+    public @ResponseBody List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws CreateAccountException {
         LOG.info("Create a new account - {}}", account.getId());
-        return accountManager.createAccount(account);
+        return accountManager.create(account);
     }
 
     @PutMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
+    public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
         LOG.info("Update an account - {}", account.getId());
-        return accountManager.updateAccount(account);
+        return accountManager.update(account);
     }
 
     @DeleteMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> deleteAccount(@RequestBody AccountDTO account) throws InvalidAccountIdException {
+    public @ResponseBody List<AccountDTO> deleteAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
         LOG.info("Delete account {}", account.getId());
-        return accountManager.deleteAccount(account);
+        return accountManager.delete(account);
     }
 }

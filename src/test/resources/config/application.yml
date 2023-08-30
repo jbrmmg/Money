@@ -20,7 +20,7 @@ spring:
         properties:
             hibernate:
                 format_sql: true
-        show-sql: true
+                show-sql: true
 
 money:
     service-name: Middle Tier Test
@@ -37,6 +37,9 @@ money:
 
 logging:
     level:
-        ROOT: WARN
+        ROOT: INFO
         com.jbr.middletier: DEBUG
+        org.hibernate.SQL: DEBUG
         org.hibernate.type.descriptor.sql: TRACE
+        org.hibernate.orm.jdbc.bind: TRACE
+

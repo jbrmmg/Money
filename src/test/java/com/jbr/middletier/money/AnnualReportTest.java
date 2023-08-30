@@ -6,6 +6,8 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.StatementMapper;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.utils.CssAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -13,7 +15,6 @@ import org.jdom2.input.DOMBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -49,7 +50,10 @@ public class AnnualReportTest extends Support {
     private StatementRepository statementRepository;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private UtilityMapper utilityMapper;
+
+    @Autowired
+    private StatementMapper statementMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -70,14 +74,10 @@ public class AnnualReportTest extends Support {
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 
         // Create some transactions
-        AccountDTO account = new AccountDTO();
-        account.setId("AMEX");
-        CategoryDTO category = new CategoryDTO();
-        category.setId("HSE");
         TransactionDTO transaction = new TransactionDTO();
-        transaction.setAccount(account);
-        transaction.setCategory(category);
-        transaction.setDate(LocalDate.of(2010,1,1));
+        transaction.setAccountId("AMEX");
+        transaction.setCategoryId("HSE");
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
         transaction.setAmount(10.02);
         transaction.setDescription("Testing");
 
@@ -86,24 +86,20 @@ public class AnnualReportTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        StatementId statementId = new StatementId();
-        statementId.setAccount(modelMapper.map(account,Account.class));
-        statementId.setMonth(1);
-        statementId.setYear(2010);
-        Statement statement = new Statement();
-        statement.setId(statementId);
+
+        StatementDTO statement = new StatementDTO();
+        statement.setAccountId("AMEX");
+        statement.setMonth(1);
+        statement.setYear(2010);
 
         // Add the transaction to statement
         for(Transaction next : transactionRepository.findAll()) {
-            next.setStatement(statement);
+            next.setStatement(statementMapper.map(statement,Statement.class));
             transactionRepository.save(next);
         }
 
         // Lock the statement
-        StatementIdDTO lockStatementRequest = new StatementIdDTO();
-        lockStatementRequest.setAccount(account);
-        lockStatementRequest.setMonth(1);
-        lockStatementRequest.setYear(2010);
+        StatementIdDTO lockStatementRequest = new StatementIdDTO("AMEX",1,2010);
 
         getMockMvc().perform(post("/jbr/int/money/statement/lock")
                         .content(this.json(lockStatementRequest))

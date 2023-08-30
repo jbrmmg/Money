@@ -2,7 +2,7 @@ package com.jbr.middletier.money.data;
 
 import com.jbr.middletier.money.util.FinancialAmount;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import javax.validation.constraints.NotNull;
 
 /**

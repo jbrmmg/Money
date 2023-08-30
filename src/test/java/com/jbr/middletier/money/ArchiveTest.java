@@ -7,11 +7,12 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.StatementMapper;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.manager.ArchiveManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -45,7 +46,10 @@ public class ArchiveTest extends Support {
     private ArchiveManager archiveManager;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private UtilityMapper utilityMapper;
+
+    @Autowired
+    private StatementMapper statementMapper;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -154,14 +158,10 @@ public class ArchiveTest extends Support {
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 
         // Create some transactions
-        AccountDTO account = new AccountDTO();
-        account.setId("AMEX");
-        CategoryDTO category = new CategoryDTO();
-        category.setId("HSE");
         TransactionDTO transaction = new TransactionDTO();
-        transaction.setAccount(account);
-        transaction.setCategory(category);
-        transaction.setDate(LocalDate.of(2010,1,1));
+        transaction.setAccountId("AMEX");
+        transaction.setCategoryId("HSE");
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
         transaction.setAmount(10.02);
         transaction.setDescription("Testing");
 
@@ -170,24 +170,19 @@ public class ArchiveTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        StatementId statementId = new StatementId();
-        statementId.setAccount(modelMapper.map(account,Account.class));
-        statementId.setMonth(1);
-        statementId.setYear(2010);
-        Statement statement = new Statement();
-        statement.setId(statementId);
+        StatementDTO statementDTO = new StatementDTO();
+        statementDTO.setAccountId("AMEX");
+        statementDTO.setMonth(1);
+        statementDTO.setYear(2010);
 
         // Add the transaction to statement
         for(Transaction next : transactionRepository.findAll()) {
-            next.setStatement(statement);
+            next.setStatement(statementMapper.map(statementDTO,Statement.class));
             transactionRepository.save(next);
         }
 
         // Lock the statement
-        StatementIdDTO lockStatementId = new StatementIdDTO();
-        lockStatementId.setAccount(account);
-        lockStatementId.setMonth(1);
-        lockStatementId.setYear(2010);
+        StatementIdDTO lockStatementId = new StatementIdDTO("AMEX",1,2010);
 
         getMockMvc().perform(post("/jbr/int/money/statement/lock")
                         .content(this.json(lockStatementId))

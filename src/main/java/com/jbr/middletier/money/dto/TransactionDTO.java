@@ -7,11 +7,13 @@ import java.time.LocalDate;
 
 public class TransactionDTO {
     private int id;
-    private AccountDTO account;
-    private CategoryDTO category;
-    private LocalDate date;
+    private String accountId;
+    private String categoryId;
+    private String date;
     private double amount;
-    private StatementDTO statement;
+    private Integer statementMonth;
+
+    private Integer statementYear;
     private Integer oppositeId;
     private String description;
 
@@ -23,27 +25,27 @@ public class TransactionDTO {
         this.id = id;
     }
 
-    public AccountDTO getAccount() {
-        return account;
+    public String getAccountId() {
+        return accountId;
     }
 
-    public void setAccount(AccountDTO account) {
-        this.account = account;
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
-    public CategoryDTO getCategory() {
-        return category;
+    public String getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(CategoryDTO category) {
-        this.category = category;
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
-    public LocalDate getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(String date) {
         this.date = date;
     }
 
@@ -55,13 +57,19 @@ public class TransactionDTO {
         this.amount = amount;
     }
 
-    public StatementDTO getStatement() {
-        return statement;
+    public Integer getStatementYear() {
+        return statementYear;
     }
 
-    public void setStatement(StatementDTO statement) {
-        this.statement = statement;
+    public void setStatementYear(Integer statementYear) {
+        this.statementYear = statementYear;
     }
+
+    public Integer getStatementMonth() {
+        return statementMonth;
+    }
+
+    public void setStatementMonth(Integer statementMonth) { this.statementMonth = statementMonth; }
 
     public Integer getOppositeTransactionId() {
         return oppositeId;

@@ -2,7 +2,7 @@ package com.jbr.middletier.money.data;
 
 import com.jbr.middletier.money.util.TransactionString;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 
 /**
