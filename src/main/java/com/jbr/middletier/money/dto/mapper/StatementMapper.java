@@ -4,6 +4,8 @@ import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.StatementId;
 import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.dto.StatementIdDTO;
+import com.jbr.middletier.money.dto.mapper.converter.DoubleFinancialAmountConverter;
+import com.jbr.middletier.money.dto.mapper.converter.FinancialAmountDoubleConverter;
 import com.jbr.middletier.money.dto.mapper.converter.StatementFromDTO;
 import com.jbr.middletier.money.manager.AccountManager;
 import org.modelmapper.TypeMap;
@@ -15,6 +17,8 @@ import org.modelmapper.ModelMapper;
 public class StatementMapper extends ModelMapper {
     @Autowired
     public StatementMapper(AccountManager accountManager) {
+        this.addConverter(new FinancialAmountDoubleConverter());
+        this.addConverter(new DoubleFinancialAmountConverter());
         this.addConverter(new StatementFromDTO(accountManager));
 
         // Statement mapper.

@@ -15,13 +15,16 @@ import org.springframework.stereotype.Controller;
 public class TransactionMapper extends ModelMapper {
     @Autowired
     public TransactionMapper(AccountManager accountManager, CategoryManager categoryManager, StatementManager statementManager) {
+        StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
         this.addConverter(new AccountStringConverter());
         this.addConverter(new StringAccountConverter(accountManager));
         this.addConverter(new CategoryStringConverter());
         this.addConverter(new StringCategoryConverter(categoryManager));
         this.addConverter(new LocalDateStringConverter());
-        this.addConverter(new StringLocalDateConverter());
-        this.addConverter(new TransactionFromDTO(accountManager,categoryManager,statementManager));
+        this.addConverter(stringLocalDateConverter);
+        this.addConverter(new FinancialAmountDoubleConverter());
+        this.addConverter(new DoubleFinancialAmountConverter());
+        this.addConverter(new TransactionFromDTO(accountManager,categoryManager,statementManager,stringLocalDateConverter));
 
         TypeMap<Transaction, TransactionDTO> transactionMapper = this.createTypeMap(Transaction.class, TransactionDTO.class);
         transactionMapper.addMappings(

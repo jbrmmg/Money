@@ -1,30 +1,12 @@
 package com.jbr.middletier.money.dto;
 
-public class CategoryDTO {
-    private String id;
-    private String name;
+public class CategoryDTO extends ComparableNamedDTO {
     private Long sort;
     private Boolean restricted;
     private String colour;
     private Boolean expense;
     private String group;
     private Boolean systemUse;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public Long getSort() {
         return sort;

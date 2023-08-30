@@ -30,7 +30,7 @@ public class CategoryController {
     public @ResponseBody List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
 
-        return categoryManager.getAll();
+        return categoryManager.getAllBySortOrder();
     }
 
     @GetMapping(path="/int/money/categories")

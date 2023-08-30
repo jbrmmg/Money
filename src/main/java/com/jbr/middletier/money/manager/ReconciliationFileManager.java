@@ -151,9 +151,9 @@ public class ReconciliationFileManager {
             }
 
             // Process this line.
-            TransactionDTO transaction = this.transactionMapper.map(processLine(format, nextLine), TransactionDTO.class);
-            if(transaction != null) {
-                result.add(transaction);
+            Transaction lineTransaction = processLine(format, nextLine);
+            if(lineTransaction != null) {
+                result.add(this.transactionMapper.map(lineTransaction, TransactionDTO.class));
             }
         }
 

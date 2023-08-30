@@ -145,9 +145,9 @@ public class CategoryTest extends Support {
         String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
-                .andExpect(status().isConflict())
+                .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("You cannot delete this category as it is used by system. TRF", error);
+        Assert.assertEquals("You cannot delete this category as it is used by system. (TRF)", error);
     }
 
     @Test
@@ -166,6 +166,6 @@ public class CategoryTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot update system category TRF", error);
+        Assert.assertEquals("You cannot update this category as it is used by system. (TRF)", error);
     }
 }

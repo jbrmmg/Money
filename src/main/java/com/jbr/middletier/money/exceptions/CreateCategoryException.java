@@ -1,7 +1,9 @@
 package com.jbr.middletier.money.exceptions;
 
-public class CreateCategoryException extends Exception {
+import org.springframework.http.HttpStatus;
+
+public class CreateCategoryException extends MoneyException {
     public CreateCategoryException(String id) {
-        super("Category already exists " + id);
+        super(HttpStatus.CONFLICT, "Category already exists " + id);
     }
 }

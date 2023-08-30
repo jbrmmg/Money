@@ -1,7 +1,9 @@
 package com.jbr.middletier.money.exceptions;
 
-public class InvalidTransactionSearchException extends Exception {
+import org.springframework.http.HttpStatus;
+
+public class InvalidTransactionSearchException extends MoneyException {
     public InvalidTransactionSearchException(String message) {
-        super(message);
+        super(HttpStatus.CONFLICT, message);
     }
 }

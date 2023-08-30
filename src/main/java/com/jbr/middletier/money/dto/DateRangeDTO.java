@@ -9,8 +9,8 @@ public class DateRangeDTO {
     private final LocalDate to;
 
     public DateRangeDTO(UtilityMapper mapper, String from, String to) {
-        this.from = mapper.map(from,LocalDate.class);
-        this.to = mapper.map(to,LocalDate.class);
+        this.from = ( from == null ) ? null : mapper.map(from,LocalDate.class);
+        this.to = ( to == null ) ? null : mapper.map(to,LocalDate.class);
     }
 
     public LocalDate getFrom() {

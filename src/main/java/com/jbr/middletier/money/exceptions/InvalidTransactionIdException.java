@@ -1,7 +1,9 @@
 package com.jbr.middletier.money.exceptions;
 
-public class InvalidTransactionIdException extends Exception {
+import org.springframework.http.HttpStatus;
+
+public class InvalidTransactionIdException extends MoneyException {
     public InvalidTransactionIdException(int id) {
-        super("Cannot find transaction with id " + id);
+        super(HttpStatus.CONFLICT, "Cannot find transaction with id " + id);
     }
 }

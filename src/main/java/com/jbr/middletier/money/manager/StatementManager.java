@@ -43,7 +43,7 @@ public class StatementManager {
         }
 
         if(internalStatement.getId().getAccount() == null) {
-            throw new UpdateDeleteAccountException("Null");
+            throw new UpdateDeleteAccountException(statement.getAccountId());
         }
 
         Optional<Account> account = accountManager.getIfValid(internalStatement.getId().getAccount().getId());
@@ -114,7 +114,7 @@ public class StatementManager {
         return getStatements(statementId.getAccount().getId(),null);
     }
 
-    public Iterable<StatementDTO> createStatement(StatementDTO statement) throws UpdateDeleteAccountException, StatementAlreadyExists {
+    public Iterable<StatementDTO> createStatement(StatementDTO statement) throws UpdateDeleteAccountException, StatementAlreadyExistsException {
         Account account = getAccount(statement);
 
         // Get the statements currently available for this account.
@@ -123,7 +123,7 @@ public class StatementManager {
         // Can only create a statement if there are none.
         if(!statements.isEmpty()) {
             LOG.warn("Statements can only be created where none exist.");
-            throw new StatementAlreadyExists(statements.get(0));
+            throw new StatementAlreadyExistsException(statements.get(0));
         }
 
         Statement newStatement = statementMapper.map(statement,Statement.class);
@@ -143,7 +143,7 @@ public class StatementManager {
     }
 
     @Transactional
-    public void internalDeleteStatement(StatementDTO statement, List<StatementDTO> statements, AccountTransactionManager accountTransactionManager) throws InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
+    public void internalDeleteStatement(StatementDTO statement, List<StatementDTO> statements, AccountTransactionManager accountTransactionManager) throws InvalidStatementIdException, CannotDeleteLockedStatementException, CannotDeleteLastStatementException {
         // Only the last statement in the list can be deleted
         if(statements.isEmpty()) {
             LOG.warn("There are no statements for the account.");
@@ -153,7 +153,7 @@ public class StatementManager {
         // We cannot delete the last statement.
         if(statements.size() < 2) {
             LOG.warn("Cannot request delete if only one statement.");
-            throw new CannotDeleteLastStatement(statement);
+            throw new CannotDeleteLastStatementException(statement);
         }
 
         // The last statement should be unlocked.
@@ -162,12 +162,12 @@ public class StatementManager {
 
         if(!last.equals(statement)) {
             LOG.warn("Delete request is not for the last statement.");
-            throw new CannotDeleteLockedStatement(statement);
+            throw new CannotDeleteLockedStatementException(statement);
         }
 
         if(last.getLocked() || !penultimate.getLocked()) {
             LOG.warn("Either the last statement is locked, or the penultimate is not locked.");
-            throw new CannotDeleteLockedStatement(statement);
+            throw new CannotDeleteLockedStatementException(statement);
         }
 
         // Remove any transactions from this statement.
@@ -175,7 +175,7 @@ public class StatementManager {
     }
 
     @Transactional
-    public Iterable<StatementDTO> deleteStatement(StatementDTO statement, AccountTransactionManager accountTransactionManager) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatement, CannotDeleteLastStatement {
+    public Iterable<StatementDTO> deleteStatement(StatementDTO statement, AccountTransactionManager accountTransactionManager) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatementException, CannotDeleteLastStatementException {
         Account account = getAccount(statement);
 
         // Get the statements currently available for this account.

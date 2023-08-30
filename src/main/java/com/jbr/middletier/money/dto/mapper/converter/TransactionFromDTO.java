@@ -1,9 +1,6 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.data.StatementId;
 import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.CategoryManager;
@@ -14,14 +11,16 @@ public class TransactionFromDTO extends AbstractConverter<TransactionDTO, Transa
     private final AccountManager accountManager;
     private final CategoryManager categoryManager;
     private final StatementManager statementManager;
-
+    private final StringLocalDateConverter stringLocalDateConverter;
 
     public TransactionFromDTO(AccountManager accountManager,
                               CategoryManager categoryManager,
-                              StatementManager statementManager) {
+                              StatementManager statementManager,
+                              StringLocalDateConverter stringLocalDateConverter) {
         this.accountManager = accountManager;
         this.categoryManager = categoryManager;
         this.statementManager = statementManager;
+        this.stringLocalDateConverter = stringLocalDateConverter;
     }
 
     @Override
@@ -33,6 +32,7 @@ public class TransactionFromDTO extends AbstractConverter<TransactionDTO, Transa
         result.setCategory(categoryManager.getIfValid(source.getCategoryId()).orElse(null));
         result.setDescription(source.getDescription());
         result.setOppositeTransactionId(source.getOppositeTransactionId());
+        result.setDate(this.stringLocalDateConverter.convert(source.getDate()));
 
         // Load the statement, if specified.
         result.setStatement(statementManager.getStatement(accountManager.getIfValid(source.getAccountId()).orElse(null),

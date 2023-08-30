@@ -2,11 +2,16 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.mapper.CategoryMapper;
 import com.jbr.middletier.money.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+
+import java.util.Comparator;
+import java.util.List;
 
 @Controller
 public class CategoryManager extends AbstractManager<
@@ -40,11 +45,7 @@ public class CategoryManager extends AbstractManager<
     void validateUpdateOrDelete(Category instance, boolean update) throws UpdateDeleteCategoryException {
         // Cannot update or delete system categories
         if(instance.getSystemUse()) {
-            if(update) {
-                throw new UpdateDeleteCategoryException(instance.getId(),"Cannot update system category");
-            } else {
-                throw new UpdateDeleteCategoryException(instance.getId(),"Cannot delete system category");
-            }
+            throw new UpdateDeleteCategoryException(instance.getId(),"You cannot " + (update ? "update" : "delete") + " this category as it is used by system.", HttpStatus.FORBIDDEN);
         }
 
     }
@@ -57,5 +58,11 @@ public class CategoryManager extends AbstractManager<
         instance.setRestricted(from.getRestricted());
         instance.setSort(from.getSort());
         instance.setExpense(from.getExpense());
+    }
+
+    public List<CategoryDTO> getAllBySortOrder() {
+        List<CategoryDTO> result = getAll();
+        result.sort(Comparator.comparing(CategoryDTO::getSort));
+        return result;
     }
 }

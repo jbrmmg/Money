@@ -8,7 +8,8 @@ import static com.jbr.middletier.money.dto.mapper.converter.LocalDateStringConve
 public class StringLocalDateConverter extends AbstractConverter<String, LocalDate> {
     @Override
     public LocalDate convert(String s) {
-        if(s == null) return null;
+        if(s == null)
+            return null;
 
         return LocalDate.parse(s, standardFormatter);
     }

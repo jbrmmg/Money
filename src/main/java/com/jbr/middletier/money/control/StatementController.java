@@ -52,14 +52,14 @@ public class StatementController {
     }
 
     @PostMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody StatementDTO statement) throws StatementAlreadyExists, UpdateDeleteAccountException {
+    public @ResponseBody Iterable<StatementDTO> createStatement(@RequestBody StatementDTO statement) throws StatementAlreadyExistsException, UpdateDeleteAccountException {
         LOG.info("Create a new statement - {}", statement);
 
         return this.statementManager.createStatement(statement);
     }
 
     @DeleteMapping(path="/int/money/statement")
-    public @ResponseBody Iterable<StatementDTO> deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatement, UpdateDeleteAccountException, CannotDeleteLastStatement {
+    public @ResponseBody Iterable<StatementDTO> deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatementException, UpdateDeleteAccountException, CannotDeleteLastStatementException {
         LOG.info("Delete an account - {} {} {}", statement.getAccountId(), statement.getMonth(), statement.getYear());
 
         return this.statementManager.deleteStatement(statement,accountTransactionManager);

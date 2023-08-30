@@ -80,7 +80,7 @@ public class StatementTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1280.32, -1280.32)))
-                .andExpect(jsonPath("$[*].category.id", containsInAnyOrder("TRF", "TRF")));
+                .andExpect(jsonPath("$[*].categoryId", containsInAnyOrder("TRF", "TRF")));
 
         // Reconcile the transaction..
         Iterable<Transaction> transactions = transactionRepository.findAll();
@@ -149,7 +149,7 @@ public class StatementTest extends Support {
         // Delete the statement.
         StatementDTO statement = new StatementDTO();
         statement.setAccountId("BANK");
-        statement.setMonth(01);
+        statement.setMonth(1);
         statement.setYear(2010);
 
         error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
@@ -157,9 +157,9 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot delete locked statement BANK.201001", error);
+        Assert.assertEquals("Cannot delete locked statement BANK 1 2010", error);
 
-        statementId.setMonth(2);
+        statement.setMonth(2);
         getMockMvc().perform(delete("/jbr/int/money/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -175,8 +175,8 @@ public class StatementTest extends Support {
         getMockMvc().perform(get("/jbr/ext/money/statement")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id.account.id", is("AMEX")))
-                .andExpect(jsonPath("$[1].id.account.id", is("BANK")))
+                .andExpect(jsonPath("$[0].accountId", is("AMEX")))
+                .andExpect(jsonPath("$[1].accountId", is("BANK")))
                 .andExpect(jsonPath("$[0].openBalance", is(0.0)))
                 .andExpect(jsonPath("$[1].openBalance", is(0.0)));
 
@@ -184,8 +184,8 @@ public class StatementTest extends Support {
         getMockMvc().perform(get("/jbr/int/money/statement")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id.account.id", is("AMEX")))
-                .andExpect(jsonPath("$[1].id.account.id", is("BANK")))
+                .andExpect(jsonPath("$[0].accountId", is("AMEX")))
+                .andExpect(jsonPath("$[1].accountId", is("BANK")))
                 .andExpect(jsonPath("$[0].openBalance", is(0.0)))
                 .andExpect(jsonPath("$[1].openBalance", is(0.0)));
     }
@@ -240,7 +240,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot delete last statement BANK.202001", error);
+        Assert.assertEquals("Cannot delete last statement BANK 1 2020", error);
     }
 
     @Test
@@ -256,7 +256,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Statement already exists - AMEX.201001", error);
+        Assert.assertEquals("Statement already exists - AMEX 1 2010", error);
     }
 
     @Test
@@ -293,6 +293,6 @@ public class StatementTest extends Support {
         statement.setOpenBalance(100);
 
         InvalidStatementIdException test = new InvalidStatementIdException(statement);
-        Assert.assertEquals("Cannot find statement with id AMEX.201001", test.getMessage());
+        Assert.assertEquals("Cannot find statement with id AMEX 1 2010", test.getMessage());
     }
 }

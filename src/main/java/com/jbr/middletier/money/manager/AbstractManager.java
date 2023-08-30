@@ -1,11 +1,12 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.dto.ComparableNamedDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.*;
 
-public abstract class AbstractManager<O,E,I,R extends CrudRepository<O, I>,AddException extends Throwable,UpdateDeleteException extends Throwable> {
+public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends CrudRepository<O, I>,AddException extends Throwable,UpdateDeleteException extends Throwable> {
     private final Class<E> externalClass;
     private final Class<O> internalClass;
     private final ModelMapper modelMapper;
@@ -44,6 +45,9 @@ public abstract class AbstractManager<O,E,I,R extends CrudRepository<O, I>,AddEx
         for(O next : this.cache.values()) {
             result.add(modelMapper.map(next,this.externalClass));
         }
+
+        // Sort the list.
+        result.sort(ComparableNamedDTO::compareTo);
 
         return result;
     }
@@ -107,18 +111,21 @@ public abstract class AbstractManager<O,E,I,R extends CrudRepository<O, I>,AddEx
             throw getUpdateDeleteException(instanceId);
         }
 
+        // Get the actual internal instance
+        internalInstance = this.cache.get(instanceId);
+
         // Validate that this is OK
         validateUpdateOrDelete(internalInstance,update);
 
         // Perform the action
         if(update) {
             // Update
-            updateInstance(this.cache.get(instanceId),internalInstance);
-            repository.save(this.cache.get(instanceId));
+            updateInstance(internalInstance,internalInstance);
+            repository.save(internalInstance);
         } else {
             // Delete
             repository.delete(internalInstance);
-            this.cache.values().remove(internalInstance);
+            this.cache.remove(instanceId);
         }
 
         return getAll();

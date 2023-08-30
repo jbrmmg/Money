@@ -17,7 +17,8 @@ public class LocalDateStringConverter extends AbstractConverter<LocalDate,String
 
     @Override
     public String convert(LocalDate localDate) {
-        if(localDate == null) return null;
+        if(localDate == null)
+            return null;
 
         return localDate.format(standardFormatter);
     }

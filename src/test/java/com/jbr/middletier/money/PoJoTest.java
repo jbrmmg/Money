@@ -295,6 +295,7 @@ public class PoJoTest {
         transactionDTO.setOppositeTransactionId(92);
         transactionDTO.setAmount(1.29);
         transactionDTO.setDescription("Testing");
+        transactionDTO.setDate("2018-07-23");
         Transaction transaction = transactionMapper.map(transactionDTO, Transaction.class);
         Assert.assertEquals("BANK",transaction.getAccount().getId());
         Assert.assertEquals("HSE",transaction.getCategory().getId());
@@ -304,6 +305,7 @@ public class PoJoTest {
         Assert.assertEquals(92,transaction.getOppositeTransactionId().intValue());
         Assert.assertEquals(1.29,transaction.getAmount().getValue(),0.001);
         Assert.assertEquals("Testing",transaction.getDescription());
+        Assert.assertEquals(LocalDate.of(2018,7,23),transaction.getDate());
 
         statementRepository.delete(testStatement);
     }
@@ -335,6 +337,31 @@ public class PoJoTest {
     }
 
     @Test
+    public void RegularToDTO2() {
+        Account account = new Account();
+        account.setId("123");
+        Category category = new Category();
+        category.setId("456");
+        Regular regular = new Regular();
+        regular.setAccount(account);
+        regular.setCategory(category);
+        regular.setAmount(10.20);
+        regular.setFrequency("1W");
+        regular.setDescription("Testing");
+        regular.setStart(LocalDate.of(2019,2,5));
+        regular.setWeekendAdj(AdjustmentType.AT_BACKWARD);
+        RegularDTO regularDTO = regularMapper.map(regular,RegularDTO.class);
+        Assert.assertEquals("123",regularDTO.getAccountId());
+        Assert.assertEquals("456",regularDTO.getCategoryId());
+        Assert.assertEquals(10.20,regularDTO.getAmount(),0.001);
+        Assert.assertEquals("1W",regularDTO.getFrequency());
+        Assert.assertEquals("Testing",regularDTO.getDescription());
+        Assert.assertEquals(AdjustmentType.AT_BACKWARD.toString(),regularDTO.getWeekendAdj());
+        Assert.assertEquals("2019-02-05",regularDTO.getStart());
+        Assert.assertNull(regularDTO.getLastDate());
+    }
+
+    @Test
     public void RegularFromDTO()  {
         RegularDTO regularDTO = new RegularDTO();
         regularDTO.setAccountId("BANK");
@@ -354,6 +381,27 @@ public class PoJoTest {
         Assert.assertEquals(AdjustmentType.AT_FORWARD,regular.getWeekendAdj());
         Assert.assertEquals(LocalDate.of(2019,4,3),regular.getStart());
         Assert.assertEquals(LocalDate.of(2019,5,10),regular.getLastDate());
+    }
+
+    @Test
+    public void RegularFromDTO2()  {
+        RegularDTO regularDTO = new RegularDTO();
+        regularDTO.setAccountId("BANK");
+        regularDTO.setCategoryId("FDG");
+        regularDTO.setAmount(10.20);
+        regularDTO.setFrequency("1W");
+        regularDTO.setDescription("Testing");
+        regularDTO.setStart("2019-04-03");
+        regularDTO.setWeekendAdj("FW");
+        Regular regular = regularMapper.map(regularDTO,Regular.class);
+        Assert.assertEquals("BANK",regular.getAccount().getId());
+        Assert.assertEquals("FDG",regular.getCategory().getId());
+        Assert.assertEquals(10.20,regular.getAmount(),0.001);
+        Assert.assertEquals("1W",regular.getFrequency());
+        Assert.assertEquals("Testing",regular.getDescription());
+        Assert.assertEquals(AdjustmentType.AT_FORWARD,regular.getWeekendAdj());
+        Assert.assertEquals(LocalDate.of(2019,4,3),regular.getStart());
+        Assert.assertNull(regular.getLastDate());
     }
 
     @Test
