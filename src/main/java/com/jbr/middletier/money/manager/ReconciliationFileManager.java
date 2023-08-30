@@ -99,7 +99,7 @@ public class ReconciliationFileManager {
         }
 
         // Cannot be determinded on the title line, does it match formats that have no title?
-        if(contents.size() > 0) {
+        if(!contents.isEmpty()) {
             for (ReconcileFormat next : reconcileFormatRepository.findByHeaderLineIsNull()) {
                 ReconcileFileLine firstLine = contents.get(0);
 

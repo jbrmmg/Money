@@ -48,11 +48,9 @@ public class MatchData implements Comparable<MatchData> {
     public boolean equals(Object object) {
         if (object == this) return true;
 
-        if (!(object instanceof MatchData)) {
+        if (!(object instanceof MatchData other)) {
             return false;
         }
-
-        MatchData other = (MatchData)object;
 
         return this.compareTo(other) == 0;
     }

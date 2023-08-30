@@ -269,15 +269,6 @@ public class ReportGenerator {
         return applicationProperties.getReportShare() + "/" + year + "/Report-" + reportDateString + ".pdf";
     }
 
-    static class MonthStatus {
-        int year;
-        int month;
-
-        int lockedStatementCount;
-        int statementsFound;
-        int activeAccounts;
-    }
-
     public Map<Integer,MonthStatus> getMonthStatusMap(int activeAccounts) {
         Map<Integer,MonthStatus> monthStatusMap = new HashMap<>();
 

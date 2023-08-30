@@ -56,7 +56,7 @@ public class Regular {
 
     private LocalDate addFrequency ( LocalDate fromDate ) throws CannotDetermineNextDateException {
         try {
-            // Frequency is a number plus a letter, eg. 20D = 20 days.
+            // Frequency is a number plus a letter, e.g. 20D = 20 days.
             String unit = this.frequency.substring(frequency.length() - 1);
 
             int count = Integer.parseInt(this.frequency.replace(unit, ""));
@@ -65,26 +65,25 @@ public class Regular {
                 count = 1;
             }
 
-            switch (unit) {
-                case "D":
+            return switch (unit) {
+                case "D" -> {
                     LOG.info("Day x {}", count);
-                    return fromDate.plusDays(count);
-
-                case "W":
+                    yield fromDate.plusDays(count);
+                }
+                case "W" -> {
                     LOG.info("Week x {}", count);
-                    return fromDate.plusWeeks(count);
-
-                case "M":
+                    yield fromDate.plusWeeks(count);
+                }
+                case "M" -> {
                     LOG.info("Month x {}", count);
-                    return fromDate.plusMonths(count);
-
-                case "Y":
+                    yield fromDate.plusMonths(count);
+                }
+                case "Y" -> {
                     LOG.info("Year x {}", count);
-                    return fromDate.plusYears(count);
-
-                default:
-                    throw new CannotDetermineNextDateException("Unexpected frequency unit - {}" + unit);
-            }
+                    yield fromDate.plusYears(count);
+                }
+                default -> throw new CannotDetermineNextDateException("Unexpected frequency unit - {}" + unit);
+            };
         } catch (CannotDetermineNextDateException ex) {
             throw ex;
         } catch( Exception ex) {

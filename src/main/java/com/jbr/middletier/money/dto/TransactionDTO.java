@@ -2,9 +2,6 @@ package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.util.FinancialAmount;
 
-import java.time.LocalDate;
-
-
 public class TransactionDTO {
     private int id;
     private String accountId;

@@ -1,8 +1,5 @@
 package com.jbr.middletier.money.dto;
 
-
-import com.jbr.middletier.money.schedule.AdjustmentType;
-
 public class RegularDTO {
     private Integer id;
     private String accountId;

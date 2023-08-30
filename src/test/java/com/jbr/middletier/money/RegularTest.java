@@ -5,7 +5,6 @@ import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
 import com.jbr.middletier.money.dto.mapper.RegularMapper;
-import com.jbr.middletier.money.schedule.AdjustmentType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

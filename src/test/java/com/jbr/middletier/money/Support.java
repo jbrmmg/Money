@@ -48,7 +48,7 @@ public class Support {
 
     @Before
     public void setup() {
-        // Setup the mock web context.
+        // Set up the mock web context.
         this.mockMvc = webAppContextSetup(webApplicationContext).build();
 
         // The AllTransaction table needs to be a view.

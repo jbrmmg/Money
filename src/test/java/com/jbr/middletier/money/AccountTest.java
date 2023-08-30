@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AccountTest extends Support {
     @Test
     public void getAccountTest() throws Exception {
-        // Get accounts (external), check that both categories are returned and in the correct order..
+        // Get accounts (external), check that both categories are returned and in the correct order.
         getMockMvc().perform(get("/jbr/ext/money/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))
@@ -28,7 +28,7 @@ public class AccountTest extends Support {
                 .andExpect(jsonPath("$[2].id", is("JLPC")))
                 .andExpect(jsonPath("$[3].id", is("NWDE")));
 
-        // Get accounts (internal), check that both categories are returned and in the correct order..
+        // Get accounts (internal), check that both categories are returned and in the correct order.
         getMockMvc().perform(get("/jbr/int/money/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))

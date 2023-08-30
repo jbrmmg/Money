@@ -45,10 +45,8 @@ public class LogoTest {
     private void checkCss(List<Content> styleContent, int textSize, String textColour, String fillColour, String borderColour, String borderColour2)  {
         boolean found = false;
         for(Content next: styleContent) {
-            if(next instanceof CDATA) {
+            if(next instanceof CDATA styleSheet) {
                 found = true;
-
-                CDATA styleSheet = (CDATA)next;
 
                 CascadingStyleSheet css = CSSReader.readFromString(styleSheet.getValue(), StandardCharsets.UTF_8, ECSSVersion.CSS30);
 
@@ -111,35 +109,32 @@ public class LogoTest {
         boolean rectAmFound = false;
         for(Element nextElement : root.getChildren()) {
             switch (nextElement.getName()) {
-                case "style":
-                case "text":
-                    // Already checked.
-                    break;
-                case "rect":
+                case "style", "text" -> {
+                }
+                // Already checked.
+                case "rect" -> {
                     // Check the rectangles.
-                    switch(nextElement.getAttribute("class").getValue()) {
-                        case "amborder":
+                    switch (nextElement.getAttribute("class").getValue()) {
+                        case "amborder" -> {
                             checkRect(nextElement, 100, 100, 0, 0);
                             rectAmBorderFound = true;
-                            break;
-                        case "amborder2":
+                        }
+                        case "amborder2" -> {
                             checkRect(nextElement, 90, 90, 5, 5);
                             rectAmBorder2Found = true;
-                            break;
-                        case "am":
-                            if(borderColour2 == null) {
+                        }
+                        case "am" -> {
+                            if (borderColour2 == null) {
                                 checkRect(nextElement, 90, 90, 5, 5);
                             } else {
                                 checkRect(nextElement, 80, 80, 10, 10);
                             }
                             rectAmFound = true;
-                            break;
-                        default:
-                            Assert.fail();
+                        }
+                        default -> Assert.fail();
                     }
-                    break;
-                default:
-                    Assert.fail();
+                }
+                default -> Assert.fail();
             }
         }
         Assert.assertTrue(rectAmBorderFound);

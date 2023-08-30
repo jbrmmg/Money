@@ -34,17 +34,11 @@ public class RegularCtrl {
     }
 
     private LocalDate adjustDate(LocalDate transactionDate, AdjustmentType adjustment) {
-        int adjustmentAmt;
-        switch(adjustment) {
-            case AT_FORWARD:
-                adjustmentAmt = 1;
-                break;
-            case AT_BACKWARD:
-                adjustmentAmt = -1;
-                break;
-            default:
-                adjustmentAmt = 0;
-        }
+        int adjustmentAmt = switch (adjustment) {
+            case AT_FORWARD -> 1;
+            case AT_BACKWARD -> -1;
+            default -> 0;
+        };
 
         if(adjustmentAmt != 0) {
             while( (transactionDate.getDayOfWeek() == DayOfWeek.SUNDAY) || (transactionDate.getDayOfWeek() == DayOfWeek.SATURDAY) ) {

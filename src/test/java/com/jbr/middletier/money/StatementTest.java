@@ -82,7 +82,7 @@ public class StatementTest extends Support {
                 .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1280.32, -1280.32)))
                 .andExpect(jsonPath("$[*].categoryId", containsInAnyOrder("TRF", "TRF")));
 
-        // Reconcile the transaction..
+        // Reconcile the transaction.
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             assertFalse(nextTransaction.reconciled());

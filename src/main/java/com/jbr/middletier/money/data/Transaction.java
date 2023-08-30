@@ -121,11 +121,9 @@ public class Transaction {
     public boolean equals(Object o) {
         if (o == this) return true;
 
-        if (!(o instanceof Transaction)) {
+        if (!(o instanceof Transaction transaction)) {
             return false;
         }
-
-        Transaction transaction = (Transaction) o;
 
         return this.toString().equals(transaction.toString());
     }

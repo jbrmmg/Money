@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class CategoryTest extends Support {
     @Test
     public void getCategoryTest() throws Exception {
-        // Get accounts (external), check that both categories are returned and in the correct order..
+        // Get accounts (external), check that both categories are returned and in the correct order.
         getMockMvc().perform(get("/jbr/ext/money/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("FDG")))
@@ -31,7 +31,7 @@ public class CategoryTest extends Support {
                 .andExpect(jsonPath("$[2].id", is("FDT")))
                 .andExpect(jsonPath("$[3].id", is("HSE")));
 
-        // Get accounts (internal), check that both categories are returned and in the correct order..
+        // Get accounts (internal), check that both categories are returned and in the correct order.
         getMockMvc().perform(get("/jbr/int/money/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("FDG")))

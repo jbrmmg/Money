@@ -5,7 +5,7 @@ import com.jbr.middletier.money.manager.CategoryManager;
 import org.modelmapper.AbstractConverter;
 
 public class StringCategoryConverter extends AbstractConverter<String, Category> {
-    CategoryManager categoryManager;
+    private final CategoryManager categoryManager;
 
     public StringCategoryConverter(CategoryManager categoryManager) {
         this.categoryManager = categoryManager;
