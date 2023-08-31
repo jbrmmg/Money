@@ -646,7 +646,18 @@ public class PoJoTest {
         Account account = new Account();
         account.setId("WHAT");
         MatchData source = new MatchData(reconcilationData,account);
+        source.setAfterAmount(0.74);
+        source.setBeforeAmount(112.72);
 
         MatchDataDTO matchData = reconciliationMapper.map(source,MatchDataDTO.class);
+        Assert.assertEquals(0,matchData.getId());
+        Assert.assertEquals(0.74,matchData.getAfterAmount(),0.001);
+        Assert.assertEquals(112.72,matchData.getBeforeAmount(), 0.01);
+        Assert.assertNull(matchData.getTransaction());
+        Assert.assertEquals("2018-02-15",matchData.getReconciliationDate());
+        Assert.assertEquals(20.21,matchData.getReconciliationAmount(),0.001);
+        Assert.assertEquals("WHAT", matchData.getAccountId());
+        Assert.assertNull(matchData.getCategoryId());
+        Assert.assertEquals("Testing",matchData.getDescription());
     }
 }

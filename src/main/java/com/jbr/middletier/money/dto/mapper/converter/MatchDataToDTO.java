@@ -20,8 +20,12 @@ public class MatchDataToDTO extends AbstractConverter<MatchData, MatchDataDTO> {
 
         result.setId(matchData.getId());
         result.setDescription(matchData.getDescription());
-        result.setAccountId(matchData.getAccount().getId());
-        result.setCategoryId(matchData.getCategory().getId());
+        if(matchData.getAccount() != null) {
+            result.setAccountId(matchData.getAccount().getId());
+        }
+        if(matchData.getCategory() != null) {
+            result.setCategoryId(matchData.getCategory().getId());
+        }
         result.setAfterAmount(matchData.getAfterAmount());
         result.setBeforeAmount(matchData.getBeforeAmount());
         result.setBackwardAction(matchData.getBackwardAction());
