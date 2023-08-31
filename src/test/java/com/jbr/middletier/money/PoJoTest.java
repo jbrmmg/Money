@@ -593,7 +593,7 @@ public class PoJoTest {
         Assert.assertNotNull(matchData.getTransaction());
         Assert.assertFalse(matchData.getTransaction().getHasStatement());
         Assert.assertFalse(matchData.getTransaction().getStatementLocked());
-        Assert.assertEquals("2019-02-18",matchData.getReconciliationDate());
+        Assert.assertEquals("2019-02-18",matchData.getDate());
         Assert.assertEquals(32.09,matchData.getTransaction().getAmount(),0.001);
         Assert.assertEquals("WHAT", matchData.getAccountId());
         Assert.assertEquals("WHERE", matchData.getCategoryId());
@@ -629,7 +629,7 @@ public class PoJoTest {
         Assert.assertNotNull(matchData.getTransaction());
         Assert.assertTrue(matchData.getTransaction().getHasStatement());
         Assert.assertFalse(matchData.getTransaction().getStatementLocked());
-        Assert.assertEquals("2019-02-18",matchData.getReconciliationDate());
+        Assert.assertEquals("2019-02-18",matchData.getDate());
         Assert.assertEquals(32.09,matchData.getTransaction().getAmount(),0.001);
         Assert.assertEquals("WHAT", matchData.getAccountId());
         Assert.assertEquals("WHERE", matchData.getCategoryId());
@@ -654,8 +654,8 @@ public class PoJoTest {
         Assert.assertEquals(0.74,matchData.getAfterAmount(),0.001);
         Assert.assertEquals(112.72,matchData.getBeforeAmount(), 0.01);
         Assert.assertNull(matchData.getTransaction());
-        Assert.assertEquals("2018-02-15",matchData.getReconciliationDate());
-        Assert.assertEquals(20.21,matchData.getReconciliationAmount(),0.001);
+        Assert.assertEquals("2018-02-15",matchData.getDate());
+        Assert.assertEquals(20.21,matchData.getAmount(),0.001);
         Assert.assertEquals("WHAT", matchData.getAccountId());
         Assert.assertNull(matchData.getCategoryId());
         Assert.assertEquals("Testing",matchData.getDescription());

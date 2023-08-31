@@ -30,8 +30,8 @@ public class MatchDataToDTO extends AbstractConverter<MatchData, MatchDataDTO> {
         result.setBeforeAmount(matchData.getBeforeAmount());
         result.setBackwardAction(matchData.getBackwardAction());
         result.setForwardAction(matchData.getForwardAction());
-        result.setReconciliationAmount(matchData.getAmount());
-        result.setReconciliationDate(localDateStringConverter.convert(matchData.getDate()));
+        result.setAmount(matchData.getAmount());
+        result.setDate(localDateStringConverter.convert(matchData.getDate()));
 
         if(matchData.getTransaction() != null) {
             TransactionDTO transactionDTO = transactionToDTO.convert(matchData.getTransaction());

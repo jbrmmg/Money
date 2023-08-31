@@ -2,8 +2,8 @@ package com.jbr.middletier.money.dto;
 
 public class MatchDataDTO {
     private int id;
-    private String reconciliationDate;
-    private double reconciliationAmount;
+    private String date;
+    private double amount;
     private TransactionDTO transaction;
     private double beforeAmount;
     private double afterAmount;
@@ -21,20 +21,20 @@ public class MatchDataDTO {
         this.id = id;
     }
 
-    public String getReconciliationDate() {
-        return reconciliationDate;
+    public String getDate() {
+        return date;
     }
 
-    public void setReconciliationDate(String reconciliationDate) {
-        this.reconciliationDate = reconciliationDate;
+    public void setDate(String date) {
+        this.date = date;
     }
 
-    public double getReconciliationAmount() {
-        return reconciliationAmount;
+    public double getAmount() {
+        return amount;
     }
 
-    public void setReconciliationAmount(double reconciliationAmount) {
-        this.reconciliationAmount = reconciliationAmount;
+    public void setAmount(double amount) {
+        this.amount = amount;
     }
 
     public TransactionDTO getTransaction() {
