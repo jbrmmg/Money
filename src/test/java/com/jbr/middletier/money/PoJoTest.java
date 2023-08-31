@@ -575,6 +575,7 @@ public class PoJoTest {
         account.setId("WHAT");
         Category category = new Category();
         category.setId("WHERE");
+        category.setColour("RED");
         Transaction transaction = new Transaction();
         transaction.setDate(LocalDate.of(2019,2,18));
         transaction.setDescription("Test");
@@ -598,6 +599,7 @@ public class PoJoTest {
         Assert.assertEquals("WHAT", matchData.getAccountId());
         Assert.assertEquals("WHERE", matchData.getCategoryId());
         Assert.assertEquals("Test",matchData.getDescription());
+        Assert.assertEquals("RED",matchData.getColour());
     }
 
     @Test
@@ -606,6 +608,7 @@ public class PoJoTest {
         account.setId("WHAT");
         Category category = new Category();
         category.setId("WHERE");
+        category.setColour("BLUE");
         StatementId statementId = new StatementId(account,2019,2);
         Statement statement = new Statement();
         statement.setId(statementId);
@@ -634,6 +637,7 @@ public class PoJoTest {
         Assert.assertEquals("WHAT", matchData.getAccountId());
         Assert.assertEquals("WHERE", matchData.getCategoryId());
         Assert.assertEquals("Test",matchData.getDescription());
+        Assert.assertEquals("BLUE",matchData.getColour());
     }
 
     @Test

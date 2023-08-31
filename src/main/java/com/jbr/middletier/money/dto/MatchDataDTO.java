@@ -8,6 +8,7 @@ public class MatchDataDTO {
     private double beforeAmount;
     private double afterAmount;
     private String categoryId;
+    private String colour;
     private String description;
     private String accountId;
     private String forwardAction;
@@ -67,6 +68,14 @@ public class MatchDataDTO {
 
     public void setCategoryId(String categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public String getColour() {
+        return colour;
+    }
+
+    public void setColour(String colour) {
+        this.colour = colour;
     }
 
     public String getDescription() {
