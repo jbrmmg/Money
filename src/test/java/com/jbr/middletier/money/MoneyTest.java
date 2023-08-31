@@ -7,7 +7,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
-import com.jbr.middletier.money.dto.mapper.UtilityMapper;
+import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;

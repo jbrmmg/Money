@@ -7,7 +7,7 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
-import com.jbr.middletier.money.dto.mapper.UtilityMapper;
+import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.utils.CssAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
