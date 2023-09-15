@@ -1,4 +1,4 @@
-package com.jbr.middletier.money.manager;
+﻿package com.jbr.middletier.money.manager;
 
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -11,8 +11,12 @@ import org.springframework.stereotype.Component;
 public class EnvironmentPropertiesPrinter {
     private static final Logger LOG = LoggerFactory.getLogger(EnvironmentPropertiesPrinter.class);
 
+    private final Environment env;
+
     @Autowired
-    private Environment env;
+    public EnvironmentPropertiesPrinter(Environment env) {
+        this.env = env;
+    }
 
     @PostConstruct
     public void logApplicationProperties() {
