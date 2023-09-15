@@ -126,4 +126,6 @@ public class ReconciliationFileTest {
         Assert.assertNotNull(nationwideFile);
         testReconcilationFile(nationwideFile,48,102.39,-1235.90, LocalDate.of(2022,7,29), LocalDate.of(2022,8,25));
     }
+
+    //TODO add a BARC file test.
 }

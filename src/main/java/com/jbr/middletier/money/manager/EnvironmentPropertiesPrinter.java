@@ -1,4 +1,4 @@
-﻿package com.jbr.middletier.money.manager;
+package com.jbr.middletier.money.manager;
 
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
