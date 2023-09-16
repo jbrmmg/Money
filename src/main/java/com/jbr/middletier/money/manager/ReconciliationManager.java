@@ -1,12 +1,12 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.control.TransactionController;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.*;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.ReconciliationMapper;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
-import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.dto.MatchDataDTO;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +28,9 @@ public class ReconciliationManager {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
-    private final TransactionController transactionController;
+    private final AccountTransactionManager accountTransactionManager;
     private final TransactionMapper transactionMapper;
-    private final UtilityMapper utilityMapper;
+    private final ReconciliationMapper reconciliationMapper;
     private Account lastAccount;
 
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
@@ -38,17 +38,17 @@ public class ReconciliationManager {
                                  AccountRepository accountRepository,
                                  TransactionRepository transactionRepository,
                                  StatementRepository statementRepository,
-                                 TransactionController transactionController,
+                                 AccountTransactionManager accountTransactionManager,
                                  TransactionMapper transactionMapper,
-                                 UtilityMapper utilityMapper) {
+                                 ReconciliationMapper reconciliationMapper) {
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
-        this.transactionController = transactionController;
+        this.accountTransactionManager = accountTransactionManager;
         this.transactionMapper = transactionMapper;
-        this.utilityMapper = utilityMapper;
+        this.reconciliationMapper = reconciliationMapper;
         this.lastAccount = null;
     }
 
@@ -68,7 +68,7 @@ public class ReconciliationManager {
         }
     }
 
-    public void autoReconcileData() throws UpdateDeleteCategoryException, UpdateDeleteAccountException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public void autoReconcileData() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
         List<MatchData> matchData = matchFromLastData();
 
@@ -77,10 +77,10 @@ public class ReconciliationManager {
             try {
                 // Process the action.
                 if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.CREATE.toString())) {
-                    TransactionDTO newTransaction = new TransactionDTO();
+                    Transaction newTransaction = new Transaction();
 
-                    newTransaction.setAccountId(next.getAccount().getId());
-                    newTransaction.setCategoryId(next.getCategory().getId());
+                    newTransaction.setAccount(next.getAccount());
+                    newTransaction.setCategory(next.getCategory());
 
                     newTransaction.setDate(next.getDate());
 
@@ -88,17 +88,11 @@ public class ReconciliationManager {
                     newTransaction.setDescription(next.getDescription());
 
                     // Create the transaction.
-                    transactionController.addTransactionExt(Collections.singletonList(newTransaction));
+                    accountTransactionManager.saveTransaction(newTransaction);
                 } else if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.RECONCILE.toString())) {
                     // Reconcile the transaction
                     reconcile(next.getTransaction().getId(),true);
                 }
-            } catch (UpdateDeleteCategoryException ex) {
-                LOG.error("Invalid Category Id exception.");
-                throw ex;
-            } catch (UpdateDeleteAccountException ex) {
-                LOG.error("Invalid Account Id exception.");
-                throw ex;
             } catch (MultipleUnlockedStatementException ex) {
                 LOG.error("Multiple Unlock Statement Exception.");
                 throw ex;
@@ -170,7 +164,7 @@ public class ReconciliationManager {
 
         // Create a result for each reconciliation data.
         for(ReconciliationData next : reconciliationData) {
-            result.add(new MatchData(utilityMapper, next, account));
+            result.add(new MatchData(next, account));
         }
 
         // Build up those reconciliations that match (first with reconciled then with un-reconciled).
@@ -180,7 +174,7 @@ public class ReconciliationManager {
         // For any transactions that are reconciled remaining, create a match entry.
         for(Transaction next : transactions) {
             if(next.reconciled()) {
-                result.add(new MatchData(utilityMapper, next));
+                result.add(new MatchData(next));
             }
         }
 
@@ -292,7 +286,7 @@ public class ReconciliationManager {
         throw new InvalidTransactionIdException(transactionId);
     }
 
-    public List<MatchData> matchImpl(String accountId) throws UpdateDeleteAccountException {
+    public List<MatchDataDTO> matchImpl(String accountId) throws UpdateDeleteAccountException {
 
         Optional<Account> account = accountRepository.findById(accountId);
 
@@ -301,6 +295,13 @@ public class ReconciliationManager {
         }
 
         lastAccount = account.get();
-        return matchData(account.get());
+        List<MatchData> matchData = matchData(account.get());
+
+        List<MatchDataDTO> result = new ArrayList<>();
+        for(MatchData next : matchData) {
+            result.add(reconciliationMapper.map(next,MatchDataDTO.class));
+        }
+
+        return result;
     }
 }

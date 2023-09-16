@@ -8,8 +8,11 @@ import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.*;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.manager.AccountManager;
+import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.schedule.AdjustmentType;
+import com.jbr.middletier.money.util.DateRange;
 import com.jbr.middletier.money.util.FinancialAmount;
+import com.jbr.middletier.money.utils.UtilityMapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +41,9 @@ public class PoJoTest {
 
     @Autowired
     private UtilityMapper utilityMapper;
+
+    @Autowired
+    private ReconciliationMapper reconciliationMapper;
 
     @Autowired
     private AccountManager accountManager;
@@ -245,6 +251,8 @@ public class PoJoTest {
         Assert.assertEquals(1.29,transactionDTO.getAmount(),0.001);
         Assert.assertEquals("Testing",transactionDTO.getDescription());
         Assert.assertEquals("2018-10-07",transactionDTO.getDate());
+        Assert.assertTrue(transactionDTO.getHasStatement());
+        Assert.assertTrue(transactionDTO.getStatementLocked());
     }
 
     @Test
@@ -270,6 +278,8 @@ public class PoJoTest {
         Assert.assertEquals(1.29,transactionDTO.getAmount(),0.001);
         Assert.assertEquals("Testing",transactionDTO.getDescription());
         Assert.assertEquals("2018-10-07",transactionDTO.getDate());
+        Assert.assertFalse(transactionDTO.getHasStatement());
+        Assert.assertFalse(transactionDTO.getStatementLocked());
     }
 
     @Test
@@ -483,7 +493,9 @@ public class PoJoTest {
 
     @Test
     public void DateRangeDTO() {
-        DateRangeDTO dateRange = new DateRangeDTO( utilityMapper,"2010-05-03","2010-06-21");
+        DateRangeDTO dateRangeDTO = new DateRangeDTO("2010-05-03","2010-06-21");
+
+        DateRange dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
         Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
         Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
     }
@@ -555,5 +567,101 @@ public class PoJoTest {
         Assert.assertEquals(text.hashCode(),next.hashCode());
 
         Assert.assertNotEquals(statementId,next);
+    }
+
+    @Test
+    public void matchDataToDTO() {
+        Account account = new Account();
+        account.setId("WHAT");
+        Category category = new Category();
+        category.setId("WHERE");
+        category.setColour("RED");
+        Transaction transaction = new Transaction();
+        transaction.setDate(LocalDate.of(2019,2,18));
+        transaction.setDescription("Test");
+        transaction.setAmount(32.09);
+        transaction.setStatement(null);
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        MatchData source = new MatchData(transaction);
+        source.setAfterAmount(0.29);
+        source.setBeforeAmount(102.02);
+
+        MatchDataDTO matchData = reconciliationMapper.map(source,MatchDataDTO.class);
+        Assert.assertEquals(-1,matchData.getId());
+        Assert.assertEquals(0.29,matchData.getAfterAmount(),0.001);
+        Assert.assertEquals(102.02,matchData.getBeforeAmount(), 0.01);
+        Assert.assertNotNull(matchData.getTransaction());
+        Assert.assertFalse(matchData.getTransaction().getHasStatement());
+        Assert.assertFalse(matchData.getTransaction().getStatementLocked());
+        Assert.assertEquals("2019-02-18",matchData.getDate());
+        Assert.assertEquals(32.09,matchData.getTransaction().getAmount(),0.001);
+        Assert.assertEquals("WHAT", matchData.getAccountId());
+        Assert.assertEquals("WHERE", matchData.getCategoryId());
+        Assert.assertEquals("Test",matchData.getDescription());
+        Assert.assertEquals("RED",matchData.getColour());
+    }
+
+    @Test
+    public void matchDataToDTO2() {
+        Account account = new Account();
+        account.setId("WHAT");
+        Category category = new Category();
+        category.setId("WHERE");
+        category.setColour("BLUE");
+        StatementId statementId = new StatementId(account,2019,2);
+        Statement statement = new Statement();
+        statement.setId(statementId);
+        statement.setLocked(false);
+        statement.setOpenBalance(0.21);
+        Transaction transaction = new Transaction();
+        transaction.setDate(LocalDate.of(2019,2,18));
+        transaction.setDescription("Test");
+        transaction.setAmount(32.09);
+        transaction.setStatement(statement);
+        transaction.setAccount(account);
+        transaction.setCategory(category);
+        MatchData source = new MatchData(transaction);
+        source.setAfterAmount(0.29);
+        source.setBeforeAmount(102.02);
+
+        MatchDataDTO matchData = reconciliationMapper.map(source,MatchDataDTO.class);
+        Assert.assertEquals(-1,matchData.getId());
+        Assert.assertEquals(0.29,matchData.getAfterAmount(),0.001);
+        Assert.assertEquals(102.02,matchData.getBeforeAmount(), 0.01);
+        Assert.assertNotNull(matchData.getTransaction());
+        Assert.assertTrue(matchData.getTransaction().getHasStatement());
+        Assert.assertFalse(matchData.getTransaction().getStatementLocked());
+        Assert.assertEquals("2019-02-18",matchData.getDate());
+        Assert.assertEquals(32.09,matchData.getTransaction().getAmount(),0.001);
+        Assert.assertEquals("WHAT", matchData.getAccountId());
+        Assert.assertEquals("WHERE", matchData.getCategoryId());
+        Assert.assertEquals("Test",matchData.getDescription());
+        Assert.assertEquals("BLUE",matchData.getColour());
+    }
+
+    @Test
+    public void matchDataToDTO3() {
+        ReconciliationData reconcilationData = new ReconciliationData();
+        reconcilationData.setAmount(20.21);
+        reconcilationData.setDescription("Testing");
+        reconcilationData.setDate(LocalDate.of(2018,2,15));
+        reconcilationData.setCategory(null);
+        Account account = new Account();
+        account.setId("WHAT");
+        MatchData source = new MatchData(reconcilationData,account);
+        source.setAfterAmount(0.74);
+        source.setBeforeAmount(112.72);
+
+        MatchDataDTO matchData = reconciliationMapper.map(source,MatchDataDTO.class);
+        Assert.assertEquals(0,matchData.getId());
+        Assert.assertEquals(0.74,matchData.getAfterAmount(),0.001);
+        Assert.assertEquals(112.72,matchData.getBeforeAmount(), 0.01);
+        Assert.assertNull(matchData.getTransaction());
+        Assert.assertEquals("2018-02-15",matchData.getDate());
+        Assert.assertEquals(20.21,matchData.getAmount(),0.001);
+        Assert.assertEquals("WHAT", matchData.getAccountId());
+        Assert.assertNull(matchData.getCategoryId());
+        Assert.assertEquals("Testing",matchData.getDescription());
     }
 }

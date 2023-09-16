@@ -3,7 +3,6 @@ package com.jbr.middletier.money.control;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import org.slf4j.Logger;
@@ -22,12 +21,10 @@ public class TransactionController {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionController.class);
 
     private final AccountTransactionManager accountTransactionManager;
-    private final UtilityMapper utilityMapper;
 
     @Autowired
-    public TransactionController(AccountTransactionManager accountTransactionManager, UtilityMapper utilityMapper) {
+    public TransactionController(AccountTransactionManager accountTransactionManager) {
         this.accountTransactionManager = accountTransactionManager;
-        this.utilityMapper = utilityMapper;
     }
 
     @GetMapping(path="/ext/money/transaction")
@@ -40,7 +37,7 @@ public class TransactionController {
 
         LOG.info("Get Transactions {} {} {} {} {} {}", type, from, to, category, account, sortAscending);
         return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(type),
-                new DateRangeDTO(utilityMapper, from, to),
+                new DateRangeDTO(from, to),
                 category == null ? null : Arrays.asList(category.split(",")),
                 account == null ? null : Arrays.asList(account.split(",")),
                 Boolean.TRUE.equals(sortAscending));

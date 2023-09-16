@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.util.DateRange;
 import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.JoinType;
@@ -60,7 +61,7 @@ public class TransactionSpecifications {
                                                             criteriaBuilder.isNull(root.get(STATEMENT).get(ID).get(MONTH)) );
     }
 
-    public static Specification<Transaction> datesBetween(DateRangeDTO dateRange) {
+    public static Specification<Transaction> datesBetween(DateRange dateRange) {
         // Strings are dates - from to
         return (root, criteriaQuery, criteriaBuilder) -> {
 
