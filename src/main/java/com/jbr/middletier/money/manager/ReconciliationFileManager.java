@@ -15,9 +15,11 @@ import java.io.*;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -75,8 +77,11 @@ public class ReconciliationFileManager {
 
     private boolean validFormattedDate(String dateFormat, String dateValue) {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
-            LocalDate.parse(dateValue,formatter);
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                    .parseCaseInsensitive()
+                    .appendPattern(dateFormat)
+                    .toFormatter(Locale.ENGLISH);
+            LocalDate ignored = LocalDate.parse(dateValue,formatter);
         } catch (DateTimeParseException invalid) {
             return false;
         }
@@ -93,8 +98,8 @@ public class ReconciliationFileManager {
             }
         }
 
-        // Cannot be determinded on the title line, does it match formats that have no title?
-        if(contents.size() > 0) {
+        // Cannot be determined on the title line, does it match formats that have no title?
+        if(!contents.isEmpty()) {
             for (ReconcileFormat next : reconcileFormatRepository.findByHeaderLineIsNull()) {
                 ReconcileFileLine firstLine = contents.get(0);
 
