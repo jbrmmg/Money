@@ -94,7 +94,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(7)));
+                .andExpect(jsonPath("$", hasSize(8)));
 
         getMockMvc().perform(get("/jbr/int/money/match?account=AMEX")
                         .content(this.json(reconciliationFile))
@@ -118,7 +118,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(7)));
+                .andExpect(jsonPath("$", hasSize(8)));
 
         getMockMvc().perform(put("/jbr/ext/money/reconciliation/auto")
                         .content(this.json(reconciliationFile))
@@ -151,7 +151,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(7)));
+                .andExpect(jsonPath("$", hasSize(8)));
 
         getMockMvc().perform(delete("/jbr/ext/money/reconciliation/clear")
                         .content(this.json(reconciliationFile))
@@ -162,7 +162,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(7)));
+                .andExpect(jsonPath("$", hasSize(8)));
 
         getMockMvc().perform(delete("/jbr/int/money/reconciliation/clear")
                         .content(this.json(reconciliationFile))
@@ -184,7 +184,7 @@ public class ReconciliationTest extends Support {
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(7)));
+                .andExpect(jsonPath("$", hasSize(8)));
 
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
         reconcileUpdate.setCategoryId("FSE");
