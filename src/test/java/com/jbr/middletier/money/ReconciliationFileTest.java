@@ -26,7 +26,7 @@ public class ReconciliationFileTest {
     @Test
     public void testFilesAvailable() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
-        Assert.assertEquals(7, files.size());
+        Assert.assertEquals(8, files.size());
     }
 
     private void testReconcilationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {
@@ -120,5 +120,31 @@ public class ReconciliationFileTest {
         }
         Assert.assertNotNull(nationwideFile);
         testReconcilationFile(nationwideFile,48,102.39,-1235.90, LocalDate.of(2022,7,29), LocalDate.of(2022,8,25));
+    }
+
+    @Test
+    public void testBarclaysFile() throws IOException {
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
+        ReconciliationFileDTO barclaycardFile = null;
+        for(ReconciliationFileDTO next : files) {
+            if(next.getFilename().toLowerCase().contains("barc.")) {
+                barclaycardFile = next;
+            }
+        }
+        Assert.assertNotNull(barclaycardFile);
+        testReconcilationFile(barclaycardFile,57,466.17,-1608.64, LocalDate.of(2023,1,5), LocalDate.of(2023,12,3));
+    }
+
+    @Test
+    public void testBarclaysFile2() throws IOException {
+        List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
+        ReconciliationFileDTO barclaycardFile = null;
+        for(ReconciliationFileDTO next : files) {
+            if(next.getFilename().toLowerCase().contains("barc2")) {
+                barclaycardFile = next;
+            }
+        }
+        Assert.assertNotNull(barclaycardFile);
+        testReconcilationFile(barclaycardFile,12,2,-297.34, LocalDate.of(2023,9,3), LocalDate.of(2023,9,13));
     }
 }
