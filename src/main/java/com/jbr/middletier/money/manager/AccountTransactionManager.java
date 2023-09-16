@@ -8,6 +8,7 @@ import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.util.DateRange;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +109,7 @@ public class AccountTransactionManager {
         return search;
     }
 
-    private Specification<Transaction> getAllTransactions(DateRangeDTO dateRange, List<Account> accounts, List<Category> categories) throws InvalidTransactionSearchException {
+    private Specification<Transaction> getAllTransactions(DateRange dateRange, List<Account> accounts, List<Category> categories) throws InvalidTransactionSearchException {
         // Validate data.
         if(dateRange.getFrom() == null){
             throw new InvalidTransactionSearchException("must specify a from date");
@@ -148,7 +149,7 @@ public class AccountTransactionManager {
     }
 
     private Specification<Transaction> getTransactionSearch(TransactionRequestType type,
-                                                            DateRangeDTO dateRange,
+                                                            DateRange    dateRange,
                                                             List<String> categoryIds,
                                                             List<String> accountIds) throws InvalidTransactionSearchException {
         // Get the accounts
@@ -197,7 +198,7 @@ public class AccountTransactionManager {
     }
 
     public List<TransactionDTO> getTransactions(TransactionRequestType type,
-                                                DateRangeDTO dateRange,
+                                                DateRangeDTO externalDateRange,
                                                 List<String> categoryIds,
                                                 List<String> accountIds,
                                                 boolean sortAscending) throws InvalidTransactionSearchException {
@@ -212,6 +213,8 @@ public class AccountTransactionManager {
             transactionSort = Sort.by(Sort.Direction.ASC,"date", "account", "amount");
         }
 
+        DateRange dateRange = transactionMapper.map(externalDateRange,DateRange.class);
+
         Specification<Transaction> specification = getTransactionSearch(type, dateRange, categoryIds, accountIds);
 
         List<TransactionDTO> result = new ArrayList<>();
@@ -224,22 +227,26 @@ public class AccountTransactionManager {
         return result;
     }
 
-    private Transaction internalCreateTransaction(TransactionDTO transaction) throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
+    private Transaction internalCreateTransaction(TransactionDTO transaction) throws InvalidTransactionException {
         Transaction newTransaction =  transactionMapper.map(transaction,Transaction.class);
 
-        // Check the account and category are valid.
-        if(newTransaction.getAccount() == null) {
-            throw new UpdateDeleteAccountException(transaction.getAccountId());
-        }
-
-        if(newTransaction.getCategory() == null) {
-            throw new UpdateDeleteCategoryException(transaction.getCategoryId());
-        }
-
-        return transactionRepository.save(newTransaction);
+        return saveTransaction(newTransaction);
     }
 
-    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
+    public Transaction saveTransaction(Transaction transaction) throws InvalidTransactionException {
+        // Check the account and category are valid.
+        if(transaction.getAccount() == null) {
+            throw new InvalidTransactionException("Missing account creating transaction.");
+        }
+
+        if(transaction.getCategory() == null) {
+            throw new InvalidTransactionException("Missing category creating transaction.");
+        }
+
+        return transactionRepository.save(transaction);
+    }
+
+    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws InvalidTransactionException {
         List<TransactionDTO> result = new ArrayList<>();
 
         Transaction newTransaction = internalCreateTransaction(transaction);
@@ -249,7 +256,7 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
+    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidTransactionException {
         Transaction fromTransaction = internalCreateTransaction(from);
 
         // Save the 'from' transaction and update the opposite id on the 'to'
@@ -267,7 +274,7 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException, UpdateDeleteCategoryException, UpdateDeleteAccountException {
+    public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException {
         if(transaction.size() == 1) {
             return createIndividualTransaction(transaction.get(0));
         }

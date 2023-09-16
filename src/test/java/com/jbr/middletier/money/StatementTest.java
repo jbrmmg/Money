@@ -6,7 +6,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.UtilityMapper;
+import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
 import org.junit.Assert;
 import org.junit.Test;

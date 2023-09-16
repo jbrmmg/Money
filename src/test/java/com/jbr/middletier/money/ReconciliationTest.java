@@ -13,7 +13,7 @@ import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
-import com.jbr.middletier.money.reconciliation.MatchData;
+import com.jbr.middletier.money.dto.MatchDataDTO;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -450,10 +450,10 @@ public class ReconciliationTest extends Support {
         testTransaction.setStatement(unlocked);
         this.transactionRepository.save(testTransaction);
 
-        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
         int setCategory = 0;
         int none = 0;
-        for(MatchData next : matchData) {
+        for(MatchDataDTO next : matchData) {
             if(next.getForwardAction().equalsIgnoreCase("NONE")) {
                 none++;
             } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
@@ -474,10 +474,10 @@ public class ReconciliationTest extends Support {
         // Create a transaction
         createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
 
-        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
         int setCategory = 0;
         int reconcile = 0;
-        for(MatchData next : matchData) {
+        for(MatchDataDTO next : matchData) {
             if(next.getForwardAction().equalsIgnoreCase("RECONCILE")) {
                 reconcile++;
             } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
@@ -502,10 +502,10 @@ public class ReconciliationTest extends Support {
         transaction.setStatement(unlocked);
         this.transactionRepository.save(transaction);
 
-        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
         int setCategory = 0;
         int unreconcile = 0;
-        for(MatchData next : matchData) {
+        for(MatchDataDTO next : matchData) {
             if(next.getForwardAction().equalsIgnoreCase("UNRECONCILE")) {
                 unreconcile++;
             } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
@@ -523,9 +523,9 @@ public class ReconciliationTest extends Support {
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
-        List<MatchData> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
         int reconcile = 0;
-        for(MatchData next : matchData) {
+        for(MatchDataDTO next : matchData) {
             if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
                 reconcile++;
             }

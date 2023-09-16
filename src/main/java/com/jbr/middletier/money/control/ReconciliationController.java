@@ -7,7 +7,7 @@ import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
-import com.jbr.middletier.money.reconciliation.MatchData;
+import com.jbr.middletier.money.dto.MatchDataDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,25 +72,25 @@ public class ReconciliationController {
     }
 
     @GetMapping(path="/ext/money/match")
-    public @ResponseBody List<MatchData> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws UpdateDeleteAccountException {
+    public @ResponseBody List<MatchDataDTO> matchExt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws UpdateDeleteAccountException {
         LOG.info("External match data - reconciliation data with reconciled transactions");
         return reconciliationManager.matchImpl(accountId);
     }
 
     @GetMapping(path="/int/money/match")
-    public @ResponseBody List<MatchData> matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws UpdateDeleteAccountException {
+    public @ResponseBody List<MatchDataDTO> matchInt(@RequestParam(value="account", defaultValue="UNKN") String accountId) throws UpdateDeleteAccountException {
         return matchExt(accountId);
     }
 
     @PutMapping(path="/ext/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionIdException, InvalidTransactionException {
+    public @ResponseBody OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         LOG.info("Auto Reconciliation Data (ext) ");
         reconciliationManager.autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path="/int/money/reconciliation/auto")
-    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionIdException, InvalidTransactionException {
+    public @ResponseBody OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         return reconcileDataExt();
     }
 

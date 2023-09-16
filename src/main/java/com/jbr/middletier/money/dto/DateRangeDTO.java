@@ -1,23 +1,23 @@
 package com.jbr.middletier.money.dto;
 
-import com.jbr.middletier.money.dto.mapper.UtilityMapper;
-
-import java.time.LocalDate;
-
 public class DateRangeDTO {
-    private final LocalDate from;
-    private final LocalDate to;
+    private String from;
+    private String to;
 
-    public DateRangeDTO(UtilityMapper mapper, String from, String to) {
-        this.from = ( from == null ) ? null : mapper.map(from,LocalDate.class);
-        this.to = ( to == null ) ? null : mapper.map(to,LocalDate.class);
+    public DateRangeDTO(String from, String to) {
+        this.from = from;
+        this.to = to;
     }
 
-    public LocalDate getFrom() {
+    public String getFrom() {
         return this.from;
     }
 
-    public LocalDate getTo() {
+    public void setFrom(String from) { this.from = from; }
+
+    public String getTo() {
         return this.to;
     }
+
+    public void setTo(String to) { this.to = to; }
 }

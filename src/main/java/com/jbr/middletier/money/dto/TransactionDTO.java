@@ -14,6 +14,10 @@ public class TransactionDTO {
     private Integer oppositeId;
     private String description;
 
+    private Boolean hasStatement;
+
+    private Boolean statementLocked;
+
     public int getId() {
         return id;
     }
@@ -82,6 +86,22 @@ public class TransactionDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Boolean getHasStatement() {
+        return hasStatement;
+    }
+
+    public void setHasStatement(Boolean hasStatement) {
+        this.hasStatement = hasStatement;
+    }
+
+    public Boolean getStatementLocked() {
+        return statementLocked;
+    }
+
+    public void setStatementLocked(Boolean statementLocked) {
+        this.statementLocked = statementLocked;
     }
 
     public FinancialAmount getFinancialAmount() {

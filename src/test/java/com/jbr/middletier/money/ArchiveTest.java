@@ -8,7 +8,7 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
-import com.jbr.middletier.money.dto.mapper.UtilityMapper;
+import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.manager.ArchiveManager;
 import org.junit.Assert;
 import org.junit.Test;
