@@ -210,7 +210,7 @@ public class ReconciliationTest extends Support {
         try {
             this.reconciliationManager.matchImpl("XXXX");
             Assert.fail();
-        } catch(InvalidAccountIdException ex) {
+        } catch(UpdateDeleteAccountException ex) {
             Assert.assertEquals("Cannot find account with id Invalid account id.XXXX", ex.getMessage());
         }
     }
@@ -437,7 +437,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchExactly() throws IOException, InvalidAccountIdException {
+    public void testMatchExactly() throws IOException, UpdateDeleteAccountException {
         // load the file.
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
@@ -466,7 +466,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchExactlyPlusRecon() throws IOException, InvalidAccountIdException {
+    public void testMatchExactlyPlusRecon() throws IOException, UpdateDeleteAccountException {
         // load the file.
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
@@ -490,7 +490,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchMoreTransactions() throws IOException, InvalidAccountIdException {
+    public void testMatchMoreTransactions() throws IOException, UpdateDeleteAccountException {
         // load the file.
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
@@ -518,7 +518,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testAutomaticRec() throws IOException, InvalidAccountIdException, MultipleUnlockedStatementException, InvalidCategoryIdException, InvalidTransactionIdException, InvalidTransactionException {
+    public void testAutomaticRec() throws IOException, UpdateDeleteAccountException, MultipleUnlockedStatementException, UpdateDeleteCategoryException, InvalidTransactionIdException, InvalidTransactionException {
         // load the file.
         ReconciliationFileDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);

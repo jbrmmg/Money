@@ -3,6 +3,7 @@ package com.jbr.middletier.money.control;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import org.slf4j.Logger;
@@ -21,10 +22,12 @@ public class TransactionController {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionController.class);
 
     private final AccountTransactionManager accountTransactionManager;
+    private final UtilityMapper utilityMapper;
 
     @Autowired
-    public TransactionController(AccountTransactionManager accountTransactionManager) {
+    public TransactionController(AccountTransactionManager accountTransactionManager, UtilityMapper utilityMapper) {
         this.accountTransactionManager = accountTransactionManager;
+        this.utilityMapper = utilityMapper;
     }
 
     @GetMapping(path="/ext/money/transaction")
@@ -37,7 +40,7 @@ public class TransactionController {
 
         LOG.info("Get Transactions {} {} {} {} {} {}", type, from, to, category, account, sortAscending);
         return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(type),
-                new DateRangeDTO(from, to),
+                new DateRangeDTO(utilityMapper, from, to),
                 category == null ? null : Arrays.asList(category.split(",")),
                 account == null ? null : Arrays.asList(account.split(",")),
                 Boolean.TRUE.equals(sortAscending));
@@ -54,22 +57,22 @@ public class TransactionController {
     }
 
     @PostMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionException {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PostMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws InvalidCategoryIdException, InvalidAccountIdException, InvalidTransactionException {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PutMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> updateTransactionExt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public @ResponseBody Iterable<TransactionDTO> updateTransactionExt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 
     @PutMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> updateTransactionInt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public @ResponseBody Iterable<TransactionDTO> updateTransactionInt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 

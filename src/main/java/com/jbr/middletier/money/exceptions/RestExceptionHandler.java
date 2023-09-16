@@ -16,107 +16,112 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-    @ExceptionHandler(AccountAlreadyExistsException.class)
-    protected ResponseEntity<Object> handleBackupAlreadyExist(AccountAlreadyExistsException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Account already exists", ex));
+    @ExceptionHandler(CreateAccountException.class)
+    protected ResponseEntity<Object> handleCreateAccountException(CreateAccountException ex) {
+        return buildResponseEntity(ex);
     }
 
-    @ExceptionHandler(InvalidAccountIdException.class)
-    protected ResponseEntity<Object> handleBackupAlreadyExist(InvalidAccountIdException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"Account id invalid", ex));
+    @ExceptionHandler(UpdateDeleteAccountException.class)
+    protected ResponseEntity<Object> handleUpdateDeleteAccountException(UpdateDeleteAccountException ex) {
+        return buildResponseEntity(ex);
     }
 
-    @ExceptionHandler(CategoryAlreadyExistsException.class)
-    protected ResponseEntity<Object> handleCateogryAlreadyExist(CategoryAlreadyExistsException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Category already exists", ex));
+    @ExceptionHandler(CreateCategoryException.class)
+    protected ResponseEntity<Object> handleCreateCategoryException(CreateCategoryException ex) {
+        return buildResponseEntity(ex);
     }
 
-    @ExceptionHandler(DeleteSystemCategoryException.class)
-    protected ResponseEntity<Object> handlDeleteSystemCategory(DeleteSystemCategoryException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Cannot delete system category", ex));
-    }
-
-    @ExceptionHandler(InvalidCategoryIdException.class)
-    protected ResponseEntity<Object> handleInvalidCategoryId(InvalidCategoryIdException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"Category id invalid", ex));
+    @ExceptionHandler(UpdateDeleteCategoryException.class)
+    protected ResponseEntity<Object> handleUpdateDeleteCategoryException(UpdateDeleteCategoryException ex) {
+        return buildResponseEntity(ex);
     }
 
     @ExceptionHandler(InvalidStatementIdException.class)
-    protected ResponseEntity<Object> handleInvalidStatementId(InvalidStatementIdException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"Statement id invalid", ex));
+    protected ResponseEntity<Object> handleInvalidStatementIdException(InvalidStatementIdException ex) {
+        return buildResponseEntity(ex);
     }
 
-    @ExceptionHandler(StatementAlreadyExists.class)
-    protected ResponseEntity<Object> handleStatementAlreadyExists(StatementAlreadyExists ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Statement already exists", ex));
-    }
-
-    @ExceptionHandler(CannotUpdateSystemCategory.class)
-    protected ResponseEntity<Object> handleCannotUpdateSystemCategory(CannotUpdateSystemCategory ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FORBIDDEN,"Cannot update system category", ex));
+    @ExceptionHandler(StatementAlreadyExistsException.class)
+    protected ResponseEntity<Object> handleStatementAlreadyExistsException(StatementAlreadyExistsException ex) {
+        return buildResponseEntity(ex);
     }
 
     @ExceptionHandler(StatementAlreadyLockedException.class)
-    protected ResponseEntity<Object> handleStatementAlreadyLocked(StatementAlreadyLockedException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FORBIDDEN, "Cannot lock a statement again.", ex));
+    protected ResponseEntity<Object> handleStatementAlreadyLockedException(StatementAlreadyLockedException ex) {
+        return buildResponseEntity(ex);
     }
 
-    @ExceptionHandler(CannotDeleteLockedStatement.class)
-    protected ResponseEntity<Object> handleStatementAlreadyLocked(CannotDeleteLockedStatement ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FORBIDDEN, "Cannot delete locked statement.", ex));
+    @ExceptionHandler(CannotDeleteLockedStatementException.class)
+    protected ResponseEntity<Object> handleCannotDeleteLockedStatementException(CannotDeleteLockedStatementException ex) {
+        return buildResponseEntity(ex);
     }
 
-    @ExceptionHandler(CannotDeleteLastStatement.class)
-    protected ResponseEntity<Object> handleLastStatement(CannotDeleteLastStatement ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FORBIDDEN, "Cannot delete last statement.", ex));
+    @ExceptionHandler(CannotDeleteLastStatementException.class)
+    protected ResponseEntity<Object> handleCannotDeleteLastStatementException(CannotDeleteLastStatementException ex) {
+        return buildResponseEntity(ex);
     }
 
     @ExceptionHandler(RegularAlreadyExistsException.class)
-    protected ResponseEntity<Object> handleRegularAlreadyExist(RegularAlreadyExistsException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT, "Regular payment already exists.", ex));
+    protected ResponseEntity<Object> handleRegularAlreadyExistsException(RegularAlreadyExistsException ex) {
+        return buildResponseEntity(ex);
     }
 
     @ExceptionHandler(InvalidRegularIdException.class)
-    protected ResponseEntity<Object> handleRegularIdException(InvalidRegularIdException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT, "Regular payment invalid id.", ex));
+    protected ResponseEntity<Object> handleInvalidRegularIdException(InvalidRegularIdException ex) {
+        return buildResponseEntity(ex);
     }
 
     @ExceptionHandler(InvalidTransactionSearchException.class)
-    protected ResponseEntity<Object> handleRegularIdException(InvalidTransactionSearchException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT, "Regular payment invalid id.", ex));
+    protected ResponseEntity<Object> handleInvalidTransactionSearchException(InvalidTransactionSearchException ex) {
+        return buildResponseEntity(ex);
     }
 
     @ExceptionHandler(EmailGenerationException.class)
-    protected ResponseEntity<Object> handleEmailException(EmailGenerationException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "Email generation failed.", ex));
+    protected ResponseEntity<Object> handleEmailGenerationException(EmailGenerationException ex) {
+        return buildResponseEntity(ex);
     }
 
     @ExceptionHandler(TranscoderException.class)
     protected ResponseEntity<Object> handleTranscoderException(TranscoderException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "Report failed, transcoder failure.", ex));
+        return buildResponseEntity(new MoneyException(HttpStatus.FAILED_DEPENDENCY, ex));
     }
 
     @ExceptionHandler(DocumentException.class)
-    protected ResponseEntity<Object> handleTranscoderException(DocumentException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "Report failed, document exception.", ex));
+    protected ResponseEntity<Object> handleDocumentException(DocumentException ex) {
+        return buildResponseEntity(new MoneyException(HttpStatus.FAILED_DEPENDENCY, ex));
     }
 
     @ExceptionHandler(IOException.class)
-    protected ResponseEntity<Object> handleTranscoderException(IOException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.FAILED_DEPENDENCY, "IO Exception.", ex));
+    protected ResponseEntity<Object> handleIOException(IOException ex) {
+        return buildResponseEntity(new MoneyException(HttpStatus.FAILED_DEPENDENCY, ex));
     }
 
     @ExceptionHandler(FileNotFoundException.class)
-    protected ResponseEntity<Object> handleFileNotFound(FileNotFoundException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.NOT_FOUND,"File not found", ex));
+    protected ResponseEntity<Object> handleFileNotFoundException(FileNotFoundException ex) {
+        return buildResponseEntity(new MoneyException(HttpStatus.NOT_FOUND, ex));
     }
 
     @ExceptionHandler(InvalidTransactionException.class)
-    protected ResponseEntity<Object> handleInvalidTransaction(InvalidTransactionException ex) {
-        return buildResponseEntity(new ApiError(HttpStatus.CONFLICT,"Invalid Transaction", ex));
+    protected ResponseEntity<Object> handleInvalidTransactionException(InvalidTransactionException ex) {
+        return buildResponseEntity(ex);
     }
 
-    private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
-        return new ResponseEntity<>(apiError,apiError.getStatus());
+    @ExceptionHandler(CannotDetermineNextDateException.class)
+    protected ResponseEntity<Object> handleCannotDetermineNextDateException(CannotDetermineNextDateException ex) {
+        return buildResponseEntity(ex);
+    }
+
+    @ExceptionHandler(InvalidTransactionIdException.class)
+    protected ResponseEntity<Object> handleInvalidTransactionIdException(InvalidTransactionIdException ex) {
+        return buildResponseEntity(ex);
+    }
+
+    @ExceptionHandler(MultipleUnlockedStatementException.class)
+    protected ResponseEntity<Object> handleMultipleUnlockedStatementException(MultipleUnlockedStatementException ex) {
+        return buildResponseEntity(ex);
+    }
+
+    private ResponseEntity<Object> buildResponseEntity(MoneyException error) {
+        return new ResponseEntity<>(error,error.getStatus());
     }
 }

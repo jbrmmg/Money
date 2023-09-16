@@ -32,10 +32,10 @@ public class LogoManager {
 
         // Get the logo definition
         Optional<LogoDefinition> logoDefinition = logoDefinitionRepository.findById(logoId);
-        if(!logoDefinition.isPresent()) {
+        if(logoDefinition.isEmpty()) {
             logoDefinition = logoDefinitionRepository.findById(DEFAULT_LOGO_ID);
 
-            if(!logoDefinition.isPresent()) {
+            if(logoDefinition.isEmpty()) {
                 throw new IllegalStateException("Cannot find the default logo definition.");
             }
         }

@@ -128,7 +128,7 @@ public class FileFormatDescription {
 
     private double internalGetAmount(ReconcileFileLine line, int index) throws FileFormatException {
         String value = getColumnValue(index,line).replace(",","").replace("£","");
-        if(value.trim().length() == 0) {
+        if(value.trim().isEmpty()) {
             return 0;
         }
 

@@ -6,7 +6,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 public class StatementIdDTO implements Comparable<StatementIdDTO> {
-    AccountDTO account;
+    String accountId;
     @Min(1)
     @Max(12)
     Integer month;
@@ -14,12 +14,23 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
     @Max(9999)
     Integer year;
 
-    public AccountDTO getAccount() {
-        return account;
+    public StatementIdDTO() {
     }
 
-    public void setAccount(AccountDTO account) {
-        this.account = account;
+    public StatementIdDTO(String accountId,
+                          Integer month,
+                          Integer year) {
+        this.accountId = accountId;
+        this.month = month;
+        this.year = year;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
     public Integer getMonth() {
@@ -41,8 +52,8 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
     @Override
     public int compareTo(@NotNull StatementIdDTO o) {
         // First compare the account.
-        if(!this.account.getId().equalsIgnoreCase(o.account.getId())) {
-            return this.account.getId().compareTo(o.account.getId());
+        if(!this.accountId.equalsIgnoreCase(o.accountId)) {
+            return this.accountId.compareTo(o.accountId);
         }
 
         // Then compare the year
@@ -74,6 +85,6 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
 
     @Override
     public String toString() {
-        return this.account.getId() + "." + String.format("%04d", this.year) + String.format("%02d", this.month);
+        return this.accountId.toUpperCase() + "." + String.format("%04d", this.year) + String.format("%02d", this.month);
     }
 }

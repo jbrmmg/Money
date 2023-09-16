@@ -2,15 +2,13 @@ package com.jbr.middletier.money.reporting;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
+import com.jbr.middletier.money.manager.AccountManager;
+import com.jbr.middletier.money.manager.AccountTransactionManager;
+import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransportWrapper;
 import com.jbr.middletier.money.xml.html.EmailHtml;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,25 +24,22 @@ import java.util.*;
 public class EmailGenerator {
     private static final Logger LOG = LoggerFactory.getLogger(EmailGenerator.class);
 
-    private final TransactionRepository transactionRepository;
-    private final StatementRepository statementRepository;
-    private final AccountRepository accountRepository;
+    private final AccountTransactionManager transactionManager;
+    private final StatementManager statementManager;
+    private final AccountManager accountManager;
     private final TransportWrapper transportWrapper;
-    private final ModelMapper modelMapper;
     private final ApplicationProperties applicationProperties;
 
     @Autowired
-    public EmailGenerator(TransactionRepository transactionRepository,
-                          StatementRepository statementRepository,
-                          AccountRepository accountRepository,
+    public EmailGenerator(AccountTransactionManager transactionManager,
+                          StatementManager statementManager,
+                          AccountManager accountManager,
                           TransportWrapper transportWrapper,
-                          ModelMapper modelMapper,
                           ApplicationProperties applicationProperties) {
-        this.transactionRepository = transactionRepository;
-        this.statementRepository = statementRepository;
-        this.accountRepository = accountRepository;
+        this.transactionManager = transactionManager;
+        this.statementManager = statementManager;
+        this.accountManager = accountManager;
         this.transportWrapper = transportWrapper;
-        this.modelMapper = modelMapper;
         this.applicationProperties = applicationProperties;
     }
 
@@ -55,7 +50,7 @@ public class EmailGenerator {
                                 String password,
                                 long weeks) throws EmailGenerationException {
         try {
-            List<TransactionDTO> emailTransactions = new ArrayList<>();
+            List<Transaction> emailTransactions = new ArrayList<>();
 
             // Get the data that we will contain in the email.
             FinancialAmount startAmount = new FinancialAmount();
@@ -67,36 +62,28 @@ public class EmailGenerator {
             oldest = oldest.plusWeeks(-1 * weeks);
 
             // Get the latest statement that is locked for each account.
-            Iterable<Account> accounts = accountRepository.findAll();
-
-            for (Account nextAccount : accounts) {
+            for (Account nextAccount : accountManager.getAllExternal()) {
                 // Get the latest statement.
-                List<Statement> latestStatements = statementRepository.findByIdAccountAndLocked(nextAccount, false);
+                List<Statement> latestStatements = statementManager.getLatestStatementInternal(nextAccount);
                 for (Statement nextStatement : latestStatements) {
                     endAmount.increment(nextStatement.getOpenBalance());
                     startAmount.increment(nextStatement.getOpenBalance());
 
                     // Get the transactions for this.
-                    List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
-                            nextAccount,
-                            nextStatement.getId().getYear(),
-                            nextStatement.getId().getMonth());
+                    List<Transaction> transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,nextStatement.getId());
                     for (Transaction nextTransaction : transactions) {
                         endAmount.increment(nextTransaction.getAmount());
                         transactionTotal1.increment(nextTransaction.getAmount());
 
-                        emailTransactions.add(modelMapper.map(nextTransaction,TransactionDTO.class));
+                        emailTransactions.add(nextTransaction);
                     }
 
-                    transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
-                            nextAccount,
-                            StatementId.getPreviousId(nextStatement.getId()).getYear(),
-                            StatementId.getPreviousId(nextStatement.getId()).getMonth());
+                    transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,StatementId.getPreviousId(nextStatement.getId()));
                     for (Transaction nextTransaction : transactions) {
                         if (nextTransaction.getDate().isAfter(oldest)) {
                             transactionTotal2.increment(nextTransaction.getAmount().getValue());
 
-                            emailTransactions.add(modelMapper.map(nextTransaction,TransactionDTO.class));
+                            emailTransactions.add(nextTransaction);
                         }
                     }
                 }
@@ -109,9 +96,9 @@ public class EmailGenerator {
                     return -1;
                 }
 
-                if (emailTransaction.getAmount() > t1.getAmount()) {
+                if (emailTransaction.getAmount().isGreaterThan(t1.getAmount())) {
                     return +1;
-                } else if (emailTransaction.getAmount() < t1.getAmount()) {
+                } else if (emailTransaction.getAmount().isLessThan(t1.getAmount())) {
                     return -1;
                 }
 
@@ -122,7 +109,7 @@ public class EmailGenerator {
             startAmount.decrement(transactionTotal1);
             startAmount.decrement(transactionTotal2);
 
-            for (TransactionDTO nextTransaction : emailTransactions) {
+            for (Transaction nextTransaction : emailTransactions) {
                 LOG.info("{}", nextTransaction);
             }
 

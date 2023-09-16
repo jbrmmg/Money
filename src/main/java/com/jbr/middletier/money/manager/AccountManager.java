@@ -3,77 +3,50 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.exceptions.AccountAlreadyExistsException;
-import com.jbr.middletier.money.exceptions.InvalidAccountIdException;
-import org.modelmapper.ModelMapper;
+import com.jbr.middletier.money.dto.mapper.AccountMapper;
+import com.jbr.middletier.money.exceptions.CreateAccountException;
+import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 @Controller
-public class AccountManager {
-    private final ModelMapper modelMapper;
-    private final AccountRepository accountRepository;
-
+public class AccountManager extends AbstractManager<
+        Account,
+        AccountDTO,
+        String,
+        AccountRepository,
+        CreateAccountException,
+        UpdateDeleteAccountException> {
     @Autowired
-    public AccountManager(ModelMapper modelMapper, AccountRepository accountRepository) {
-        this.modelMapper = modelMapper;
-        this.accountRepository = accountRepository;
+    public AccountManager(AccountMapper modelMapper, AccountRepository accountRepository)  {
+        super(AccountDTO.class,Account.class,modelMapper,accountRepository);
     }
 
-    public List<AccountDTO> getAccounts() {
-        List<AccountDTO> result = new ArrayList<>();
-        for(Account nextAccount: accountRepository.findAll()) {
-            result.add(this.modelMapper.map(nextAccount, AccountDTO.class));
-        }
-
-        Collections.sort(result);
-
-        return result;
+    @Override
+    String getInstanceId(Account instance) {
+        return instance.getId();
     }
 
-    public List<AccountDTO> createAccount(AccountDTO account) throws AccountAlreadyExistsException {
-        // Is there an account with this ID?
-        Optional<Account> existingAccount = accountRepository.findById(account.getId());
-        if(existingAccount.isPresent()) {
-            throw new AccountAlreadyExistsException(account);
-        }
-
-        accountRepository.save(this.modelMapper.map(account,Account.class));
-
-        return getAccounts();
+    @Override
+    CreateAccountException getAddException(String id) {
+        return new CreateAccountException(id);
     }
 
-    public List<AccountDTO> updateAccount(AccountDTO account) throws InvalidAccountIdException {
-
-        // Is there an account with this ID?
-        Optional<Account> existingAccount = accountRepository.findById(account.getId());
-        if(existingAccount.isPresent()) {
-            existingAccount.get().setColour(account.getColour());
-            existingAccount.get().setImagePrefix(account.getImagePrefix());
-            existingAccount.get().setName(account.getName());
-            accountRepository.save(existingAccount.get());
-
-            return getAccounts();
-        }
-
-        throw new InvalidAccountIdException(account);
+    @Override
+    UpdateDeleteAccountException getUpdateDeleteException(String id) {
+        return new UpdateDeleteAccountException(id);
     }
 
-    public List<AccountDTO> deleteAccount(AccountDTO account) throws InvalidAccountIdException {
+    @SuppressWarnings("RedundantThrows")
+    @Override
+    void validateUpdateOrDelete(Account instance, boolean update) throws UpdateDeleteAccountException {
+        // Not required for accounts.
+    }
 
-        // Is there an account with this ID?
-        Optional<Account> existingAccount = accountRepository.findById(account.getId());
-        if(existingAccount.isPresent()) {
-            accountRepository.delete(existingAccount.get());
-
-            return getAccounts();
-        }
-
-        throw new InvalidAccountIdException(account);
+    @Override
+    void updateInstance(Account instance, Account from) {
+        instance.setColour(from.getColour());
+        instance.setImagePrefix(from.getImagePrefix());
+        instance.setName(from.getName());
     }
 }

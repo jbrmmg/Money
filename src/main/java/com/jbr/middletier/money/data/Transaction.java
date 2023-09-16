@@ -4,9 +4,9 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransactionString;
 import org.hibernate.annotations.*;
 
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 
 /**
@@ -58,8 +58,6 @@ public class Transaction {
         this.amount = amount;
         this.description = description;
     }
-
-    public static final String TRANSACTION_DATE_FORMAT = "yyyy-MM-dd";
 
     public int getId() {
         return id;
@@ -123,11 +121,9 @@ public class Transaction {
     public boolean equals(Object o) {
         if (o == this) return true;
 
-        if (!(o instanceof Transaction)) {
+        if (!(o instanceof Transaction transaction)) {
             return false;
         }
-
-        Transaction transaction = (Transaction) o;
 
         return this.toString().equals(transaction.toString());
     }

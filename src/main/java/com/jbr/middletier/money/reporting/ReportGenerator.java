@@ -269,15 +269,6 @@ public class ReportGenerator {
         return applicationProperties.getReportShare() + "/" + year + "/Report-" + reportDateString + ".pdf";
     }
 
-    static class MonthStatus {
-        int year;
-        int month;
-
-        int lockedStatementCount;
-        int statementsFound;
-        int activeAccounts;
-    }
-
     public Map<Integer,MonthStatus> getMonthStatusMap(int activeAccounts) {
         Map<Integer,MonthStatus> monthStatusMap = new HashMap<>();
 
@@ -319,7 +310,7 @@ public class ReportGenerator {
 
         List<Account> accounts = new ArrayList<>();
         accountRepository.findAll().forEach(a -> {
-            if(!a.getClosed()) {
+            if(Boolean.FALSE.equals(a.getClosed())) {
                 accounts.add(a);
             }
         });

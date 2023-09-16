@@ -5,16 +5,15 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
-import com.jbr.middletier.money.exceptions.InvalidCategoryIdException;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -37,7 +36,7 @@ public class TransactionTest extends Support {
     private AccountTransactionManager accountTransactionManager;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private TransactionMapper transactionMapper;
 
     @Before
     public void cleanUp() {
@@ -69,17 +68,14 @@ public class TransactionTest extends Support {
 
         testTransaction = transactionRepository.save(testTransaction);
 
-        TransactionDTO updateTransaction = modelMapper.map(testTransaction,TransactionDTO.class);
+        TransactionDTO updateTransaction = transactionMapper.map(testTransaction,TransactionDTO.class);
 
-        CategoryDTO invalidCategory = new CategoryDTO();
-        invalidCategory.setId("XXX");
-
-        updateTransaction.setCategory(invalidCategory);
+        updateTransaction.setCategoryId("XXX");
 
         try {
             accountTransactionManager.updateTransaction(updateTransaction);
             Assert.fail();
-        } catch (InvalidCategoryIdException ex) {
+        } catch (UpdateDeleteCategoryException ex) {
             Assert.assertEquals("Cannot find category with id XXX", ex.getMessage());
         }
     }

@@ -15,6 +15,11 @@ public enum AdjustmentType {
         return this.type;
     }
 
+    @Override
+    public String toString() {
+        return this.type;
+    }
+
     public static AdjustmentType getAdjustmentType(String name) {
         for(AdjustmentType type : AdjustmentType.values()) {
             if(type.getTypeName().equalsIgnoreCase(name)) {

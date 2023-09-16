@@ -1,19 +1,14 @@
 package com.jbr.middletier.money.dto;
 
-
-import com.jbr.middletier.money.schedule.AdjustmentType;
-
-import java.time.LocalDate;
-
 public class RegularDTO {
     private Integer id;
-    private AccountDTO account;
+    private String accountId;
     private double amount;
-    private CategoryDTO category;
+    private String categoryId;
     private String frequency;
-    private AdjustmentType weekendAdj;
-    private LocalDate start;
-    private LocalDate lastCreated;
+    private String weekendAdj;
+    private String start;
+    private String lastCreated;
     private String description;
 
     public Integer getId() {
@@ -24,12 +19,12 @@ public class RegularDTO {
         this.id = id;
     }
 
-    public AccountDTO getAccount() {
-        return account;
+    public String getAccountId() {
+        return accountId;
     }
 
-    public void setAccount(AccountDTO account) {
-        this.account = account;
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
     public double getAmount() {
@@ -40,12 +35,12 @@ public class RegularDTO {
         this.amount = amount;
     }
 
-    public CategoryDTO getCategory() {
-        return category;
+    public String getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(CategoryDTO category) {
-        this.category = category;
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
     public String getFrequency() {
@@ -56,27 +51,27 @@ public class RegularDTO {
         this.frequency = frequency;
     }
 
-    public AdjustmentType getWeekendAdj() {
+    public String getWeekendAdj() {
         return this.weekendAdj;
     }
 
-    public void setWeekendAdj(AdjustmentType weekendAdj) {
+    public void setWeekendAdj(String weekendAdj) {
         this.weekendAdj = weekendAdj;
     }
 
-    public LocalDate getStart() {
+    public String getStart() {
         return start;
     }
 
-    public void setStart(LocalDate start) {
+    public void setStart(String start) {
         this.start = start;
     }
 
-    public LocalDate getLastDate() {
+    public String getLastDate() {
         return lastCreated;
     }
 
-    public void setLastDate(LocalDate lastCreated) {
+    public void setLastDate(String lastCreated) {
         this.lastCreated = lastCreated;
     }
 

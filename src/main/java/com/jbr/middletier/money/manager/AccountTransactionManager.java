@@ -4,12 +4,11 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
-import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.FinancialAmount;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,17 +31,17 @@ public class AccountTransactionManager {
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
-    private final ModelMapper modelMapper;
+    private final TransactionMapper transactionMapper;
 
     @Autowired
     public AccountTransactionManager(AccountRepository accountRepository,
                                      CategoryRepository categoryRepository,
                                      TransactionRepository transactionRepository,
-                                     ModelMapper modelMapper) {
+                                     TransactionMapper transactionMapper) {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
-        this.modelMapper = modelMapper;
+        this.transactionMapper = transactionMapper;
     }
 
     public FinancialAmount getFinalBalanceForStatement(Statement statement) {
@@ -74,7 +73,7 @@ public class AccountTransactionManager {
         transactionRepository.saveAll(transactions);
     }
 
-    private Specification<Transaction> getReconciledTransactions(Iterable<Account> accounts, LocalDate statementDate, Iterable<Category> categories) throws InvalidTransactionSearchException {
+    private Specification<Transaction> getReconciledTransactions(List<Account> accounts, LocalDate statementDate, List<Category> categories) throws InvalidTransactionSearchException {
         // Validate data.
         if((accounts == null)) {
             throw new InvalidTransactionSearchException("Must specify account");
@@ -94,7 +93,7 @@ public class AccountTransactionManager {
         return search;
     }
 
-    private Specification<Transaction> getUnreconciledTransactions(Iterable<Account> accounts, Iterable<Category> categories) {
+    private Specification<Transaction> getUnreconciledTransactions(List<Account> accounts, List<Category> categories) {
         // Not locked transactions - no date, multiple accounts, list of categories
         Specification<Transaction> search = Specification.where(statementIsNull());
 
@@ -109,7 +108,7 @@ public class AccountTransactionManager {
         return search;
     }
 
-    private Specification<Transaction> getAllTransactions(DateRangeDTO dateRange, Iterable<Account> accounts, Iterable<Category> categories) throws InvalidTransactionSearchException {
+    private Specification<Transaction> getAllTransactions(DateRangeDTO dateRange, List<Account> accounts, List<Category> categories) throws InvalidTransactionSearchException {
         // Validate data.
         if(dateRange.getFrom() == null){
             throw new InvalidTransactionSearchException("must specify a from date");
@@ -133,7 +132,7 @@ public class AccountTransactionManager {
         return search;
     }
 
-    private Specification<Transaction> getUnlockedTransactions(Iterable<Account> accounts, Iterable<Category> categories) {
+    private Specification<Transaction> getUnlockedTransactions(List<Account> accounts, List<Category> categories) {
         // Not locked transactions - no date, multiple accounts, list of categories
         Specification<Transaction> search = Specification.where(notLocked());
 
@@ -153,34 +152,48 @@ public class AccountTransactionManager {
                                                             List<String> categoryIds,
                                                             List<String> accountIds) throws InvalidTransactionSearchException {
         // Get the accounts
-        Iterable<Account> accounts = null;
+        List<Account> accounts = null;
         if(accountIds != null) {
-            accounts = accountRepository.findAllById(accountIds);
+            accounts = new ArrayList<>();
+            for(Account next : accountRepository.findAllById(accountIds)) {
+                accounts.add(next);
+            }
         }
 
         // Get the categories
-        Iterable<Category> categories = null;
+        List<Category> categories = null;
         if(categoryIds != null) {
-            categories = categoryRepository.findAllById(categoryIds);
+            categories = new ArrayList<>();
+            for(Category next : categoryRepository.findAllById(categoryIds)) {
+                categories.add(next);
+            }
         }
 
         // Process the request.
         switch (type) {
-            case TRT_UNRECONCILED:
+            case TRT_UNRECONCILED -> {
                 LOG.info("Get Transaction - un reconciled");
                 return getUnreconciledTransactions(accounts, categories);
-            case TRT_RECONCILED:
+            }
+            case TRT_RECONCILED -> {
                 LOG.info("Get Transaction - reconciled");
                 return getReconciledTransactions(accounts, dateRange.getFrom(), categories);
-            case TRT_ALL:
+            }
+            case TRT_ALL -> {
                 LOG.info("Get Transaction - all");
                 return getAllTransactions(dateRange, accounts, categories);
-            case TRT_UNLOCKED:
+            }
+            case TRT_UNLOCKED -> {
                 LOG.info("Get Transaction - unlocked");
                 return getUnlockedTransactions(accounts, categories);
+            }
+            case TRT_UNKNOWN -> {
+                LOG.info("Get Transaction - unknown");
+                throw new IllegalStateException("Should never get here as all Enum values are catered for.");
+            }
         }
 
-        throw new IllegalStateException("Should never get here as all Enum values are catered for.");
+        return null;
     }
 
     public List<TransactionDTO> getTransactions(TransactionRequestType type,
@@ -202,44 +215,46 @@ public class AccountTransactionManager {
         Specification<Transaction> specification = getTransactionSearch(type, dateRange, categoryIds, accountIds);
 
         List<TransactionDTO> result = new ArrayList<>();
-        for(Transaction transaction : transactionRepository.findAll(specification, transactionSort)) {
-            result.add(modelMapper.map(transaction,TransactionDTO.class));
+        LOG.debug("Iterate over transactions");
+        for(Transaction transaction : transactionRepository.findAll(Objects.requireNonNull(specification), transactionSort)) {
+            LOG.debug("Transaction {}", transaction.getId());
+            result.add(transactionMapper.map(transaction,TransactionDTO.class));
         }
 
         return result;
     }
 
-    private Transaction internalCreateTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
+    private Transaction internalCreateTransaction(TransactionDTO transaction) throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
+        Transaction newTransaction =  transactionMapper.map(transaction,Transaction.class);
+
         // Check the account and category are valid.
-        Optional<Account> account = accountRepository.findById(transaction.getAccount().getId());
-        if(account.isEmpty()) {
-            throw new InvalidAccountIdException(transaction.getAccount());
+        if(newTransaction.getAccount() == null) {
+            throw new UpdateDeleteAccountException(transaction.getAccountId());
         }
 
-        Optional<Category> category = categoryRepository.findById(transaction.getCategory().getId());
-        if(category.isEmpty()) {
-            throw new InvalidCategoryIdException(transaction.getCategory());
+        if(newTransaction.getCategory() == null) {
+            throw new UpdateDeleteCategoryException(transaction.getCategoryId());
         }
 
-        return transactionRepository.save(modelMapper.map(transaction,Transaction.class));
+        return transactionRepository.save(newTransaction);
     }
 
-    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws InvalidAccountIdException, InvalidCategoryIdException {
+    private List<TransactionDTO> createIndividualTransaction(TransactionDTO transaction) throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
         List<TransactionDTO> result = new ArrayList<>();
 
         Transaction newTransaction = internalCreateTransaction(transaction);
 
-        result.add(modelMapper.map(newTransaction,TransactionDTO.class));
+        result.add(transactionMapper.map(newTransaction,TransactionDTO.class));
         return result;
     }
 
     @Transactional
-    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidCategoryIdException, InvalidAccountIdException {
+    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         Transaction fromTransaction = internalCreateTransaction(from);
 
         // Save the 'from' transaction and update the opposite id on the 'to'
         List<TransactionDTO> result = new ArrayList<>();
-        result.add(modelMapper.map(fromTransaction,TransactionDTO.class));
+        result.add(transactionMapper.map(fromTransaction,TransactionDTO.class));
         to.setOppositeTransactionId(fromTransaction.getId());
 
         // Save the 'to' transaction and update the 'from' transaction.
@@ -252,7 +267,7 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException, InvalidCategoryIdException, InvalidAccountIdException {
+    public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException, UpdateDeleteCategoryException, UpdateDeleteAccountException {
         if(transaction.size() == 1) {
             return createIndividualTransaction(transaction.get(0));
         }
@@ -265,7 +280,7 @@ public class AccountTransactionManager {
         TransactionDTO from = transaction.get(0);
         TransactionDTO to = transaction.get(1);
 
-        if(from.getAccount().getId().equals(to.getAccount().getId())) {
+        if(from.getAccountId().equals(to.getAccountId())) {
             throw new InvalidTransactionException("Transfer must be two different accounts");
         }
 
@@ -275,8 +290,8 @@ public class AccountTransactionManager {
             throw new InvalidTransactionException("Cannot find the transfer category");
         }
 
-        from.setCategory(modelMapper.map(transfer.get(), CategoryDTO.class));
-        to.setCategory(modelMapper.map(transfer.get(), CategoryDTO.class));
+        from.setCategoryId("TRF");
+        to.setCategoryId("TRF");
 
         // Ensure the amount is the reverse
         to.setAmount(from.getAmount() * -1);
@@ -286,14 +301,14 @@ public class AccountTransactionManager {
         return createTransferTransaction(from,to);
     }
 
-    public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, InvalidCategoryIdException {
+    public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         // Find the transaction.
         Optional<Transaction> existingTransaction = transactionRepository.findById(transaction.getId());
         if(existingTransaction.isPresent()) {
             List<TransactionDTO> result = new ArrayList<>();
             List<Transaction> toBeSaved = new ArrayList<>();
 
-            result.add(modelMapper.map(existingTransaction.get(),TransactionDTO.class));
+            result.add(transactionMapper.map(existingTransaction.get(),TransactionDTO.class));
             toBeSaved.add(existingTransaction.get());
 
             // Is there an opposite transaction?
@@ -301,7 +316,7 @@ public class AccountTransactionManager {
                 Optional<Transaction> oppositeTransaction = transactionRepository.findById(existingTransaction.get().getOppositeTransactionId());
 
                 if(oppositeTransaction.isPresent()) {
-                    result.add(modelMapper.map(oppositeTransaction.get(), TransactionDTO.class));
+                    result.add(transactionMapper.map(oppositeTransaction.get(), TransactionDTO.class));
                     toBeSaved.add(oppositeTransaction.get());
                 }
             }
@@ -312,10 +327,10 @@ public class AccountTransactionManager {
                 next.setDescription(transaction.getDescription());
 
                 if(toBeSaved.size() == 1) {
-                    Optional<Category> category = categoryRepository.findById(transaction.getCategory().getId());
+                    Optional<Category> category = categoryRepository.findById(transaction.getCategoryId());
 
                     if(category.isEmpty()) {
-                        throw new InvalidCategoryIdException(transaction.getCategory().getId());
+                        throw new UpdateDeleteCategoryException(transaction.getCategoryId());
                     }
 
                     next.setCategory(category.get());
@@ -356,5 +371,12 @@ public class AccountTransactionManager {
         }
 
         throw new InvalidTransactionIdException(transaction.getId());
+    }
+
+    public List<Transaction> getInternalTransactionsForStatement(Account account, StatementId statementId) {
+        return transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
+                account,
+                statementId.getYear(),
+                statementId.getMonth());
     }
 }

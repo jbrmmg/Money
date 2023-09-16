@@ -4,10 +4,10 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.ReconciliationData;
 import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.dto.mapper.UtilityMapper;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Created by jason on 11/04/17.
@@ -48,11 +48,9 @@ public class MatchData implements Comparable<MatchData> {
     public boolean equals(Object object) {
         if (object == this) return true;
 
-        if (!(object instanceof MatchData)) {
+        if (!(object instanceof MatchData other)) {
             return false;
         }
-
-        MatchData other = (MatchData)object;
 
         return this.compareTo(other) == 0;
     }
@@ -71,6 +69,7 @@ public class MatchData implements Comparable<MatchData> {
 
     private enum BackwardActionType { UNRECONCILE, DELETE, NONE }
 
+    private final UtilityMapper utilityMapper;
     private final int reconciliationId;
     private final LocalDate reconciliationDate;
     private final double reconciliationAmount;
@@ -83,7 +82,8 @@ public class MatchData implements Comparable<MatchData> {
     private ForwardActionType forwardActionType;
     private BackwardActionType backwordActionType;
 
-    public MatchData(ReconciliationData source, Account account)  {
+    public MatchData(UtilityMapper utilityMapper, ReconciliationData source, Account account)  {
+        this.utilityMapper = utilityMapper;
         this.reconciliationId = source.getId();
         this.reconciliationDate = source.getDate();
         this.reconciliationAmount = source.getAmount();
@@ -101,7 +101,8 @@ public class MatchData implements Comparable<MatchData> {
         this.backwordActionType = BackwardActionType.NONE;
     }
 
-    public MatchData(Transaction transaction) {
+    public MatchData(UtilityMapper utilityMapper, Transaction transaction) {
+        this.utilityMapper = utilityMapper;
         this.transaction = transaction;
         this.reconciliationId = -1;
         this.reconciliationDate = transaction.getDate();
@@ -163,7 +164,7 @@ public class MatchData implements Comparable<MatchData> {
     public Account getAccount() { return this.account; }
 
     public String getDate() {
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd").format(this.reconciliationDate);
+        return utilityMapper.map(this.reconciliationDate,String.class);
     }
 
     public boolean transactionMatch(Transaction transaction, int withinDays) {
