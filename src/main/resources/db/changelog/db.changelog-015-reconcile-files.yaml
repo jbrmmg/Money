@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 15
+      author: jason
+      changes:
+
+        - createTable:
+            tableName: reconciliation_file
+            columns:
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: char(4)
+              - column:
+                  name: last_modified
+                  type: datetime
+              - column:
+                  name: size
+                  type: int(11)
+              - column:
+                  name: error
+                  type: varchar(100)
+
+        - createTable:
+            tableName: rec_file_tran
+            columns:
+              - column:
+                  name: file_name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line
+                  type: int(11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date
+                  type: datetime
+              - column:
+                  name: amount
+                  type: decimal(10,2)
+              - column:
+                  name: description
+                  type: varchar(40)
+              - column:
+                  name: error
+                  type: varchar(100)

@@ -30,7 +30,7 @@ money:
   report-share: /home/jason/Working/DbgReportShare/
   report-schedule: 0 23 * * * ?
   report-enabled: true
-  reconcile-file-location: /home/jason/Working
+  reconcile-file-location: /home/jason/Working/DbgReconcilation
 
 info:
   app:

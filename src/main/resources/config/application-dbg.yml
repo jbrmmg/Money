@@ -21,3 +21,6 @@ server:
 info:
     app:
         version: Debug
+
+money:
+    reconcile-file-location: /home/jason/Working/DbgReconcilation/

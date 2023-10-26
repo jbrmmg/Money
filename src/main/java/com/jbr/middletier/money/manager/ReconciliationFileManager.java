@@ -2,7 +2,10 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.ReconcileFormat;
+import com.jbr.middletier.money.data.ReconciliationFile;
 import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.dataaccess.ReconciliationFileRepository;
+import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
@@ -11,34 +14,41 @@ import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.devtools.filewatch.ChangedFile;
+import org.springframework.boot.devtools.filewatch.ChangedFiles;
+import org.springframework.boot.devtools.filewatch.FileChangeListener;
 import org.springframework.stereotype.Controller;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 @Controller
-public class ReconciliationFileManager {
+public class ReconciliationFileManager implements FileChangeListener {
     private static final Logger LOG = LoggerFactory.getLogger(ReconciliationFileManager.class);
 
     private final ApplicationProperties applicationProperties;
     private final ReconcileFormatRepository reconcileFormatRepository;
     private final TransactionMapper transactionMapper;
 
+    private final ReconciliationFileRepository reconciliationFileRepository;
+
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
                                      ReconcileFormatRepository reconcileFormatRepository,
-                                     TransactionMapper transactionMapper) {
+                                     TransactionMapper transactionMapper,
+                                     ReconciliationFileRepository reconciliationFileRepository) {
         this.applicationProperties = applicationProperties;
         this.reconcileFormatRepository = reconcileFormatRepository;
         this.transactionMapper = transactionMapper;
+        this.reconciliationFileRepository = reconciliationFileRepository;
     }
 
     public List<ReconciliationFileDTO> getFiles() {
@@ -165,6 +175,91 @@ public class ReconciliationFileManager {
         return result;
     }
 
+    public static class TransactionFileDetails {
+        List<TransactionDTO> transactions;
+        boolean OK;
+        String error;
+        AccountDTO account;
+
+        public TransactionFileDetails() {
+            this.transactions = new ArrayList<>();
+            this.OK = false;
+            this.error = "Unitialised";
+            this.account = null;
+        }
+
+        public List<TransactionDTO> getTransactions() {
+            return this.transactions;
+        }
+
+        public void addTransaction(TransactionDTO transaction) {
+            this.transactions.add(transaction);
+        }
+
+        public void setOK(boolean OK) {
+            this.OK = OK;
+        }
+
+        public boolean isOK() {
+            return this.OK;
+        }
+
+        public void setError(String error) {
+            this.error = error;
+        }
+
+        public String getError() {
+            return this.error;
+        }
+
+        public void setAccount(AccountDTO account) {
+            this.account = account;
+        }
+
+        public AccountDTO getAccount() {
+            return this.account;
+        }
+    }
+
+    public TransactionFileDetails getFileTransactionDetails(ReconciliationFileDTO file) throws IOException {
+        LOG.info("Get transactions from {}", file.getFilename());
+
+        TransactionFileDetails result = new TransactionFileDetails();
+
+        // Get the full filename
+        File transactionFile = new File(file.getFilename());
+
+        if(!Files.exists(transactionFile.toPath())) {
+            throw new FileNotFoundException("Cannot find " +  transactionFile.getName());
+        }
+
+        // Read the file into a list of strings.
+        List<ReconcileFileLine> contents = readContents(transactionFile);
+
+        // Determine the file format
+        FileFormatDescription formatDescription = determineFileFormat(contents);
+        if(!formatDescription.getValid()) {
+            result.setError("Cannot determine format");
+            return result;
+        }
+
+        // Process the file.
+        List<TransactionDTO> transactions = processFile(formatDescription, contents);
+        LOG.info("Processed file, found {} transactions", transactions.size());
+
+        if(!transactions.isEmpty()) {
+            for (TransactionDTO next : transactions) {
+                result.addTransaction(next);
+            }
+            result.setOK(true);
+        } else {
+            result.setError("No transactions found");
+        }
+
+        return result;
+    }
+
+    @Deprecated
     public List<TransactionDTO> getFileTransactions(ReconciliationFileDTO file) throws IOException {
         LOG.info("Get transactions from {}", file.getFilename());
 
@@ -187,5 +282,86 @@ public class ReconciliationFileManager {
         LOG.info("Processed file, found {} transactions", result.size());
 
         return result;
+    }
+
+    public void fileUpdated(File update) {
+        Optional<ReconciliationFile> dbFile = Optional.empty();
+
+        try {
+            LOG.info("Update file: " + update.toString());
+
+            ReconciliationFileDTO fileInformation = new ReconciliationFileDTO();
+            fileInformation.setFilename(new File(this.applicationProperties.getReconcileFileLocation(), update.getName()).toString());
+
+            TransactionFileDetails details = this.getFileTransactionDetails(fileInformation);
+
+            // Does this already exist?
+            dbFile = this.reconciliationFileRepository.findById(update.getName());
+            if(dbFile.isEmpty()) {
+                dbFile = Optional.of(new ReconciliationFile());
+                dbFile.get().setName(update.getName());
+            }
+
+            dbFile.get().setAccount(null);
+
+            BasicFileAttributes attr = Files.readAttributes(update.toPath(), BasicFileAttributes.class);
+            dbFile.get().setLastModified(LocalDateTime.ofInstant(attr.lastModifiedTime().toInstant(), ZoneId.systemDefault()));
+            dbFile.get().setSize(attr.size());
+
+            // Is this a valid file?
+            if(details.isOK()) {
+                // TODO load data into the file.
+                dbFile.get().setError(null);
+            } else {
+                // TODO flag as a problem.
+                dbFile.get().setError(details.error);
+            }
+        } catch (IOException error) {
+            dbFile.ifPresent(reconciliationFile -> reconciliationFile.setError("Exception processing file."));
+            LOG.warn("Failed to get details of " + update);
+        }
+
+        // Save the data.
+        dbFile.ifPresent(this.reconciliationFileRepository::save);
+    }
+
+    public void clearFileData() {
+        // TODO clear all the file data stored.
+
+        this.reconciliationFileRepository.deleteAll();
+    }
+
+    public void fileDeleted(File deleted) {
+        //TODO - remove data from database.
+        Optional<ReconciliationFile> dbFile = this.reconciliationFileRepository.findById(deleted.getName());
+        if(dbFile.isPresent()) {
+            this.reconciliationFileRepository.delete(dbFile.get());
+        }
+
+        LOG.info("Deleted file: " + deleted.toString());
+    }
+
+    @Override
+    public void onChange(Set<ChangedFiles> changeSet) {
+        for(ChangedFiles next : changeSet) {
+            for(ChangedFile nextFile : next.getFiles()) {
+                // Is this a csv file?
+                if(!nextFile.getFile().getName().toLowerCase().endsWith(".csv")) {
+                    LOG.info(nextFile + " ignoring file as not a csv");
+                    continue;
+                }
+
+                // What is the change?
+                switch (nextFile.getType()) {
+                    case ADD:
+                    case MODIFY:
+                        fileUpdated(nextFile.getFile());
+                        break;
+                    case DELETE:
+                        fileDeleted(nextFile.getFile());
+                        break;
+                }
+            }
+        }
     }
 }
