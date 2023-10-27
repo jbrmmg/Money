@@ -174,4 +174,12 @@ public class FileFormatDescription {
         String description = getColumnValue(getDescriptionColumn(),line).trim();
         return description.substring(0, Math.min(description.length(), 40));
     }
+
+    public String getAccountId() {
+        if(this.reconcileFormat != null && this.reconcileFormat.getAccount() != null) {
+            return this.reconcileFormat.getAccount().getId();
+        }
+
+        return null;
+    }
 }

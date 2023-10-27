@@ -51,3 +51,60 @@ databaseChangeLog:
               - column:
                   name: error
                   type: varchar(100)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_rec_trn_file
+            baseTableName: rec_file_tran
+            baseColumnNames: file_name
+            referencedTableName: reconciliation_file
+            referencedColumnNames: name
+
+        - addPrimaryKey:
+            tableName: fk_rec_trn_file
+            columnNames: file_name, line
+
+        - addColumn:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  type: varchar(4)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_account_format
+            baseTableName: reconcile_format
+            baseColumnNames: account_id
+            referencedTableName: account
+            referencedColumnNames: id
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: 'AMEX'
+            where: id = 'amex'
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: 'BANK'
+            where: id = 'fd'
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: 'JLP2'
+            where: id = 'jlp2' and 'JLP2' IN (SELECT id FROM account WHERE id = 'JLP2')
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: select id from account where id = 'BARC'
+            where: id = 'barc' and 'BARC' IN (SELECT id FROM account WHERE id = 'BARC')

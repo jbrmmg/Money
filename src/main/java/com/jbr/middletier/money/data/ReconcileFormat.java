@@ -1,9 +1,6 @@
 package com.jbr.middletier.money.data;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name="reconcile_format")
@@ -35,6 +32,10 @@ public class ReconcileFormat {
 
     @Column
     private Boolean reverse;
+
+    @JoinColumn(name="account_id")
+    @ManyToOne(optional = true)
+    private Account account;
 
     public String getId() {
         return id;
@@ -106,5 +107,13 @@ public class ReconcileFormat {
 
     public void setReverse(Boolean reverse) {
         this.reverse = reverse;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 }

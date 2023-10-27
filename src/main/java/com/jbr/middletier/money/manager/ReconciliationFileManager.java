@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
+import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.ReconcileFormat;
 import com.jbr.middletier.money.data.ReconciliationFile;
 import com.jbr.middletier.money.data.Transaction;
@@ -38,7 +39,6 @@ public class ReconciliationFileManager implements FileChangeListener {
     private final ApplicationProperties applicationProperties;
     private final ReconcileFormatRepository reconcileFormatRepository;
     private final TransactionMapper transactionMapper;
-
     private final ReconciliationFileRepository reconciliationFileRepository;
 
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
@@ -179,13 +179,13 @@ public class ReconciliationFileManager implements FileChangeListener {
         List<TransactionDTO> transactions;
         boolean OK;
         String error;
-        AccountDTO account;
+        String accountId;
 
         public TransactionFileDetails() {
             this.transactions = new ArrayList<>();
             this.OK = false;
             this.error = "Unitialised";
-            this.account = null;
+            this.accountId = null;
         }
 
         public List<TransactionDTO> getTransactions() {
@@ -212,12 +212,12 @@ public class ReconciliationFileManager implements FileChangeListener {
             return this.error;
         }
 
-        public void setAccount(AccountDTO account) {
-            this.account = account;
+        public void setAccountId(String account) {
+            this.accountId = account;
         }
 
-        public AccountDTO getAccount() {
-            return this.account;
+        public String getAccountId() {
+            return this.accountId;
         }
     }
 
@@ -241,6 +241,12 @@ public class ReconciliationFileManager implements FileChangeListener {
         if(!formatDescription.getValid()) {
             result.setError("Cannot determine format");
             return result;
+        }
+
+        // Set the account (if available)
+        if(formatDescription.getAccountId() != null) {
+            Account account = this.transactionMapper.map(formatDescription.getAccountId(),Account.class);
+            result.setAccountId(account.getId());
         }
 
         // Process the file.
@@ -303,6 +309,9 @@ public class ReconciliationFileManager implements FileChangeListener {
             }
 
             dbFile.get().setAccount(null);
+            if(details.getAccountId() != null) {
+                dbFile.get().setAccount(transactionMapper.map(details.getAccountId(), Account.class));
+            }
 
             BasicFileAttributes attr = Files.readAttributes(update.toPath(), BasicFileAttributes.class);
             dbFile.get().setLastModified(LocalDateTime.ofInstant(attr.lastModifiedTime().toInstant(), ZoneId.systemDefault()));
