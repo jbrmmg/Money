@@ -1,7 +1,5 @@
 package com.jbr.middletier.money.dto.mapper;
 
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.mapper.converter.*;
 import com.jbr.middletier.money.manager.AccountManager;

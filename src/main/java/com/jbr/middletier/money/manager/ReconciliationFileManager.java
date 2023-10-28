@@ -91,13 +91,14 @@ public class ReconciliationFileManager implements FileChangeListener {
         return result;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private boolean validFormattedDate(String dateFormat, String dateValue) {
         try {
             DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                     .parseCaseInsensitive()
                     .appendPattern(dateFormat)
                     .toFormatter(Locale.ENGLISH);
-            LocalDate ignored = LocalDate.parse(dateValue,formatter);
+            LocalDate.parse(dateValue,formatter);
         } catch (DateTimeParseException invalid) {
             return false;
         }
@@ -178,14 +179,14 @@ public class ReconciliationFileManager implements FileChangeListener {
 
     public static class TransactionFileDetails {
         List<TransactionDTO> transactions;
-        boolean OK;
+        boolean ok;
         String error;
         String accountId;
 
         public TransactionFileDetails() {
             this.transactions = new ArrayList<>();
-            this.OK = false;
-            this.error = "Unitialised";
+            this.ok = false;
+            this.error = "Uninitialised";
             this.accountId = null;
         }
 
@@ -197,12 +198,12 @@ public class ReconciliationFileManager implements FileChangeListener {
             this.transactions.add(transaction);
         }
 
-        public void setOK(boolean OK) {
-            this.OK = OK;
+        public void setOk(boolean OK) {
+            this.ok = OK;
         }
 
-        public boolean isOK() {
-            return this.OK;
+        public boolean isOk() {
+            return this.ok;
         }
 
         public void setError(String error) {
@@ -258,7 +259,7 @@ public class ReconciliationFileManager implements FileChangeListener {
             for (TransactionDTO next : transactions) {
                 result.addTransaction(next);
             }
-            result.setOK(true);
+            result.setOk(true);
         } else {
             result.setError("No transactions found");
         }
@@ -271,7 +272,7 @@ public class ReconciliationFileManager implements FileChangeListener {
         ArrayList<ReconciliationFileTransaction> transactions = new ArrayList<>();
 
         try {
-            LOG.info("Update file: " + update.toString());
+            LOG.info("Update file: {}", update);
 
             ReconciliationFileDTO fileInformation = new ReconciliationFileDTO();
             fileInformation.setFilename(new File(this.applicationProperties.getReconcileFileLocation(), update.getName()).toString());
@@ -296,7 +297,7 @@ public class ReconciliationFileManager implements FileChangeListener {
 
             // Is this a valid file?
             int index = 0;
-            if(details.isOK()) {
+            if(details.isOk()) {
                 for(TransactionDTO next : details.getTransactions()) {
                     index++;
                     ReconciliationFileTransaction transaction = new ReconciliationFileTransaction();
@@ -314,7 +315,7 @@ public class ReconciliationFileManager implements FileChangeListener {
             }
         } catch (IOException error) {
             dbFile.ifPresent(reconciliationFile -> reconciliationFile.setError("Exception processing file."));
-            LOG.warn("Failed to get details of " + update);
+            LOG.warn("Failed to get details of {}", update);
         }
 
         // Save the data.
@@ -335,7 +336,7 @@ public class ReconciliationFileManager implements FileChangeListener {
             this.reconciliationFileRepository.delete(dbFile.get());
         }
 
-        LOG.info("Deleted file: " + deleted);
+        LOG.info("Deleted file: {}", deleted);
     }
 
     @Override
@@ -345,14 +346,13 @@ public class ReconciliationFileManager implements FileChangeListener {
             for(ChangedFile nextFile : next.getFiles()) {
                 // Is this a csv file?
                 if(!nextFile.getFile().getName().toLowerCase().endsWith(".csv")) {
-                    LOG.info(nextFile + " ignoring file as not a csv");
+                    LOG.info("{} ignoring file as not a csv", nextFile);
                     continue;
                 }
 
                 // What is the change?
                 switch (nextFile.getType()) {
-                    case ADD:
-                    case MODIFY:
+                    case ADD, MODIFY:
                         fileUpdated(nextFile.getFile());
                         break;
                     case DELETE:

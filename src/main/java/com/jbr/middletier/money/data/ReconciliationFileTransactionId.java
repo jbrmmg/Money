@@ -23,8 +23,6 @@ public class ReconciliationFileTransactionId implements Serializable {
     }
 
     public ReconciliationFileTransactionId() {
-        this.file = null;
-        this.line = 0;
     }
 
     public ReconciliationFile getFile() {

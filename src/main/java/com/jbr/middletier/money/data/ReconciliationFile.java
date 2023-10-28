@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name="reconciliation_file")
-public class ReconciliationFile {
+public class ReconciliationFile implements Serializable {
     @Id
     @Size(max=100)
     @Column(name="name")
