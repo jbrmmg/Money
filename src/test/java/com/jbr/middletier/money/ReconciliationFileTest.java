@@ -34,15 +34,15 @@ public class ReconciliationFileTest {
     }
 
     private void testReconcilationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {
-        List<TransactionDTO> transactions = reconciliationFileManager.getFileTransactions(file);
+        ReconciliationFileManager.TransactionFileDetails transactionFileDetails = reconciliationFileManager.getFileTransactionDetails(file);
 
-        Assert.assertEquals(count, transactions.size());
+        Assert.assertEquals(count, transactionFileDetails.getTransactions().size());
 
         double totalIn = 0.0;
         double totalOut = 0.0;
-        LocalDate earliestDate = utilityMapper.map(transactions.get(0).getDate(),LocalDate.class);
-        LocalDate latestDate = utilityMapper.map(transactions.get(0).getDate(),LocalDate.class);
-        for(TransactionDTO next : transactions) {
+        LocalDate earliestDate = utilityMapper.map(transactionFileDetails.getTransactions().get(0).getDate(),LocalDate.class);
+        LocalDate latestDate = utilityMapper.map(transactionFileDetails.getTransactions().get(0).getDate(),LocalDate.class);
+        for(TransactionDTO next : transactionFileDetails.getTransactions()) {
             LocalDate transactionDate = utilityMapper.map(next.getDate(),LocalDate.class);
             if(transactionDate.isBefore(earliestDate)) {
                 earliestDate = transactionDate;

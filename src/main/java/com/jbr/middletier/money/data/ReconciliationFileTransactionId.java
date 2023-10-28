@@ -1,11 +1,13 @@
 package com.jbr.middletier.money.data;
 
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
+@Embeddable
 public class ReconciliationFileTransactionId implements Serializable {
     @NotNull
     @ManyToOne
@@ -18,6 +20,11 @@ public class ReconciliationFileTransactionId implements Serializable {
     public ReconciliationFileTransactionId(ReconciliationFile file, int line) {
         this.file = file;
         this.line = line;
+    }
+
+    public ReconciliationFileTransactionId() {
+        this.file = null;
+        this.line = 0;
     }
 
     public ReconciliationFile getFile() {

@@ -60,7 +60,7 @@ databaseChangeLog:
             referencedColumnNames: name
 
         - addPrimaryKey:
-            tableName: fk_rec_trn_file
+            tableName: rec_file_tran
             columnNames: file_name, line
 
         - addColumn:
