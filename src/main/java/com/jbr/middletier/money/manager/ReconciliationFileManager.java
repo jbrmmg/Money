@@ -8,6 +8,7 @@ import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.event.FileMonitorInstance;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ public class ReconciliationFileManager implements FileChangeListener {
     private final TransactionMapper transactionMapper;
     private final ReconciliationFileRepository reconciliationFileRepository;
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
+    private final List<FileMonitorInstance> monitors;
 
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
                                      ReconcileFormatRepository reconcileFormatRepository,
@@ -50,6 +52,7 @@ public class ReconciliationFileManager implements FileChangeListener {
         this.transactionMapper = transactionMapper;
         this.reconciliationFileRepository = reconciliationFileRepository;
         this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
+        this.monitors = new ArrayList<>();
     }
 
     public List<ReconciliationFileDTO> getFiles() {
@@ -69,6 +72,17 @@ public class ReconciliationFileManager implements FileChangeListener {
         }
 
         return result;
+    }
+
+    public void monitorInstance(FileMonitorInstance instance) {
+        for(FileMonitorInstance next : this.monitors) {
+            if(instance == next) {
+                // Already monitored
+                return;
+            }
+        }
+
+        this.monitors.add(instance);
     }
 
     private List<ReconcileFileLine> readContents(File transactionFile) throws IOException {
@@ -359,6 +373,16 @@ public class ReconciliationFileManager implements FileChangeListener {
                         fileDeleted(nextFile.getFile());
                         break;
                 }
+            }
+        }
+
+        // Tell the file monitors that there has been an update.
+        for(FileMonitorInstance next : this.monitors) {
+            if(next.getAge() > 120) {
+                // Remove from the list.
+                this.monitors.remove(next);
+            } else {
+                next.setFilesUpdated();
             }
         }
     }
