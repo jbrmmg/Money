@@ -57,19 +57,10 @@ public class ReconciliationFileManager implements FileChangeListener {
     }
 
     public List<ReconciliationFileDTO> getFiles() {
-        LOG.info("Get files from {}", applicationProperties.getReconcileFileLocation());
-
-        final File folder = new File(applicationProperties.getReconcileFileLocation());
-
         List<ReconciliationFileDTO> result = new ArrayList<>();
 
-        for(final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
-            if(!fileEntry.isDirectory() && fileEntry.getPath().endsWith(".csv")) {
-                ReconciliationFileDTO newReconciliationFile = new ReconciliationFileDTO();
-                newReconciliationFile.setFilename(fileEntry.getPath());
-
-                result.add(newReconciliationFile);
-            }
+        for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
+            result.add(this.transactionMapper.map(next,ReconciliationFileDTO.class));
         }
 
         return result;
