@@ -1,14 +1,10 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dto.ReconcileTransactionDTO;
-import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
-import com.jbr.middletier.money.dto.ReconciliationFileDTO;
-import com.jbr.middletier.money.event.FileMonitorInstance;
+import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
-import com.jbr.middletier.money.dto.MatchDataDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +29,15 @@ public class ReconciliationController {
 
     private final ReconciliationFileManager reconciliationFileManager;
     private final ReconciliationManager reconciliationManager;
+    private final Flux<ServerSentEvent<ReconcileFileDataUpdateDTO>> updateNotifier;
 
     @Autowired
     public ReconciliationController(ReconciliationFileManager reconciliationFileManager,
                                     ReconciliationManager reconciliationManager) {
         this.reconciliationFileManager = reconciliationFileManager;
         this.reconciliationManager = reconciliationManager;
+        this.updateNotifier = Flux.interval(Duration.ofSeconds(2))
+                .map(this::checkFileUpdates);
     }
 
     @PutMapping(path = "/ext/money/reconcile")
@@ -112,13 +111,17 @@ public class ReconciliationController {
         return this.reconcileDataDeleteExt();
     }
 
-    @GetMapping(path="/int/money/reconciliation/file-updates",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> fileUpdate() {
-        try {
-            FileMonitorInstance monitor = new FileMonitorInstance(reconciliationFileManager);
+    private ServerSentEvent<ReconcileFileDataUpdateDTO> checkFileUpdates(long unused) {
+        // Return the update information.
+        return ServerSentEvent.<ReconcileFileDataUpdateDTO> builder()
+                .data(reconciliationFileManager.getLastUpdateTime())
+                .build();
+    }
 
-            return Flux.interval(Duration.ofSeconds(2))
-                    .map(monitor::test);
+    @GetMapping(path="/int/money/reconciliation/file-updates",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<ReconcileFileDataUpdateDTO>> fileUpdate() {
+        try {
+            return this.updateNotifier;
         } catch (Exception e) {
             LOG.info("Exception");
         }

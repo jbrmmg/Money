@@ -3,6 +3,7 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.TransactionFileDetailsDTO;
 import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.junit.Assert;
@@ -34,7 +35,7 @@ public class ReconciliationFileTest {
     }
 
     private void testReconcilationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) throws IOException {
-        ReconciliationFileManager.TransactionFileDetails transactionFileDetails = reconciliationFileManager.getFileTransactionDetails(file);
+        TransactionFileDetailsDTO transactionFileDetails = reconciliationFileManager.getFileTransactionDetails(file);
 
         Assert.assertEquals(count, transactionFileDetails.getTransactions().size());
 

@@ -4,11 +4,12 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.ReconciliationFileRepository;
 import com.jbr.middletier.money.dataaccess.ReconciliationFileTransactionRepository;
+import com.jbr.middletier.money.dto.ReconcileFileDataUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.TransactionFileDetailsDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
-import com.jbr.middletier.money.event.FileMonitorInstance;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +41,7 @@ public class ReconciliationFileManager implements FileChangeListener {
     private final TransactionMapper transactionMapper;
     private final ReconciliationFileRepository reconciliationFileRepository;
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
-    private final List<FileMonitorInstance> monitors;
+    private LocalDateTime lastUpdateTime;
 
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
                                      ReconcileFormatRepository reconcileFormatRepository,
@@ -52,7 +53,7 @@ public class ReconciliationFileManager implements FileChangeListener {
         this.transactionMapper = transactionMapper;
         this.reconciliationFileRepository = reconciliationFileRepository;
         this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
-        this.monitors = new ArrayList<>();
+        this.lastUpdateTime = LocalDateTime.now();
     }
 
     public List<ReconciliationFileDTO> getFiles() {
@@ -72,17 +73,6 @@ public class ReconciliationFileManager implements FileChangeListener {
         }
 
         return result;
-    }
-
-    public void monitorInstance(FileMonitorInstance instance) {
-        for(FileMonitorInstance next : this.monitors) {
-            if(instance == next) {
-                // Already monitored
-                return;
-            }
-        }
-
-        this.monitors.add(instance);
     }
 
     private List<ReconcileFileLine> readContents(File transactionFile) throws IOException {
@@ -191,56 +181,10 @@ public class ReconciliationFileManager implements FileChangeListener {
         return result;
     }
 
-    public static class TransactionFileDetails {
-        List<TransactionDTO> transactions;
-        boolean ok;
-        String error;
-        String accountId;
-
-        public TransactionFileDetails() {
-            this.transactions = new ArrayList<>();
-            this.ok = false;
-            this.error = "Uninitialised";
-            this.accountId = null;
-        }
-
-        public List<TransactionDTO> getTransactions() {
-            return this.transactions;
-        }
-
-        public void addTransaction(TransactionDTO transaction) {
-            this.transactions.add(transaction);
-        }
-
-        public void setOk(boolean OK) {
-            this.ok = OK;
-        }
-
-        public boolean isOk() {
-            return this.ok;
-        }
-
-        public void setError(String error) {
-            this.error = error;
-        }
-
-        public String getError() {
-            return this.error;
-        }
-
-        public void setAccountId(String account) {
-            this.accountId = account;
-        }
-
-        public String getAccountId() {
-            return this.accountId;
-        }
-    }
-
-    public TransactionFileDetails getFileTransactionDetails(ReconciliationFileDTO file) throws IOException {
+    public TransactionFileDetailsDTO getFileTransactionDetails(ReconciliationFileDTO file) throws IOException {
         LOG.info("Get transactions from {}", file.getFilename());
 
-        TransactionFileDetails result = new TransactionFileDetails();
+        TransactionFileDetailsDTO result = new TransactionFileDetailsDTO();
 
         // Get the full filename
         File transactionFile = new File(file.getFilename());
@@ -291,7 +235,7 @@ public class ReconciliationFileManager implements FileChangeListener {
             ReconciliationFileDTO fileInformation = new ReconciliationFileDTO();
             fileInformation.setFilename(new File(this.applicationProperties.getReconcileFileLocation(), update.getName()).toString());
 
-            TransactionFileDetails details = this.getFileTransactionDetails(fileInformation);
+            TransactionFileDetailsDTO details = this.getFileTransactionDetails(fileInformation);
 
             // Does this already exist?
             dbFile = this.reconciliationFileRepository.findById(update.getName());
@@ -325,7 +269,7 @@ public class ReconciliationFileManager implements FileChangeListener {
 
                 dbFile.get().setError(null);
             } else {
-                dbFile.get().setError(details.error);
+                dbFile.get().setError(details.getError());
             }
         } catch (IOException error) {
             dbFile.ifPresent(reconciliationFile -> reconciliationFile.setError("Exception processing file."));
@@ -335,11 +279,16 @@ public class ReconciliationFileManager implements FileChangeListener {
         // Save the data.
         dbFile.ifPresent(this.reconciliationFileRepository::save);
         this.reconciliationFileTransactionRepository.saveAll(transactions);
+        this.lastUpdateTime = LocalDateTime.now();
     }
 
     public void clearFileData() {
         this.reconciliationFileTransactionRepository.deleteAll();
         this.reconciliationFileRepository.deleteAll();
+    }
+
+    public ReconcileFileDataUpdateDTO getLastUpdateTime() {
+        return new ReconcileFileDataUpdateDTO(this.lastUpdateTime,applicationProperties.getReconcileFileLocation());
     }
 
     @Transactional
@@ -348,6 +297,7 @@ public class ReconciliationFileManager implements FileChangeListener {
         if(dbFile.isPresent()) {
             this.reconciliationFileTransactionRepository.deleteById_File(dbFile.get());
             this.reconciliationFileRepository.delete(dbFile.get());
+            this.lastUpdateTime = LocalDateTime.now();
         }
 
         LOG.info("Deleted file: {}", deleted);
@@ -373,16 +323,6 @@ public class ReconciliationFileManager implements FileChangeListener {
                         fileDeleted(nextFile.getFile());
                         break;
                 }
-            }
-        }
-
-        // Tell the file monitors that there has been an update.
-        for(FileMonitorInstance next : this.monitors) {
-            if(next.getAge() > 120) {
-                // Remove from the list.
-                this.monitors.remove(next);
-            } else {
-                next.setFilesUpdated();
             }
         }
     }

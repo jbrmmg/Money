@@ -59,7 +59,7 @@ public class ReconciliationManager {
     public void loadFile(ReconciliationFileDTO fileResponse, ReconciliationFileManager reconciliationFileManager) throws IOException {
         clearRepositoryData();
 
-        ReconciliationFileManager.TransactionFileDetails transactionFileDetails = reconciliationFileManager.getFileTransactionDetails(fileResponse);
+        TransactionFileDetailsDTO transactionFileDetails = reconciliationFileManager.getFileTransactionDetails(fileResponse);
 
         for(TransactionDTO next : transactionFileDetails.getTransactions()) {
             ReconciliationData newReconciliationData = transactionMapper.map(next,ReconciliationData.class);
