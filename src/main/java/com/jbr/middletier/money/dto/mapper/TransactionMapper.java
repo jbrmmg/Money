@@ -13,7 +13,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class TransactionMapper extends ModelMapper {
     @Autowired
-    public TransactionMapper(AccountManager accountManager, CategoryManager categoryManager, StatementManager statementManager) {
+    public TransactionMapper(AccountManager accountManager, CategoryManager categoryManager, StatementManager statementManager,AccountMapper accountMapper) {
         StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
         LocalDateStringConverter localDateStringConverter = new LocalDateStringConverter();
         this.addConverter(new AccountStringConverter());
@@ -26,7 +26,7 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new DoubleFinancialAmountConverter());
         this.addConverter(new TransactionFromDTO(accountManager,categoryManager,statementManager,stringLocalDateConverter));
         this.addConverter(new TransactionToDTO(localDateStringConverter));
-        this.addConverter(new ReconciliationFileToDTO());
+        this.addConverter(new ReconciliationFileToDTO(accountMapper));
         this.createTypeMap(DateRange.class, DateRangeDTO.class);
         this.createTypeMap(DateRangeDTO.class, DateRange.class);
     }
