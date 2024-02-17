@@ -18,7 +18,9 @@ public class ReconciliationFileToDTO extends AbstractConverter<ReconciliationFil
         ReconciliationFileDTO result = new ReconciliationFileDTO();
 
         result.setFilename(reconciliationFile.getName());
-        result.setAccount(accountMapper.map(reconciliationFile.getAccount(), AccountDTO.class));
+        if(reconciliationFile.getAccount() != null) {
+            result.setAccount(accountMapper.map(reconciliationFile.getAccount(), AccountDTO.class));
+        }
         result.setError(reconciliationFile.getError());
         result.setSize(reconciliationFile.getSize());
         result.setLastModified(reconciliationFile.getLastModified());

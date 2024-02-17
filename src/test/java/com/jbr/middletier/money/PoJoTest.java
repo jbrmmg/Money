@@ -682,7 +682,20 @@ public class PoJoTest {
         Assert.assertEquals(321L,reconciliationFileDTO.getSize(),0.1);
         Assert.assertEquals(LocalDateTime.of(2023,1,2,6,32,4),reconciliationFileDTO.getLastModified());
         Assert.assertEquals("BLAH",reconciliationFileDTO.getAccount().getId());
-        Assert.assertEquals("FredFinstone.txt",reconciliationFileDTO.getFilename());
+        Assert.assertEquals("FredFlinstone.txt",reconciliationFileDTO.getFilename());
         Assert.assertEquals("Error", reconciliationFileDTO.getError());
+
+        reconciliationFile.setError("Another");
+        reconciliationFile.setSize(921L);
+        reconciliationFile.setName("BarneyRubble.txt");
+        reconciliationFile.setLastModified(LocalDateTime.of(2023,2,3,4,12,6));
+        reconciliationFile.setAccount(null);
+
+        reconciliationFileDTO = transactionMapper.map(reconciliationFile,ReconciliationFileDTO.class);
+        Assert.assertEquals(921L,reconciliationFileDTO.getSize(),0.1);
+        Assert.assertEquals(LocalDateTime.of(2023,2,3,4,12,6),reconciliationFileDTO.getLastModified());
+        Assert.assertNull(reconciliationFileDTO.getAccount());
+        Assert.assertEquals("BarneyRubble.txt",reconciliationFileDTO.getFilename());
+        Assert.assertEquals("Another", reconciliationFileDTO.getError());
     }
 }
