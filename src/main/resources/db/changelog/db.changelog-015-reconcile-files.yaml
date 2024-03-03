@@ -24,7 +24,7 @@ databaseChangeLog:
                   type: int(11)
               - column:
                   name: error
-                  type: varchar(100)
+                  type: varchar(200)
 
         - createTable:
             tableName: rec_file_tran

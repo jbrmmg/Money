@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @Controller
@@ -60,7 +61,39 @@ public class ReconciliationFileManager implements FileChangeListener {
         List<ReconciliationFileDTO> result = new ArrayList<>();
 
         for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
-            result.add(this.transactionMapper.map(next,ReconciliationFileDTO.class));
+            ReconciliationFileDTO nextFile = transactionMapper.map(next,ReconciliationFileDTO.class);
+
+            // Get the details of the file.
+            int transactionCount = 0;
+            double debitSum = 0.0;
+            double creditSum = 0.0;
+            LocalDate earliest = null;
+            LocalDate latest = null;
+            for(ReconciliationFileTransaction nextTran : reconciliationFileTransactionRepository.findById_File(next)) {
+                transactionCount++;
+
+                if(nextTran.getAmount() > 0) {
+                    creditSum += nextTran.getAmount();
+                } else {
+                    debitSum += nextTran.getAmount();
+                }
+
+                if(earliest == null || nextTran.getDate().isBefore(earliest)) {
+                    earliest = nextTran.getDate();
+                }
+
+                if(latest == null || nextTran.getDate().isAfter(latest)) {
+                    latest = nextTran.getDate();
+                }
+            }
+
+            nextFile.setTransactionCount(transactionCount);
+            nextFile.setCreditSum(creditSum);
+            nextFile.setDebitSum(debitSum);
+            nextFile.setEarliestTransaction(earliest);
+            nextFile.setLatestTransaction(latest);
+
+            result.add(nextFile);
         }
 
         return result;
@@ -68,9 +101,12 @@ public class ReconciliationFileManager implements FileChangeListener {
 
     private List<ReconcileFileLine> readContents(File transactionFile) throws IOException {
         List<ReconcileFileLine> result = new ArrayList<>();
+        AtomicInteger lineNumber = new AtomicInteger();
 
         try(Stream<String> stream = Files.lines(transactionFile.toPath())) {
             stream.forEach(s -> {
+                lineNumber.getAndIncrement();
+
                 // Remove any characters that are not principal
                 s = s.replaceAll("\\P{InBasic_Latin}", "");
 
@@ -79,7 +115,7 @@ public class ReconciliationFileManager implements FileChangeListener {
                     s = s.replace("\t", " ");
                 }
 
-                result.add(new ReconcileFileLine(s.trim()));
+                result.add(new ReconcileFileLine(lineNumber.get(), s.trim()));
             });
         }
 
@@ -124,28 +160,27 @@ public class ReconciliationFileManager implements FileChangeListener {
         return new FileFormatDescription();
     }
 
-    private Transaction processLine(FileFormatDescription format, ReconcileFileLine line) {
-        try {
-            LOG.info("Process Line");
-            for(String next : line.getColumns()) {
-                LOG.info("Next {}",next);
-            }
-            LOG.info("Format {}", format.getValid());
-            // We need to get 3 things from the line; date, description and amount.
-            Transaction result = new Transaction();
-            result.setDate(format.getDate(line));
-            result.setAmount(format.getAmount(line));
-            result.setDescription(format.getDescription(line));
+    private Transaction processLine(FileFormatDescription format, ReconcileFileLine line) throws FileFormatException {
+        LOG.info("Process Line");
+        for(String next : line.getColumns()) {
+            LOG.info("Next {}",next);
+        }
+        LOG.info("Format {}", format.getValid());
+        // We need to get 3 things from the line; date, description and amount.
+        Transaction result = new Transaction();
+        result.setDate(format.getDate(line));
+        result.setAmount(format.getAmount(line));
+        result.setDescription(format.getDescription(line));
 
-            return result;
-        } catch (FileFormatException ex) {
-            // The line is ignored if it cannot be processes.
-            LOG.warn("Line is ignored {} {}", line.getLine(), ex.getMessage());
+        // Sometimes the date may be null (for pending transactions), if this is the case ignore the transaction.
+        if(result.getDate() == null) {
             return null;
         }
+
+        return result;
     }
 
-    private List<TransactionDTO> processFile(FileFormatDescription format, List<ReconcileFileLine> contents) {
+    private List<TransactionDTO> processFile(FileFormatDescription format, List<ReconcileFileLine> contents) throws FileFormatException {
         LOG.info("Process file with format {}", format);
 
         List<TransactionDTO> result = new ArrayList<>();
@@ -201,16 +236,20 @@ public class ReconciliationFileManager implements FileChangeListener {
         }
 
         // Process the file.
-        List<TransactionDTO> transactions = processFile(formatDescription, contents);
-        LOG.info("Processed file, found {} transactions", transactions.size());
+        try {
+            List<TransactionDTO> transactions = processFile(formatDescription, contents);
+            LOG.info("Processed file, found {} transactions", transactions.size());
 
-        if(!transactions.isEmpty()) {
-            for (TransactionDTO next : transactions) {
-                result.addTransaction(next);
+            if (!transactions.isEmpty()) {
+                for (TransactionDTO next : transactions) {
+                    result.addTransaction(next);
+                }
+                result.setOk(true);
+            } else {
+                result.setError("No transactions found");
             }
-            result.setOk(true);
-        } else {
-            result.setError("No transactions found");
+        } catch (FileFormatException e) {
+            result.setError(e.getMessage());
         }
 
         return result;
