@@ -32,6 +32,8 @@ public class ReconciliationManager {
     private final TransactionMapper transactionMapper;
     private final ReconciliationMapper reconciliationMapper;
     private Account lastAccount;
+    private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
+    private final ReconciliationFileRepository reconciliationFileRepository;
 
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
                                  CategoryRepository categoryRepository,
@@ -40,7 +42,9 @@ public class ReconciliationManager {
                                  StatementRepository statementRepository,
                                  AccountTransactionManager accountTransactionManager,
                                  TransactionMapper transactionMapper,
-                                 ReconciliationMapper reconciliationMapper) {
+                                 ReconciliationMapper reconciliationMapper,
+                                 ReconciliationFileTransactionRepository reconciliationFileTransactionRepository,
+                                 ReconciliationFileRepository reconciliationFileRepository) {
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
         this.accountRepository = accountRepository;
@@ -50,22 +54,32 @@ public class ReconciliationManager {
         this.transactionMapper = transactionMapper;
         this.reconciliationMapper = reconciliationMapper;
         this.lastAccount = null;
+        this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
+        this.reconciliationFileRepository = reconciliationFileRepository;
     }
 
     public void clearRepositoryData() {
         reconciliationRepository.deleteAll();
     }
 
-    public void loadFile(ReconciliationFileDTO fileResponse, ReconciliationFileManager reconciliationFileManager) throws IOException {
+    public void loadFile(ReconciliationFileLoadDTO fileLoad, ReconciliationFileManager reconciliationFileManager) throws IOException {
         clearRepositoryData();
 
-        TransactionFileDetailsDTO transactionFileDetails = reconciliationFileManager.getFileTransactionDetails(fileResponse);
+        // Get the reconciliation file.
+        Optional<ReconciliationFile> file = reconciliationFileRepository.findById(fileLoad.getFilename());
 
-        for(TransactionDTO next : transactionFileDetails.getTransactions()) {
-            ReconciliationData newReconciliationData = transactionMapper.map(next,ReconciliationData.class);
+        if(file.isPresent()) {
+            // Copy the transactions.
+            for(ReconciliationFileTransaction next : reconciliationFileTransactionRepository.findById_File(file.get())) {
+                ReconciliationData newReconciliationData = transactionMapper.map(next,ReconciliationData.class);
 
-            reconciliationRepository.save(newReconciliationData);
+                reconciliationRepository.save(newReconciliationData);
+            }
+
+            return;
         }
+
+        LOG.warn("{} not found, nothing loaded", fileLoad.getFilename());
     }
 
     public void autoReconcileData() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {

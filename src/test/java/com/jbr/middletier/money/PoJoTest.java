@@ -697,5 +697,9 @@ public class PoJoTest {
         Assert.assertNull(reconciliationFileDTO.getAccount());
         Assert.assertEquals("BarneyRubble.txt",reconciliationFileDTO.getFilename());
         Assert.assertEquals("Another", reconciliationFileDTO.getError());
+
+        ReconciliationFileLoadDTO fileLoad = new ReconciliationFileLoadDTO();
+        fileLoad.setFilename("grep");
+        Assert.assertEquals("grep",fileLoad.getFilename());
     }
 }
