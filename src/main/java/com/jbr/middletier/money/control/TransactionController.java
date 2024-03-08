@@ -54,12 +54,12 @@ public class TransactionController {
     }
 
     @PostMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionException {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PostMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws UpdateDeleteCategoryException, UpdateDeleteAccountException, InvalidTransactionException {
+    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 

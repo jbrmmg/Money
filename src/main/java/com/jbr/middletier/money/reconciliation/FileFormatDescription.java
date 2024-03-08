@@ -105,11 +105,17 @@ public class FileFormatDescription {
             return unQuote(line.getColumns().get(index).trim());
         }
 
-        throw new FileFormatException("Required index out of range");
+        throw new FileFormatException(line.getLineNumber(),"Required index out of range");
     }
 
     public LocalDate getDate(ReconcileFileLine line) throws FileFormatException {
         String value = getColumnValue(getDateColumn(),line);
+
+        // If the date is a specific value then ignore it.
+        // TODO make this part of the format description database data
+        if(value.equalsIgnoreCase("pending")) {
+            return null;
+        }
 
         LocalDate result;
         try {
@@ -120,7 +126,7 @@ public class FileFormatDescription {
 
             result = LocalDate.parse(value,formatter);
         } catch (DateTimeParseException ex) {
-            throw new FileFormatException("Cannot convert the string to a date " + ex.getMessage());
+            throw new FileFormatException(line.getLineNumber(),"Cannot convert the string to a date " + ex.getMessage());
         }
 
         return result;
@@ -141,7 +147,7 @@ public class FileFormatDescription {
                 numericValue *= -1;
             }
         } catch (NumberFormatException ex) {
-            throw new FileFormatException("Cannot convert the string to an amount " + ex.getMessage());
+            throw new FileFormatException(line.getLineNumber(),"Cannot convert the string to an amount " + ex.getMessage());
         }
 
         return numericValue;
@@ -173,5 +179,13 @@ public class FileFormatDescription {
     public String getDescription(ReconcileFileLine line) throws FileFormatException {
         String description = getColumnValue(getDescriptionColumn(),line).trim();
         return description.substring(0, Math.min(description.length(), 40));
+    }
+
+    public String getAccountId() {
+        if(this.reconcileFormat != null && this.reconcileFormat.getAccount() != null) {
+            return this.reconcileFormat.getAccount().getId();
+        }
+
+        return null;
     }
 }

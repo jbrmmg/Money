@@ -6,10 +6,12 @@ import java.util.List;
 public class ReconcileFileLine {
     private final String line;
     private final List<String> columns;
+    private final int lineNumber;
 
-    public ReconcileFileLine(String line) {
+    public ReconcileFileLine(int lineNumber, String line) {
         this.line = line;
         this.columns = Arrays.asList(line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1));
+        this.lineNumber = lineNumber;
     }
 
     public String getLine() {
@@ -18,5 +20,9 @@ public class ReconcileFileLine {
 
     public List<String> getColumns() {
         return this.columns;
+    }
+
+    public int getLineNumber() {
+        return this.lineNumber;
     }
 }
