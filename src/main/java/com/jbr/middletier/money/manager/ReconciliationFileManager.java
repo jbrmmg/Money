@@ -96,6 +96,21 @@ public class ReconciliationFileManager implements FileChangeListener {
             result.add(nextFile);
         }
 
+        // Sort the list so any bad files are at the bottom.
+        result.sort((lhs, rhs) -> {
+            // If there is an error, sort to the bottom.
+            if (lhs.getError() != null && rhs.getError() == null) {
+                return 1;
+            }
+
+            if (lhs.getError() == null && rhs.getError() != null) {
+                return -1;
+            }
+
+            // Otherwise just sort on name.
+            return lhs.getFilename().compareTo(rhs.getFilename());
+        });
+
         return result;
     }
 
