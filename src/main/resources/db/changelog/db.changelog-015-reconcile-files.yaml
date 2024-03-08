@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: 15
+      author: jason
+      changes:
+
+        - createTable:
+            tableName: reconciliation_file
+            columns:
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: char(4)
+              - column:
+                  name: last_modified
+                  type: datetime
+              - column:
+                  name: size
+                  type: int(11)
+              - column:
+                  name: error
+                  type: varchar(200)
+
+        - createTable:
+            tableName: rec_file_tran
+            columns:
+              - column:
+                  name: file_name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line
+                  type: int(11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date
+                  type: datetime
+              - column:
+                  name: amount
+                  type: decimal(10,2)
+              - column:
+                  name: description
+                  type: varchar(40)
+              - column:
+                  name: error
+                  type: varchar(100)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_rec_trn_file
+            baseTableName: rec_file_tran
+            baseColumnNames: file_name
+            referencedTableName: reconciliation_file
+            referencedColumnNames: name
+
+        - addPrimaryKey:
+            tableName: rec_file_tran
+            columnNames: file_name, line
+
+        - addColumn:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  type: varchar(4)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_account_format
+            baseTableName: reconcile_format
+            baseColumnNames: account_id
+            referencedTableName: account
+            referencedColumnNames: id
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: 'AMEX'
+            where: id = 'amex'
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: 'BANK'
+            where: id = 'fd'
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: 'JLP2'
+            where: id = 'jlp2' and 'JLP2' IN (SELECT id FROM account WHERE id = 'JLP2')
+
+        - update:
+            tableName: reconcile_format
+            columns:
+              - column:
+                  name: account_id
+                  value: select id from account where id = 'BARC'
+            where: id = 'barc' and 'BARC' IN (SELECT id FROM account WHERE id = 'BARC')

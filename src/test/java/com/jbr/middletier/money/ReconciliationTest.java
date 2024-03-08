@@ -10,6 +10,7 @@ import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
+import com.jbr.middletier.money.dto.ReconciliationFileLoadDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
@@ -131,8 +132,8 @@ public class ReconciliationTest extends Support {
                 .andExpect(status().isOk());
     }
 
-    private ReconciliationFileDTO getReconcileFile() {
-        ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
+    private ReconciliationFileLoadDTO getReconcileFile() {
+        ReconciliationFileLoadDTO reconciliationFile = new ReconciliationFileLoadDTO();
 
         fileManager.getFiles().forEach(f -> {
             if(f.getFilename().contains("test.AMEX.match.csv")) {
@@ -145,7 +146,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testClearReconcile() throws Exception {
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
 
         getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
                         .content(this.json(reconciliationFile))
@@ -218,7 +219,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testSetCategoryUpdate() throws IOException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         final int[] id = {0};
@@ -342,7 +343,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testSetCategoryUpdateInvalidCategory() throws IOException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         final int[] id = {0};
@@ -369,7 +370,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void reconcileInvalidId() throws IOException, MultipleUnlockedStatementException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         try {
@@ -384,7 +385,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testMultipleUnlockedException() throws IOException, InvalidTransactionIdException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         // Create a second unlocked statement.
@@ -439,7 +440,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testMatchExactly() throws IOException, UpdateDeleteAccountException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         // Find the statement that is not locked.
@@ -468,7 +469,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testMatchExactlyPlusRecon() throws IOException, UpdateDeleteAccountException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         // Create a transaction
@@ -492,7 +493,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testMatchMoreTransactions() throws IOException, UpdateDeleteAccountException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         Statement unlocked = getUnlockedStatement("BANK");
@@ -520,7 +521,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testAutomaticRec() throws IOException, UpdateDeleteAccountException, MultipleUnlockedStatementException, UpdateDeleteCategoryException, InvalidTransactionIdException, InvalidTransactionException {
         // load the file.
-        ReconciliationFileDTO reconciliationFile = getReconcileFile();
+        ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
 
         List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
