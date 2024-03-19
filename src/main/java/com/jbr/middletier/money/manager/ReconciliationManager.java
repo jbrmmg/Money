@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -62,7 +64,7 @@ public class ReconciliationManager {
         reconciliationRepository.deleteAll();
     }
 
-    public void loadFile(ReconciliationFileLoadDTO fileLoad, ReconciliationFileManager reconciliationFileManager) throws IOException {
+    public void loadFile(ReconciliationFileLoadDTO fileLoad) throws IOException {
         clearRepositoryData();
 
         // Get the reconciliation file.
@@ -80,6 +82,7 @@ public class ReconciliationManager {
         }
 
         LOG.warn("{} not found, nothing loaded", fileLoad.getFilename());
+        throw new FileNotFoundException("Cannot find " + fileLoad.getFilename());
     }
 
     public void autoReconcileData() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {

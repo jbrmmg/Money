@@ -48,8 +48,6 @@ public class ReconciliationTest extends Support {
     @Autowired
     private ReconciliationManager reconciliationManager;
     @Autowired
-    private ReconciliationFileManager reconciliationFileManager;
-    @Autowired
     private StatementRepository statementRepository;
 
     @Before
@@ -220,7 +218,7 @@ public class ReconciliationTest extends Support {
     public void testSetCategoryUpdate() throws IOException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         final int[] id = {0};
         this.reconciliationRepository.findAll().forEach(r -> {
@@ -344,7 +342,7 @@ public class ReconciliationTest extends Support {
     public void testSetCategoryUpdateInvalidCategory() throws IOException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         final int[] id = {0};
         this.reconciliationRepository.findAll().forEach(r -> {
@@ -371,7 +369,7 @@ public class ReconciliationTest extends Support {
     public void reconcileInvalidId() throws IOException, MultipleUnlockedStatementException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         try {
             // There should be no transactions
@@ -386,7 +384,7 @@ public class ReconciliationTest extends Support {
     public void testMultipleUnlockedException() throws IOException, InvalidTransactionIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         // Create a second unlocked statement.
         Statement duplicate = new Statement();
@@ -441,7 +439,7 @@ public class ReconciliationTest extends Support {
     public void testMatchExactly() throws IOException, UpdateDeleteAccountException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         // Find the statement that is not locked.
         Statement unlocked = getUnlockedStatement("BANK");
@@ -470,7 +468,7 @@ public class ReconciliationTest extends Support {
     public void testMatchExactlyPlusRecon() throws IOException, UpdateDeleteAccountException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         // Create a transaction
         createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
@@ -494,7 +492,7 @@ public class ReconciliationTest extends Support {
     public void testMatchMoreTransactions() throws IOException, UpdateDeleteAccountException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         Statement unlocked = getUnlockedStatement("BANK");
 
@@ -522,7 +520,7 @@ public class ReconciliationTest extends Support {
     public void testAutomaticRec() throws IOException, UpdateDeleteAccountException, MultipleUnlockedStatementException, UpdateDeleteCategoryException, InvalidTransactionIdException, InvalidTransactionException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
-        this.reconciliationManager.loadFile(reconciliationFile, reconciliationFileManager);
+        this.reconciliationManager.loadFile(reconciliationFile);
 
         List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
         int reconcile = 0;
