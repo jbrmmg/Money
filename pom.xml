@@ -40,6 +40,7 @@
                 <version>${org.springframework.version}</version>
                 <configuration>
                     <executable>true</executable>
+                    <excludeDevtools>false</excludeDevtools>
                 </configuration>
                 <executions>
                     <execution>
