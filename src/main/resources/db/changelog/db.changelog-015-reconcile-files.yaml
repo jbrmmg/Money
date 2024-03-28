@@ -106,5 +106,5 @@ databaseChangeLog:
             columns:
               - column:
                   name: account_id
-                  value: select id from account where id = 'BARC'
+                  value: 'BARC'
             where: id = 'barc' and 'BARC' IN (SELECT id FROM account WHERE id = 'BARC')
