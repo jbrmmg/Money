@@ -54,7 +54,7 @@ public class ReconciliationController {
     @PostMapping(path = "/int/money/reconciliation/load")
     public @ResponseBody Iterable<ReconciliationFileDTO> reconcileDataLoadInt(@RequestBody ReconciliationFileLoadDTO reconciliationFileLoad) throws IOException {
         LOG.info("Request to load file - {}", reconciliationFileLoad.getFilename());
-        reconciliationManager.loadFile(reconciliationFileLoad, reconciliationFileManager);
+        reconciliationManager.loadFile(reconciliationFileLoad);
         return getListOfFiles();
     }
 

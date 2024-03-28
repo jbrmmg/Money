@@ -536,7 +536,7 @@ public class MoneyTest extends Support {
         String absolutePath = file.getAbsolutePath();
 
         ReconciliationFileDTO loadFileRequest = new ReconciliationFileDTO();
-        loadFileRequest.setFilename (absolutePath + "/" + filename);
+        loadFileRequest.setFilename (filename);
 
         getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
                         .contentType(getContentType())
