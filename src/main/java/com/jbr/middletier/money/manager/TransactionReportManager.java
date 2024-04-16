@@ -1,69 +1,47 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.dataaccess.AccountRepository;
+import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 public class TransactionReportManager {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionReportManager.class);
 
+    private final AccountRepository accountRepository;
+    private final CategoryRepository categoryRepository;
+    private final TransactionRepository transactionRepository;
+    private final TransactionFilter filter;
+
+    @Autowired
+    public TransactionReportManager(AccountRepository accountRepository,
+                                    CategoryRepository categoryRepository,
+                                    TransactionRepository transactionRepository,
+                                    TransactionFilter filter) {
+        this.accountRepository = accountRepository;
+        this.categoryRepository = categoryRepository;
+        this.transactionRepository = transactionRepository;
+        this.filter = filter;
+    }
+
     private String getDateString(LocalDate date) {
         return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-    }
-
-    private boolean transctionPassFilterValue(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        return true;
-    }
-
-    private boolean transctionPassFilterDate(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        return true;
-    }
-
-    private boolean transctionPassFilterCategory(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        return true;
-    }
-
-    private boolean transctionPassFilterAccount(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        return true;
-    }
-
-    private boolean transctionPassFilterStatement(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        return true;
-    }
-
-    private TransactionReportDTO transactionPassesFilter(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        // Make sure the transaction passes the filters.
-        if(!transctionPassFilterValue(transaction, filter)) {
-            return null;
-        }
-
-        if(!transctionPassFilterDate(transaction, filter)) {
-            return null;
-        }
-
-        if(!transctionPassFilterAccount(transaction, filter)) {
-            return null;
-        }
-
-        if(!transctionPassFilterCategory(transaction, filter)) {
-            return null;
-        }
-
-        if(!transctionPassFilterStatement(transaction, filter)) {
-            return null;
-        }
-
-        return transaction;
     }
 
     private List<TransactionReportDTO> getPredicted(TransactionFilterDTO filter) {
@@ -87,14 +65,20 @@ public class TransactionReportManager {
     private List<TransactionReportDTO> getStandardTransactions(TransactionFilterDTO filter) {
         // If predicated or from reconciled then we don't need standard tranactions.
         if(filter.getPredicted() != null && filter.getPredicted().equals(Boolean.TRUE)) {
-            return new ArrayList<TransactionReportDTO>();
+            return new ArrayList<>();
         }
 
         if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.TRUE)) {
-            return new ArrayList<TransactionReportDTO>();
+            return new ArrayList<>();
         }
 
-        return new ArrayList<TransactionReportDTO>();
+        ArrayList<TransactionReportDTO> result = new ArrayList<>();
+
+        for(Transaction next : transactionRepository.findAll()) {
+            this.filter.passTransaction(next, filter).ifPresent(result::add);
+        }
+
+        return result;
     }
 
     private FinancialAmount calculateOpeningBalance() {
@@ -118,6 +102,8 @@ public class TransactionReportManager {
     }
 
     public TransactionDataDTO getTransactions(TransactionFilterDTO filter) {
+        LOG.info("Get Transactions based on {}",filter);
+
         TransactionDataDTO result = new TransactionDataDTO();
 
         // Add the transactions.

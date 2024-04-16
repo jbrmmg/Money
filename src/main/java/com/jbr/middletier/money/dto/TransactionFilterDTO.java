@@ -1,12 +1,13 @@
 package com.jbr.middletier.money.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionFilterDTO {
     private ValueRangeDTO debitRange;
     private ValueRangeDTO creditRange;
     private DateRangeDTO dateRange;
-    private StatementIdDTO statementId;
+    private StatementDateDTO statementDate;
     private List<AccountDTO> accounts;
     private List<CategoryDTO> categories;
     private Boolean locked;
@@ -14,6 +15,10 @@ public class TransactionFilterDTO {
     private Boolean fromReconciled;
 
     public ValueRangeDTO getDebitRange() {
+        if(this.debitRange == null) {
+            return new ValueRangeDTO();
+        }
+
         return debitRange;
     }
 
@@ -22,6 +27,10 @@ public class TransactionFilterDTO {
     }
 
     public ValueRangeDTO getCreditRange() {
+        if(this.creditRange == null) {
+            return new ValueRangeDTO();
+        }
+
         return creditRange;
     }
 
@@ -30,6 +39,10 @@ public class TransactionFilterDTO {
     }
 
     public DateRangeDTO getDateRange() {
+        if(this.dateRange == null) {
+            return new DateRangeDTO();
+        }
+
         return dateRange;
     }
 
@@ -37,15 +50,23 @@ public class TransactionFilterDTO {
         this.dateRange = dateRange;
     }
 
-    public StatementIdDTO getStatementId() {
-        return statementId;
+    public StatementDateDTO getStatementDate() {
+        if(this.statementDate == null) {
+            return new StatementDateDTO();
+        }
+
+        return statementDate;
     }
 
-    public void setStatementId(StatementIdDTO statementId) {
-        this.statementId = statementId;
+    public void setStatementDate(StatementDateDTO statementDate) {
+        this.statementDate = statementDate;
     }
 
     public List<AccountDTO> getAccounts() {
+        if(this.accounts == null) {
+            return new ArrayList<>();
+        }
+
         return accounts;
     }
 
@@ -54,6 +75,10 @@ public class TransactionFilterDTO {
     }
 
     public List<CategoryDTO> getCategories() {
+        if(this.categories == null) {
+            return new ArrayList<>();
+        }
+
         return categories;
     }
 
@@ -83,5 +108,65 @@ public class TransactionFilterDTO {
 
     public void setFromReconciled(Boolean fromReconciled) {
         this.fromReconciled = fromReconciled;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("Filter: debitRange: ");
+        builder.append(this.getDebitRange());
+
+        builder.append(", creditRange: ");
+        builder.append(this.getCreditRange());
+
+        builder.append(", dateRange: ");
+        builder.append(this.getDateRange());
+
+        builder.append(", statementDate: ");
+        builder.append(this.getStatementDate());
+
+        builder.append(", accounts: (");
+        if(!this.getAccounts().isEmpty()) {
+            builder.append(String.join(",",this.getAccounts().stream()
+                    .map(AccountDTO::getId)
+                    .toList()));
+        } else {
+            builder.append("any");
+        }
+        builder.append(")");
+
+        builder.append(", categories: (");
+        if(!this.getCategories().isEmpty()) {
+            builder.append(String.join(",",this.getCategories().stream()
+                    .map(CategoryDTO::getId)
+                    .toList()));
+        } else {
+            builder.append("any");
+        }
+        builder.append(")");
+
+        builder.append(", locked: ");
+        if(this.getLocked() == null) {
+            builder.append("any");
+        } else {
+            builder.append(this.getLocked());
+        }
+
+        builder.append(", predicted: ");
+        if(this.getPredicted() == null) {
+            builder.append("any");
+        } else {
+            builder.append(this.getPredicted());
+        }
+
+        builder.append(", from Reconciled: ");
+        if(this.getFromReconciled() == null) {
+            builder.append("any");
+        } else {
+            builder.append(this.getFromReconciled());
+        }
+
+        return builder.toString();
     }
 }

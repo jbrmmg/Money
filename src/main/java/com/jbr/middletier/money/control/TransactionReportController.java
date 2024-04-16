@@ -21,13 +21,15 @@ public class TransactionReportController {
         this.accountTransactionManager = accountTransactionManager;
     }
 
-    @GetMapping(path="/ext/money/transaction2")
+    @GetMapping(path="/ext/money/transaction/report")
     @ResponseBody TransactionDataDTO getTransactionsExternal(@RequestBody TransactionFilterDTO filter) {
+        LOG.trace("EXT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }
 
-    @GetMapping(path="/int/money/transaction2")
+    @GetMapping(path="/int/money/transaction/report")
     @ResponseBody TransactionDataDTO getTransactionsInternal(@RequestBody TransactionFilterDTO filter) {
+        LOG.trace("INT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }
 }
