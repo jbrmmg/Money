@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionFilterDTO {
-    private ValueRangeDTO debitRange;
-    private ValueRangeDTO creditRange;
+    private ValueRangeDTO valueRange;
     private DateRangeDTO dateRange;
     private StatementDateDTO statementDate;
     private List<AccountDTO> accounts;
@@ -14,28 +13,16 @@ public class TransactionFilterDTO {
     private Boolean predicted;
     private Boolean fromReconciled;
 
-    public ValueRangeDTO getDebitRange() {
-        if(this.debitRange == null) {
+    public ValueRangeDTO getValueRange() {
+        if(this.valueRange == null) {
             return new ValueRangeDTO();
         }
 
-        return debitRange;
+        return valueRange;
     }
 
-    public void setDebitRange(ValueRangeDTO debitRange) {
-        this.debitRange = debitRange;
-    }
-
-    public ValueRangeDTO getCreditRange() {
-        if(this.creditRange == null) {
-            return new ValueRangeDTO();
-        }
-
-        return creditRange;
-    }
-
-    public void setCreditRange(ValueRangeDTO creditRange) {
-        this.creditRange = creditRange;
+    public void setValueRange(ValueRangeDTO valueRange) {
+        this.valueRange = valueRange;
     }
 
     public DateRangeDTO getDateRange() {
@@ -114,11 +101,8 @@ public class TransactionFilterDTO {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
-        builder.append("Filter: debitRange: ");
-        builder.append(this.getDebitRange());
-
-        builder.append(", creditRange: ");
-        builder.append(this.getCreditRange());
+        builder.append("Filter: value range: ");
+        builder.append(this.valueRange);
 
         builder.append(", dateRange: ");
         builder.append(this.getDateRange());

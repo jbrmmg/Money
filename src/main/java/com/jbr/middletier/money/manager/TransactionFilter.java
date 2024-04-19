@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
@@ -30,26 +31,24 @@ public class TransactionFilter {
     }
 
     private boolean transactionPassFilterValue(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        // If debit, check the debit filter.
-        if(transaction.getAmount().isNegative()) {
-            // Is there a debit restriction?
-            if(filter.getDebitRange() != null) {
-                return checkValueRange(transaction.getAmount().getValue() * -1,
-                        filter.getDebitRange().getMinimum(),
-                        filter.getDebitRange().getMaximum());
-            }
-
+        if(filter.getValueRange() == null) {
             return true;
         }
 
-        // If credit then check the credit filter.
-        if(filter.getCreditRange() != null) {
-            return checkValueRange(transaction.getAmount().getValue(),
-                    filter.getCreditRange().getMinimum(),
-                    filter.getCreditRange().getMaximum());
+        // First check the sign.
+        if( (transaction.getAmount().isNegative() && !filter.getValueRange().getDebit()) ||
+            (!transaction.getAmount().isNegative() && filter.getValueRange().getDebit()) ) {
+            // Sign mismatch.
+            return false;
         }
 
-        return true;
+        // Check the value.
+        double absValue = Math.abs(transaction.getAmount().getValue());
+        if(absValue < filter.getValueRange().getMinimum()) {
+            return false;
+        }
+
+        return !(absValue > filter.getValueRange().getMaximum());
     }
 
     private LocalDate dateStringToDate(String date) {
@@ -88,7 +87,18 @@ public class TransactionFilter {
     }
 
     private boolean transactionPassFilterAccount(TransactionReportDTO transaction, TransactionFilterDTO filter) {
-        return filter.getAccounts().isEmpty();
+        // If account list is empty then any account is allowed.
+        if(filter.getAccounts().isEmpty()) {
+            return true;
+        }
+
+        for(AccountDTO next : filter.getAccounts()) {
+            if(transaction.getAccount().getId().equalsIgnoreCase(next.getId())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean transactionPassFilterStatement(TransactionReportDTO transaction, TransactionFilterDTO filter) {
@@ -106,9 +116,6 @@ public class TransactionFilter {
 
     public Optional<TransactionReportDTO> passTransaction(Transaction transaction, TransactionFilterDTO filter) {
         TransactionReportDTO result = transactionMapper.map(transaction,TransactionReportDTO.class);
-        result.setId(transaction.getId());
-        result.setPredicted(false);
-        result.setFromReconciliation(false);
 
         // Make sure the transaction passes the filters.
         if(!transactionPassFilterValue(result, filter)) {

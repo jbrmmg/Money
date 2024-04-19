@@ -11,6 +11,7 @@ public class TransactionReportDTO {
     private CategoryDTO category;
     private String description;
     private Integer oppositeId;
+    private StatementDTO statement;
     private Boolean predicted;
     private Boolean fromReconciliation;
 
@@ -92,5 +93,13 @@ public class TransactionReportDTO {
 
     public void setFromReconciliation(Boolean fromReconciliation) {
         this.fromReconciliation = fromReconciliation;
+    }
+
+    public StatementDTO getStatement() {
+        return statement;
+    }
+
+    public void setStatement(StatementDTO statement) {
+        this.statement = statement;
     }
 }
