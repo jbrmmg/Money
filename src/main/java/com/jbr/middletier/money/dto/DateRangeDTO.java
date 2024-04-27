@@ -15,8 +15,12 @@ public class DateRangeDTO {
     }
 
     public DateRangeDTO(String from, String to) {
-        this.setFrom(from);
-        this.setTo(to);
+        if(from != null) {
+            this.setFrom(from);
+        }
+        if(to != null) {
+            this.setTo(to);
+        }
     }
 
     private LocalDate convertToLocalDate(String date) {

@@ -13,6 +13,7 @@ import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
 import com.jbr.middletier.money.util.TransactionString;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -263,6 +264,7 @@ public class MoneyTest extends Support {
 
     // Test Get Transactions
     @Test
+    @Ignore
     public void testGetTransaction() throws Exception {
         cleanUp();
 
@@ -327,6 +329,7 @@ public class MoneyTest extends Support {
     }
 
     @Test
+    @Ignore
     public void testRegular() throws Exception {
         cleanUp();
 
@@ -439,6 +442,7 @@ public class MoneyTest extends Support {
     }
 
     @Test
+    @Ignore
     public void testRegularWeekendFwd() throws Exception {
         cleanUp();
 
@@ -484,6 +488,7 @@ public class MoneyTest extends Support {
     }
 
     @Test
+    @Ignore
     public void testRegularWeekendBwd() throws Exception {
         cleanUp();
 

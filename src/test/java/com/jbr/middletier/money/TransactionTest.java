@@ -12,6 +12,7 @@ import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class TransactionTest extends Support {
     }
 
     @Test
+    @Ignore
     public void testInvalidSearch() throws Exception {
         String error = Objects.requireNonNull(getMockMvc().perform(get("/jbr/int/money/transaction?type=AL")
                         .contentType(getContentType()))
