@@ -72,7 +72,7 @@ public class ValueRangeDTO {
         this.maximum = maximum;
     }
 
-    public boolean getDebit() {
+    public boolean getCredit() {
         if(this.credit == null) {
             return false;
         }
@@ -80,8 +80,8 @@ public class ValueRangeDTO {
         return credit;
     }
 
-    public void setDebit(Boolean debit) {
-        this.credit = debit;
+    public void setCredit(Boolean credit) {
+        this.credit = credit;
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ValueRangeDTO {
         DecimalFormat df = new DecimalFormat("#0.00");
 
         stringBuilder.append("[");
-        stringBuilder.append(this.getDebit() ? "DB" : "CR");
+        stringBuilder.append(this.getCredit() ? "CR" : "DB");
         stringBuilder.append(" ");
         stringBuilder.append(df.format(this.getMinimum()));
         stringBuilder.append("->");

@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/jbr")
 public class TransactionReportController {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionReportController.class);
@@ -22,13 +22,13 @@ public class TransactionReportController {
     }
 
     @GetMapping(path="/ext/money/transaction/report")
-    @ResponseBody TransactionDataDTO getTransactionsExternal(@RequestBody TransactionFilterDTO filter) {
+    TransactionDataDTO getTransactionsExternal(@RequestBody TransactionFilterDTO filter) {
         LOG.trace("EXT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }
 
     @GetMapping(path="/int/money/transaction/report")
-    @ResponseBody TransactionDataDTO getTransactionsInternal(@RequestBody TransactionFilterDTO filter) {
+    TransactionDataDTO getTransactionsInternal(@RequestBody TransactionFilterDTO filter) {
         LOG.trace("INT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }

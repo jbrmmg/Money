@@ -36,8 +36,8 @@ public class TransactionFilter {
         }
 
         // First check the sign.
-        if( (transaction.getAmount().isNegative() && !filter.getValueRange().getDebit()) ||
-            (!transaction.getAmount().isNegative() && filter.getValueRange().getDebit()) ) {
+        if( (transaction.getAmount().isNegative() && filter.getValueRange().getCredit()) ||
+            (!transaction.getAmount().isNegative() && !filter.getValueRange().getCredit()) ) {
             // Sign mismatch.
             return false;
         }
