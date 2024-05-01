@@ -1,10 +1,7 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.TransactionDataDTO;
-import com.jbr.middletier.money.dto.TransactionFilterDTO;
-import com.jbr.middletier.money.dto.TransactionReportDTO;
+import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -22,12 +19,21 @@ public class TransactionFilter {
         this.transactionMapper = transactionMapper;
     }
 
-    private boolean checkValueRange(double value, Double minimum, Double maximim) {
-        if(minimum != null && value < minimum) {
-            return false;
+    private boolean transactionPassFilterLocked(TransactionReportDTO transaction, TransactionFilterDTO filter) {
+        if(filter.getLocked() == null) {
+            return true;
         }
 
-        return maximim == null || !(value > maximim);
+        // Get the locked status.
+        boolean transactionLocked = false;
+
+        if(transaction.getStatement() != null) {
+            if(transaction.getStatement().getLocked()) {
+                transactionLocked = true;
+            }
+        }
+
+        return transactionLocked == filter.getLocked();
     }
 
     private boolean transactionPassFilterValue(TransactionReportDTO transaction, TransactionFilterDTO filter) {
@@ -35,20 +41,8 @@ public class TransactionFilter {
             return true;
         }
 
-        // First check the sign.
-        if( (transaction.getAmount().isNegative() && filter.getValueRange().getCredit()) ||
-            (!transaction.getAmount().isNegative() && !filter.getValueRange().getCredit()) ) {
-            // Sign mismatch.
-            return false;
-        }
-
-        // Check the value.
-        double absValue = Math.abs(transaction.getAmount().getValue());
-        if(absValue < filter.getValueRange().getMinimum()) {
-            return false;
-        }
-
-        return !(absValue > filter.getValueRange().getMaximum());
+        return (!(transaction.getAmount().getValue() > filter.getValueRange().getMaximum())) &&
+                (!(transaction.getAmount().getValue() < filter.getValueRange().getMinimum()));
     }
 
     private LocalDate dateStringToDate(String date) {
@@ -83,7 +77,17 @@ public class TransactionFilter {
 
     private boolean transactionPassFilterCategory(TransactionReportDTO transaction, TransactionFilterDTO filter) {
         // If there is no filter on category then pass.
-        return filter.getCategories().isEmpty();
+        if(filter.getCategories().isEmpty()) {
+            return true;
+        }
+
+        for(CategoryDTO category : filter.getCategories()) {
+            if(transaction.getCategory().getId().equals(category.getId())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean transactionPassFilterAccount(TransactionReportDTO transaction, TransactionFilterDTO filter) {
@@ -107,17 +111,31 @@ public class TransactionFilter {
         }
 
         if(filter.getStatementDate().getMonth() != null) {
+            if(!filter.getStatementDate().getMonth().equals(transaction.getStatement().getMonth())) {
+                return false;
+            }
         }
 
-        //TODO
-        // Transaction does not have details of the statement!
+        if(filter.getStatementDate().getYear() != null) {
+            return filter.getStatementDate().getYear().equals(transaction.getStatement().getYear());
+        }
+
         return true;
     }
 
     public Optional<TransactionReportDTO> passTransaction(Transaction transaction, TransactionFilterDTO filter) {
         TransactionReportDTO result = transactionMapper.map(transaction,TransactionReportDTO.class);
 
+        // If the filter only wants predicted then result empty.
+        if(filter.getPredicted() != null && filter.getPredicted() == Boolean.TRUE) {
+            return Optional.empty();
+        }
+
         // Make sure the transaction passes the filters.
+        if(!transactionPassFilterLocked(result, filter)) {
+            return Optional.empty();
+        }
+
         if(!transactionPassFilterValue(result, filter)) {
             return Optional.empty();
         }

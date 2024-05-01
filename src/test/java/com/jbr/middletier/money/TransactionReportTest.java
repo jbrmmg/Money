@@ -100,21 +100,34 @@ public class TransactionReportTest {
     }
 
     @Test
-    public void testFilter1() {
+    public void testFilterAmount() {
         // Check a transaction matches a filter
         Transaction test = createTestTransaction();
+        test.setAmount(-13.48);
 
         TransactionFilterDTO dto = new TransactionFilterDTO();
-        dto.setValueRange(new ValueRangeDTO(10,32,false));
+        dto.setValueRange(new ValueRangeDTO(-32,-10));
 
         Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
 
-        test.setAmount(32.1);
+        test.setAmount(-32.1);
         Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        test.setAmount(-9.98);
+        Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        test.setAmount(12.81);
+        Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        test.setAmount(-10.1);
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+
+        test.setAmount(-31.9);
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
     }
 
     @Test
-    public void testFilter2() {
+    public void testFilterDate() {
         // Check a transaction matches a filter (14-10-2023)
         Transaction test = createTestTransaction();
 
@@ -123,12 +136,21 @@ public class TransactionReportTest {
 
         Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
 
-        test.setDate(LocalDate.of(2023,11,14));
+        test.setDate(LocalDate.of(2023,11,1));
         Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        test.setDate(LocalDate.of(2023,9,30));
+        Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        test.setDate(LocalDate.of(2023,10,1));
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+
+        test.setDate(LocalDate.of(2023,10,31));
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
     }
 
     @Test
-    public void testFilter3() {
+    public void testFilterAccount() {
         // Check a transaction matches a filter (TEST)
         Transaction test = createTestTransaction();
 
@@ -145,5 +167,93 @@ public class TransactionReportTest {
         transactionAccount.setId("TXST");
         test.setAccount(transactionAccount);
         Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+    }
+
+    @Test
+    public void testFilterCategory() {
+        // Check a transaction matches a filter (TEST)
+        Transaction test = createTestTransaction();
+
+        TransactionFilterDTO dto = new TransactionFilterDTO();
+
+        CategoryDTO category = new CategoryDTO();
+        category.setId("TEST");
+
+        dto.setCategories(Stream.of(category).toList());
+
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+
+        Category transactionCategory = new Category();
+        transactionCategory.setId("TXST");
+        test.setCategory(transactionCategory);
+        Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+    }
+
+    @Test
+    public void testFilterStatement() {
+        Transaction test = createTestTransaction();
+
+        TransactionFilterDTO dto = new TransactionFilterDTO();
+        StatementDateDTO statementDate = new StatementDateDTO();
+        statementDate.setYear(2023);
+        statementDate.setMonth(3);
+        dto.setStatementDate(statementDate);
+
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+    }
+
+    @Test
+    public void testFilterLocked() {
+        Transaction test = createTestTransaction();
+        test.getStatement().setLocked(true);
+
+        TransactionFilterDTO dto = new TransactionFilterDTO();
+        dto.setLocked(true);
+
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+
+        test.getStatement().setLocked(false);
+        Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+    }
+
+    @Test
+    public void testFilterPredicted() {
+        Transaction test = createTestTransaction();
+        test.getStatement().setLocked(true);
+
+        TransactionFilterDTO dto = new TransactionFilterDTO();
+        dto.setPredicted(true);
+
+        Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        dto.setPredicted(false);
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+    }
+
+    @Test
+    public void testFilterAll() {
+        Transaction test = createTestTransaction();
+
+        TransactionFilterDTO dto = new TransactionFilterDTO();
+        StatementDateDTO statementDate = new StatementDateDTO();
+        statementDate.setYear(2023);
+        statementDate.setMonth(3);
+        dto.setStatementDate(statementDate);
+
+        AccountDTO account = new AccountDTO();
+        account.setId("TEST");
+        dto.setAccounts(Stream.of(account).toList());
+
+        CategoryDTO category = new CategoryDTO();
+        category.setId("TEST");
+        dto.setCategories(Stream.of(category).toList());
+
+        dto.setDateRange(new DateRangeDTO("2023-10-01","2023-10-31"));
+
+        dto.setValueRange(new ValueRangeDTO(11,14));
+
+        dto.setLocked(false);
+
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
     }
 }
