@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
 import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.categoryIn;
@@ -385,5 +386,9 @@ public class AccountTransactionManager {
                 account,
                 statementId.getYear(),
                 statementId.getMonth());
+    }
+
+    public List<Transaction> getAllTransactions() {
+        return new ArrayList<>((Collection<? extends Transaction>) transactionRepository.findAll());
     }
 }

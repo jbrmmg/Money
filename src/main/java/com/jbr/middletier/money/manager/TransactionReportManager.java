@@ -1,42 +1,34 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.CategoryRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
-import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 public class TransactionReportManager {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionReportManager.class);
 
-    private final AccountRepository accountRepository;
-    private final CategoryRepository categoryRepository;
-    private final TransactionRepository transactionRepository;
+    private final AccountTransactionManager transactionManager;
+    private final RegularPaymentManager regularPaymentManager;
     private final TransactionFilter filter;
 
     @Autowired
-    public TransactionReportManager(AccountRepository accountRepository,
-                                    CategoryRepository categoryRepository,
-                                    TransactionRepository transactionRepository,
+    public TransactionReportManager(AccountTransactionManager transactionManager,
+                                    RegularPaymentManager regularPaymentManager,
                                     TransactionFilter filter) {
-        this.accountRepository = accountRepository;
-        this.categoryRepository = categoryRepository;
-        this.transactionRepository = transactionRepository;
+        this.transactionManager = transactionManager;
+        this.regularPaymentManager = regularPaymentManager;
         this.filter = filter;
     }
 
@@ -47,19 +39,25 @@ public class TransactionReportManager {
     private List<TransactionReportDTO> getPredicted(TransactionFilterDTO filter) {
         // If predicted are excluded then return empty list.
         if(filter.getPredicted() != null && filter.getPredicted().equals(Boolean.FALSE)) {
-            return new ArrayList<TransactionReportDTO>();
+            return new ArrayList<>();
         }
 
-        return new ArrayList<TransactionReportDTO>();
+        ArrayList<TransactionReportDTO> result = new ArrayList<>();
+
+        for(Regular next : regularPaymentManager.getAllRegularPayments()) {
+            this.filter.passTransaction(next, filter).ifPresent(result::add);
+        }
+
+        return result;
     }
 
     private List<TransactionReportDTO> getFromReconciled(TransactionFilterDTO filter) {
         // If predicted are excluded then return empty list.
         if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.FALSE)) {
-            return new ArrayList<TransactionReportDTO>();
+            return new ArrayList<>();
         }
 
-        return new ArrayList<TransactionReportDTO>();
+        return new ArrayList<>();
     }
 
     private List<TransactionReportDTO> getStandardTransactions(TransactionFilterDTO filter) {
@@ -74,7 +72,7 @@ public class TransactionReportManager {
 
         ArrayList<TransactionReportDTO> result = new ArrayList<>();
 
-        for(Transaction next : transactionRepository.findAll()) {
+        for(Transaction next : transactionManager.getAllTransactions()) {
             this.filter.passTransaction(next, filter).ifPresent(result::add);
         }
 

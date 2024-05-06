@@ -4,7 +4,9 @@ import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
 import com.jbr.middletier.money.manager.TransactionFilter;
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +29,7 @@ public class TransactionReportTest {
     @Autowired
     public TransactionFilter filter;
 
-    private Transaction createTestTransaction() {
+    private Account createAccount() {
         Account testAccount = new Account();
         testAccount.setId("TEST");
         testAccount.setName("Testing");
@@ -35,6 +37,10 @@ public class TransactionReportTest {
         testAccount.setClosed(false);
         testAccount.setImagePrefix("Blah");
 
+        return testAccount;
+    }
+
+    private Category createCategory() {
         Category testCategory = new Category();
         testCategory.setId("TEST");
         testCategory.setName("Testing");
@@ -44,6 +50,12 @@ public class TransactionReportTest {
         testCategory.setRestricted(false);
         testCategory.setSort(100L);
         testCategory.setSystemUse(false);
+
+        return testCategory;
+    }
+
+    private Transaction createTestTransaction() {
+        Account testAccount = createAccount();
 
         StatementId testStatementId = new StatementId();
         testStatementId.setAccount(testAccount);
@@ -61,14 +73,65 @@ public class TransactionReportTest {
         result.setDescription("Testing");
         result.setOppositeTransactionId(73);
         result.setAccount(testAccount);
-        result.setCategory(testCategory);
+        result.setCategory(createCategory());
         result.setStatement(testStatement);
 
         return result;
     }
 
+    private Regular createRegular() {
+        Regular result = new Regular();
+        result.setAccount(createAccount());
+        result.setAmount(-112.92);
+        result.setCategory(createCategory());
+        result.setId(1);
+        result.setDescription("Test");
+        result.setFrequency("1M");
+        result.setLastDate(LocalDate.of(2023,11,1));
+        result.setStart(LocalDate.of(2023,11,1));
+        result.setWeekendAdj(AdjustmentType.AT_FORWARD);
+
+        return result;
+    }
+
+    private DateRangeDTO getRegularFilterDateRange(Regular regular) throws CannotDetermineNextDateException {
+        LocalDate from = regular.getNextDate(LocalDate.now()).minusDays(1);
+        LocalDate to = regular.getNextDate(LocalDate.now()).plusDays(1);
+        return new DateRangeDTO(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(from),DateTimeFormatter.ofPattern("yyyy-MM-dd").format(to));
+    }
+
     @Test
-    public void testMapper() {
+    public void testMapperFromRegular() throws CannotDetermineNextDateException {
+        // Test mapping a transaction to a report transaction.
+        Regular test = createRegular();
+        TransactionReportDTO dto = transactionMapper.map(test,TransactionReportDTO.class);
+
+        // Main test.
+        Assert.assertNotNull(dto);
+        Assert.assertEquals(test.getAmount(), dto.getAmount().getValue(), 0.001);
+        Assert.assertNull(dto.getId());
+        Assert.assertTrue(dto.getPredicted());
+        Assert.assertFalse(dto.getFromReconciliation());
+        Assert.assertEquals(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(test.getNextDate(LocalDate.now())), dto.getDate());
+        Assert.assertEquals(test.getDescription(), dto.getDescription());
+        Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
+        Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
+        Assert.assertNull(dto.getStatement());
+
+        // Check that it still works when contained objects are
+        test.setDescription(null);
+        test.setAccount(null);
+        test.setCategory(null);
+        dto = transactionMapper.map(test,TransactionReportDTO.class);
+
+        Assert.assertNull(dto.getStatement());
+        Assert.assertNull(dto.getAccount());
+        Assert.assertNull(dto.getCategory());
+        Assert.assertNull(dto.getDescription());
+    }
+
+    @Test
+    public void testMapperFromTransaction() {
         // Test mapping a transaction to a report transaction.
         Transaction test = createTestTransaction();
         TransactionReportDTO dto = transactionMapper.map(test,TransactionReportDTO.class);
@@ -124,10 +187,14 @@ public class TransactionReportTest {
 
         test.setAmount(-31.9);
         Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+
+        Regular testRegular = createRegular();
+        dto.setValueRange(new ValueRangeDTO(-113,-110));
+        Assert.assertTrue(this.filter.passTransaction(testRegular,dto).isPresent());
     }
 
     @Test
-    public void testFilterDate() {
+    public void testFilterDate() throws CannotDetermineNextDateException {
         // Check a transaction matches a filter (14-10-2023)
         Transaction test = createTestTransaction();
 
@@ -147,6 +214,11 @@ public class TransactionReportTest {
 
         test.setDate(LocalDate.of(2023,10,31));
         Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+
+        // Check date of a regular payment.
+        Regular testRegular = createRegular();
+        dto.setDateRange(getRegularFilterDateRange(testRegular));
+        Assert.assertTrue(this.filter.passTransaction(testRegular,dto).isPresent());
     }
 
     @Test
@@ -167,6 +239,13 @@ public class TransactionReportTest {
         transactionAccount.setId("TXST");
         test.setAccount(transactionAccount);
         Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        // Check regular.
+        Regular testRegular = createRegular();
+        Assert.assertTrue(this.filter.passTransaction(testRegular,dto).isPresent());
+
+        testRegular.setAccount(transactionAccount);
+        Assert.assertFalse(this.filter.passTransaction(testRegular,dto).isPresent());
     }
 
     @Test
@@ -187,6 +266,13 @@ public class TransactionReportTest {
         transactionCategory.setId("TXST");
         test.setCategory(transactionCategory);
         Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+
+        // Check regular.
+        Regular testRegular = createRegular();
+        Assert.assertTrue(this.filter.passTransaction(testRegular,dto).isPresent());
+
+        testRegular.setCategory(transactionCategory);
+        Assert.assertFalse(this.filter.passTransaction(testRegular,dto).isPresent());
     }
 
     @Test
@@ -218,6 +304,8 @@ public class TransactionReportTest {
 
     @Test
     public void testFilterPredicted() {
+        Regular regular = createRegular();
+
         Transaction test = createTestTransaction();
         test.getStatement().setLocked(true);
 
@@ -225,9 +313,29 @@ public class TransactionReportTest {
         dto.setPredicted(true);
 
         Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+        Assert.assertTrue(this.filter.passTransaction(regular,dto).isPresent());
 
         dto.setPredicted(false);
         Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+        Assert.assertFalse(this.filter.passTransaction(regular,dto).isPresent());
+    }
+
+    @Test
+    public void testFilterReconciled() {
+        Regular regular = createRegular();
+
+        Transaction test = createTestTransaction();
+        test.getStatement().setLocked(true);
+
+        TransactionFilterDTO dto = new TransactionFilterDTO();
+        dto.setFromReconciled(true);
+
+        Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
+        Assert.assertFalse(this.filter.passTransaction(regular,dto).isPresent());
+
+        dto.setFromReconciled(false);
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+        Assert.assertTrue(this.filter.passTransaction(regular,dto).isPresent());
     }
 
     @Test
@@ -253,6 +361,37 @@ public class TransactionReportTest {
         dto.setValueRange(new ValueRangeDTO(11,14));
 
         dto.setLocked(false);
+
+        dto.setPredicted(false);
+
+        dto.setFromReconciled(false);
+
+        Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
+    }
+
+    @Test
+    public void testFilterAllRegular() throws CannotDetermineNextDateException {
+        Regular test = createRegular();
+
+        TransactionFilterDTO dto = new TransactionFilterDTO();
+
+        AccountDTO account = new AccountDTO();
+        account.setId("TEST");
+        dto.setAccounts(Stream.of(account).toList());
+
+        CategoryDTO category = new CategoryDTO();
+        category.setId("TEST");
+        dto.setCategories(Stream.of(category).toList());
+
+        dto.setDateRange(getRegularFilterDateRange(test));
+
+        dto.setValueRange(new ValueRangeDTO(-114,-110));
+
+        dto.setLocked(false);
+
+        dto.setPredicted(true);
+
+        dto.setFromReconciled(false);
 
         Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
     }

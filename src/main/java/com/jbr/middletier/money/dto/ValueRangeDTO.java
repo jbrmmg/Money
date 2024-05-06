@@ -21,7 +21,7 @@ public class ValueRangeDTO {
 
     public Double getMinimum() {
         if(this.minimum == null) {
-            return Double.MIN_VALUE;
+            return Double.NEGATIVE_INFINITY;
         }
 
         return minimum;
@@ -42,7 +42,7 @@ public class ValueRangeDTO {
 
     public Double getMaximum() {
         if(this.maximum == null) {
-            return Double.MAX_VALUE;
+            return Double.POSITIVE_INFINITY;
         }
 
         return maximum;

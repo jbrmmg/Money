@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.dto.mapper;
 
 import com.jbr.middletier.money.dto.DateRangeDTO;
+import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.mapper.converter.*;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.CategoryManager;
@@ -33,6 +34,7 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new TransactionToDTO(localDateStringConverter));
         this.addConverter(new ReconciliationFileToDTO(accountMapper));
         this.addConverter(new TransactionToReportDTO(localDateStringConverter,accountMapper,categoryMapper,statementMapper));
+        this.addConverter(new RegularToReportDTO(localDateStringConverter,accountMapper,categoryMapper));
         this.createTypeMap(DateRange.class, DateRangeDTO.class);
         this.createTypeMap(DateRangeDTO.class, DateRange.class);
     }

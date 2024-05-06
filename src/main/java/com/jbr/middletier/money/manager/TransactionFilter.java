@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
@@ -123,6 +124,51 @@ public class TransactionFilter {
         return true;
     }
 
+    private Optional<TransactionReportDTO> internalPassTransaction(TransactionReportDTO transaction, TransactionFilterDTO filter) {
+        // Make sure the transaction passes the filters.
+        if(!transactionPassFilterLocked(transaction, filter)) {
+            return Optional.empty();
+        }
+
+        if(!transactionPassFilterValue(transaction, filter)) {
+            return Optional.empty();
+        }
+
+        if(!transctionPassFilterDate(transaction, filter)) {
+            return Optional.empty();
+        }
+
+        if(!transactionPassFilterAccount(transaction, filter)) {
+            return Optional.empty();
+        }
+
+        if(!transactionPassFilterCategory(transaction, filter)) {
+            return Optional.empty();
+        }
+
+        if(!transactionPassFilterStatement(transaction, filter)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(transaction);
+    }
+
+    public Optional<TransactionReportDTO> passTransaction(Regular transaction, TransactionFilterDTO filter) {
+        TransactionReportDTO result = transactionMapper.map(transaction,TransactionReportDTO.class);
+
+        // Only allowed if predicted are allowed.
+        if(filter.getPredicted() != null && filter.getPredicted() == Boolean.FALSE) {
+            return Optional.empty();
+        }
+
+        // If the filter only wants data from reconciliation then result is empty.
+        if(filter.getFromReconciled() != null && filter.getFromReconciled() == Boolean.TRUE) {
+            return Optional.empty();
+        }
+
+        return internalPassTransaction(result,filter);
+    }
+
     public Optional<TransactionReportDTO> passTransaction(Transaction transaction, TransactionFilterDTO filter) {
         TransactionReportDTO result = transactionMapper.map(transaction,TransactionReportDTO.class);
 
@@ -131,31 +177,11 @@ public class TransactionFilter {
             return Optional.empty();
         }
 
-        // Make sure the transaction passes the filters.
-        if(!transactionPassFilterLocked(result, filter)) {
+        // If the filter only wants data from reconciliation then result is empty.
+        if(filter.getFromReconciled() != null && filter.getFromReconciled() == Boolean.TRUE) {
             return Optional.empty();
         }
 
-        if(!transactionPassFilterValue(result, filter)) {
-            return Optional.empty();
-        }
-
-        if(!transctionPassFilterDate(result, filter)) {
-            return Optional.empty();
-        }
-
-        if(!transactionPassFilterAccount(result, filter)) {
-            return Optional.empty();
-        }
-
-        if(!transactionPassFilterCategory(result, filter)) {
-            return Optional.empty();
-        }
-
-        if(!transactionPassFilterStatement(result, filter)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(result);
+        return internalPassTransaction(result,filter);
     }
 }
