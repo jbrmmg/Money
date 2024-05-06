@@ -35,6 +35,7 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new ReconciliationFileToDTO(accountMapper));
         this.addConverter(new TransactionToReportDTO(localDateStringConverter,accountMapper,categoryMapper,statementMapper));
         this.addConverter(new RegularToReportDTO(localDateStringConverter,accountMapper,categoryMapper));
+        this.addConverter(new MatchDataToReportDTO(localDateStringConverter,accountMapper,categoryMapper));
         this.createTypeMap(DateRange.class, DateRangeDTO.class);
         this.createTypeMap(DateRangeDTO.class, DateRange.class);
     }

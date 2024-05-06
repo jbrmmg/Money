@@ -5,6 +5,8 @@ import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
+import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
+import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,14 +23,17 @@ public class TransactionReportManager {
 
     private final AccountTransactionManager transactionManager;
     private final RegularPaymentManager regularPaymentManager;
+    private final ReconciliationManager reconciliationManager;
     private final TransactionFilter filter;
 
     @Autowired
     public TransactionReportManager(AccountTransactionManager transactionManager,
                                     RegularPaymentManager regularPaymentManager,
+                                    ReconciliationManager reconciliationManager,
                                     TransactionFilter filter) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
+        this.reconciliationManager = reconciliationManager;
         this.filter = filter;
     }
 
@@ -52,21 +57,31 @@ public class TransactionReportManager {
     }
 
     private List<TransactionReportDTO> getFromReconciled(TransactionFilterDTO filter) {
-        // If predicted are excluded then return empty list.
-        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.FALSE)) {
+        // If reconciled are excluded then return empty list.
+        if(filter.getReconciliationAccount() != null && filter.getReconciliationAccount().isEmpty()) {
             return new ArrayList<>();
         }
 
-        return new ArrayList<>();
+        try {
+            ArrayList<TransactionReportDTO> result = new ArrayList<>();
+
+            for (MatchData next : reconciliationManager.match(filter.getReconciliationAccount())) {
+                this.filter.passTransaction(next, filter).ifPresent(result::add);
+            }
+
+            return result;
+        } catch (UpdateDeleteAccountException e) {
+            return new ArrayList<>();
+        }
     }
 
     private List<TransactionReportDTO> getStandardTransactions(TransactionFilterDTO filter) {
-        // If predicated or from reconciled then we don't need standard tranactions.
+        // If predicated or from reconciled then we don't need standard transactions.
         if(filter.getPredicted() != null && filter.getPredicted().equals(Boolean.TRUE)) {
             return new ArrayList<>();
         }
 
-        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.TRUE)) {
+        if(filter.getReconciliationAccount() != null && !filter.getReconciliationAccount().isEmpty()) {
             return new ArrayList<>();
         }
 

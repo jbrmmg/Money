@@ -321,4 +321,16 @@ public class ReconciliationManager {
 
         return result;
     }
+
+    public List<MatchData> match(String accountId) throws UpdateDeleteAccountException {
+
+        Optional<Account> account = accountRepository.findById(accountId);
+
+        if(account.isEmpty()) {
+            throw new UpdateDeleteAccountException("Invalid account id." + accountId);
+        }
+
+        lastAccount = account.get();
+        return matchData(account.get());
+    }
 }

@@ -11,7 +11,7 @@ public class TransactionFilterDTO {
     private List<CategoryDTO> categories;
     private Boolean locked;
     private Boolean predicted;
-    private Boolean fromReconciled;
+    private String reconciliationAccount;
 
     public ValueRangeDTO getValueRange() {
         if(this.valueRange == null) {
@@ -89,12 +89,12 @@ public class TransactionFilterDTO {
         this.predicted = predicted;
     }
 
-    public Boolean getFromReconciled() {
-        return fromReconciled;
+    public String getReconciliationAccount() {
+        return reconciliationAccount;
     }
 
-    public void setFromReconciled(Boolean fromReconciled) {
-        this.fromReconciled = fromReconciled;
+    public void setReconciliationAccount(String reconciliationAccount) {
+        this.reconciliationAccount = reconciliationAccount;
     }
 
     @Override
@@ -145,10 +145,10 @@ public class TransactionFilterDTO {
         }
 
         builder.append(", from Reconciled: ");
-        if(this.getFromReconciled() == null) {
+        if(this.getReconciliationAccount() == null) {
             builder.append("any");
         } else {
-            builder.append(this.getFromReconciled());
+            builder.append(this.getReconciliationAccount());
         }
 
         return builder.toString();

@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.reconciliation.MatchData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -162,7 +163,7 @@ public class TransactionFilter {
         }
 
         // If the filter only wants data from reconciliation then result is empty.
-        if(filter.getFromReconciled() != null && filter.getFromReconciled() == Boolean.TRUE) {
+        if(filter.getReconciliationAccount() != null && !filter.getReconciliationAccount().isEmpty()) {
             return Optional.empty();
         }
 
@@ -178,7 +179,23 @@ public class TransactionFilter {
         }
 
         // If the filter only wants data from reconciliation then result is empty.
-        if(filter.getFromReconciled() != null && filter.getFromReconciled() == Boolean.TRUE) {
+        if(filter.getReconciliationAccount() != null && !filter.getReconciliationAccount().isEmpty()) {
+            return Optional.empty();
+        }
+
+        return internalPassTransaction(result,filter);
+    }
+
+    public Optional<TransactionReportDTO> passTransaction(MatchData transaction, TransactionFilterDTO filter) {
+        TransactionReportDTO result = transactionMapper.map(transaction,TransactionReportDTO.class);
+
+        // If the filter only wants predicted then result empty.
+        if(filter.getPredicted() != null && filter.getPredicted() == Boolean.TRUE) {
+            return Optional.empty();
+        }
+
+        // If the filter only wants data from reconciliation then result is empty.
+        if(filter.getReconciliationAccount() != null && filter.getReconciliationAccount().isEmpty()) {
             return Optional.empty();
         }
 
