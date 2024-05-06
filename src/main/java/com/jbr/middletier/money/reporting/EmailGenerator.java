@@ -58,7 +58,7 @@ public class EmailGenerator {
             FinancialAmount transactionTotal1 = new FinancialAmount();
             FinancialAmount transactionTotal2 = new FinancialAmount();
 
-            LocalDate oldest = LocalDate.now();
+            LocalDate oldest = applicationProperties.getToday();
             oldest = oldest.plusWeeks(-1 * weeks);
 
             // Get the latest statement that is locked for each account.

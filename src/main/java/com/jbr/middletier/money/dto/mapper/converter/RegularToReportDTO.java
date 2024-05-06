@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
@@ -16,16 +17,18 @@ public class RegularToReportDTO extends AbstractConverter<Regular, TransactionRe
     private final LocalDateStringConverter localDateStringConverter;
     private final AccountMapper accountMapper;
     private final CategoryMapper categoryMapper;
+    private final ApplicationProperties applicationProperties;
 
-    public RegularToReportDTO(LocalDateStringConverter localDateStringConverter, AccountMapper accountMapper, CategoryMapper categoryMapper) {
+    public RegularToReportDTO(ApplicationProperties applicationProperties, LocalDateStringConverter localDateStringConverter, AccountMapper accountMapper, CategoryMapper categoryMapper) {
         this.localDateStringConverter = localDateStringConverter;
         this.accountMapper = accountMapper;
         this.categoryMapper = categoryMapper;
+        this.applicationProperties = applicationProperties;
     }
 
     private LocalDate determineDate(Regular source) {
         try {
-            return source.getNextDate(LocalDate.now());
+            return source.getNextDate(this.applicationProperties.getToday());
         } catch (CannotDetermineNextDateException e) {
             return null;
         }

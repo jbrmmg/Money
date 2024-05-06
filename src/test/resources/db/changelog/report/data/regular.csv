@@ -1,2 +1,7 @@
 id,account,amount,category,frequency,start,last_created,weekend_adj,description
-1,BANK,102.2,HSE,1M,2019-05-22,2019-05-22,BW,Test Regular
+3,BANK,1000,WGS,1M,2019-05-22,2023-04-22,BW,Wages
+5,BANK,-304.67,UTC,1M,2019-05-01,2023-04-01,FW,Council Tax
+6,BANK,-13.25,UTT,1M,2019-05-01,2023-04-01,FW,TV Licence
+11,AMEX,-15.99,UTT,1M,2019-05-05,2023-04-05,FW,Netflix
+18,BANK,-244.1,UTL,1M,2019-12-24,2023-04-24,FW,Octopus
+27,AMEX,-7.99,UTT,1M,2023-03-17,2023-04-17,BW,Disney Plus

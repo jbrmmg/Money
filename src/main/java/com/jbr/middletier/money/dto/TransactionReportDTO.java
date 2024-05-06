@@ -102,4 +102,24 @@ public class TransactionReportDTO {
     public void setStatement(StatementDTO statement) {
         this.statement = statement;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        result.append("[");
+        result.append(this.getId());
+        result.append(" ");
+        result.append(this.getDate());
+        result.append(" ");
+        result.append(this.getAmount().getValue());
+        result.append(" ");
+        result.append(this.getPredicted());
+        result.append(" ");
+        result.append(this.getFromReconciliation());
+        result.append(" ");
+        result.append("]");
+
+        return result.toString();
+    }
 }

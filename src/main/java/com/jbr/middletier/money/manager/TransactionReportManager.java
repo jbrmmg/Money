@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
@@ -27,18 +28,21 @@ public class TransactionReportManager {
     private final ReconciliationManager reconciliationManager;
     private final TransactionFilter filter;
     private final TransactionMapper mapper;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
     public TransactionReportManager(AccountTransactionManager transactionManager,
                                     RegularPaymentManager regularPaymentManager,
                                     ReconciliationManager reconciliationManager,
                                     TransactionFilter filter,
-                                    TransactionMapper mapper) {
+                                    TransactionMapper mapper,
+                                    ApplicationProperties applicationProperties) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
         this.reconciliationManager = reconciliationManager;
         this.filter = filter;
         this.mapper = mapper;
+        this.applicationProperties = applicationProperties;
     }
 
     private String getDateString(LocalDate date) {
@@ -118,7 +122,7 @@ public class TransactionReportManager {
     }
 
     private FinancialAmount calculateTodayBalance(FinancialAmount openBalance, List<TransactionReportDTO> transactions) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = this.applicationProperties.getToday();
 
         double balance = openBalance.getValue();
 
@@ -139,7 +143,7 @@ public class TransactionReportManager {
 
         LocalDate transactionDate = mapper.map(lastTransaction.getDate(),LocalDate.class);
 
-        if(transactionDate.isAfter(LocalDate.now())) {
+        if(transactionDate.isAfter(applicationProperties.getToday())) {
             return mapper.map(lastTransaction.getDate(),String.class);
         }
 
@@ -182,7 +186,7 @@ public class TransactionReportManager {
         }
 
         // Calculate today's date.
-        result.setToday(getDateString(LocalDate.now()));
+        result.setToday(getDateString(applicationProperties.getToday()));
 
         // Calculate today's balance.
         result.setTodayBalance(calculateTodayBalance(result.getOpenBalance(), result.getTransactions()));

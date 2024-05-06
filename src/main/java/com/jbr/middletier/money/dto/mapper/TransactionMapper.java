@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.dto.mapper;
 
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.mapper.converter.*;
@@ -9,17 +10,20 @@ import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.DateRange;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class TransactionMapper extends ModelMapper {
+    private final ApplicationProperties applicationProperties;
+
     @Autowired
     public TransactionMapper(AccountManager accountManager,
                              CategoryManager categoryManager,
                              StatementManager statementManager,
                              AccountMapper accountMapper,
                              CategoryMapper categoryMapper,
-                             StatementMapper statementMapper) {
+                             StatementMapper statementMapper, @Qualifier("money-com.jbr.middletier.money.config.ApplicationProperties") ApplicationProperties applicationProperties) {
         StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
         LocalDateStringConverter localDateStringConverter = new LocalDateStringConverter();
         this.addConverter(new AccountStringConverter());
@@ -34,9 +38,10 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new TransactionToDTO(localDateStringConverter));
         this.addConverter(new ReconciliationFileToDTO(accountMapper));
         this.addConverter(new TransactionToReportDTO(localDateStringConverter,accountMapper,categoryMapper,statementMapper));
-        this.addConverter(new RegularToReportDTO(localDateStringConverter,accountMapper,categoryMapper));
+        this.addConverter(new RegularToReportDTO(applicationProperties,localDateStringConverter,accountMapper,categoryMapper));
         this.addConverter(new MatchDataToReportDTO(localDateStringConverter,accountMapper,categoryMapper));
         this.createTypeMap(DateRange.class, DateRangeDTO.class);
         this.createTypeMap(DateRangeDTO.class, DateRange.class);
+        this.applicationProperties = applicationProperties;
     }
 }
