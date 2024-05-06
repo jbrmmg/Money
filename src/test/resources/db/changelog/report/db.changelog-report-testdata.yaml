@@ -4,6 +4,25 @@ databaseChangeLog:
       author: jason
       changes:
         - loadData:
+            tableName: statement
+            columns:
+              - column:
+                  name: account
+              - column:
+                  name: month
+              - column:
+                  name: year
+              - column:
+                  name: open_balance
+              - column:
+                  name: locked
+              - column:
+                  name: deleted
+            commentLineStartsWith: //
+            encoding: UTF-8
+            file: /db/changelog/report/data/statement.csv
+            separator: ","
+        - loadData:
             tableName: transaction
             columns:
               - column:
@@ -65,23 +84,4 @@ databaseChangeLog:
             commentLineStartsWith: //
             encoding: UTF-8
             file: /db/changelog/report/data/regular.csv
-            separator: ","
-        - loadData:
-            tableName: statement
-            columns:
-              - column:
-                  name: account
-              - column:
-                  name: month
-              - column:
-                  name: year
-              - column:
-                  name: open_balance
-              - column:
-                  name: locked
-              - column:
-                  name: deleted
-            commentLineStartsWith: //
-            encoding: UTF-8
-            file: /db/changelog/report/data/statement.csv
             separator: ","

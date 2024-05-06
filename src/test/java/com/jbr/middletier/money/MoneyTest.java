@@ -13,7 +13,6 @@ import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
 import com.jbr.middletier.money.util.TransactionString;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -77,6 +76,9 @@ public class MoneyTest extends Support {
 
     @Autowired
     TransactionMapper transactionMapper;
+
+    @Autowired
+    ApplicationProperties applicationProperties;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -264,7 +266,6 @@ public class MoneyTest extends Support {
 
     // Test Get Transactions
     @Test
-    @Ignore
     public void testGetTransaction() throws Exception {
         cleanUp();
 
@@ -329,11 +330,10 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    @Ignore
     public void testRegular() throws Exception {
         cleanUp();
 
-        LocalDate testDate = LocalDate.now();
+        LocalDate testDate = applicationProperties.getToday();
 
         Optional<Category> category = categoryRepository.findById("FDG");
         if(category.isEmpty()) {
@@ -385,7 +385,7 @@ public class MoneyTest extends Support {
         regularRepository.save(testRegularPayment);
 
         // Create a payment, invalid - should not create anything.
-        testDate = LocalDate.now();
+        testDate = applicationProperties.getToday();
         testDate = testDate.plusDays(-7);
 
         testRegularPayment = new Regular();
@@ -442,12 +442,11 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    @Ignore
     public void testRegularWeekendFwd() throws Exception {
         cleanUp();
 
         // Move date to a saturday.
-        LocalDate testDate = LocalDate.now();
+        LocalDate testDate = applicationProperties.getToday();
         while(testDate.getDayOfWeek() != DayOfWeek.SATURDAY ) {
             testDate = testDate.plusDays(1);
         }
@@ -488,11 +487,10 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    @Ignore
     public void testRegularWeekendBwd() throws Exception {
         cleanUp();
 
-        LocalDate testDate = LocalDate.now();
+        LocalDate testDate = applicationProperties.getToday();
 
         // Move date to a saturday.
         while(testDate.getDayOfWeek() != DayOfWeek.SATURDAY) {

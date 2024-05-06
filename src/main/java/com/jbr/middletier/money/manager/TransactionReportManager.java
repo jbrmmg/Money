@@ -1,10 +1,12 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -13,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,20 +26,23 @@ public class TransactionReportManager {
     private final RegularPaymentManager regularPaymentManager;
     private final ReconciliationManager reconciliationManager;
     private final TransactionFilter filter;
+    private final TransactionMapper mapper;
 
     @Autowired
     public TransactionReportManager(AccountTransactionManager transactionManager,
                                     RegularPaymentManager regularPaymentManager,
                                     ReconciliationManager reconciliationManager,
-                                    TransactionFilter filter) {
+                                    TransactionFilter filter,
+                                    TransactionMapper mapper) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
         this.reconciliationManager = reconciliationManager;
         this.filter = filter;
+        this.mapper = mapper;
     }
 
     private String getDateString(LocalDate date) {
-        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        return date.format(Constants.MONEY_DATE_FORMATTER);
     }
 
     private List<TransactionReportDTO> getPredicted(TransactionFilterDTO filter) {
@@ -100,24 +104,56 @@ public class TransactionReportManager {
         return result;
     }
 
-    private FinancialAmount calculateOpeningBalance() {
+    private FinancialAmount calculateOpeningBalance(TransactionFilterDTO filter) {
+        // Opening balance will depend on the filter.
         return new FinancialAmount();
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {
+        if(!transactions.isEmpty()) {
+            return transactions.get(0).getDate();
+        }
+
         return "";
     }
 
     private FinancialAmount calculateTodayBalance(FinancialAmount openBalance, List<TransactionReportDTO> transactions) {
-        return new FinancialAmount();
+        LocalDate today = LocalDate.now();
+
+        double balance = openBalance.getValue();
+
+        for(TransactionReportDTO transaction : transactions) {
+            LocalDate transactionDate = mapper.map(transaction.getDate(),LocalDate.class);
+
+            if(transactionDate.isBefore(today)) {
+                balance += transaction.getAmount().getValue();
+            }
+        }
+
+        return new FinancialAmount(balance);
     }
 
-    private String calculateFutureDate() {
+    private String calculateFutureDate(List<TransactionReportDTO> transactions) {
+        // Get the last transaction.
+        TransactionReportDTO lastTransaction = transactions.get(transactions.size()-1);
+
+        LocalDate transactionDate = mapper.map(lastTransaction.getDate(),LocalDate.class);
+
+        if(transactionDate.isAfter(LocalDate.now())) {
+            return mapper.map(lastTransaction.getDate(),String.class);
+        }
+
         return "";
     }
 
     private FinancialAmount calculateFutureBalance(FinancialAmount openBalance, List<TransactionReportDTO> transactions) {
-        return new FinancialAmount();
+        double balance = openBalance.getValue();
+
+        for(TransactionReportDTO transaction : transactions) {
+            balance += transaction.getAmount().getValue();
+        }
+
+        return new FinancialAmount(balance);
     }
 
     public TransactionDataDTO getTransactions(TransactionFilterDTO filter) {
@@ -130,15 +166,20 @@ public class TransactionReportManager {
         result.getTransactions().addAll(getFromReconciled(filter));
         result.getTransactions().addAll(getStandardTransactions(filter));
 
-        // Merge any transactions that actually represent the same thing - i.e. where reconciled and created.
-
-        // Sort the transactions.
+        // Remove any reconciled transaction where the transaction is also present, then sort the transactions.
+        result.removeDuplicatesAndSort();
 
         // Calculate the opening details
-        result.setOpenBalance(calculateOpeningBalance());
+        result.setOpenBalance(calculateOpeningBalance(filter));
         result.setOpenDate(calculateOpenDate(result.getTransactions()));
 
         // Calculate the balances on the transactions.
+        double balance = result.getOpenBalance().getValue();
+        for(TransactionReportDTO next : result.getTransactions()) {
+            next.setBalance(new FinancialAmount(balance));
+
+            balance += next.getAmount().getValue();
+        }
 
         // Calculate today's date.
         result.setToday(getDateString(LocalDate.now()));
@@ -147,7 +188,7 @@ public class TransactionReportManager {
         result.setTodayBalance(calculateTodayBalance(result.getOpenBalance(), result.getTransactions()));
 
         // Calculate future date.
-        result.setForwardDate(calculateFutureDate());
+        result.setForwardDate(calculateFutureDate(result.getTransactions()));
 
         // Calculate future balance.
         result.setForwardBalance(calculateFutureBalance(result.getOpenBalance(), result.getTransactions()));

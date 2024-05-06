@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.Regular;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dto.*;
@@ -7,9 +8,7 @@ import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Controller
@@ -48,7 +47,7 @@ public class TransactionFilter {
     }
 
     private LocalDate dateStringToDate(String date) {
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        return LocalDate.parse(date, Constants.MONEY_DATE_FORMATTER);
     }
 
     private boolean transctionPassFilterDate(TransactionReportDTO transaction, TransactionFilterDTO filter) {

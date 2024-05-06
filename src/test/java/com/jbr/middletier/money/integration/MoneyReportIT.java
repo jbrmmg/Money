@@ -3,7 +3,6 @@ package com.jbr.middletier.money.integration;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.Support;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
-import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -27,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @WebAppConfiguration
 @ContextConfiguration(initializers = {MoneyReportIT.Initializer.class})
-@ActiveProfiles(value="report")
+@ActiveProfiles(value="report-it")
 public class MoneyReportIT extends Support {
     @SuppressWarnings("rawtypes")
     @ClassRule

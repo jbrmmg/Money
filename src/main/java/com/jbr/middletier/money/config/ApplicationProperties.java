@@ -3,6 +3,8 @@ package com.jbr.middletier.money.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalDate;
+
 @Configuration
 @ConfigurationProperties(prefix="money")
 public class ApplicationProperties {
@@ -17,6 +19,7 @@ public class ApplicationProperties {
     private boolean archiveEnabled;
     private String reconcileFileLocation;
     private Integer smtpPort;
+    private LocalDate today;
 
     public void setServiceName(String serviceName) { this.serviceName = serviceName; }
 
@@ -72,5 +75,17 @@ public class ApplicationProperties {
 
     public void setSmtpPort(Integer smtpPort) {
         this.smtpPort = smtpPort;
+    }
+
+    public LocalDate getToday() {
+        if(this.today == null) {
+            return LocalDate.now();
+        }
+
+        return today;
+    }
+
+    public void setToday(LocalDate today) {
+        this.today = today;
     }
 }

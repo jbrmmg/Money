@@ -1,13 +1,13 @@
 package com.jbr.middletier.money.dto;
 
+import com.jbr.middletier.money.config.Constants;
+
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class DateRangeDTO {
     private String from;
     private String to;
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public DateRangeDTO() {
         this.from = null;
@@ -25,7 +25,7 @@ public class DateRangeDTO {
 
     private LocalDate convertToLocalDate(String date) {
         try {
-            return LocalDate.parse(date, formatter);
+            return LocalDate.parse(date, Constants.MONEY_DATE_FORMATTER);
         } catch (DateTimeParseException e) {
             return null;
         }
@@ -33,7 +33,7 @@ public class DateRangeDTO {
 
     public String getFrom() {
         if(this.from == null) {
-            return "1900-01-01";
+            return Constants.MONEY_EARLIEST_DATE_STRING;
         }
 
         return this.from;
@@ -43,7 +43,7 @@ public class DateRangeDTO {
         // String must be in the format yyyy-MM-dd and if provided then must be before the 'to' date.
         LocalDate date = convertToLocalDate(from);
         if(date == null) {
-            throw new IllegalArgumentException("Date Range: the dates must be in the format YYYY-MM-DD");
+            throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);
         }
 
         LocalDate toDate = convertToLocalDate(this.getTo());
@@ -56,7 +56,7 @@ public class DateRangeDTO {
 
     public String getTo() {
         if(this.to == null) {
-            return "2199-12-31";
+            return Constants.MONEY_LATEST_DATE_STRING;
         }
 
         return this.to;
@@ -66,7 +66,7 @@ public class DateRangeDTO {
         // String must be in the format yyyy-MM-dd and if provided then must be after the 'from' date.
         LocalDate date = convertToLocalDate(from);
         if(date == null) {
-            throw new IllegalArgumentException("Date Range: the dates must be in the format YYYY-MM-DD");
+            throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);
         }
 
         LocalDate fromDate = convertToLocalDate(this.getFrom());

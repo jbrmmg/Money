@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
@@ -20,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
 import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.categoryIn;
@@ -112,10 +112,10 @@ public class AccountTransactionManager {
 
     private Specification<Transaction> getAllTransactions(DateRange dateRange, List<Account> accounts, List<Category> categories) throws InvalidTransactionSearchException {
         // Validate data.
-        if(dateRange.getFrom() == null){
+        if(dateRange.getFrom() == null || dateRange.getFrom().isEqual(Constants.MONEY_EARLIEST_DATE)){
             throw new InvalidTransactionSearchException("must specify a from date");
         }
-        if(dateRange.getTo() == null){
+        if(dateRange.getTo() == null || dateRange.getTo().isEqual(Constants.MONEY_LATEST_DATE)){
             throw new InvalidTransactionSearchException("must specify a to date");
         }
 

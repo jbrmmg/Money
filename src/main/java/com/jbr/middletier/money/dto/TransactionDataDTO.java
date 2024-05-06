@@ -76,4 +76,34 @@ public class TransactionDataDTO {
     public void setForwardBalance(FinancialAmount forwardBalance) {
         this.forwardBalance = forwardBalance;
     }
+
+    public void removeDuplicatesAndSort() {
+        List<TransactionReportDTO> duplicates = new ArrayList<>();
+
+        // Look for duplicates
+        for(TransactionReportDTO transaction : this.transactions) {
+            if(transaction.getFromReconciliation() && transaction.getId() != null) {
+                // Find the transaction.
+                for(TransactionReportDTO innerTransaction : this.transactions) {
+                    if(!innerTransaction.getFromReconciliation() && !innerTransaction.getPredicted() && innerTransaction.getId().equals(transaction.getId())) {
+                        duplicates.add(transaction);
+                    }
+                }
+            }
+        }
+
+        // Remove duplicates
+        this.transactions.removeAll(duplicates);
+
+        // Sort the transactions.
+        this.transactions.sort((t1,t2) -> {
+            // Sort first by date.
+            if(!t1.getDate().equals(t2.getDate())) {
+                return t1.getDate().compareTo(t2.getDate());
+            }
+
+            // Sort by the amounts.
+            return Double.compare(t1.getAmount().getValue(),t2.getAmount().getValue());
+        });
+    }
 }

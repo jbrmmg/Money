@@ -165,7 +165,7 @@ public class EmailTest extends Support {
 
         Transaction transaction = new Transaction();
         transaction.setAmount(10);
-        transaction.setDate(LocalDate.now().plusDays(-30));
+        transaction.setDate(applicationProperties.getToday().plusDays(-30));
         transaction.setDescription("Testing");
         transaction.setAccount(account);
         transaction.setCategory(category);
@@ -174,7 +174,7 @@ public class EmailTest extends Support {
 
         transaction = new Transaction();
         transaction.setAmount(20);
-        transaction.setDate(LocalDate.now().plusDays(-7));
+        transaction.setDate(applicationProperties.getToday().plusDays(-7));
         transaction.setDescription("Testing 2");
         transaction.setAccount(account);
         transaction.setCategory(category);
@@ -183,7 +183,7 @@ public class EmailTest extends Support {
 
         transaction = new Transaction();
         transaction.setAmount(5);
-        transaction.setDate(LocalDate.now().plusDays(-6));
+        transaction.setDate(applicationProperties.getToday().plusDays(-6));
         transaction.setDescription("Testing 3");
         transaction.setAccount(account);
         transaction.setCategory(category);

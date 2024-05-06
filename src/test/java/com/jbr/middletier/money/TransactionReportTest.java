@@ -1,6 +1,8 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
+import com.jbr.middletier.money.config.ApplicationProperties;
+import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
@@ -15,9 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
 @RunWith(SpringRunner.class)
@@ -29,6 +29,9 @@ public class TransactionReportTest {
 
     @Autowired
     public TransactionFilter filter;
+
+    @Autowired
+    public ApplicationProperties applicationProperties;
 
     private Account createAccount() {
         Account testAccount = new Account();
@@ -112,9 +115,9 @@ public class TransactionReportTest {
     }
 
     private DateRangeDTO getRegularFilterDateRange(Regular regular) throws CannotDetermineNextDateException {
-        LocalDate from = regular.getNextDate(LocalDate.now()).minusDays(1);
-        LocalDate to = regular.getNextDate(LocalDate.now()).plusDays(1);
-        return new DateRangeDTO(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(from),DateTimeFormatter.ofPattern("yyyy-MM-dd").format(to));
+        LocalDate from = regular.getNextDate(applicationProperties.getToday()).minusDays(1);
+        LocalDate to = regular.getNextDate(applicationProperties.getToday()).plusDays(1);
+        return new DateRangeDTO(Constants.MONEY_DATE_FORMATTER.format(from),Constants.MONEY_DATE_FORMATTER.format(to));
     }
 
     @Test
@@ -129,7 +132,7 @@ public class TransactionReportTest {
         Assert.assertNull(dto.getId());
         Assert.assertTrue(dto.getPredicted());
         Assert.assertFalse(dto.getFromReconciliation());
-        Assert.assertEquals(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(test.getNextDate(LocalDate.now())), dto.getDate());
+        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getNextDate(applicationProperties.getToday())), dto.getDate());
         Assert.assertEquals(test.getDescription(), dto.getDescription());
         Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
         Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
@@ -159,7 +162,7 @@ public class TransactionReportTest {
         Assert.assertEquals(0, dto.getId().intValue());
         Assert.assertFalse(dto.getPredicted());
         Assert.assertFalse(dto.getFromReconciliation());
-        Assert.assertEquals(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(test.getDate()), dto.getDate());
+        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
         Assert.assertEquals(test.getDescription(), dto.getDescription());
         Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
         Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
@@ -191,7 +194,7 @@ public class TransactionReportTest {
         Assert.assertEquals(0, dto.getId().intValue());
         Assert.assertFalse(dto.getPredicted());
         Assert.assertTrue(dto.getFromReconciliation());
-        Assert.assertEquals(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(test.getDate()), dto.getDate());
+        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
         Assert.assertEquals(test.getDescription(), dto.getDescription());
         Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
         Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
@@ -206,7 +209,7 @@ public class TransactionReportTest {
         Assert.assertNull(dto.getId());
         Assert.assertFalse(dto.getPredicted());
         Assert.assertTrue(dto.getFromReconciliation());
-        Assert.assertEquals(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(test.getDate()), dto.getDate());
+        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
         Assert.assertEquals(test.getDescription(), dto.getDescription());
         Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
         Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
