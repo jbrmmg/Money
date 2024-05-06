@@ -402,12 +402,14 @@ public class TransactionReportTest {
         test.getStatement().setLocked(true);
 
         TransactionFilterDTO dto = new TransactionFilterDTO();
+        dto.setFromReconciled(true);
         dto.setReconciliationAccount("BANK");
 
         Assert.assertFalse(this.filter.passTransaction(test,dto).isPresent());
         Assert.assertFalse(this.filter.passTransaction(regular,dto).isPresent());
 
         dto.setReconciliationAccount("");
+        dto.setFromReconciled(false);
         Assert.assertTrue(this.filter.passTransaction(test,dto).isPresent());
         Assert.assertTrue(this.filter.passTransaction(regular,dto).isPresent());
     }

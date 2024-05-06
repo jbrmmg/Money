@@ -163,7 +163,7 @@ public class TransactionFilter {
         }
 
         // If the filter only wants data from reconciliation then result is empty.
-        if(filter.getReconciliationAccount() != null && !filter.getReconciliationAccount().isEmpty()) {
+        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.TRUE)) {
             return Optional.empty();
         }
 
@@ -179,7 +179,7 @@ public class TransactionFilter {
         }
 
         // If the filter only wants data from reconciliation then result is empty.
-        if(filter.getReconciliationAccount() != null && !filter.getReconciliationAccount().isEmpty()) {
+        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.TRUE)) {
             return Optional.empty();
         }
 
@@ -195,7 +195,7 @@ public class TransactionFilter {
         }
 
         // If the filter only wants data from reconciliation then result is empty.
-        if(filter.getReconciliationAccount() != null && filter.getReconciliationAccount().isEmpty()) {
+        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.FALSE)) {
             return Optional.empty();
         }
 

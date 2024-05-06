@@ -58,8 +58,14 @@ public class TransactionReportManager {
 
     private List<TransactionReportDTO> getFromReconciled(TransactionFilterDTO filter) {
         // If reconciled are excluded then return empty list.
-        if(filter.getReconciliationAccount() != null && filter.getReconciliationAccount().isEmpty()) {
+        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.FALSE)) {
             return new ArrayList<>();
+        }
+
+        // There must be a reconciliation account specified.
+        if(filter.getReconciliationAccount() == null || filter.getReconciliationAccount().isEmpty()) {
+            // TODO - throw a specific exception.
+//            throw new TBD();
         }
 
         try {
@@ -81,7 +87,7 @@ public class TransactionReportManager {
             return new ArrayList<>();
         }
 
-        if(filter.getReconciliationAccount() != null && !filter.getReconciliationAccount().isEmpty()) {
+        if(filter.getFromReconciled() != null && !filter.getFromReconciled().equals(Boolean.TRUE)) {
             return new ArrayList<>();
         }
 

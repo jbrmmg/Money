@@ -11,6 +11,7 @@ public class TransactionFilterDTO {
     private List<CategoryDTO> categories;
     private Boolean locked;
     private Boolean predicted;
+    private Boolean fromReconciled;
     private String reconciliationAccount;
 
     public ValueRangeDTO getValueRange() {
@@ -87,6 +88,14 @@ public class TransactionFilterDTO {
 
     public void setPredicted(Boolean predicted) {
         this.predicted = predicted;
+    }
+
+    public Boolean getFromReconciled() {
+        return fromReconciled;
+    }
+
+    public void setFromReconciled(Boolean fromReconciled) {
+        this.fromReconciled = fromReconciled;
     }
 
     public String getReconciliationAccount() {
