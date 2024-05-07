@@ -64,6 +64,6 @@ public class FinancialAmount {
 
     @Override
     public String toString() {
-        return internalToString(this.value) + " " + this.getType().toString();
+        return internalToString(this.value);
     }
 }
