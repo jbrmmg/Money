@@ -95,7 +95,7 @@ public class TransactionReportManager {
             return new ArrayList<>();
         }
 
-        if(filter.getFromReconciled() != null && !filter.getFromReconciled().equals(Boolean.TRUE)) {
+        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.TRUE)) {
             return new ArrayList<>();
         }
 
@@ -139,12 +139,14 @@ public class TransactionReportManager {
 
     private String calculateFutureDate(List<TransactionReportDTO> transactions) {
         // Get the last transaction.
-        TransactionReportDTO lastTransaction = transactions.get(transactions.size()-1);
+        if(!transactions.isEmpty()) {
+            TransactionReportDTO lastTransaction = transactions.get(transactions.size() - 1);
 
-        LocalDate transactionDate = mapper.map(lastTransaction.getDate(),LocalDate.class);
+            LocalDate transactionDate = mapper.map(lastTransaction.getDate(), LocalDate.class);
 
-        if(transactionDate.isAfter(applicationProperties.getToday())) {
-            return mapper.map(lastTransaction.getDate(),String.class);
+            if (transactionDate.isAfter(applicationProperties.getToday())) {
+                return mapper.map(lastTransaction.getDate(), String.class);
+            }
         }
 
         return "";

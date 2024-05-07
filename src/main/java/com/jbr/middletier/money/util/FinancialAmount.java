@@ -1,9 +1,13 @@
 package com.jbr.middletier.money.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.text.DecimalFormat;
 
+@JsonSerialize(using = FinancialAmountSerializer.class)
+@JsonDeserialize(using = FinancialAmountDeserializer.class)
 public class FinancialAmount {
     private double value;
 
@@ -11,7 +15,9 @@ public class FinancialAmount {
         this.value = value;
     }
 
-    public FinancialAmount() { this.value = 0.0; }
+    public FinancialAmount() {
+        this.value = 0.0;
+    }
 
     public double getValue() {
         return this.value;
@@ -28,15 +34,11 @@ public class FinancialAmount {
     }
 
     public FinancialAmountType getType() {
-        if(this.value < 0) {
-            return FinancialAmountType.DB;
-        }
-
         if(this.value > 0) {
             return FinancialAmountType.CR;
         }
 
-        return FinancialAmountType.Z;
+        return FinancialAmountType.DB;
     }
 
     public void setType(FinancialAmountType type) {
@@ -60,6 +62,10 @@ public class FinancialAmount {
 
     public String toAbsString() {
         return internalToString(Math.abs(this.value));
+    }
+
+    public String toFormattedString(int size) {
+        return String.format("%"+ size + "s %-2s",toAbsString(),this.getType().toString());
     }
 
     @Override

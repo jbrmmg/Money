@@ -1,10 +1,12 @@
 package com.jbr.middletier.money.dto;
 
+import com.jbr.middletier.money.util.FinancialAmount;
+
 public class StatementDTO implements Comparable<StatementDTO> {
     private String accountId;
     private Integer month;
     private Integer year;
-    private double openBalance;
+    private FinancialAmount openBalance;
     private boolean locked;
 
     public String getAccountId() {
@@ -31,11 +33,15 @@ public class StatementDTO implements Comparable<StatementDTO> {
         this.year = year;
     }
 
-    public double getOpenBalance() {
+    public FinancialAmount getOpenBalance() {
+        if(this.openBalance == null) {
+            return new FinancialAmount();
+        }
+
         return openBalance;
     }
 
-    public void setOpenBalance(double openBalance) {
+    public void setOpenBalance(FinancialAmount openBalance) {
         this.openBalance = openBalance;
     }
 

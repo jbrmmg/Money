@@ -323,7 +323,6 @@ public class ReconciliationManager {
     }
 
     public List<MatchData> match(String accountId) throws UpdateDeleteAccountException {
-
         Optional<Account> account = accountRepository.findById(accountId);
 
         if(account.isEmpty()) {

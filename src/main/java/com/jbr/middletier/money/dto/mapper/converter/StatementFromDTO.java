@@ -25,7 +25,7 @@ public class StatementFromDTO extends AbstractConverter<StatementDTO,Statement> 
         statementId.setYear(source.getYear());
 
         result.setLocked(source.getLocked());
-        result.setOpenBalance(source.getOpenBalance());
+        result.setOpenBalance(source.getOpenBalance().getValue());
 
         return result;
     }

@@ -209,7 +209,7 @@ public class PoJoTest {
         Assert.assertEquals(1,statementDTO.getMonth().intValue());
         Assert.assertEquals(2022,statementDTO.getYear().intValue());
         Assert.assertTrue(statementDTO.getLocked());
-        Assert.assertEquals(101.23,statementDTO.getOpenBalance(),0.001);
+        Assert.assertEquals(101.23,statementDTO.getOpenBalance().getValue(),0.001);
     }
 
     @Test
@@ -219,7 +219,7 @@ public class PoJoTest {
         statementDTO.setMonth(2);
         statementDTO.setYear(2021);
         statementDTO.setLocked(true);
-        statementDTO.setOpenBalance(102.12);
+        statementDTO.setOpenBalance(new FinancialAmount(102.12));
         Statement statement = statementMapper.map(statementDTO,Statement.class);
         Assert.assertEquals("BANK",statement.getId().getAccount().getId());
         Assert.assertEquals(2,statement.getId().getMonth().intValue());
