@@ -13,7 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
-@Controller
+@RestController
 @RequestMapping("/jbr")
 public class ArchiveAndReportController {
     private static final Logger LOG = LoggerFactory.getLogger(ArchiveAndReportController.class);
@@ -29,14 +29,14 @@ public class ArchiveAndReportController {
     }
 
     @PostMapping(path="/int/money/transaction/archive")
-    public @ResponseBody StatusDTO archive(@RequestBody ArchiveOrReportRequestDTO archiveRequest) {
+    public StatusDTO archive(@RequestBody ArchiveOrReportRequestDTO archiveRequest) {
         this.archiveManager.archive(archiveRequest);
 
         return StatusDTO.OK;
     }
 
     @PostMapping(path="/int/money/transaction/report")
-    public @ResponseBody StatusDTO report(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
+    public StatusDTO report(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
         LOG.info("Report Controller - request report.");
         reportGenerator.generateReport(report.getYear(),report.getMonth());
 
@@ -44,7 +44,7 @@ public class ArchiveAndReportController {
     }
 
     @PostMapping(path="/int/money/transaction/annualreport")
-    public @ResponseBody StatusDTO annualReport(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
+    public StatusDTO annualReport(@RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, DocumentException, IOException {
         LOG.info("Report Controller - request report (Annual).");
         reportGenerator.generateAnnualReport(report.getYear());
 

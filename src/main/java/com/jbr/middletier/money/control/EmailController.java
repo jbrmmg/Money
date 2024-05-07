@@ -7,12 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/jbr")
 public class EmailController {
     private static final Logger LOG = LoggerFactory.getLogger(EmailController.class);
@@ -25,13 +22,13 @@ public class EmailController {
     }
 
     @PostMapping(path="/int/money/email")
-    public @ResponseBody OkStatus sendEmail(@RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
+    public OkStatus sendEmail(@RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
                                             @RequestParam(value="from", defaultValue="creditcards@jbrmmg.me.uk") String from,
                                             @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,
                                             @RequestParam(value="host", defaultValue="smtp.ionos.co.uk") String host,
                                             @RequestParam(value="password") String password,
                                             @RequestParam(value="weeks", defaultValue="7") long weeks ) throws EmailGenerationException {
-        LOG.info("sending email to {}", to);
+        LOG.info("sending email to (sanitized) {}", to.replaceAll("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$",""));
         this.emailGenerator.generateReport(to,from,username,host,password,weeks);
 
         return OkStatus.getOkStatus();

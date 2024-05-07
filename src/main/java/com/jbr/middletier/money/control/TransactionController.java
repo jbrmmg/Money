@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * Created by jason on 08/03/17.
  */
-@Controller
+@RestController
 @RequestMapping("/jbr")
 public class TransactionController {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionController.class);
@@ -28,7 +28,7 @@ public class TransactionController {
     }
 
     @GetMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsExt(@RequestParam(value="type", required = false) String type,
+    public Iterable<TransactionDTO> getExtTransactionsExt(@RequestParam(value="type", required = false) String type,
                                                                         @RequestParam(value="from", required = false) String from,
                                                                         @RequestParam(value="to", required = false) String to,
                                                                         @RequestParam(value="category", required = false)  String category,
@@ -44,7 +44,7 @@ public class TransactionController {
     }
 
     @GetMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> getExtTransactionsInt(@RequestParam(value="type", required = false) String type,
+    public Iterable<TransactionDTO> getExtTransactionsInt(@RequestParam(value="type", required = false) String type,
                                                                         @RequestParam(value="from", required = false) String from,
                                                                         @RequestParam(value="to", required = false) String to,
                                                                         @RequestParam(value="category", required = false)  String category,
@@ -54,32 +54,32 @@ public class TransactionController {
     }
 
     @PostMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
+    public Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PostMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
+    public Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PutMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> updateTransactionExt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
+    public Iterable<TransactionDTO> updateTransactionExt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 
     @PutMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> updateTransactionInt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
+    public Iterable<TransactionDTO> updateTransactionInt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 
     @DeleteMapping(path="/ext/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> deleteExternal(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
+    public Iterable<TransactionDTO> deleteExternal(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
         return this.accountTransactionManager.deleteTransaction(transaction);
     }
 
     @DeleteMapping(path="/int/money/transaction")
-    public @ResponseBody Iterable<TransactionDTO> deleteInternal( @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
+    public Iterable<TransactionDTO> deleteInternal( @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
         return this.accountTransactionManager.deleteTransaction(transaction);
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/jbr")
 public class RegularPaymentController {
     private static final Logger LOG = LoggerFactory.getLogger(RegularPaymentController.class);
@@ -23,19 +23,19 @@ public class RegularPaymentController {
     }
 
     @GetMapping(path="/ext/money/transaction/regulars")
-    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsExt() {
+    public Iterable<RegularDTO> getRegularPaymentsExt() {
         LOG.info("Get the regular payments. (ext)");
         return this.regularPaymentManager.getRegularPayments();
     }
 
     @GetMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsInt() {
+    public Iterable<RegularDTO> getRegularPaymentsInt() {
         LOG.info("Get the regular payments.(int)");
         return this.regularPaymentManager.getRegularPayments();
     }
 
     @PostMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsCreateInt(@RequestBody RegularDTO regular) throws RegularAlreadyExistsException {
+    public Iterable<RegularDTO> getRegularPaymentsCreateInt(@RequestBody RegularDTO regular) throws RegularAlreadyExistsException {
         LOG.info("Create a regular payment");
         this.regularPaymentManager.createRegularPayment(regular);
 
@@ -43,7 +43,7 @@ public class RegularPaymentController {
     }
 
     @PutMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsUpdateInt(@RequestBody RegularDTO regular) throws InvalidRegularIdException {
+    public Iterable<RegularDTO> getRegularPaymentsUpdateInt(@RequestBody RegularDTO regular) throws InvalidRegularIdException {
         LOG.info("Update a regular payment");
         this.regularPaymentManager.updateRegularPayment(regular);
 
@@ -51,7 +51,7 @@ public class RegularPaymentController {
     }
 
     @DeleteMapping(path="/int/money/transaction/regulars")
-    public @ResponseBody Iterable<RegularDTO> getRegularPaymentsDeleteInt(@RequestBody RegularDTO regular) throws InvalidRegularIdException {
+    public Iterable<RegularDTO> getRegularPaymentsDeleteInt(@RequestBody RegularDTO regular) throws InvalidRegularIdException {
         LOG.info("Delete a regular payment.");
         this.regularPaymentManager.deleteRegularPayment(regular);
 

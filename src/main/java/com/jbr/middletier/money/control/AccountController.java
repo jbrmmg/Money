@@ -12,7 +12,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -20,7 +19,7 @@ import java.util.List;
  * Created by jason on 07/03/17.
  */
 
-@Controller
+@RestController
 @RequestMapping("/jbr")
 public class AccountController {
     private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
@@ -36,7 +35,7 @@ public class AccountController {
     }
 
     @GetMapping(path="/int/money/account/logo")
-    public @ResponseBody ResponseEntity<String> getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
+    public ResponseEntity<String> getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
                                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (int)");
         HttpHeaders headers = new HttpHeaders();
@@ -45,40 +44,40 @@ public class AccountController {
     }
 
     @GetMapping(path="/ext/money/account/logo")
-    public @ResponseBody ResponseEntity<String> getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
+    public ResponseEntity<String> getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") String id,
                                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (ext)");
         return getIntAccountLogo(id, disabled);
     }
 
     @GetMapping(path="/ext/money/accounts")
-    public @ResponseBody List<AccountDTO> getExtAccounts() {
+    public List<AccountDTO> getExtAccounts() {
         LOG.info("Request Accounts (ext).");
 
         return accountManager.getAll();
     }
 
     @GetMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO>  getIntAccounts() {
+    public List<AccountDTO>  getIntAccounts() {
         LOG.info("Request Accounts (int).");
 
         return accountManager.getAll();
     }
 
     @PostMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws CreateAccountException {
+    public List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws CreateAccountException {
         LOG.info("Create a new account - {}}", account.getId());
         return accountManager.create(account);
     }
 
     @PutMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> updateAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
+    public List<AccountDTO> updateAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
         LOG.info("Update an account - {}", account.getId());
         return accountManager.update(account);
     }
 
     @DeleteMapping(path="/int/money/accounts")
-    public @ResponseBody List<AccountDTO> deleteAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
+    public List<AccountDTO> deleteAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
         LOG.info("Delete account {}", account.getId());
         return accountManager.delete(account);
     }

@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Created by jason on 08/02/17.
  */
-@Controller
+@RestController
 @RequestMapping("/jbr")
 public class CategoryController {
     private static final Logger LOG = LoggerFactory.getLogger(CategoryController.class);
@@ -27,34 +27,34 @@ public class CategoryController {
     }
 
     @GetMapping(path="/ext/money/categories")
-    public @ResponseBody List<CategoryDTO>  getExtCategories() {
+    public List<CategoryDTO>  getExtCategories() {
         LOG.info("Request Categories.");
 
         return categoryManager.getAllBySortOrder();
     }
 
     @GetMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO>  getIntCategories() {
+    public List<CategoryDTO>  getIntCategories() {
         LOG.info("Request Categories.");
         return this.getExtCategories();
     }
 
     @PostMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CreateCategoryException {
+    public List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CreateCategoryException {
         LOG.info("Create a new account - {}", category.getId());
 
         return categoryManager.create(category);
     }
 
     @PutMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
+    public List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
         LOG.info("Update an account - {}", category.getId());
 
         return categoryManager.update(category);
     }
 
     @DeleteMapping(path="/int/money/categories")
-    public @ResponseBody List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
+    public List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
         LOG.info("Delete account {}", category.getId());
 
         return categoryManager.delete(category);
