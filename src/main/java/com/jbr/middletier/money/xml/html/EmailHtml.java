@@ -8,6 +8,7 @@ import com.jbr.middletier.money.data.Account;
 import com.jbr.middletier.money.data.Category;
 import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.util.FinancialAmount;
+import com.jbr.middletier.money.util.FinancialAmountType;
 import org.jdom2.Element;
 import org.jdom2.Text;
 
@@ -217,7 +218,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getAmountColumn(FinancialAmount amount) {
         return createTdElement()
-                .setAttribute(CLASS, amount.isNegative() ? "amount amount-data db" : "amount amount-data")
+                .setAttribute(CLASS, amount.getType().equals(FinancialAmountType.DB) ? "amount amount-data db" : "amount amount-data")
                 .addContent(new Text(amount.toAbsString()));
     }
 
