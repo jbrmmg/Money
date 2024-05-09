@@ -88,4 +88,25 @@ public class StatementDTO implements Comparable<StatementDTO> {
     public int hashCode() {
         return this.statementIdDTO().hashCode();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        if(this.accountId != null) {
+            result.append(this.accountId);
+        }
+
+        if(this.year != null) {
+            result.append(" ");
+            result.append(this.year);
+        }
+
+        if(this.month != null) {
+            result.append(" ");
+            result.append(this.month);
+        }
+
+        return result.toString();
+    }
 }

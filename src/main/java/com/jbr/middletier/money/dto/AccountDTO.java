@@ -1,7 +1,5 @@
 package com.jbr.middletier.money.dto;
 
-import org.jetbrains.annotations.NotNull;
-
 import javax.validation.constraints.Pattern;
 
 public class AccountDTO extends ComparableNamedDTO {
@@ -40,5 +38,10 @@ public class AccountDTO extends ComparableNamedDTO {
     @Override
     public boolean equals(Object obj) {
         return super.equals(obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

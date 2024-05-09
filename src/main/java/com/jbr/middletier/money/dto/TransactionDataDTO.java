@@ -82,10 +82,10 @@ public class TransactionDataDTO {
 
         // Look for duplicates
         for(TransactionReportDTO transaction : this.transactions) {
-            if(transaction.getFromReconciliation() && transaction.getId() != null) {
+            if(transaction.getFromReconciliation().equals(Boolean.TRUE) && transaction.getId() != null) {
                 // Find the transaction.
                 for(TransactionReportDTO innerTransaction : this.transactions) {
-                    if(!innerTransaction.getFromReconciliation() && !innerTransaction.getPredicted() && innerTransaction.getId().equals(transaction.getId())) {
+                    if(!innerTransaction.getFromReconciliation().equals(Boolean.TRUE) && innerTransaction.getPredicted().equals(Boolean.FALSE) && innerTransaction.getId().equals(transaction.getId())) {
                         duplicates.add(transaction);
                     }
                 }
