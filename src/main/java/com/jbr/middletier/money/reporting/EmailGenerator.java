@@ -2,6 +2,7 @@ package com.jbr.middletier.money.reporting;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dto.EmailRequestDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -43,12 +44,7 @@ public class EmailGenerator {
         this.applicationProperties = applicationProperties;
     }
 
-    public void generateReport( String to,
-                                String from,
-                                String username,
-                                String host,
-                                String password,
-                                long weeks) throws EmailGenerationException {
+    public void generateReport(EmailRequestDTO request) throws EmailGenerationException {
         try {
             List<Transaction> emailTransactions = new ArrayList<>();
 
@@ -59,7 +55,7 @@ public class EmailGenerator {
             FinancialAmount transactionTotal2 = new FinancialAmount();
 
             LocalDate oldest = applicationProperties.getToday();
-            oldest = oldest.plusWeeks(-1 * weeks);
+            oldest = oldest.plusWeeks(-1L * request.getWeeks());
 
             // Get the latest statement that is locked for each account.
             for (Account nextAccount : accountManager.getAllExternal()) {
@@ -121,21 +117,21 @@ public class EmailGenerator {
             Properties properties = new Properties();
             properties.put("mail.smtp.auth", "true");
             properties.put("mail.smtp.starttls.enable", "true");
-            properties.put("mail.smtp.host", host);
+            properties.put("mail.smtp.host", request.getHost());
             properties.put("mail.smtp.port", this.applicationProperties.getSmtpPort());
 
             Session session = Session.getInstance(properties,
                     new javax.mail.Authenticator() {
                         @Override
                         protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(username, password);
+                            return new PasswordAuthentication(request.getUsername(), request.getPassword());
                         }
                     });
 
             Message message = new MimeMessage(session);
 
-            message.setFrom(new InternetAddress(from));
-            message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            message.setFrom(new InternetAddress(request.getFrom()));
+            message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(request.getTo()));
             message.setSubject("Credit card bills");
 
             // Get the email template.

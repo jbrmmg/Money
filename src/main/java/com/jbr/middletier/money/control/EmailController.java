@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.OkStatus;
+import com.jbr.middletier.money.dto.EmailRequestDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.reporting.EmailGenerator;
 import org.slf4j.Logger;
@@ -21,14 +22,9 @@ public class EmailController {
     }
 
     @PostMapping(path="/int/money/email")
-    public OkStatus sendEmail(@RequestParam(value="to", defaultValue="jason@jbrmmg.me.uk") String to,
-                                            @RequestParam(value="from", defaultValue="creditcards@jbrmmg.me.uk") String from,
-                                            @RequestParam(value="username", defaultValue="creditcards@jbrmmg.me.uk") String username,
-                                            @RequestParam(value="host", defaultValue="smtp.ionos.co.uk") String host,
-                                            @RequestParam(value="password") String password,
-                                            @RequestParam(value="weeks", defaultValue="7") long weeks ) throws EmailGenerationException {
-        LOG.info("sending email to (sanitized) {}", to.replaceAll("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$",""));
-        this.emailGenerator.generateReport(to,from,username,host,password,weeks);
+    public OkStatus sendEmail(@RequestBody EmailRequestDTO request ) throws EmailGenerationException {
+        LOG.info("sending email to (sanitized) {}", request);
+        this.emailGenerator.generateReport(request);
 
         return OkStatus.getOkStatus();
     }

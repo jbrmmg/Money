@@ -6,6 +6,7 @@ import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.dto.EmailRequestDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -64,7 +65,13 @@ public class EmailTest extends Support {
 
     @Test
     public void testEmail() throws Exception {
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/email?host=throw&password=fake&to=throw@com")
+        EmailRequestDTO request = new EmailRequestDTO();
+        request.setTo("throw@com");
+        request.setHost("throw");
+        request.setPassword("fake");
+        request.setFrom("test@com");
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/email")
+                        .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isFailedDependency())
                 .andReturn().getResolvedException()).getMessage();
@@ -73,7 +80,15 @@ public class EmailTest extends Support {
 
     @Test
     public void testEmail2() throws Exception {
-        getMockMvc().perform(post("/jbr/int/money/email?host=ignore.do.not.send&password=fake")
+        EmailRequestDTO request = new EmailRequestDTO();
+        request.setTo("standard@com");
+        request.setHost("ignore.do.not.send");
+        request.setPassword("fake");
+        request.setFrom("test@com");
+
+        // - /jbr/int/money/email?host=ignore.do.not.send&password=fake
+        getMockMvc().perform(post("/jbr/int/money/email")
+                        .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
     }
@@ -223,7 +238,14 @@ public class EmailTest extends Support {
                 testWrapper,
                 applicationProperties);
 
-        testGenerator.generateReport("a", "b", "blah", "testing", "", 4);
+        EmailRequestDTO request = new EmailRequestDTO();
+        request.setTo("a");
+        request.setFrom("b");
+        request.setUsername("blah");
+        request.setHost("testing");
+        request.setPassword("");
+        request.setWeeks(4);
+        testGenerator.generateReport(request);
 
         // Re-instate the standard statements.
         transactionRepository.deleteAll();
