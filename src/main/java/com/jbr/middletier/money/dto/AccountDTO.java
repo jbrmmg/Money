@@ -1,5 +1,7 @@
 package com.jbr.middletier.money.dto;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.validation.constraints.Pattern;
 
 public class AccountDTO extends ComparableNamedDTO {
@@ -8,7 +10,7 @@ public class AccountDTO extends ComparableNamedDTO {
 
     @Pattern(regexp="^[0-9a-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
     private String colour;
-    
+
     private Boolean closed;
 
     public String getImagePrefix() {
@@ -33,5 +35,10 @@ public class AccountDTO extends ComparableNamedDTO {
 
     public void setClosed(Boolean closed) {
         this.closed = closed;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 }

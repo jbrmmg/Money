@@ -22,7 +22,7 @@ public class EmailController {
     }
 
     @PostMapping(path="/int/money/email")
-    public OkStatus sendEmail(@RequestBody EmailRequestDTO request ) throws EmailGenerationException {
+    public OkStatus sendEmail(@RequestBody EmailRequestDTO request) throws EmailGenerationException {
         LOG.info("sending email to (sanitized) {}", request);
         this.emailGenerator.generateReport(request);
 

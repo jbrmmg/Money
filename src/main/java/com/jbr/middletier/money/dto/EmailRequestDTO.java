@@ -7,18 +7,18 @@ public class EmailRequestDTO {
     @NotNull(message="To cannot be null")
     private String to;
 
-    @Email(message="From must be a valid email address")
     @NotNull(message="From cannot be null")
+    @Email(message="From must be a valid email address")
     private String from;
 
-    @Email(message="Username must be a valid email address")
     @NotNull(message="Username cannot be null")
+    @Email(message="Username must be a valid email address")
     private String username;
 
-    @Pattern(regexp="^[0-9a-zA-Z._]{1,200}$",message="Hostname must be alphanumberic (plus . or _) upto 200 characters")
+    @Pattern(regexp="^[0-9a-zA-Z._]{1,200}$",message="Hostname must be alphanumeric (plus . or _) upto 200 characters")
     private String host;
 
-    @Pattern(regexp="^[0-9a-zA-Z._]{1,200}$",message="Hostname must be alphanumberic (plus . or _) upto 200 characters")
+    @Pattern(regexp="^[0-9a-zA-Z._]{1,200}$",message="Hostname must be alphanumeric (plus . or _) upto 200 characters")
     private String password;
 
     @Max(value = 52,message="Weeks cannot be greater than 52")

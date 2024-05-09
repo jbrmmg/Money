@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.Pattern;
 import java.util.*;
 
 /**
@@ -34,11 +36,22 @@ public class TransactionController {
                                                                         @RequestParam(value="account", required = false)  String account,
                                                                         @RequestParam(value="sortAscending", required = false) Boolean sortAscending) throws InvalidTransactionSearchException {
 
-        LOG.info("Get Transactions {} {} {} {} {} {}", type, from, to, category, account, sortAscending);
-        return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(type),
-                new DateRangeDTO(from, to),
-                category == null ? null : Arrays.asList(category.split(",")),
-                account == null ? null : Arrays.asList(account.split(",")),
+        @Pattern(regexp = "^[a-zA-Z]{2}$", message = "Type must be a two letter code")
+        String sanitizedType = type;
+        @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "From must be a valid date format.")
+        String sanitizedFrom = from;
+        @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "To must be a valid date format.")
+        String sanitizedTo = to;
+        @Pattern(regexp = "^[a-zA-Z,]*$", message = "Category must be a comma separated list of ids")
+        String sanitizedCategory = category;
+        @Pattern(regexp = "^[a-zA-Z,]*$", message = "Account must be a comma separated list of ids")
+        String sanitizedAccount = account;
+
+        LOG.info("Get Transactions {} {} {} {} {} {}", sanitizedType, sanitizedFrom, sanitizedTo, sanitizedCategory, sanitizedAccount, sortAscending);
+        return accountTransactionManager.getTransactions(TransactionRequestType.getTransactionType(sanitizedType),
+                new DateRangeDTO(sanitizedFrom, sanitizedTo),
+                category == null ? null : Arrays.asList(sanitizedCategory.split(",")),
+                account == null ? null : Arrays.asList(sanitizedAccount.split(",")),
                 Boolean.TRUE.equals(sortAscending));
     }
 

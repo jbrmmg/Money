@@ -52,7 +52,7 @@ public class ReconciliationController {
 
     @PostMapping(path = "/int/money/reconciliation/load")
     public Iterable<ReconciliationFileDTO> reconcileDataLoadInt(@RequestBody ReconciliationFileLoadDTO reconciliationFileLoad) throws IOException {
-        LOG.info("Request to load file (sanitized) - {}", reconciliationFileLoad.getFilename().replaceAll("^[A-Za-z0-9+_.-]+$",""));
+        LOG.info("Request to load file (sanitized) - {}", reconciliationFileLoad.getFilename());
         reconciliationManager.loadFile(reconciliationFileLoad);
         return getListOfFiles();
     }

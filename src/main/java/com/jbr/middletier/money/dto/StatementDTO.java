@@ -2,11 +2,24 @@ package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.util.FinancialAmount;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Pattern;
+
 public class StatementDTO implements Comparable<StatementDTO> {
+    @Pattern(regexp="^[0-9a-zA-Z]{1,4}$",message="Account ID contain letters or digits up to 4 characters.")
     private String accountId;
+
+    @Min(1)
+    @Max(12)
     private Integer month;
+
+    @Min(1900)
+    @Max(2399)
     private Integer year;
+
     private FinancialAmount openBalance;
+
     private boolean locked;
 
     public String getAccountId() {
