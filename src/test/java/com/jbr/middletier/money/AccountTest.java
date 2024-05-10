@@ -62,12 +62,20 @@ public class AccountTest extends Support {
         AccountDTO account = new AccountDTO();
         account.setId("XXXX");
         account.setName("Testing");
-        account.setColour("FCFCFC");
+        account.setColour("FFFFF");
         account.setImagePrefix("test");
 
-        getMockMvc().perform(post("/jbr/int/money/accounts")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/accounts")
                 .content(this.json(account))
                 .contentType(getContentType()))
+                .andExpect(status().isBadRequest())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertTrue(error.contains("Colour must be a 6 digit hex value."));
+
+        account.setColour("FFFFFF");
+        getMockMvc().perform(post("/jbr/int/money/accounts")
+                        .content(this.json(account))
+                        .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))
                 .andExpect(jsonPath("$[1].id", is("BANK")))

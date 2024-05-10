@@ -5,6 +5,7 @@ import com.jbr.middletier.money.exceptions.CreateAccountException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.LogoManager;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
@@ -65,19 +67,19 @@ public class AccountController {
     }
 
     @PostMapping(path="/int/money/accounts")
-    public List<AccountDTO> createAccount(@RequestBody AccountDTO account) throws CreateAccountException {
+    public List<AccountDTO> createAccount(@Valid @RequestBody AccountDTO account) throws CreateAccountException {
         LOG.info("Create a new account - {}}", account.getId());
         return accountManager.create(account);
     }
 
     @PutMapping(path="/int/money/accounts")
-    public List<AccountDTO> updateAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
+    public List<AccountDTO> updateAccount(@Valid @RequestBody AccountDTO account) throws UpdateDeleteAccountException {
         LOG.info("Update an account - {}", account.getId());
         return accountManager.update(account);
     }
 
     @DeleteMapping(path="/int/money/accounts")
-    public List<AccountDTO> deleteAccount(@RequestBody AccountDTO account) throws UpdateDeleteAccountException {
+    public List<AccountDTO> deleteAccount(@Valid @RequestBody AccountDTO account) throws UpdateDeleteAccountException {
         LOG.info("Delete account {}", account.getId());
         return accountManager.delete(account);
     }
