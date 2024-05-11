@@ -16,7 +16,7 @@ public class TransactionDTO {
 
     private Integer statementYear;
     private Integer oppositeId;
-    @Pattern(regexp="^[0-9a-zA-Z\\s]{1,40}$",message="Description can only contain letters or digits up to 45 characters.")
+    @Pattern(regexp="^[0-9a-zA-Z\\s!]{1,45}$",message="Description can only contain letters or digits up to 45 characters.")
     private String description;
 
     private Boolean hasStatement;
