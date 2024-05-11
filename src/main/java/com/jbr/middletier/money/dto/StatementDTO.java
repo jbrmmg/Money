@@ -7,7 +7,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 
 public class StatementDTO implements Comparable<StatementDTO> {
-    @Pattern(regexp="^[0-9a-zA-Z]{1,4}$",message="Account ID contain letters or digits up to 4 characters.")
+    @Pattern(regexp="^[\\da-zA-Z]{1,4}$",message="Account ID contain letters or digits up to 4 characters.")
     private String accountId;
 
     @Min(1)

@@ -7,11 +7,11 @@ public class TransactionReportDTO {
     private Integer id;
     private FinancialAmount amount;
     private FinancialAmount balance;
-    @Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",message = "From must be a date in format yyyy-dd-mm")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String date;
     private AccountDTO account;
     private CategoryDTO category;
-    @Pattern(regexp="^[0-9a-zA-Z\\s]{1,40}$",message="Description can only contain letters or digits up to 45 characters.")
+    @Pattern(regexp="^[\\da-zA-Z\\s]{1,40}$",message="Description can only contain letters or digits up to 45 characters.")
     private String description;
     private Integer oppositeId;
     private StatementDTO statement;
@@ -108,21 +108,18 @@ public class TransactionReportDTO {
 
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
 
-        result.append("[");
-        result.append(this.getId());
-        result.append(" ");
-        result.append(this.getDate());
-        result.append(" ");
-        result.append(this.getAmount().getValue());
-        result.append(" ");
-        result.append(this.getPredicted());
-        result.append(" ");
-        result.append(this.getFromReconciliation());
-        result.append(" ");
-        result.append("]");
-
-        return result.toString();
+        return "[" +
+                this.getId() +
+                " " +
+                this.getDate() +
+                " " +
+                this.getAmount().getValue() +
+                " " +
+                this.getPredicted() +
+                " " +
+                this.getFromReconciliation() +
+                " " +
+                "]";
     }
 }

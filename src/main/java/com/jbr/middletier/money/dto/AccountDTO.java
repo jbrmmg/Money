@@ -3,10 +3,10 @@ package com.jbr.middletier.money.dto;
 import jakarta.validation.constraints.Pattern;
 
 public class AccountDTO extends ComparableNamedDTO {
-    @Pattern(regexp="^[0-9a-zA-Z]{1,45}$",message="Image Prefix can only contain letters or digits up to 45 characters.")
+    @Pattern(regexp="^[\\da-zA-Z]{1,45}$",message="Image Prefix can only contain letters or digits up to 45 characters.")
     private String imagePrefix;
 
-    @Pattern(regexp="^[0-9a-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
+    @Pattern(regexp="^[\\da-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
     private String colour;
 
     private Boolean closed;

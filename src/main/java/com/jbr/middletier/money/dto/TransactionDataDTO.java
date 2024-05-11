@@ -7,17 +7,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionDataDTO {
-    @Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",message = "Open date must be a date in format yyyy-dd-mm")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "Open date must be a date in format yyyy-dd-mm")
     private String openDate;
     private FinancialAmount openBalance;
 
     private List<TransactionReportDTO> transactions;
 
-    @Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",message = "Today must be a date in format yyyy-dd-mm")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "Today must be a date in format yyyy-dd-mm")
     private String today;
     private FinancialAmount todayBalance;
 
-    @Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",message = "Forward date must be a date in format yyyy-dd-mm")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "Forward date must be a date in format yyyy-dd-mm")
     private String forwardDate;
     private FinancialAmount forwardBalance;
 

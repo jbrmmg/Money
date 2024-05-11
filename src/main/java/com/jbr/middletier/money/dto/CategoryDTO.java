@@ -5,10 +5,10 @@ import jakarta.validation.constraints.Pattern;
 public class CategoryDTO extends ComparableNamedDTO {
     private Long sort;
     private Boolean restricted;
-    @Pattern(regexp="^[0-9a-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
+    @Pattern(regexp="^[\\da-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
     private String colour;
     private Boolean expense;
-    @Pattern(regexp="^[0-9a-zA-Z]{1,45}$",message="Group can only contain letters or digits up to 45 characters.")
+    @Pattern(regexp="^[\\da-zA-Z]{1,45}$",message="Group can only contain letters or digits up to 45 characters.")
     private String group;
     private Boolean systemUse;
 

@@ -4,9 +4,9 @@ import jakarta.validation.constraints.Pattern;
 import org.jetbrains.annotations.NotNull;
 
 public class ComparableNamedDTO implements Comparable<ComparableNamedDTO> {
-    @Pattern(regexp="^[0-9a-zA-Z]{1,4}$",message="ID can only contain letters or digits up to 4 characters.")
+    @Pattern(regexp="^[\\da-zA-Z]{1,4}$",message="ID can only contain letters or digits up to 4 characters.")
     private String id;
-    @Pattern(regexp="^[0-9a-zA-Z]{1,45}$",message="Name can only contain letters or digits up to 45 characters.")
+    @Pattern(regexp="^[\\da-zA-Z\\s]{1,45}$",message="Name can only contain letters or digits up to 45 characters.")
     private String name;
 
     protected ComparableNamedDTO() {

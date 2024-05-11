@@ -15,10 +15,10 @@ public class EmailRequestDTO {
     @Email(message="Username must be a valid email address")
     private String username;
 
-    @Pattern(regexp="^[0-9a-zA-Z._]{1,200}$",message="Hostname must be alphanumeric (plus . or _) upto 200 characters")
+    @Pattern(regexp="^[\\da-zA-Z._]{1,200}$",message="Hostname must be alphanumeric (plus . or _) upto 200 characters")
     private String host;
 
-    @Pattern(regexp="^[0-9a-zA-Z._]{1,200}$",message="Hostname must be alphanumeric (plus . or _) upto 200 characters")
+    @Pattern(regexp="^[\\da-zA-Z._]{1,200}$",message="Hostname must be alphanumeric (plus . or _) upto 200 characters")
     private String password;
 
     @Max(value = 52,message="Weeks cannot be greater than 52")
