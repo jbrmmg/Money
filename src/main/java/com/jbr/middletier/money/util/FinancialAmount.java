@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.util;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -65,7 +64,7 @@ public class FinancialAmount {
     }
 
     public String toFormattedString(int size) {
-        return String.format("%"+ size + "s %-2s",toAbsString(),this.getType().toString());
+        return String.format("%" + size + "s %-2s",toAbsString(),this.getType().toString());
     }
 
     @Override

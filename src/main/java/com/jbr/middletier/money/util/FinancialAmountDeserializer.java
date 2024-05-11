@@ -16,11 +16,8 @@ public class FinancialAmountDeserializer extends JsonDeserializer<FinancialAmoun
 
         // If the type does not match the value, then correct it.
         String type = node.get("type").asText();
-        if(type != null) {
-            if( (type.equalsIgnoreCase("db") && (value > 0)) ||
-                    (type.equalsIgnoreCase("cr") && (value < 0)) ){
-                value *= -1;
-            }
+        if(type != null && ((type.equalsIgnoreCase("db") && (value > 0)) || (type.equalsIgnoreCase("cr") && (value < 0)) )) {
+            value *= -1;
         }
 
         return new FinancialAmount(value);

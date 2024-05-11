@@ -36,15 +36,15 @@ public class TransactionFilter {
             return true;
         }
 
-        return (!(transaction.getAmount().getValue() > filter.getValueRange().getMaximum())) &&
-                (!(transaction.getAmount().getValue() < filter.getValueRange().getMinimum()));
+        return ((transaction.getAmount().getValue() <= filter.getValueRange().getMaximum())) &&
+                ((transaction.getAmount().getValue() >= filter.getValueRange().getMinimum()));
     }
 
     private LocalDate dateStringToDate(String date) {
         return LocalDate.parse(date, Constants.MONEY_DATE_FORMATTER);
     }
 
-    private boolean transctionPassFilterDate(TransactionReportDTO transaction, TransactionFilterDTO filter) {
+    private boolean transactionPassFilterDate(TransactionReportDTO transaction, TransactionFilterDTO filter) {
         // If there is no date filter then pass the filter.
         if(filter.getDateRange() == null) {
             return true;
@@ -105,10 +105,8 @@ public class TransactionFilter {
             return true;
         }
 
-        if(filter.getStatementDate().getMonth() != null) {
-            if(!filter.getStatementDate().getMonth().equals(transaction.getStatement().getMonth())) {
-                return false;
-            }
+        if(filter.getStatementDate().getMonth() != null && !filter.getStatementDate().getMonth().equals(transaction.getStatement().getMonth())) {
+            return false;
         }
 
         if(filter.getStatementDate().getYear() != null) {
@@ -128,7 +126,7 @@ public class TransactionFilter {
             return Optional.empty();
         }
 
-        if(!transctionPassFilterDate(transaction, filter)) {
+        if(!transactionPassFilterDate(transaction, filter)) {
             return Optional.empty();
         }
 
