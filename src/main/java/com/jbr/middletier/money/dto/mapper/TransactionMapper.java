@@ -2,7 +2,6 @@ package com.jbr.middletier.money.dto.mapper;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.dto.DateRangeDTO;
-import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.mapper.converter.*;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.CategoryManager;
@@ -15,15 +14,14 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class TransactionMapper extends ModelMapper {
-    private final ApplicationProperties applicationProperties;
-
     @Autowired
     public TransactionMapper(AccountManager accountManager,
                              CategoryManager categoryManager,
                              StatementManager statementManager,
                              AccountMapper accountMapper,
                              CategoryMapper categoryMapper,
-                             StatementMapper statementMapper, @Qualifier("money-com.jbr.middletier.money.config.ApplicationProperties") ApplicationProperties applicationProperties) {
+                             StatementMapper statementMapper,
+                             @Qualifier("money-com.jbr.middletier.money.config.ApplicationProperties") ApplicationProperties applicationProperties) {
         StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
         LocalDateStringConverter localDateStringConverter = new LocalDateStringConverter();
         this.addConverter(new AccountStringConverter());
@@ -42,6 +40,5 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new MatchDataToReportDTO(localDateStringConverter,accountMapper,categoryMapper));
         this.createTypeMap(DateRange.class, DateRangeDTO.class);
         this.createTypeMap(DateRangeDTO.class, DateRange.class);
-        this.applicationProperties = applicationProperties;
     }
 }

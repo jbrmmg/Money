@@ -137,7 +137,6 @@ public class ReconciliationFileManager implements FileChangeListener {
         return result;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     private boolean validFormattedDate(String dateFormat, String dateValue) {
         try {
             DateTimeFormatter formatter = new DateTimeFormatterBuilder()
@@ -360,13 +359,10 @@ public class ReconciliationFileManager implements FileChangeListener {
                 }
 
                 // What is the change?
-                switch (nextFile.getType()) {
-                    case ADD, MODIFY:
-                        fileUpdated(nextFile.getFile());
-                        break;
-                    case DELETE:
-                        fileDeleted(nextFile.getFile());
-                        break;
+                if (Objects.requireNonNull(nextFile.getType()) == ChangedFile.Type.ADD || nextFile.getType() == ChangedFile.Type.MODIFY) {
+                    fileUpdated(nextFile.getFile());
+                } else if (nextFile.getType() == ChangedFile.Type.DELETE) {
+                    fileDeleted(nextFile.getFile());
                 }
             }
         }

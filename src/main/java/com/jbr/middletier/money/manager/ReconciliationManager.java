@@ -249,11 +249,11 @@ public class ReconciliationManager {
             Optional<Category> category =  categoryRepository.findById(reconciliationUpdate.getCategoryId());
 
             if(category.isPresent()) {
-                LOG.info("Category updated for - {}", reconciliationUpdate.getId());
+                LOG.info("Category updated for - {} (reconciliation)", reconciliationUpdate.getId());
                 reconciliationData.get().setCategory(category.get());
                 reconciliationRepository.save(reconciliationData.get());
             } else {
-                LOG.info("Invalid category.");
+                LOG.info("Invalid category (reconciliation).");
             }
         } else {
             LOG.info("Invalid id.");

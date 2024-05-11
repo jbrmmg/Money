@@ -28,8 +28,8 @@ public class TransactionFileDetailsDTO {
         this.transactions.add(transaction);
     }
 
-    public void setOk(boolean OK) {
-        this.ok = OK;
+    public void setOk(boolean ok) {
+        this.ok = ok;
     }
 
     public boolean isOk() {

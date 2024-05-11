@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.util;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -10,7 +9,7 @@ import java.io.IOException;
 
 public class FinancialAmountDeserializer extends JsonDeserializer<FinancialAmount> {
     @Override
-    public FinancialAmount deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+    public FinancialAmount deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
 
         double value = node.get("value").asDouble();

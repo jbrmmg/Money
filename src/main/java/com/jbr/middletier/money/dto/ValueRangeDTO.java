@@ -29,12 +29,8 @@ public class ValueRangeDTO {
 
     public void setMinimum(Double minimum) {
         // Value must be positive and must be less than the maximum if provided.
-        if(minimum != null) {
-            if(this.maximum != null) {
-                if(minimum > this.maximum) {
-                    throw new IllegalArgumentException("Value Range: Minimum cannot be greater than maximum");
-                }
-            }
+        if(minimum != null && this.maximum != null && minimum > this.maximum) {
+            throw new IllegalArgumentException("Value Range: Minimum cannot be greater than maximum");
         }
 
         this.minimum = minimum;
@@ -49,12 +45,8 @@ public class ValueRangeDTO {
     }
 
     public void setMaximum(Double maximum) {
-        if(maximum != null) {
-            if(this.minimum != null) {
-                if(maximum < this.minimum) {
-                    throw new IllegalArgumentException("Value Range: Maximum cannot be less than minimum");
-                }
-            }
+        if(maximum != null && this.minimum != null && maximum < this.minimum) {
+            throw new IllegalArgumentException("Value Range: Maximum cannot be less than minimum");
         }
 
         this.maximum = maximum;

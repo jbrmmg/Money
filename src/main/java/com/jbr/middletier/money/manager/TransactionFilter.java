@@ -26,13 +26,7 @@ public class TransactionFilter {
         }
 
         // Get the locked status.
-        boolean transactionLocked = false;
-
-        if(transaction.getStatement() != null) {
-            if(transaction.getStatement().getLocked()) {
-                transactionLocked = true;
-            }
-        }
+        boolean transactionLocked = transaction.getStatement() != null && transaction.getStatement().getLocked();
 
         return transactionLocked == filter.getLocked();
     }

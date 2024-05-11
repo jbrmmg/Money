@@ -1,7 +1,6 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.data.Regular;
-import com.jbr.middletier.money.data.Transaction;
 import com.jbr.middletier.money.dataaccess.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
 import com.jbr.middletier.money.exceptions.InvalidRegularIdException;
