@@ -2,11 +2,14 @@ package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.config.Constants;
 
+import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 public class DateRangeDTO {
+    @Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String from;
+    @Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String to;
 
     public DateRangeDTO() {

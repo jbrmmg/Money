@@ -5,6 +5,7 @@ import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,32 +67,32 @@ public class TransactionController {
     }
 
     @PostMapping(path="/ext/money/transaction")
-    public Iterable<TransactionDTO>  addTransactionExt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
+    public Iterable<TransactionDTO>  addTransactionExt(@Valid @RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PostMapping(path="/int/money/transaction")
-    public Iterable<TransactionDTO>  addTransactionInt(@RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
+    public Iterable<TransactionDTO>  addTransactionInt(@Valid @RequestBody List<TransactionDTO> transaction) throws InvalidTransactionException {
         return this.accountTransactionManager.createTransaction(transaction);
     }
 
     @PutMapping(path="/ext/money/transaction")
-    public Iterable<TransactionDTO> updateTransactionExt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
+    public Iterable<TransactionDTO> updateTransactionExt(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 
     @PutMapping(path="/int/money/transaction")
-    public Iterable<TransactionDTO> updateTransactionInt(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
+    public Iterable<TransactionDTO> updateTransactionInt(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         return this.accountTransactionManager.updateTransaction(transaction);
     }
 
     @DeleteMapping(path="/ext/money/transaction")
-    public Iterable<TransactionDTO> deleteExternal(@RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
+    public Iterable<TransactionDTO> deleteExternal(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
         return this.accountTransactionManager.deleteTransaction(transaction);
     }
 
     @DeleteMapping(path="/int/money/transaction")
-    public Iterable<TransactionDTO> deleteInternal( @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
+    public Iterable<TransactionDTO> deleteInternal(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
         return this.accountTransactionManager.deleteTransaction(transaction);
     }
 }

@@ -1,14 +1,17 @@
 package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.util.FinancialAmount;
+import jakarta.validation.constraints.Pattern;
 
 public class TransactionReportDTO {
     private Integer id;
     private FinancialAmount amount;
     private FinancialAmount balance;
+    @Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String date;
     private AccountDTO account;
     private CategoryDTO category;
+    @Pattern(regexp="^[0-9a-zA-Z\\s]{1,40}$",message="Description can only contain letters or digits up to 45 characters.")
     private String description;
     private Integer oppositeId;
     private StatementDTO statement;

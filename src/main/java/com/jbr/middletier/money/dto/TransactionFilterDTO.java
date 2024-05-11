@@ -1,5 +1,7 @@
 package com.jbr.middletier.money.dto;
 
+import jakarta.validation.constraints.Pattern;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +14,7 @@ public class TransactionFilterDTO {
     private Boolean locked;
     private Boolean predicted;
     private Boolean fromReconciled;
+    @Pattern(regexp="^[0-9a-zA-Z]{4}$",message="Account can only contain letters or digits of 4 characters.")
     private String reconciliationAccount;
 
     public ValueRangeDTO getValueRange() {

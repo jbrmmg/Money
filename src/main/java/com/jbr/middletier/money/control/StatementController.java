@@ -5,6 +5,7 @@ import com.jbr.middletier.money.dto.StatementIdDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.StatementManager;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,24 +42,24 @@ public class StatementController {
     }
 
     @PostMapping(path="/ext/money/statement/lock")
-    public Iterable<StatementDTO> statementLockExt(@RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException {
+    public Iterable<StatementDTO> statementLockExt(@Valid @RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException {
         return this.statementManager.statementLock(statementId,accountTransactionManager);
     }
 
     @PostMapping(path="/int/money/statement/lock")
-    public Iterable<StatementDTO> statementLockInt(@RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException {
+    public Iterable<StatementDTO> statementLockInt(@Valid @RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException {
         return this.statementLockExt(statementId);
     }
 
     @PostMapping(path="/int/money/statement")
-    public Iterable<StatementDTO> createStatement(@RequestBody StatementDTO statement) throws StatementAlreadyExistsException, UpdateDeleteAccountException {
+    public Iterable<StatementDTO> createStatement(@Valid @RequestBody StatementDTO statement) throws StatementAlreadyExistsException, UpdateDeleteAccountException {
         LOG.info("Create a new statement - {}", statement);
 
         return this.statementManager.createStatement(statement);
     }
 
     @DeleteMapping(path="/int/money/statement")
-    public Iterable<StatementDTO> deleteStatement(@RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatementException, UpdateDeleteAccountException, CannotDeleteLastStatementException {
+    public Iterable<StatementDTO> deleteStatement(@Valid @RequestBody StatementDTO statement) throws InvalidStatementIdException, CannotDeleteLockedStatementException, UpdateDeleteAccountException, CannotDeleteLastStatementException {
         LOG.info("Delete an account - {}", statement);
 
         return this.statementManager.deleteStatement(statement,accountTransactionManager);

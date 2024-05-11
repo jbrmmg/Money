@@ -4,6 +4,7 @@ import com.jbr.middletier.money.dto.RegularDTO;
 import com.jbr.middletier.money.exceptions.InvalidRegularIdException;
 import com.jbr.middletier.money.exceptions.RegularAlreadyExistsException;
 import com.jbr.middletier.money.manager.RegularPaymentManager;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class RegularPaymentController {
     }
 
     @PostMapping(path="/int/money/transaction/regulars")
-    public Iterable<RegularDTO> getRegularPaymentsCreateInt(@RequestBody RegularDTO regular) throws RegularAlreadyExistsException {
+    public Iterable<RegularDTO> getRegularPaymentsCreateInt(@Valid @RequestBody RegularDTO regular) throws RegularAlreadyExistsException {
         LOG.info("Create a regular payment");
         this.regularPaymentManager.createRegularPayment(regular);
 
@@ -42,7 +43,7 @@ public class RegularPaymentController {
     }
 
     @PutMapping(path="/int/money/transaction/regulars")
-    public Iterable<RegularDTO> getRegularPaymentsUpdateInt(@RequestBody RegularDTO regular) throws InvalidRegularIdException {
+    public Iterable<RegularDTO> getRegularPaymentsUpdateInt(@Valid @RequestBody RegularDTO regular) throws InvalidRegularIdException {
         LOG.info("Update a regular payment");
         this.regularPaymentManager.updateRegularPayment(regular);
 
@@ -50,7 +51,7 @@ public class RegularPaymentController {
     }
 
     @DeleteMapping(path="/int/money/transaction/regulars")
-    public Iterable<RegularDTO> getRegularPaymentsDeleteInt(@RequestBody RegularDTO regular) throws InvalidRegularIdException {
+    public Iterable<RegularDTO> getRegularPaymentsDeleteInt(@Valid @RequestBody RegularDTO regular) throws InvalidRegularIdException {
         LOG.info("Delete a regular payment.");
         this.regularPaymentManager.deleteRegularPayment(regular);
 

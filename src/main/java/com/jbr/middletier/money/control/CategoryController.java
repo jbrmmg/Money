@@ -4,6 +4,7 @@ import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.exceptions.CreateCategoryException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.manager.CategoryManager;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,21 +40,21 @@ public class CategoryController {
     }
 
     @PostMapping(path="/int/money/categories")
-    public List<CategoryDTO> createCategory(@RequestBody CategoryDTO category) throws CreateCategoryException {
+    public List<CategoryDTO> createCategory(@Valid @RequestBody CategoryDTO category) throws CreateCategoryException {
         LOG.info("Create a new account - {}", category.getId());
 
         return categoryManager.create(category);
     }
 
     @PutMapping(path="/int/money/categories")
-    public List<CategoryDTO> updateCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
+    public List<CategoryDTO> updateCategory(@Valid @RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
         LOG.info("Update an account - {}", category.getId());
 
         return categoryManager.update(category);
     }
 
     @DeleteMapping(path="/int/money/categories")
-    public List<CategoryDTO> deleteCategory(@RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
+    public List<CategoryDTO> deleteCategory(@Valid @RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
         LOG.info("Delete account {}", category.getId());
 
         return categoryManager.delete(category);

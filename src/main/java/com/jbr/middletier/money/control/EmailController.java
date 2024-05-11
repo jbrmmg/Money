@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.OkStatus;
 import com.jbr.middletier.money.dto.EmailRequestDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.reporting.EmailGenerator;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class EmailController {
     }
 
     @PostMapping(path="/int/money/email")
-    public OkStatus sendEmail(@RequestBody EmailRequestDTO request) throws EmailGenerationException {
+    public OkStatus sendEmail(@Valid @RequestBody EmailRequestDTO request) throws EmailGenerationException {
         LOG.info("sending email to (sanitized) {}", request);
         this.emailGenerator.generateReport(request);
 

@@ -5,6 +5,7 @@ import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,18 +41,18 @@ public class ReconciliationController {
     }
 
     @PutMapping(path = "/ext/money/reconcile")
-    public OkStatus reconcileExt(@RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
+    public OkStatus reconcileExt(@Valid @RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         reconciliationManager.reconcile(reconcileTransaction.getTransactionId(), reconcileTransaction.getReconcile());
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path = "/int/money/reconcile")
-    public OkStatus reconcileInt(@RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
+    public OkStatus reconcileInt(@Valid @RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
         return reconcileExt(reconcileTransaction);
     }
 
     @PostMapping(path = "/int/money/reconciliation/load")
-    public Iterable<ReconciliationFileDTO> reconcileDataLoadInt(@RequestBody ReconciliationFileLoadDTO reconciliationFileLoad) throws IOException {
+    public Iterable<ReconciliationFileDTO> reconcileDataLoadInt(@Valid @RequestBody ReconciliationFileLoadDTO reconciliationFileLoad) throws IOException {
         LOG.info("Request to load file (sanitized) - {}", reconciliationFileLoad);
         reconciliationManager.loadFile(reconciliationFileLoad);
         return getListOfFiles();
@@ -64,25 +65,25 @@ public class ReconciliationController {
     }
 
     @PutMapping(path = "/ext/money/reconciliation/update")
-    public OkStatus reconcileCategoryExt(@RequestBody ReconcileUpdateDTO reconciliationUpdate) {
+    public OkStatus reconcileCategoryExt(@Valid @RequestBody ReconcileUpdateDTO reconciliationUpdate) {
         LOG.info("Reconcile Category Update");
         reconciliationManager.processReconcileUpdate(reconciliationUpdate);
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path = "/int/money/reconciliation/update")
-    public OkStatus reconcileCategoryInt(@RequestBody ReconcileUpdateDTO reconciliationUpdate) {
+    public OkStatus reconcileCategoryInt(@Valid @RequestBody ReconcileUpdateDTO reconciliationUpdate) {
         return reconcileCategoryExt(reconciliationUpdate);
     }
 
     @GetMapping(path = "/ext/money/match")
-    public List<MatchDataDTO> matchExt(@RequestParam(value = "account", defaultValue = "UNKN") String accountId) throws UpdateDeleteAccountException {
+    public List<MatchDataDTO> matchExt(@Valid @RequestParam(value = "account", defaultValue = "UNKN") String accountId) throws UpdateDeleteAccountException {
         LOG.info("External match data - reconciliation data with reconciled transactions");
         return reconciliationManager.matchImpl(accountId);
     }
 
     @GetMapping(path = "/int/money/match")
-    public List<MatchDataDTO> matchInt(@RequestParam(value = "account", defaultValue = "UNKN") String accountId) throws UpdateDeleteAccountException {
+    public List<MatchDataDTO> matchInt(@Valid @RequestParam(value = "account", defaultValue = "UNKN") String accountId) throws UpdateDeleteAccountException {
         return matchExt(accountId);
     }
 

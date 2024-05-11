@@ -70,6 +70,7 @@ public class EmailTest extends Support {
         request.setHost("throw");
         request.setPassword("fake");
         request.setFrom("test@com");
+        request.setUsername("chk@com");
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/email")
                         .content(this.json(request))
                         .contentType(getContentType()))
@@ -85,6 +86,7 @@ public class EmailTest extends Support {
         request.setHost("ignore.do.not.send");
         request.setPassword("fake");
         request.setFrom("test@com");
+        request.setUsername("chk@com");
 
         // - /jbr/int/money/email?host=ignore.do.not.send&password=fake
         getMockMvc().perform(post("/jbr/int/money/email")

@@ -1,12 +1,16 @@
 package com.jbr.middletier.money.dto;
 
+import jakarta.validation.constraints.Pattern;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionFileDetailsDTO {
     List<TransactionDTO> transactions;
     boolean ok;
+    @Pattern(regexp="^[0-9a-zA-Z]{1,100}$",message="Error can only contain letters or digits up to 100 characters.")
     String error;
+    @Pattern(regexp="^[0-9a-zA-Z]{3}$",message="Account can only contain letters or digits of 4 characters.")
     String accountId;
 
     public TransactionFileDetailsDTO() {

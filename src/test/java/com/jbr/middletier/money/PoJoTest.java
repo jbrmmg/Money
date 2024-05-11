@@ -78,11 +78,13 @@ public class PoJoTest {
         accountDTO.setColour("BLUE");
         accountDTO.setImagePrefix("Cheese");
         accountDTO.setName("Testing");
+        accountDTO.setClosed(false);
         Account account = accountMapper.map(accountDTO,Account.class);
         Assert.assertEquals("HOPE", account.getId());
         Assert.assertEquals("BLUE",account.getColour());
         Assert.assertEquals("Testing",account.getName());
         Assert.assertEquals("Cheese",account.getImagePrefix());
+        Assert.assertFalse(account.getClosed());
     }
 
     @Test

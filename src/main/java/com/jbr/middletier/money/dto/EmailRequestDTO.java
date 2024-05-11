@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.dto;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 public class EmailRequestDTO {
     @Email(message="To must be a valid email address")
