@@ -11,6 +11,7 @@ import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class StatementManager {
     private final AccountManager accountManager;
     private final StatementMapper statementMapper;
 
+    @Autowired
     public StatementManager(StatementRepository statementRepository,
                             AccountManager accountManager,
                             StatementMapper statementMapper) {

@@ -10,6 +10,7 @@ import com.jbr.middletier.money.dto.MatchDataDTO;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
@@ -37,6 +38,7 @@ public class ReconciliationManager {
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
     private final ReconciliationFileRepository reconciliationFileRepository;
 
+    @Autowired
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
                                  CategoryRepository categoryRepository,
                                  AccountRepository accountRepository,

@@ -12,6 +12,7 @@ import com.jbr.middletier.money.dto.TransactionFileDetailsDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class ReconciliationFileManager implements FileChangeListener {
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
     private LocalDateTime lastUpdateTime;
 
+    @Autowired
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
                                      ReconcileFormatRepository reconcileFormatRepository,
                                      TransactionMapper transactionMapper,
