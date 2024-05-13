@@ -2,17 +2,17 @@ package com.jbr.middletier.money.integration;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.Support;
+import com.jbr.middletier.money.data.Statement;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
-import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
@@ -40,6 +40,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles(value="report-it")
 public class MoneyReportIT extends Support {
     private static final Logger LOG = LoggerFactory.getLogger(MoneyReportIT.class);
+
+    @Autowired
+    private StatementRepository statementRepository;
 
     @SuppressWarnings("rawtypes")
     @ClassRule
@@ -99,6 +102,16 @@ public class MoneyReportIT extends Support {
         LOG.info("-----------------------------------------------------------------------------------------------------------------------------------------------------------");
     }
 
+    @Before
+    public void cleanUp() {
+        // Remove the default statements.
+        for(Statement statement : statementRepository.findAll()) {
+            if(statement.getId().getYear().equals(2010) && statement.getId().getMonth().equals(1)) {
+                statementRepository.delete(statement);
+            }
+        }
+    }
+
     @Test
     public void testFilterAll() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
@@ -109,6 +122,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(59)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -130,6 +144,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(18)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -165,6 +180,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -186,6 +202,30 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(38)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterNotLocked() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setLocked(false);
+
+        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(35)))
+                .andExpect(jsonPath("openBalance.value", is(630.16)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())

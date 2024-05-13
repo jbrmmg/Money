@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class TransactionReportManager {
@@ -112,25 +114,25 @@ public class TransactionReportManager {
     }
 
     private boolean includeStatement(Statement statement, List<AccountDTO> accounts, Boolean locked, StatementDateDTO statementDate) {
-        if(accounts.isEmpty()) {
-            return true;
-        }
+        if(!accounts.isEmpty()) {
+            // Check the account.
+            boolean matchAccount = false;
+            for (AccountDTO nextAccount : accounts) {
+                if (statement.getId().getAccount().getId().equals(nextAccount.getId())) {
+                    matchAccount = true;
+                    break;
+                }
+            }
 
-        // Check the account.
-        boolean matchAccount = false;
-        for(AccountDTO nextAccount : accounts) {
-            if (statement.getId().getAccount().getId().equals(nextAccount.getId())) {
-                matchAccount = true;
-                break;
+            if (!matchAccount) {
+                return false;
             }
         }
 
-        if(!matchAccount) {
-            return false;
-        }
-
         // If specified, check the date.
-        if(statementDate != null && (!statement.getId().getYear().equals(statementDate.getYear()) || !statement.getId().getMonth().equals(statementDate.getMonth()))) {
+        if(statementDate != null &&
+                ((statementDate.getYear() != null && !statement.getId().getYear().equals(statementDate.getYear())) ||
+                 (statementDate.getMonth() != null && !statement.getId().getMonth().equals(statementDate.getMonth())))) {
             return false;
         }
 
@@ -150,23 +152,27 @@ public class TransactionReportManager {
         return result;
     }
 
-    private StatementDateDTO getOldestStatement(List<Statement> statements) {
-        StatementDateDTO result = null;
+    private Map<String,StatementDateDTO> getOldestStatementPerAccount(List<Statement> statements) {
+        Map<String,StatementDateDTO> result = new HashMap<>();
 
         for(Statement statement : statements) {
-            if(result == null) {
-                result = new StatementDateDTO();
-                result.setYear(statement.getId().getYear());
-                result.setMonth(statement.getId().getMonth());
+            // If this account has not been seen before then add this as the oldest.
+            if(!result.containsKey(statement.getId().getAccount().getId())) {
+                StatementDateDTO accountOldest = new StatementDateDTO();
+                accountOldest.setYear(statement.getId().getYear());
+                accountOldest.setMonth(statement.getId().getMonth());
+                result.put(statement.getId().getAccount().getId(),accountOldest);
             } else {
+                StatementDateDTO accountOldest = result.get(statement.getId().getAccount().getId());
+
                 // Is the next statement older?
-                if(result.getYear() > statement.getId().getYear()) {
+                if(accountOldest.getYear() > statement.getId().getYear()) {
                     // Older year.
-                    result.setYear(statement.getId().getYear());
-                    result.setMonth(statement.getId().getMonth());
-                } else if(result.getYear().equals(statement.getId().getYear()) && (result.getMonth() > statement.getId().getMonth())) {
+                    accountOldest.setYear(statement.getId().getYear());
+                    accountOldest.setMonth(statement.getId().getMonth());
+                } else if(accountOldest.getYear().equals(statement.getId().getYear()) && (accountOldest.getMonth() > statement.getId().getMonth())) {
                     // Same year, older month.
-                    result.setMonth(statement.getId().getMonth());
+                    accountOldest.setMonth(statement.getId().getMonth());
                 }
             }
         }
@@ -186,10 +192,10 @@ public class TransactionReportManager {
         }
 
         // If a date range is specified, then no opening balance.
-        if(filter.getDateRange().getFrom().equals(Constants.MONEY_EARLIEST_DATE_STRING)) {
+        if(!filter.getDateRange().getFrom().equals(Constants.MONEY_EARLIEST_DATE_STRING)) {
             return new FinancialAmount();
         }
-        if(filter.getDateRange().getTo().equals(Constants.MONEY_LATEST_DATE_STRING)) {
+        if(!filter.getDateRange().getTo().equals(Constants.MONEY_LATEST_DATE_STRING)) {
             return new FinancialAmount();
         }
 
@@ -204,13 +210,16 @@ public class TransactionReportManager {
         List<Statement> includedStatements = getIncludedStatements(filter);
 
         // Get the oldest date.
-        StatementDateDTO oldest = getOldestStatement(includedStatements);
+        Map<String,StatementDateDTO> oldestPerAccount = getOldestStatementPerAccount(includedStatements);
 
         // Some the opening balances from the oldest statements.
-        if(oldest != null) {
-            for (Statement statement : includedStatements) {
-                if (statement.getId().getYear().equals(oldest.getYear()) && statement.getId().getMonth().equals(oldest.getMonth())) {
-                    openingBalance += statement.getOpenBalance().getValue();
+        if(!oldestPerAccount.isEmpty()) {
+            for(Map.Entry<String,StatementDateDTO> nextEntry : oldestPerAccount.entrySet()) {
+                for (Statement statement : includedStatements) {
+                    if (statement.getId().getAccount().getId().equals(nextEntry.getKey()) && statement.getId().getYear().equals(nextEntry.getValue().getYear()) && statement.getId().getMonth().equals(nextEntry.getValue().getMonth())) {
+                        openingBalance += statement.getOpenBalance().getValue();
+                        break;
+                    }
                 }
             }
         }
