@@ -57,44 +57,46 @@ public class ReconciliationFileManager implements FileChangeListener {
         this.lastUpdateTime = LocalDateTime.now();
     }
 
-    public List<ReconciliationFileDTO> getFiles() {
+    private void processFile(ReconciliationFile next, TransactionSummaryData fileData) {
+        for(ReconciliationFileTransaction nextTran : reconciliationFileTransactionRepository.findById_File(next)) {
+            fileData.incrementCount();
+
+            if(nextTran.getAmount() > 0) {
+                fileData.incrementCredit(nextTran.getAmount());
+            } else {
+                fileData.incrementDebit(nextTran.getAmount());
+            }
+
+            fileData.updateEarliest(nextTran.getDate());
+            fileData.updateLatest(nextTran.getDate());
+        }
+    }
+
+    private List<ReconciliationFileDTO> processFiles() {
         List<ReconciliationFileDTO> result = new ArrayList<>();
 
         for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
             ReconciliationFileDTO nextFile = transactionMapper.map(next,ReconciliationFileDTO.class);
 
             // Get the details of the file.
-            int transactionCount = 0;
-            double debitSum = 0.0;
-            double creditSum = 0.0;
-            LocalDate earliest = null;
-            LocalDate latest = null;
-            for(ReconciliationFileTransaction nextTran : reconciliationFileTransactionRepository.findById_File(next)) {
-                transactionCount++;
+            TransactionSummaryData fileData = new TransactionSummaryData();
 
-                if(nextTran.getAmount() > 0) {
-                    creditSum += nextTran.getAmount();
-                } else {
-                    debitSum += nextTran.getAmount();
-                }
+            processFile(next,fileData);
 
-                if(earliest == null || nextTran.getDate().isBefore(earliest)) {
-                    earliest = nextTran.getDate();
-                }
-
-                if(latest == null || nextTran.getDate().isAfter(latest)) {
-                    latest = nextTran.getDate();
-                }
-            }
-
-            nextFile.setTransactionCount(transactionCount);
-            nextFile.setCreditSum(creditSum);
-            nextFile.setDebitSum(debitSum);
-            nextFile.setEarliestTransaction(earliest);
-            nextFile.setLatestTransaction(latest);
+            nextFile.setTransactionCount(fileData.getTransactionCount());
+            nextFile.setCreditSum(fileData.getCreditSum());
+            nextFile.setDebitSum(fileData.getDebitSum());
+            nextFile.setEarliestTransaction(fileData.getEarliest());
+            nextFile.setLatestTransaction(fileData.getLatest());
 
             result.add(nextFile);
         }
+
+        return result;
+    }
+
+    public List<ReconciliationFileDTO> getFiles() {
+        List<ReconciliationFileDTO> result = processFiles();
 
         // Sort the list so any bad files are at the bottom.
         result.sort((lhs, rhs) -> {

@@ -44,6 +44,44 @@ public class EmailGenerator {
         this.applicationProperties = applicationProperties;
     }
 
+    private void getTransactions(List<Transaction> emailTransactions,
+                                 FinancialAmount startAmount,
+                                 FinancialAmount endAmount,
+                                 FinancialAmount transactionTotal1,
+                                 FinancialAmount transactionTotal2,
+                                 int weeks) {
+        LocalDate oldest = applicationProperties.getToday();
+        oldest = oldest.plusWeeks(-1L * weeks);
+
+        // Get the latest statement that is locked for each account.
+        for (Account nextAccount : accountManager.getAllExternal()) {
+            // Get the latest statement.
+            List<Statement> latestStatements = statementManager.getLatestStatementInternal(nextAccount);
+            for (Statement nextStatement : latestStatements) {
+                endAmount.increment(nextStatement.getOpenBalance());
+                startAmount.increment(nextStatement.getOpenBalance());
+
+                // Get the transactions for this.
+                List<Transaction> transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,nextStatement.getId());
+                for (Transaction nextTransaction : transactions) {
+                    endAmount.increment(nextTransaction.getAmount());
+                    transactionTotal1.increment(nextTransaction.getAmount());
+
+                    emailTransactions.add(nextTransaction);
+                }
+
+                transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,StatementId.getPreviousId(nextStatement.getId()));
+                for (Transaction nextTransaction : transactions) {
+                    if (nextTransaction.getDate().isAfter(oldest)) {
+                        transactionTotal2.increment(nextTransaction.getAmount().getValue());
+
+                        emailTransactions.add(nextTransaction);
+                    }
+                }
+            }
+        }
+    }
+
     public void generateReport(EmailRequestDTO request) throws EmailGenerationException {
         try {
             List<Transaction> emailTransactions = new ArrayList<>();
@@ -54,36 +92,7 @@ public class EmailGenerator {
             FinancialAmount transactionTotal1 = new FinancialAmount();
             FinancialAmount transactionTotal2 = new FinancialAmount();
 
-            LocalDate oldest = applicationProperties.getToday();
-            oldest = oldest.plusWeeks(-1L * request.getWeeks());
-
-            // Get the latest statement that is locked for each account.
-            for (Account nextAccount : accountManager.getAllExternal()) {
-                // Get the latest statement.
-                List<Statement> latestStatements = statementManager.getLatestStatementInternal(nextAccount);
-                for (Statement nextStatement : latestStatements) {
-                    endAmount.increment(nextStatement.getOpenBalance());
-                    startAmount.increment(nextStatement.getOpenBalance());
-
-                    // Get the transactions for this.
-                    List<Transaction> transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,nextStatement.getId());
-                    for (Transaction nextTransaction : transactions) {
-                        endAmount.increment(nextTransaction.getAmount());
-                        transactionTotal1.increment(nextTransaction.getAmount());
-
-                        emailTransactions.add(nextTransaction);
-                    }
-
-                    transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,StatementId.getPreviousId(nextStatement.getId()));
-                    for (Transaction nextTransaction : transactions) {
-                        if (nextTransaction.getDate().isAfter(oldest)) {
-                            transactionTotal2.increment(nextTransaction.getAmount().getValue());
-
-                            emailTransactions.add(nextTransaction);
-                        }
-                    }
-                }
-            }
+            getTransactions(emailTransactions,startAmount,endAmount,transactionTotal1,transactionTotal2,request.getWeeks());
 
             emailTransactions.sort((emailTransaction, t1) -> {
                 if (emailTransaction.getDate().isBefore(t1.getDate())) {
