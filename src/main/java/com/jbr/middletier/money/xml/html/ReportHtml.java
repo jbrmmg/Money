@@ -15,7 +15,6 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ReportHtml extends HyperTextMarkupLanguage {
     public enum ReportType { ANNUAL, MONTH }
@@ -341,7 +340,7 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         return transactions
                 .stream()
                 .filter(t -> t.getStatement().getId().getMonth() == month)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private Element getAnnualReportBody() {
