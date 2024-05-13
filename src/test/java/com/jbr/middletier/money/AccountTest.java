@@ -2,6 +2,7 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.AccountDTO;
+import jakarta.servlet.ServletException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +56,15 @@ public class AccountTest extends Support {
                 .andExpect(status().isOk());
         getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYXY&disabled=false"))
                 .andExpect(status().isOk());
+
+        // Check the id is validated.
+        try {
+            getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYY&disabled=false")
+                            .contentType(getContentType()))
+                    .andExpect(status().isBadRequest());
+        } catch (ServletException ex) {
+            Assert.assertTrue(ex.getRootCause().getMessage().contains("Id must be a four letter code"));
+        }
     }
 
     @Test

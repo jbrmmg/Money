@@ -56,7 +56,7 @@ public class AccountTransactionManager {
 
         for (Transaction nextTransaction : transactions ) {
             balance.increment(nextTransaction.getAmount());
-            LOG.debug("Transaction {}", nextTransaction.getAmount());
+            LOG.debug("Transaction (final balance) {}", nextTransaction.getAmount());
         }
 
         return balance;
@@ -221,7 +221,7 @@ public class AccountTransactionManager {
         List<TransactionDTO> result = new ArrayList<>();
         LOG.debug("Iterate over transactions");
         for(Transaction transaction : transactionRepository.findAll(Objects.requireNonNull(specification), transactionSort)) {
-            LOG.debug("Transaction {}", transaction.getId());
+            LOG.debug("Transaction (getTransactions) {}", transaction.getId());
             result.add(transactionMapper.map(transaction,TransactionDTO.class));
         }
 

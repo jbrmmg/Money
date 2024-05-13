@@ -6,9 +6,11 @@ import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.StatementManager;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/jbr")
+@Validated
 public class StatementController {
     private static final Logger LOG = LoggerFactory.getLogger(StatementController.class);
 
@@ -30,13 +33,13 @@ public class StatementController {
     }
 
     @GetMapping(path="/ext/money/statement")
-    public Iterable<StatementDTO>  statementsExt(@RequestParam(value="accountId", required = false) String accountId,
+    public Iterable<StatementDTO>  statementsExt(@RequestParam(value="accountId", required = false) @Pattern(regexp="^[a-zA-Z]{4}$",message="Id must be a four letter code") String accountId,
                                                                @RequestParam(value="locked", required = false) Boolean locked) {
         return this.statementManager.getStatements(accountId,locked);
     }
 
     @GetMapping(path="/int/money/statement")
-    public Iterable<StatementDTO>  statementsInt(@RequestParam(value="accountId", required = false) String accountId,
+    public Iterable<StatementDTO>  statementsInt(@RequestParam(value="accountId", required = false) @Pattern(regexp="^[a-zA-Z]{4}$",message="Id must be a four letter code") String accountId,
                                                                @RequestParam(value="locked", required = false) Boolean locked) {
         return this.statementsExt(accountId,locked);
     }

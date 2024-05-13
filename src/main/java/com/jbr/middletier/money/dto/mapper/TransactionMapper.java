@@ -9,7 +9,6 @@ import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.DateRange;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -21,7 +20,7 @@ public class TransactionMapper extends ModelMapper {
                              AccountMapper accountMapper,
                              CategoryMapper categoryMapper,
                              StatementMapper statementMapper,
-                             @Qualifier("money-com.jbr.middletier.money.config.ApplicationProperties") ApplicationProperties applicationProperties) {
+                             ApplicationProperties applicationProperties) {
         StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
         LocalDateStringConverter localDateStringConverter = new LocalDateStringConverter();
         this.addConverter(new AccountStringConverter());
