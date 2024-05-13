@@ -2,6 +2,7 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
+import com.jbr.middletier.money.manager.ReconcileFileLine;
 import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.junit.Assert;
@@ -11,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -41,7 +40,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testAmexFile() throws IOException {
+    public void testAmexFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO amexFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -54,7 +53,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testFirstDirectFile() throws IOException {
+    public void testFirstDirectFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO fdFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -67,7 +66,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testJlpFile() throws IOException {
+    public void testJlpFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO jlpFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -80,7 +79,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testJlp2File() throws IOException {
+    public void testJlp2File() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO jlpFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -93,7 +92,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testNationwideFile() throws IOException {
+    public void testNationwideFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO nationwideFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -106,7 +105,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testBarclaysFile() throws IOException {
+    public void testBarclaysFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO barclaycardFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -119,7 +118,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testBarclaysFile2() throws IOException {
+    public void testBarclaysFile2() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO barclaycardFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -129,5 +128,30 @@ public class ReconciliationFileTest {
         }
         Assert.assertNotNull(barclaycardFile);
         testReconciliationFile(barclaycardFile,12,2,-297.34, LocalDate.of(2023,9,3), LocalDate.of(2023,9,13));
+    }
+
+    private String getElementsForAssert(List<String> columns) {
+        return String.join("-", columns);
+    }
+
+    @Test
+    public void testRegexInLine() {
+        ReconcileFileLine line = new ReconcileFileLine(1,"x,y,z");
+
+        Assert.assertEquals("x-y-z",getElementsForAssert(line.getColumns()));
+    }
+
+    @Test
+    public void testRegexInLine2() {
+        ReconcileFileLine line = new ReconcileFileLine(1,"\"x,x\",y,z");
+
+        Assert.assertEquals("\"x,x\"-y-z",getElementsForAssert(line.getColumns()));
+    }
+
+    @Test
+    public void testRegexInLine3() {
+        ReconcileFileLine line = new ReconcileFileLine(1,"x,x,y,z,d");
+
+        Assert.assertEquals("x-x-y-z-d",getElementsForAssert(line.getColumns()));
     }
 }
