@@ -138,6 +138,42 @@ public class TransactionReportManager {
         return locked == null || locked.equals(statement.getLocked());
     }
 
+    private List<Statement> getIncludedStatements(TransactionFilterDTO filter) {
+        List<Statement> result = new ArrayList<>();
+
+        for(Statement statement : this.statementRepository.findAll()) {
+            if(includeStatement(statement,filter.getAccounts(),filter.getLocked(),filter.getStatementDate())) {
+                result.add(statement);
+            }
+        }
+
+        return result;
+    }
+
+    private StatementDateDTO getOldestStatement(List<Statement> statements) {
+        StatementDateDTO result = null;
+
+        for(Statement statement : statements) {
+            if(result == null) {
+                result = new StatementDateDTO();
+                result.setYear(statement.getId().getYear());
+                result.setMonth(statement.getId().getMonth());
+            } else {
+                // Is the next statement older?
+                if(result.getYear() > statement.getId().getYear()) {
+                    // Older year.
+                    result.setYear(statement.getId().getYear());
+                    result.setMonth(statement.getId().getMonth());
+                } else if(result.getYear().equals(statement.getId().getYear()) && (result.getMonth() > statement.getId().getMonth())) {
+                    // Same year, older month.
+                    result.setMonth(statement.getId().getMonth());
+                }
+            }
+        }
+
+        return result;
+    }
+
     private FinancialAmount calculateOpeningBalance(TransactionFilterDTO filter) {
         // Opening balance not provided if the following filters are present.
 
@@ -165,37 +201,17 @@ public class TransactionReportManager {
         // Opening balance can be derived from the statements.
         double openingBalance = 0;
 
-        List<Statement> includedStatements = new ArrayList<>();
-        for(Statement statement : this.statementRepository.findAll()) {
-            if(includeStatement(statement,filter.getAccounts(),filter.getLocked(),filter.getStatementDate())) {
-                includedStatements.add(statement);
-            }
-        }
+        List<Statement> includedStatements = getIncludedStatements(filter);
 
         // Get the oldest date.
-        StatementDateDTO oldest = null;
-        for(Statement statement : includedStatements) {
-            if(oldest == null) {
-                oldest = new StatementDateDTO();
-                oldest.setYear(statement.getId().getYear());
-                oldest.setMonth(statement.getId().getMonth());
-            } else {
-                // Is the next statement older?
-                if(oldest.getYear() > statement.getId().getYear()) {
-                    // Older year.
-                    oldest.setYear(statement.getId().getYear());
-                    oldest.setMonth(statement.getId().getMonth());
-                } else if(oldest.getYear().equals(statement.getId().getYear()) && (oldest.getMonth() > statement.getId().getMonth())) {
-                    // Same year, older month.
-                    oldest.setMonth(statement.getId().getMonth());
-                }
-            }
-        }
+        StatementDateDTO oldest = getOldestStatement(includedStatements);
 
         // Some the opening balances from the oldest statements.
-        for(Statement statement : includedStatements) {
-            if(statement.getId().getYear().equals(oldest.getYear()) && statement.getId().getMonth().equals(oldest.getMonth())) {
-                openingBalance += statement.getOpenBalance().getValue();
+        if(oldest != null) {
+            for (Statement statement : includedStatements) {
+                if (statement.getId().getYear().equals(oldest.getYear()) && statement.getId().getMonth().equals(oldest.getMonth())) {
+                    openingBalance += statement.getOpenBalance().getValue();
+                }
             }
         }
 
