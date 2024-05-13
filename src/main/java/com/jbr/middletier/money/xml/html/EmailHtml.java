@@ -11,36 +11,46 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.FinancialAmountType;
 import org.jdom2.Element;
 import org.jdom2.Text;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class EmailHtml extends HyperTextMarkupLanguage {
-    private static final String TABLE_HEADER = "th";
-    private static final String TABLE_ROW = "tr";
-    private static final String TABLE = "table";
-    private static final String BODY = "body";
-    private static final String CLASS = "class";
-    private static final String PADDING = "padding";
-    private static final String DESCRIPTION = "description";
-
     private final FinancialAmount start;
     private final List<Transaction> transactions;
 
-    private CSSStyleRule getDateRule() {
-        CSSStyleRule fillRule = new CSSStyleRule();
+    private static final String HTML_DATE = "date";
+    private static final String HTML_DESCRIPTION = "description";
+    private static final String HTML_FONT_COURIER_NEW = "Courier New";
+    private static final String HTML_FONT_COURIER = "Courier";
 
-        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember(".date");
+    @NotNull
+    private CSSStyleRule getStandardRule(CSSStyleRule fillRule, CSSSelectorSimpleMember selectorAttribute) {
         CSSSelector selector = new CSSSelector();
 
         selector.addMember(selectorAttribute);
         fillRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration(PADDING, CSSExpression.createSimple("2px 4px 0 0"));
+        CSSDeclaration declaration = new CSSDeclaration(HTML_PADDING, CSSExpression.createSimple(formatedUnit(UnitType.PX, 2,4,0,0)));
         fillRule.addDeclaration(declaration);
 
         return fillRule;
+    }
+
+    private CSSStyleRule getDateRule() {
+        CSSStyleRule fillRule = new CSSStyleRule();
+
+        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember("." + HTML_DATE);
+        return getStandardRule(fillRule, selectorAttribute);
+    }
+
+    private CSSStyleRule getDescriptionRule() {
+        CSSStyleRule descriptionRule = new CSSStyleRule();
+
+        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember(HTML_DESCRIPTION);
+        return getStandardRule(descriptionRule, selectorAttribute);
     }
 
     private CSSStyleRule getBodyRule() {
@@ -52,10 +62,10 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         selector.addMember(selectorAttribute);
         bodyRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("font-family", CSSExpression.createSimple("\"Courier New\", Courier, monospace"));
+        CSSDeclaration declaration = new CSSDeclaration(HTML_CSS_FONT_FAMILY, CSSExpression.createSimple(fontString(HTML_FONT_COURIER_NEW,HTML_FONT_COURIER,HTML_CSS_FONT_MONOSPACED)));
         bodyRule.addDeclaration(declaration);
 
-        declaration = new CSSDeclaration("font-size", CSSExpression.createSimple("10px"));
+        declaration = new CSSDeclaration("font-size", CSSExpression.createSimple(formatedUnit(UnitType.PX,10)));
         bodyRule.addDeclaration(declaration);
 
         return bodyRule;
@@ -64,7 +74,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
     private CSSStyleRule getThRule() {
         CSSStyleRule thRule = new CSSStyleRule();
 
-        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember("th");
+        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember(HTML_TH);
         CSSSelector selector = new CSSSelector();
 
         selector.addMember(selectorAttribute);
@@ -73,25 +83,10 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         CSSDeclaration declaration = new CSSDeclaration("text-align", CSSExpression.createSimple("left"));
         thRule.addDeclaration(declaration);
 
-        declaration = new CSSDeclaration("border-bottom", CSSExpression.createSimple("2px solid black"));
+        declaration = new CSSDeclaration(HTML_BORDER_BOTTOM, CSSExpression.createSimple(borderString("black")));
         thRule.addDeclaration(declaration);
 
         return thRule;
-    }
-
-    private CSSStyleRule getDescriptionRule() {
-        CSSStyleRule descriptionRule = new CSSStyleRule();
-
-        CSSSelectorSimpleMember selectorAttribute = new CSSSelectorSimpleMember(DESCRIPTION);
-        CSSSelector selector = new CSSSelector();
-
-        selector.addMember(selectorAttribute);
-        descriptionRule.addSelector(selector);
-
-        CSSDeclaration declaration = new CSSDeclaration(PADDING, CSSExpression.createSimple("2px 4px 0 0"));
-        descriptionRule.addDeclaration(declaration);
-
-        return descriptionRule;
     }
 
     private CSSStyleRule getAmountRule() {
@@ -103,7 +98,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         selector.addMember(selectorAttribute);
         amountRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration(PADDING, CSSExpression.createSimple("2px 0 0 0"));
+        CSSDeclaration declaration = new CSSDeclaration(HTML_PADDING, CSSExpression.createSimple(formatedUnit(UnitType.PX,2,0,0,0)));
         amountRule.addDeclaration(declaration);
 
         return amountRule;
@@ -133,7 +128,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         selector.addMember(selectorAttribute);
         dbRule.addSelector(selector);
 
-        CSSDeclaration declaration = new CSSDeclaration("color", CSSExpression.createSimple("#FF0000"));
+        CSSDeclaration declaration = new CSSDeclaration(HTML_CSS_COLOUR, CSSExpression.createSimple("#FF0000"));
         dbRule.addDeclaration(declaration);
 
         return dbRule;
@@ -162,24 +157,24 @@ public class EmailHtml extends HyperTextMarkupLanguage {
     }
 
     protected Element getHeader() {
-        Element title = new Element("title")
+        Element title = new Element(HTML_TITLE)
                 .setContent(new Text("Email"));
 
-        Element style = new Element("style")
+        Element style = new Element(HTML_STYLE)
                 .setContent(new Text(getStyleSheet()));
 
-        return new Element("head")
+        return new Element(HTML_HEAD)
                 .addContent(title)
                 .addContent(style);
     }
 
     private Element createTdElement() {
-        return new Element("td");
+        return new Element(HTML_TD);
     }
 
     private Element getDateColumn(LocalDate date) {
         Element result = createTdElement()
-                .setAttribute(CLASS,"date");
+                .setAttribute(HTML_CSS_CLASS,HTML_DATE);
 
         if(null == date) {
             return result;
@@ -190,7 +185,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getAccountColumn(Account account) {
         Element result = createTdElement()
-                .setAttribute(CLASS,DESCRIPTION);
+                .setAttribute(HTML_CSS_CLASS, HTML_DESCRIPTION);
 
         if(null == account) {
             return result;
@@ -201,7 +196,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getCategoryColumn(Category category) {
         Element result = createTdElement()
-                .setAttribute(CLASS,DESCRIPTION);
+                .setAttribute(HTML_CSS_CLASS, HTML_DESCRIPTION);
 
         if(null == category) {
             return result;
@@ -212,18 +207,18 @@ public class EmailHtml extends HyperTextMarkupLanguage {
 
     private Element getDescriptionColumn(String description) {
         return createTdElement()
-                .setAttribute(CLASS, DESCRIPTION)
+                .setAttribute(HTML_CSS_CLASS, HTML_DESCRIPTION)
                 .addContent(new Text(description));
     }
 
     private Element getAmountColumn(FinancialAmount amount) {
         return createTdElement()
-                .setAttribute(CLASS, amount.getType().equals(FinancialAmountType.DB) ? "amount amount-data db" : "amount amount-data")
+                .setAttribute(HTML_CSS_CLASS, amount.getType().equals(FinancialAmountType.DB) ? "amount amount-data db" : "amount amount-data")
                 .addContent(new Text(amount.toAbsString()));
     }
 
     private Element createRow(LocalDate date, Category category, Account account, String description, FinancialAmount amount) {
-        return new Element(TABLE_ROW)
+        return new Element(HTML_TR)
                 .addContent(getDateColumn(date))
                 .addContent(getCategoryColumn(category))
                 .addContent(getAccountColumn(account))
@@ -240,32 +235,32 @@ public class EmailHtml extends HyperTextMarkupLanguage {
     }
 
     protected Element getBody() {
-        Element headerText = new Element("p")
+        Element headerText = new Element(HTML_P)
                 .addContent(new Text("Credit card transactions up to today."));
 
-        Element tableHeaderDate = new Element(TABLE_HEADER)
+        Element tableHeaderDate = new Element(HTML_TH)
                 .addContent(new Text("Date"));
 
-        Element tableHeaderCategory = new Element(TABLE_HEADER)
+        Element tableHeaderCategory = new Element(HTML_TH)
                 .addContent(new Text("Category"));
 
-        Element tableHeaderAccount = new Element(TABLE_HEADER)
+        Element tableHeaderAccount = new Element(HTML_TH)
                 .addContent(new Text("Account"));
 
-        Element tableHeaderDescription = new Element(TABLE_HEADER)
+        Element tableHeaderDescription = new Element(HTML_TH)
                 .addContent(new Text("Description"));
 
-        Element tableHeaderAmount = new Element(TABLE_HEADER)
+        Element tableHeaderAmount = new Element(HTML_TH)
                 .addContent(new Text("Amount"));
 
-        Element tableHeader = new Element(TABLE_ROW)
+        Element tableHeader = new Element(HTML_TR)
                 .addContent(tableHeaderDate)
                 .addContent(tableHeaderCategory)
                 .addContent(tableHeaderAccount)
                 .addContent(tableHeaderDescription)
                 .addContent(tableHeaderAmount);
 
-        Element table = new Element(TABLE)
+        Element table = new Element(HTML_TABLE)
                 .addContent(tableHeader);
 
         FinancialAmount endBalance = this.start;
@@ -276,7 +271,7 @@ public class EmailHtml extends HyperTextMarkupLanguage {
         }
         table.addContent(createRow(null, null, null, "Carried Forward", endBalance));
 
-        return new Element(BODY)
+        return new Element(HTML_BODY)
                 .addContent(headerText)
                 .addContent(table);
     }

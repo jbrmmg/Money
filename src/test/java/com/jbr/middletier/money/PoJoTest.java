@@ -59,11 +59,13 @@ public class PoJoTest {
         account.setColour("BLACK");
         account.setImagePrefix("Cheese");
         account.setName("Testing");
+        account.setClosed(true);
         AccountDTO accountDTO = accountMapper.map(account, AccountDTO.class);
         Assert.assertEquals("CHEESE", accountDTO.getId());
         Assert.assertEquals("BLACK",accountDTO.getColour());
         Assert.assertEquals("Testing",accountDTO.getName());
         Assert.assertEquals("Cheese",accountDTO.getImagePrefix());
+        Assert.assertTrue(accountDTO.getClosed());
 
         // Compare to non-accountDTO should always be false;
         @SuppressWarnings("EqualsBetweenInconvertibleTypes")

@@ -36,8 +36,8 @@ public class TransactionFilter {
             return true;
         }
 
-        return ((transaction.getAmount().getValue() <= filter.getValueRange().getMaximum())) &&
-                ((transaction.getAmount().getValue() >= filter.getValueRange().getMinimum()));
+        return ((transaction.getAmount().getValue() <= filter.getValueRange().getMaximum()) &&
+                (transaction.getAmount().getValue() >= filter.getValueRange().getMinimum()));
     }
 
     private LocalDate dateStringToDate(String date) {
