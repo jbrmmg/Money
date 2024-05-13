@@ -133,17 +133,12 @@ public class StatementManager {
     }
 
     @Transactional
-    public void deleteStatementTransaction(StatementDTO last, StatementDTO penultimate, AccountTransactionManager accountTransactionManager) {
-        penultimate.setLocked(false);
-        statementRepository.save(statementMapper.map(penultimate,Statement.class));
+    public Iterable<StatementDTO> deleteStatement(StatementDTO statement, AccountTransactionManager accountTransactionManager) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatementException, CannotDeleteLastStatementException {
+        Account account = getAccount(statement);
 
-        accountTransactionManager.removeTransactionsFromStatement(statementMapper.map(last,Statement.class));
+        // Get the statements currently available for this account.
+        List<StatementDTO> statements = getStatements(account.getId(),null);
 
-        statementRepository.delete(statementMapper.map(last,Statement.class));
-    }
-
-    @Transactional
-    public void internalDeleteStatement(StatementDTO statement, List<StatementDTO> statements, AccountTransactionManager accountTransactionManager) throws InvalidStatementIdException, CannotDeleteLockedStatementException, CannotDeleteLastStatementException {
         // Only the last statement in the list can be deleted
         if(statements.isEmpty()) {
             LOG.warn("There are no statements for the account.");
@@ -171,18 +166,13 @@ public class StatementManager {
         }
 
         // Remove any transactions from this statement.
-        deleteStatementTransaction(last, penultimate, accountTransactionManager);
-    }
+        penultimate.setLocked(false);
+        statementRepository.save(statementMapper.map(penultimate,Statement.class));
 
-    @Transactional
-    public Iterable<StatementDTO> deleteStatement(StatementDTO statement, AccountTransactionManager accountTransactionManager) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatementException, CannotDeleteLastStatementException {
-        Account account = getAccount(statement);
+        accountTransactionManager.removeTransactionsFromStatement(statementMapper.map(last,Statement.class));
 
-        // Get the statements currently available for this account.
-        List<StatementDTO> statements = getStatements(account.getId(),null);
+        statementRepository.delete(statementMapper.map(last,Statement.class));
 
-        // Perform the delete
-        internalDeleteStatement(statement, statements, accountTransactionManager);
         return statements;
     }
 
