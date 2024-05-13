@@ -5,6 +5,7 @@ import com.jbr.middletier.money.Support;
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -24,6 +25,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Objects;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -135,6 +138,20 @@ public class MoneyReportIT extends Support {
         ObjectMapper objectMapper = new ObjectMapper();
         TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterFromRecError() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(true);
+
+        String error = Objects.requireNonNull(getMockMvc().perform(get("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isConflict())
+                .andReturn().getResolvedException()).getMessage();
+        LOG.info("Error {}",error);
+        Assert.assertTrue(error.contains("Account ID not specified, reconciliation transactions required."));
     }
 
     @Test
