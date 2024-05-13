@@ -706,4 +706,55 @@ public class PoJoTest {
         fileLoad.setFilename("grep");
         Assert.assertEquals("grep",fileLoad.getFilename());
     }
+
+    @Test
+    public void testReconcileFileUpdateDTO() {
+        ReconcileFileDataUpdateDTO test = new ReconcileFileDataUpdateDTO(LocalDateTime.of(2023,12,3,10,15),"/test/path");
+        Assert.assertEquals("/test/path",test.getPath());
+        Assert.assertEquals(LocalDateTime.of(2023,12,3,10,15),test.getUpdateTime());
+
+        test.setPath("/test/path2");
+        test.setUpdateTime(LocalDateTime.of(2022,11,2,9,14));
+        Assert.assertEquals(LocalDateTime.of(2022,11,2,9,14),test.getUpdateTime());
+    }
+
+    @Test
+    public void testReconiliationFileTranId() {
+        Account account = new Account();
+        account.setId("TEST");
+        account.setClosed(false);
+        account.setColour("FFFFFF");
+        account.setImagePrefix("Test");
+        account.setName("Testing");
+
+        ReconciliationFile file = new ReconciliationFile();
+        file.setAccount(account);
+        file.setError("");
+        file.setSize(100L);
+        file.setName("Fred.txt");
+        file.setLastModified(LocalDateTime.of(2022,11,2,9,14));
+
+        ReconciliationFileTransactionId id = new ReconciliationFileTransactionId();
+        id.setFile(file);
+        id.setLine(10);
+
+        Assert.assertEquals(file,id.getFile());
+        Assert.assertEquals(10,id.getLine().intValue());
+        Assert.assertEquals("Fred.txt-10",id.toString());
+        Assert.assertEquals(-531378337,id.hashCode());
+    }
+
+    @Test
+    public void testConverters() {
+        Account account = new Account();
+        account.setId("XNYD");
+        Assert.assertEquals("XNYD",regularMapper.map(account,String.class));
+
+        Category category = new Category();
+        category.setId("EFIY");
+        Assert.assertEquals("EFIY",regularMapper.map(category,String.class));
+
+        FinancialAmount financialAmount = new FinancialAmount(12.89);
+        Assert.assertEquals(12.89,utilityMapper.map(financialAmount,Double.class),0.01);
+    }
 }
