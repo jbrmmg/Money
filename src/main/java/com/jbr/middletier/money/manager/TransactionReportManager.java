@@ -3,11 +3,12 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.Regular;
+import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dto.TransactionReportDTO;
-import com.jbr.middletier.money.dto.TransactionDataDTO;
-import com.jbr.middletier.money.dto.TransactionFilterDTO;
+import com.jbr.middletier.money.dataaccess.StatementRepository;
+import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -29,6 +30,7 @@ public class TransactionReportManager {
     private final TransactionFilter filter;
     private final TransactionMapper mapper;
     private final ApplicationProperties applicationProperties;
+    private final StatementRepository statementRepository;
 
     @Autowired
     public TransactionReportManager(AccountTransactionManager transactionManager,
@@ -36,12 +38,14 @@ public class TransactionReportManager {
                                     ReconciliationManager reconciliationManager,
                                     TransactionFilter filter,
                                     TransactionMapper mapper,
+                                    StatementRepository statementRepository,
                                     ApplicationProperties applicationProperties) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
         this.reconciliationManager = reconciliationManager;
         this.filter = filter;
         this.mapper = mapper;
+        this.statementRepository = statementRepository;
         this.applicationProperties = applicationProperties;
     }
 
@@ -64,7 +68,7 @@ public class TransactionReportManager {
         return result;
     }
 
-    private List<TransactionReportDTO> getFromReconciled(TransactionFilterDTO filter) {
+    private List<TransactionReportDTO> getFromReconciled(TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
         // If reconciled are excluded then return empty list.
         if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.FALSE)) {
             return new ArrayList<>();
@@ -72,8 +76,7 @@ public class TransactionReportManager {
 
         // There must be a reconciliation account specified.
         if(filter.getReconciliationAccount() == null || filter.getReconciliationAccount().isEmpty()) {
-            // TODO - throw a specific exception.
-//            throw new TBD();
+            throw new NullOrBlankAccountIdException();
         }
 
         try {
@@ -108,9 +111,96 @@ public class TransactionReportManager {
         return result;
     }
 
+    private boolean includeStatement(Statement statement, List<AccountDTO> accounts, Boolean locked, StatementDateDTO statementDate) {
+        if(accounts.isEmpty()) {
+            return true;
+        }
+
+        // Check the account.
+        boolean matchAccount = false;
+        for(AccountDTO nextAccount : accounts) {
+            if (statement.getId().getAccount().getId().equals(nextAccount.getId())) {
+                matchAccount = true;
+                break;
+            }
+        }
+
+        if(!matchAccount) {
+            return false;
+        }
+
+        // If specified, check the date.
+        if(statementDate != null && (!statement.getId().getYear().equals(statementDate.getYear()) || !statement.getId().getMonth().equals(statementDate.getMonth()))) {
+            return false;
+        }
+
+        // Check the locked status.
+        return locked == null || locked.equals(statement.getLocked());
+    }
+
     private FinancialAmount calculateOpeningBalance(TransactionFilterDTO filter) {
-        // Opening balance will depend on the filter.
-        return new FinancialAmount();
+        // Opening balance not provided if the following filters are present.
+
+        // If a value range is specified, then no opening balance.
+        if(filter.getValueRange().getMinimum() != Double.NEGATIVE_INFINITY) {
+            return new FinancialAmount();
+        }
+        if(filter.getValueRange().getMaximum() != Double.POSITIVE_INFINITY) {
+            return new FinancialAmount();
+        }
+
+        // If a date range is specified, then no opening balance.
+        if(filter.getDateRange().getFrom().equals(Constants.MONEY_EARLIEST_DATE_STRING)) {
+            return new FinancialAmount();
+        }
+        if(filter.getDateRange().getTo().equals(Constants.MONEY_LATEST_DATE_STRING)) {
+            return new FinancialAmount();
+        }
+
+        // If categories specified then no open balance.
+        if(!filter.getCategories().isEmpty()) {
+            return new FinancialAmount();
+        }
+
+        // Opening balance can be derived from the statements.
+        double openingBalance = 0;
+
+        List<Statement> includedStatements = new ArrayList<>();
+        for(Statement statement : this.statementRepository.findAll()) {
+            if(includeStatement(statement,filter.getAccounts(),filter.getLocked(),filter.getStatementDate())) {
+                includedStatements.add(statement);
+            }
+        }
+
+        // Get the oldest date.
+        StatementDateDTO oldest = null;
+        for(Statement statement : includedStatements) {
+            if(oldest == null) {
+                oldest = new StatementDateDTO();
+                oldest.setYear(statement.getId().getYear());
+                oldest.setMonth(statement.getId().getMonth());
+            } else {
+                // Is the next statement older?
+                if(oldest.getYear() > statement.getId().getYear()) {
+                    // Older year.
+                    oldest.setYear(statement.getId().getYear());
+                    oldest.setMonth(statement.getId().getMonth());
+                } else if(oldest.getYear().equals(statement.getId().getYear()) && (oldest.getMonth() > statement.getId().getMonth())) {
+                    // Same year, older month.
+                    oldest.setMonth(statement.getId().getMonth());
+                }
+            }
+        }
+
+        // Some the opening balances from the oldest statements.
+        for(Statement statement : includedStatements) {
+            if(statement.getId().getYear().equals(oldest.getYear()) && statement.getId().getMonth().equals(oldest.getMonth())) {
+                openingBalance += statement.getOpenBalance().getValue();
+            }
+        }
+
+        // Opening balance only makes sense if the only filter relates to the statement.
+        return new FinancialAmount(openingBalance);
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {
@@ -162,7 +252,7 @@ public class TransactionReportManager {
         return new FinancialAmount(balance);
     }
 
-    public TransactionDataDTO getTransactions(TransactionFilterDTO filter) {
+    public TransactionDataDTO getTransactions(TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
         LOG.info("Get Transactions based on {}",filter);
 
         TransactionDataDTO result = new TransactionDataDTO();

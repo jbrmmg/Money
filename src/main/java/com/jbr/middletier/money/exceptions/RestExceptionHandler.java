@@ -121,6 +121,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(ex);
     }
 
+    @ExceptionHandler(NullOrBlankAccountIdException.class)
+    protected ResponseEntity<Object> handleNullAccountIdException(NullOrBlankAccountIdException ex) {
+        return buildResponseEntity(ex);
+    }
+
     private ResponseEntity<Object> buildResponseEntity(MoneyException error) {
         return new ResponseEntity<>(error,error.getStatus());
     }

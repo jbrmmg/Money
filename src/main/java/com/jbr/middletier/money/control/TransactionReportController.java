@@ -2,6 +2,7 @@ package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
+import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.manager.TransactionReportManager;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -22,13 +23,13 @@ public class TransactionReportController {
     }
 
     @GetMapping(path="/ext/money/transaction/list")
-    TransactionDataDTO getTransactionsExternal(@Valid @RequestBody TransactionFilterDTO filter) {
+    TransactionDataDTO getTransactionsExternal(@Valid @RequestBody TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
         LOG.trace("EXT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }
 
     @GetMapping(path="/int/money/transaction/list")
-    TransactionDataDTO getTransactionsInternal(@Valid @RequestBody TransactionFilterDTO filter) {
+    TransactionDataDTO getTransactionsInternal(@Valid @RequestBody TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
         LOG.trace("INT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }

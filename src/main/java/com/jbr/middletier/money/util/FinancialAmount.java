@@ -64,7 +64,9 @@ public class FinancialAmount {
     }
 
     public String toFormattedString(int size) {
-        return String.format("%" + size + "s %-2s",toAbsString(),this.getType().toString());
+        String fieldSizeFormat = String.format("%%%ds", size);
+        String number = String.format(fieldSizeFormat,toAbsString());
+        return String.format("%s %-2s",number,this.getType().toString());
     }
 
     @Override
