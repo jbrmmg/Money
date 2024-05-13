@@ -9,8 +9,7 @@ public class RegularDTO {
     private double amount;
     @Pattern(regexp="^[0-9a-zA-Z]{3}$",message="Category can only contain letters or digits of 3 characters.")
     private String categoryId;
-    //TODO this should be better
-    @Pattern(regexp="^[\\da-zA-Z]{2,3}$",message="Frequency can only contain letters or digits of 2 or 3 characters.")
+    @Pattern(regexp= "^\\d[a-zA-Z]$",message="Frequency can only contain letters or digits of 2 or 3 characters.")
     private String frequency;
     @Pattern(regexp="^[a-zA-Z]{2}$",message="Weekend Adjust can only contain 2 letters characters.")
     private String weekendAdj;

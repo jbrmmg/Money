@@ -344,16 +344,18 @@ public class ReportGenerator {
             return false;
         }
 
-        LOG.info("Checking - {}", getYearFilename(true,year));
+        String yearFilename = getYearFilename(true, year);
+        LOG.info("Checking - {}", yearFilename);
 
-        if(!Files.exists(Paths.get(getYearFilename(true,year)))) {
+        if(!Files.exists(Paths.get(yearFilename))) {
             return false;
         }
 
         for(int month = 0; month < 12; month++) {
-            LOG.info("Checking - {}", getMonthFilename(true,year, month + 1));
+            String monthFilename = getMonthFilename(true,year, month + 1);
+            LOG.info("Checking - {}", monthFilename);
 
-            if(!Files.exists(Paths.get(getMonthFilename(true, year, month + 1)))) {
+            if(!Files.exists(Paths.get(monthFilename))) {
                 return false;
             }
         }
