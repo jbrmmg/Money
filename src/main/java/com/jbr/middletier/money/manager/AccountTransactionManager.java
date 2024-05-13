@@ -257,24 +257,6 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidTransactionException {
-        Transaction fromTransaction = internalCreateTransaction(from);
-
-        // Save the 'from' transaction and update the opposite id on the 'to'
-        List<TransactionDTO> result = new ArrayList<>();
-        result.add(transactionMapper.map(fromTransaction,TransactionDTO.class));
-        to.setOppositeTransactionId(fromTransaction.getId());
-
-        // Save the 'to' transaction and update the 'from' transaction.
-        result.addAll(createIndividualTransaction(to));
-        fromTransaction.setOppositeTransactionId(result.get(1).getId());
-        result.get(0).setOppositeTransactionId(fromTransaction.getOppositeTransactionId());
-        transactionRepository.save(fromTransaction);
-
-        return result;
-    }
-
-    @Transactional
     public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException {
         if(transaction.size() == 1) {
             return createIndividualTransaction(transaction.get(0));
@@ -306,7 +288,20 @@ public class AccountTransactionManager {
         to.setDate(from.getDate());
 
         // The transaction is either an individual transaction or it's a transfer
-        return createTransferTransaction(from,to);
+        Transaction fromTransaction = internalCreateTransaction(from);
+
+        // Save the 'from' transaction and update the opposite id on the 'to'
+        List<TransactionDTO> result = new ArrayList<>();
+        result.add(transactionMapper.map(fromTransaction,TransactionDTO.class));
+        to.setOppositeTransactionId(fromTransaction.getId());
+
+        // Save the 'to' transaction and update the 'from' transaction.
+        result.addAll(createIndividualTransaction(to));
+        fromTransaction.setOppositeTransactionId(result.get(1).getId());
+        result.get(0).setOppositeTransactionId(fromTransaction.getOppositeTransactionId());
+        transactionRepository.save(fromTransaction);
+
+        return result;
     }
 
     public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
