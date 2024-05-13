@@ -337,18 +337,6 @@ public class ReconciliationFileManager implements FileChangeListener {
         return new ReconcileFileDataUpdateDTO(this.lastUpdateTime,applicationProperties.getReconcileFileLocation());
     }
 
-    @Transactional
-    public void fileDeleted(File deleted) {
-        Optional<ReconciliationFile> dbFile = this.reconciliationFileRepository.findById(deleted.getName());
-        if(dbFile.isPresent()) {
-            this.reconciliationFileTransactionRepository.deleteById_File(dbFile.get());
-            this.reconciliationFileRepository.delete(dbFile.get());
-            this.lastUpdateTime = LocalDateTime.now();
-        }
-
-        LOG.info("Deleted file: {}", deleted);
-    }
-
     @Override
     @Transactional
     public void onChange(Set<ChangedFiles> changeSet) {
@@ -364,7 +352,14 @@ public class ReconciliationFileManager implements FileChangeListener {
                 if (Objects.requireNonNull(nextFile.getType()) == ChangedFile.Type.ADD || nextFile.getType() == ChangedFile.Type.MODIFY) {
                     fileUpdated(nextFile.getFile());
                 } else if (nextFile.getType() == ChangedFile.Type.DELETE) {
-                    fileDeleted(nextFile.getFile());
+                    Optional<ReconciliationFile> dbFile = this.reconciliationFileRepository.findById(nextFile.getFile().getName());
+                    if(dbFile.isPresent()) {
+                        this.reconciliationFileTransactionRepository.deleteById_File(dbFile.get());
+                        this.reconciliationFileRepository.delete(dbFile.get());
+                        this.lastUpdateTime = LocalDateTime.now();
+                    }
+
+                    LOG.info("Deleted file: {}", nextFile.getFile());
                 }
             }
         }
