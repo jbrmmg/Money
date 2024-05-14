@@ -68,7 +68,8 @@ public class MoneyReportIT extends Support {
     }
 
     private String getPaddedString(String value, int size) {
-        return String.format("%-" + size + "s", value == null ? "" : value);
+        String format = String.format("%%-%ds",size);
+        return String.format(format, value == null ? "" : value);
     }
 
     private void logTransactionData(TransactionDataDTO transactionData) {

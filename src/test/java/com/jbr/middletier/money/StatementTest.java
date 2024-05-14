@@ -154,12 +154,8 @@ public class StatementTest extends Support {
         statement.setYear(2010);
         statement.setOpenBalance(new FinancialAmount());
 
-        String fred = this.json(statement);
-
-        fred = "{\"accountId\":\"BANK\",\"month\":1,\"year\":2010,\"openBalance\":{\"value\":0.0,\"type\":\"DB\"},\"locked\":false}";
-
         error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
-                        .content(fred)
+                        .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
