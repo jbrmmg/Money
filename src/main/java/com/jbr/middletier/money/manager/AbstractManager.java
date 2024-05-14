@@ -6,7 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.*;
 
-public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends CrudRepository<O, I>,ADD_EXCEPTION extends Throwable,UPDATE_DELETE_EXCEPTION extends Throwable> {
+public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends CrudRepository<O, I>, A extends Throwable, U extends Throwable> {
     private final Class<E> externalClass;
     private final Class<O> internalClass;
     private final ModelMapper modelMapper;
@@ -22,10 +22,10 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
     }
 
     abstract I getInstanceId(O instance);
-    abstract ADD_EXCEPTION getAddException(I id);
-    abstract UPDATE_DELETE_EXCEPTION getUpdateDeleteException(I id);
+    abstract A getAddException(I id);
+    abstract U getUpdateDeleteException(I id);
     abstract void updateInstance(O instance, O from);
-    abstract void validateUpdateOrDelete(O instance, boolean update) throws UPDATE_DELETE_EXCEPTION;
+    abstract void validateUpdateOrDelete(O instance, boolean update) throws U;
 
     private void loadCache() {
         // Load the instances.
@@ -69,7 +69,7 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
         return Optional.empty();
     }
 
-    public O get(I id) throws UPDATE_DELETE_EXCEPTION {
+    public O get(I id) throws U {
         Optional<O> instance = getIfValid(id);
 
         // Return the instance with id, otherwise throw an exception
@@ -80,7 +80,7 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
         throw getUpdateDeleteException(id);
     }
 
-    public List<E> create(E instance) throws ADD_EXCEPTION {
+    public List<E> create(E instance) throws A {
         this.loadCache();
 
         // Translate the external instance to the internal.
@@ -99,7 +99,7 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
         return getAll();
     }
 
-    private List<E> updateOrDelete(E instance, boolean update) throws UPDATE_DELETE_EXCEPTION {
+    private List<E> updateOrDelete(E instance, boolean update) throws U {
         this.loadCache();
 
         // Translate the external instance to the internal.
@@ -131,11 +131,11 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
         return getAll();
     }
 
-    public List<E> update(E instance) throws UPDATE_DELETE_EXCEPTION {
+    public List<E> update(E instance) throws U {
         return updateOrDelete(instance,true);
     }
 
-    public List<E> delete(E instance) throws UPDATE_DELETE_EXCEPTION {
+    public List<E> delete(E instance) throws U {
         return updateOrDelete(instance,false);
     }
 }

@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.dto.mapper;
 
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.mapper.converter.*;
 import com.jbr.middletier.money.manager.AccountManager;
@@ -13,7 +14,13 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class TransactionMapper extends ModelMapper {
     @Autowired
-    public TransactionMapper(AccountManager accountManager, CategoryManager categoryManager, StatementManager statementManager,AccountMapper accountMapper) {
+    public TransactionMapper(AccountManager accountManager,
+                             CategoryManager categoryManager,
+                             StatementManager statementManager,
+                             AccountMapper accountMapper,
+                             CategoryMapper categoryMapper,
+                             StatementMapper statementMapper,
+                             ApplicationProperties applicationProperties) {
         StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
         LocalDateStringConverter localDateStringConverter = new LocalDateStringConverter();
         this.addConverter(new AccountStringConverter());
@@ -27,6 +34,9 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new TransactionFromDTO(accountManager,categoryManager,statementManager,stringLocalDateConverter));
         this.addConverter(new TransactionToDTO(localDateStringConverter));
         this.addConverter(new ReconciliationFileToDTO(accountMapper));
+        this.addConverter(new TransactionToReportDTO(localDateStringConverter,accountMapper,categoryMapper,statementMapper));
+        this.addConverter(new RegularToReportDTO(applicationProperties,localDateStringConverter,accountMapper,categoryMapper));
+        this.addConverter(new MatchDataToReportDTO(localDateStringConverter,accountMapper,categoryMapper));
         this.createTypeMap(DateRange.class, DateRangeDTO.class);
         this.createTypeMap(DateRangeDTO.class, DateRange.class);
     }

@@ -10,8 +10,8 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
     @Min(1)
     @Max(12)
     Integer month;
-    @Min(1)
-    @Max(9999)
+    @Min(1900)
+    @Max(2399)
     Integer year;
 
     public StatementIdDTO() {

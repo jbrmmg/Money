@@ -11,16 +11,18 @@ import org.springframework.stereotype.Component;
 public class EnvironmentPropertiesPrinter {
     private static final Logger LOG = LoggerFactory.getLogger(EnvironmentPropertiesPrinter.class);
 
-    private final Environment env;
+    private final String url;
+    private final String username;
 
     @Autowired
     public EnvironmentPropertiesPrinter(Environment env) {
-        this.env = env;
+        this.url = env.getProperty("spring.datasource.url");
+        this.username = env.getProperty("spring.datasource.username");
     }
 
     @PostConstruct
     public void logApplicationProperties() {
-        LOG.info("{}={}", "spring.datasource.url", env.getProperty("spring.datasource.url"));
-        LOG.info("{}={}", "spring.datasource.username", env.getProperty("spring.datasource.username"));
+        LOG.info("{}={}", "spring.datasource.url", this.url);
+        LOG.info("{}={}", "spring.datasource.username", this.username);
     }
 }

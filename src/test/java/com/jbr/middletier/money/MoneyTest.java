@@ -24,7 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-import java.io.File;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
@@ -76,6 +75,9 @@ public class MoneyTest extends Support {
 
     @Autowired
     TransactionMapper transactionMapper;
+
+    @Autowired
+    ApplicationProperties applicationProperties;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -330,7 +332,7 @@ public class MoneyTest extends Support {
     public void testRegular() throws Exception {
         cleanUp();
 
-        LocalDate testDate = LocalDate.now();
+        LocalDate testDate = applicationProperties.getToday();
 
         Optional<Category> category = categoryRepository.findById("FDG");
         if(category.isEmpty()) {
@@ -382,7 +384,7 @@ public class MoneyTest extends Support {
         regularRepository.save(testRegularPayment);
 
         // Create a payment, invalid - should not create anything.
-        testDate = LocalDate.now();
+        testDate = applicationProperties.getToday();
         testDate = testDate.plusDays(-7);
 
         testRegularPayment = new Regular();
@@ -443,7 +445,7 @@ public class MoneyTest extends Support {
         cleanUp();
 
         // Move date to a saturday.
-        LocalDate testDate = LocalDate.now();
+        LocalDate testDate = applicationProperties.getToday();
         while(testDate.getDayOfWeek() != DayOfWeek.SATURDAY ) {
             testDate = testDate.plusDays(1);
         }
@@ -487,7 +489,7 @@ public class MoneyTest extends Support {
     public void testRegularWeekendBwd() throws Exception {
         cleanUp();
 
-        LocalDate testDate = LocalDate.now();
+        LocalDate testDate = applicationProperties.getToday();
 
         // Move date to a saturday.
         while(testDate.getDayOfWeek() != DayOfWeek.SATURDAY) {
@@ -530,11 +532,6 @@ public class MoneyTest extends Support {
     }
 
     private void testReconciliationData(String filename, int expectedCount, double expectedSum) throws Exception {
-        String path = "src/test/resources/reconciliation";
-
-        File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
-
         ReconciliationFileDTO loadFileRequest = new ReconciliationFileDTO();
         loadFileRequest.setFilename (filename);
 
@@ -591,12 +588,12 @@ public class MoneyTest extends Support {
     public void testHealthFail() {
         CategoryRepository mockRepository = Mockito.mock(CategoryRepository.class);
         when(mockRepository.findAll()).thenReturn(new ArrayList<>());
-        ApplicationProperties applicationProperties = Mockito.mock(ApplicationProperties.class);
-        when(applicationProperties.getServiceName())
+        ApplicationProperties mockApplicationProperties = Mockito.mock(ApplicationProperties.class);
+        when(mockApplicationProperties.getServiceName())
                 .thenThrow(IllegalStateException.class)
                 .thenReturn("Fred");
 
-        ServiceHealthIndicator healthIndicator = new ServiceHealthIndicator(mockRepository,applicationProperties);
+        ServiceHealthIndicator healthIndicator = new ServiceHealthIndicator(mockRepository,mockApplicationProperties);
         Health health = healthIndicator.health();
         Assert.assertEquals(Status.DOWN, health.getStatus());
     }

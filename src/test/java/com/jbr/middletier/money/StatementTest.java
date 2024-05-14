@@ -6,6 +6,7 @@ import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
 import org.junit.Assert;
@@ -151,6 +152,7 @@ public class StatementTest extends Support {
         statement.setAccountId("BANK");
         statement.setMonth(1);
         statement.setYear(2010);
+        statement.setOpenBalance(new FinancialAmount());
 
         error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
                         .content(this.json(statement))
@@ -177,8 +179,8 @@ public class StatementTest extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].accountId", is("AMEX")))
                 .andExpect(jsonPath("$[1].accountId", is("BANK")))
-                .andExpect(jsonPath("$[0].openBalance", is(0.0)))
-                .andExpect(jsonPath("$[1].openBalance", is(0.0)));
+                .andExpect(jsonPath("$[0].openBalance.value", is(0.0)))
+                .andExpect(jsonPath("$[1].openBalance.value", is(0.0)));
 
         // Check the url.
         getMockMvc().perform(get("/jbr/int/money/statement")
@@ -186,8 +188,8 @@ public class StatementTest extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].accountId", is("AMEX")))
                 .andExpect(jsonPath("$[1].accountId", is("BANK")))
-                .andExpect(jsonPath("$[0].openBalance", is(0.0)))
-                .andExpect(jsonPath("$[1].openBalance", is(0.0)));
+                .andExpect(jsonPath("$[0].openBalance.value", is(0.0)))
+                .andExpect(jsonPath("$[1].openBalance.value", is(0.0)));
     }
 
     @Test
@@ -270,7 +272,7 @@ public class StatementTest extends Support {
         statement.setMonth(4);
         statement.setYear(2010);
         statement.setLocked(false);
-        statement.setOpenBalance(1023.9);
+        statement.setOpenBalance(new FinancialAmount(1023.9));
         getMockMvc().perform(post("/jbr/int/money/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -290,7 +292,7 @@ public class StatementTest extends Support {
         statement.setMonth(1);
         statement.setYear(2010);
         statement.setLocked(false);
-        statement.setOpenBalance(100);
+        statement.setOpenBalance(new FinancialAmount(100));
 
         InvalidStatementIdException test = new InvalidStatementIdException(statement);
         Assert.assertEquals("Cannot find statement with id AMEX 1 2010", test.getMessage());

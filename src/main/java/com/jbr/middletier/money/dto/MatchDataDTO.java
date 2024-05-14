@@ -1,17 +1,26 @@
 package com.jbr.middletier.money.dto;
 
+import jakarta.validation.constraints.Pattern;
+
 public class MatchDataDTO {
     private int id;
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String date;
     private double amount;
     private TransactionDTO transaction;
     private double beforeAmount;
     private double afterAmount;
+    @Pattern(regexp="^[\\da-zA-Z]{3}$",message="Category can only contain letters or digits of 3 characters.")
     private String categoryId;
+    @Pattern(regexp="^[\\da-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
     private String colour;
+    @Pattern(regexp="^[\\da-zA-Z\\s]{1,40}$",message="Description can only contain letters or digits up to 45 characters.")
     private String description;
+    @Pattern(regexp="^[\\da-zA-Z]{3}$",message="Account can only contain letters or digits of 4 characters.")
     private String accountId;
+    @Pattern(regexp="^\\w{1,40}$",message="Forward Account can only contain letters or digits up to 45 characters.")
     private String forwardAction;
+    @Pattern(regexp="^\\w{1,40}$",message="Backward Action can only contain letters or digits up to 45 characters.")
     private String backwardAction;
 
     public int getId() {

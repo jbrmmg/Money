@@ -2,6 +2,7 @@ package com.jbr.middletier.money.reporting;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.dto.EmailRequestDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -43,12 +44,45 @@ public class EmailGenerator {
         this.applicationProperties = applicationProperties;
     }
 
-    public void generateReport( String to,
-                                String from,
-                                String username,
-                                String host,
-                                String password,
-                                long weeks) throws EmailGenerationException {
+    private void getTransactions(List<Transaction> emailTransactions,
+                                 FinancialAmount startAmount,
+                                 FinancialAmount endAmount,
+                                 FinancialAmount transactionTotal1,
+                                 FinancialAmount transactionTotal2,
+                                 int weeks) {
+        LocalDate oldest = applicationProperties.getToday();
+        oldest = oldest.plusWeeks(-1L * weeks);
+
+        // Get the latest statement that is locked for each account.
+        for (Account nextAccount : accountManager.getAllExternal()) {
+            // Get the latest statement.
+            List<Statement> latestStatements = statementManager.getLatestStatementInternal(nextAccount);
+            for (Statement nextStatement : latestStatements) {
+                endAmount.increment(nextStatement.getOpenBalance());
+                startAmount.increment(nextStatement.getOpenBalance());
+
+                // Get the transactions for this.
+                List<Transaction> transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,nextStatement.getId());
+                for (Transaction nextTransaction : transactions) {
+                    endAmount.increment(nextTransaction.getAmount());
+                    transactionTotal1.increment(nextTransaction.getAmount());
+
+                    emailTransactions.add(nextTransaction);
+                }
+
+                transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,StatementId.getPreviousId(nextStatement.getId()));
+                for (Transaction nextTransaction : transactions) {
+                    if (nextTransaction.getDate().isAfter(oldest)) {
+                        transactionTotal2.increment(nextTransaction.getAmount().getValue());
+
+                        emailTransactions.add(nextTransaction);
+                    }
+                }
+            }
+        }
+    }
+
+    public void generateReport(EmailRequestDTO request) throws EmailGenerationException {
         try {
             List<Transaction> emailTransactions = new ArrayList<>();
 
@@ -58,36 +92,7 @@ public class EmailGenerator {
             FinancialAmount transactionTotal1 = new FinancialAmount();
             FinancialAmount transactionTotal2 = new FinancialAmount();
 
-            LocalDate oldest = LocalDate.now();
-            oldest = oldest.plusWeeks(-1 * weeks);
-
-            // Get the latest statement that is locked for each account.
-            for (Account nextAccount : accountManager.getAllExternal()) {
-                // Get the latest statement.
-                List<Statement> latestStatements = statementManager.getLatestStatementInternal(nextAccount);
-                for (Statement nextStatement : latestStatements) {
-                    endAmount.increment(nextStatement.getOpenBalance());
-                    startAmount.increment(nextStatement.getOpenBalance());
-
-                    // Get the transactions for this.
-                    List<Transaction> transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,nextStatement.getId());
-                    for (Transaction nextTransaction : transactions) {
-                        endAmount.increment(nextTransaction.getAmount());
-                        transactionTotal1.increment(nextTransaction.getAmount());
-
-                        emailTransactions.add(nextTransaction);
-                    }
-
-                    transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,StatementId.getPreviousId(nextStatement.getId()));
-                    for (Transaction nextTransaction : transactions) {
-                        if (nextTransaction.getDate().isAfter(oldest)) {
-                            transactionTotal2.increment(nextTransaction.getAmount().getValue());
-
-                            emailTransactions.add(nextTransaction);
-                        }
-                    }
-                }
-            }
+            getTransactions(emailTransactions,startAmount,endAmount,transactionTotal1,transactionTotal2,request.getWeeks());
 
             emailTransactions.sort((emailTransaction, t1) -> {
                 if (emailTransaction.getDate().isBefore(t1.getDate())) {
@@ -121,21 +126,21 @@ public class EmailGenerator {
             Properties properties = new Properties();
             properties.put("mail.smtp.auth", "true");
             properties.put("mail.smtp.starttls.enable", "true");
-            properties.put("mail.smtp.host", host);
+            properties.put("mail.smtp.host", request.getHost());
             properties.put("mail.smtp.port", this.applicationProperties.getSmtpPort());
 
             Session session = Session.getInstance(properties,
                     new javax.mail.Authenticator() {
                         @Override
                         protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(username, password);
+                            return new PasswordAuthentication(request.getUsername(), request.getPassword());
                         }
                     });
 
             Message message = new MimeMessage(session);
 
-            message.setFrom(new InternetAddress(from));
-            message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            message.setFrom(new InternetAddress(request.getFrom()));
+            message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(request.getTo()));
             message.setSubject("Credit card bills");
 
             // Get the email template.

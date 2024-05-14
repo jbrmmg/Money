@@ -9,6 +9,7 @@ import com.jbr.middletier.money.dataaccess.TransactionRepository;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
@@ -23,6 +24,7 @@ public class ArchiveManager {
     private final TransactionRepository transactionRepository;
     private final ReportGenerator reportGenerator;
 
+    @Autowired
     public ArchiveManager(StatementRepository statementRepository,
                           ApplicationProperties applicationProperties,
                           TransactionRepository transactionRepository,

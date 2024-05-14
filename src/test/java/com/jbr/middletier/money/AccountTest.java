@@ -2,6 +2,7 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.AccountDTO;
+import jakarta.servlet.ServletException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +56,15 @@ public class AccountTest extends Support {
                 .andExpect(status().isOk());
         getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYXY&disabled=false"))
                 .andExpect(status().isOk());
+
+        // Check the id is validated.
+        try {
+            getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYY&disabled=false")
+                            .contentType(getContentType()))
+                    .andExpect(status().isBadRequest());
+        } catch (ServletException ex) {
+            Assert.assertTrue(ex.getRootCause().getMessage().contains("Id must be a four letter code"));
+        }
     }
 
     @Test
@@ -62,12 +72,20 @@ public class AccountTest extends Support {
         AccountDTO account = new AccountDTO();
         account.setId("XXXX");
         account.setName("Testing");
-        account.setColour("FCFCFC");
+        account.setColour("FFFFF");
         account.setImagePrefix("test");
 
-        getMockMvc().perform(post("/jbr/int/money/accounts")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/accounts")
                 .content(this.json(account))
                 .contentType(getContentType()))
+                .andExpect(status().isBadRequest())
+                .andReturn().getResolvedException()).getMessage();
+        Assert.assertTrue(error.contains("Colour must be a 6 digit hex value."));
+
+        account.setColour("FFFFFF");
+        getMockMvc().perform(post("/jbr/int/money/accounts")
+                        .content(this.json(account))
+                        .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))
                 .andExpect(jsonPath("$[1].id", is("BANK")))

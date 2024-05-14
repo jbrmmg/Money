@@ -1,13 +1,17 @@
 package com.jbr.middletier.money.dto;
 
+import jakarta.validation.constraints.Pattern;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class ReconciliationFileDTO {
+    @Pattern(regexp="^[\\da-zA-Z_./\\\\]{1,40}",message="File can only contain letters or digits up to 45 characters.")
     private String filename;
     private AccountDTO account;
     private LocalDateTime lastModified;
     private Long size;
+    @Pattern(regexp="^[\\da-zA-Z]{1,100}$",message="Error can only contain letters or digits up to 45 characters.")
     private String error;
     private int transactionCount;
     private double creditSum;

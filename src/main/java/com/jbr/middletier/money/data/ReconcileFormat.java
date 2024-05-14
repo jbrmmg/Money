@@ -34,7 +34,7 @@ public class ReconcileFormat {
     private Boolean reverse;
 
     @JoinColumn(name="account_id")
-    @ManyToOne(optional = true)
+    @ManyToOne()
     private Account account;
 
     public String getId() {

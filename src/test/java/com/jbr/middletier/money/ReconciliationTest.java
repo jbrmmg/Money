@@ -1,10 +1,7 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.ReconciliationRepository;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
 import com.jbr.middletier.money.dataaccess.TransactionRepository;
@@ -12,9 +9,12 @@ import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileLoadDTO;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.manager.ReconcileFileLine;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.dto.MatchDataDTO;
+import com.jbr.middletier.money.reconciliation.FileFormatDescription;
+import com.jbr.middletier.money.reconciliation.FileFormatException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -260,7 +260,6 @@ public class ReconciliationTest extends Support {
     @Test
     public void testSetTransactionCategoryUpdate() {
         Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
-//        this.transactionRepository.save(testTransaction);
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -517,7 +516,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testAutomaticRec() throws IOException, UpdateDeleteAccountException, MultipleUnlockedStatementException, UpdateDeleteCategoryException, InvalidTransactionIdException, InvalidTransactionException {
+    public void testAutomaticRec() throws IOException, UpdateDeleteAccountException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -548,5 +547,21 @@ public class ReconciliationTest extends Support {
             count++;
         }
         Assert.assertEquals(3, count);
+    }
+
+    @Test
+    public void testFileFormatException() {
+        ReconcileFormat format = new ReconcileFormat();
+        format.setId("TEST");
+        format.setDescriptionColumn(6);
+
+        FileFormatDescription description = new FileFormatDescription(format);
+
+        try {
+            description.getDescription(new ReconcileFileLine(1,"x,y,z"));
+            Assert.fail("An exception should have been raised");
+        } catch(FileFormatException ex) {
+            Assert.assertEquals("Required index out of range on line 1",ex.getMessage());
+        }
     }
 }

@@ -96,7 +96,7 @@ public class RegularCtrl {
         }
 
         // Generate for today.
-        LocalDate today = LocalDate.now();
+        LocalDate today = applicationProperties.getToday();
 
         LOG.info("TODAY: {}", today);
         generateRegularPayments(today);

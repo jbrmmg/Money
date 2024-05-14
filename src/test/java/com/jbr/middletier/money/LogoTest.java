@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
@@ -242,6 +243,16 @@ public class LogoTest {
         }
     }
 
+    private String getAttributeValue(Element element, String attributeName) {
+        return element.getAttributeValue(attributeName);
+    }
+
+    private String getAttributesCheckString(Element element, String... attributes) {
+        return Arrays.stream(attributes)
+                .map(e -> getAttributeValue(element,e))
+                .collect(Collectors.joining("-"));
+    }
+
     @Test
     public void testPieChart() throws ParserConfigurationException, IOException, SAXException {
         Category categoryFDG = new Category();
@@ -298,54 +309,26 @@ public class LogoTest {
         for(Element nextElement : root.getChildren()) {
             if(nextElement.getName().equals("circle")) {
                 if(nextElement.getAttribute("id").getValue().equals("BCKG")) {
-                    Assert.assertEquals("5000", nextElement.getAttribute("cx").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("cy").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("r").getValue());
-                    Assert.assertEquals("white", nextElement.getAttribute("fill").getValue());
+                    Assert.assertEquals("5000-5000-5000-white", getAttributesCheckString(nextElement,"cx","cy","r","fill"));
                 } else if (nextElement.getAttribute("id").getValue().equals("FDG")) {
-                    Assert.assertEquals("5000", nextElement.getAttribute("cx").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("cy").getValue());
-                    Assert.assertEquals("2500", nextElement.getAttribute("r").getValue());
-                    Assert.assertEquals("none", nextElement.getAttribute("fill").getValue());
-                    Assert.assertEquals("#FFFF00", nextElement.getAttribute("stroke").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("stroke-width").getValue());
-                    Assert.assertEquals("15707.963268 15707.963268", nextElement.getAttribute("stroke-dasharray").getValue());
-                    Assert.assertEquals("rotate(-90) translate(-10000)", nextElement.getAttribute("transform").getValue());
+                    Assert.assertEquals("5000-5000-2500-none-#FFFF00-5000-15707.963268 15707.963268-rotate(-90) translate(-10000)",
+                            getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("HSE")) {
-                    Assert.assertEquals("5000", nextElement.getAttribute("cx").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("cy").getValue());
-                    Assert.assertEquals("2500", nextElement.getAttribute("r").getValue());
-                    Assert.assertEquals("none", nextElement.getAttribute("fill").getValue());
-                    Assert.assertEquals("#9966FF", nextElement.getAttribute("stroke").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("stroke-width").getValue());
-                    Assert.assertEquals("11363.690944 15707.963268", nextElement.getAttribute("stroke-dasharray").getValue());
-                    Assert.assertEquals("rotate(-90) translate(-10000)", nextElement.getAttribute("transform").getValue());
-
+                    Assert.assertEquals("5000-5000-2500-none-#9966FF-5000-11363.690944 15707.963268-rotate(-90) translate(-10000)",
+                            getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("OUTL")) {
-                    Assert.assertEquals("5000", nextElement.getAttribute("cx").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("cy").getValue());
-                    Assert.assertEquals("5000", nextElement.getAttribute("r").getValue());
-                    Assert.assertEquals("none", nextElement.getAttribute("fill").getValue());
-                    Assert.assertEquals("black", nextElement.getAttribute("stroke").getValue());
-                    Assert.assertEquals("20", nextElement.getAttribute("stroke-width").getValue());
+                    Assert.assertEquals("5000-5000-5000-none-black-20",
+                            getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width"));
                 } else {
                     Assert.fail();
                 }
             } else if (nextElement.getName().equals("text")) {
                 if (nextElement.getAttribute("id").getValue().equals("FDG-txt")) {
-                    Assert.assertEquals("#000000", nextElement.getAttribute("fill").getValue());
-                    Assert.assertEquals("600px", nextElement.getAttribute("font-size").getValue());
-                    Assert.assertEquals("start", nextElement.getAttribute("text-anchor").getValue());
-                    Assert.assertEquals("1334.769132", nextElement.getAttribute("x").getValue());
-                    Assert.assertEquals("1900.63189", nextElement.getAttribute("y").getValue());
-                    Assert.assertEquals("rotate(40.218306 1334.769132,1900.63189)", nextElement.getAttribute("transform").getValue());
+                    Assert.assertEquals("#000000-600px-start-1334.769132-1900.63189-rotate(40.218306 1334.769132,1900.63189)",
+                            getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("HSE-txt")) {
-                    Assert.assertEquals("#000000", nextElement.getAttribute("fill").getValue());
-                    Assert.assertEquals("1200px", nextElement.getAttribute("font-size").getValue());
-                    Assert.assertEquals("end", nextElement.getAttribute("text-anchor").getValue());
-                    Assert.assertEquals("8665.230868", nextElement.getAttribute("x").getValue());
-                    Assert.assertEquals("8099.36811", nextElement.getAttribute("y").getValue());
-                    Assert.assertEquals("rotate(40.218306 8665.230868,8099.36811)", nextElement.getAttribute("transform").getValue());
+                    Assert.assertEquals("#000000-1200px-end-8665.230868-8099.36811-rotate(40.218306 8665.230868,8099.36811)",
+                            getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
                 } else {
                     Assert.fail();
                 }

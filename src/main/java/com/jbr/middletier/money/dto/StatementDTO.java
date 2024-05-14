@@ -1,10 +1,25 @@
 package com.jbr.middletier.money.dto;
 
+import com.jbr.middletier.money.util.FinancialAmount;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Pattern;
+
 public class StatementDTO implements Comparable<StatementDTO> {
+    @Pattern(regexp="^[\\da-zA-Z]{1,4}$",message="Account ID contain letters or digits up to 4 characters.")
     private String accountId;
+
+    @Min(1)
+    @Max(12)
     private Integer month;
+
+    @Min(1900)
+    @Max(2399)
     private Integer year;
-    private double openBalance;
+
+    private FinancialAmount openBalance;
+
     private boolean locked;
 
     public String getAccountId() {
@@ -31,11 +46,15 @@ public class StatementDTO implements Comparable<StatementDTO> {
         this.year = year;
     }
 
-    public double getOpenBalance() {
+    public FinancialAmount getOpenBalance() {
+        if(this.openBalance == null) {
+            return new FinancialAmount();
+        }
+
         return openBalance;
     }
 
-    public void setOpenBalance(double openBalance) {
+    public void setOpenBalance(FinancialAmount openBalance) {
         this.openBalance = openBalance;
     }
 
@@ -68,5 +87,26 @@ public class StatementDTO implements Comparable<StatementDTO> {
     @Override
     public int hashCode() {
         return this.statementIdDTO().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        if(this.accountId != null) {
+            result.append(this.accountId);
+        }
+
+        if(this.year != null) {
+            result.append(" ");
+            result.append(this.year);
+        }
+
+        if(this.month != null) {
+            result.append(" ");
+            result.append(this.month);
+        }
+
+        return result.toString();
     }
 }

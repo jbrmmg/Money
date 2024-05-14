@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.manager;
 
+import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.*;
 import com.jbr.middletier.money.dataaccess.AccountRepository;
 import com.jbr.middletier.money.dataaccess.CategoryRepository;
@@ -55,7 +56,7 @@ public class AccountTransactionManager {
 
         for (Transaction nextTransaction : transactions ) {
             balance.increment(nextTransaction.getAmount());
-            LOG.debug("Transaction {}", nextTransaction.getAmount());
+            LOG.debug("Transaction (final balance) {}", nextTransaction.getAmount());
         }
 
         return balance;
@@ -111,10 +112,10 @@ public class AccountTransactionManager {
 
     private Specification<Transaction> getAllTransactions(DateRange dateRange, List<Account> accounts, List<Category> categories) throws InvalidTransactionSearchException {
         // Validate data.
-        if(dateRange.getFrom() == null){
+        if(dateRange.getFrom() == null || dateRange.getFrom().isEqual(Constants.MONEY_EARLIEST_DATE)){
             throw new InvalidTransactionSearchException("must specify a from date");
         }
-        if(dateRange.getTo() == null){
+        if(dateRange.getTo() == null || dateRange.getTo().isEqual(Constants.MONEY_LATEST_DATE)){
             throw new InvalidTransactionSearchException("must specify a to date");
         }
 
@@ -220,7 +221,7 @@ public class AccountTransactionManager {
         List<TransactionDTO> result = new ArrayList<>();
         LOG.debug("Iterate over transactions");
         for(Transaction transaction : transactionRepository.findAll(Objects.requireNonNull(specification), transactionSort)) {
-            LOG.debug("Transaction {}", transaction.getId());
+            LOG.debug("Transaction (getTransactions) {}", transaction.getId());
             result.add(transactionMapper.map(transaction,TransactionDTO.class));
         }
 
@@ -256,24 +257,6 @@ public class AccountTransactionManager {
     }
 
     @Transactional
-    public List<TransactionDTO> createTransferTransaction(TransactionDTO from, TransactionDTO to) throws InvalidTransactionException {
-        Transaction fromTransaction = internalCreateTransaction(from);
-
-        // Save the 'from' transaction and update the opposite id on the 'to'
-        List<TransactionDTO> result = new ArrayList<>();
-        result.add(transactionMapper.map(fromTransaction,TransactionDTO.class));
-        to.setOppositeTransactionId(fromTransaction.getId());
-
-        // Save the 'to' transaction and update the 'from' transaction.
-        result.addAll(createIndividualTransaction(to));
-        fromTransaction.setOppositeTransactionId(result.get(1).getId());
-        result.get(0).setOppositeTransactionId(fromTransaction.getOppositeTransactionId());
-        transactionRepository.save(fromTransaction);
-
-        return result;
-    }
-
-    @Transactional
     public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException {
         if(transaction.size() == 1) {
             return createIndividualTransaction(transaction.get(0));
@@ -305,7 +288,20 @@ public class AccountTransactionManager {
         to.setDate(from.getDate());
 
         // The transaction is either an individual transaction or it's a transfer
-        return createTransferTransaction(from,to);
+        Transaction fromTransaction = internalCreateTransaction(from);
+
+        // Save the 'from' transaction and update the opposite id on the 'to'
+        List<TransactionDTO> result = new ArrayList<>();
+        result.add(transactionMapper.map(fromTransaction,TransactionDTO.class));
+        to.setOppositeTransactionId(fromTransaction.getId());
+
+        // Save the 'to' transaction and update the 'from' transaction.
+        result.addAll(createIndividualTransaction(to));
+        fromTransaction.setOppositeTransactionId(result.get(1).getId());
+        result.get(0).setOppositeTransactionId(fromTransaction.getOppositeTransactionId());
+        transactionRepository.save(fromTransaction);
+
+        return result;
     }
 
     public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
@@ -385,5 +381,9 @@ public class AccountTransactionManager {
                 account,
                 statementId.getYear(),
                 statementId.getMonth());
+    }
+
+    public List<Transaction> getAllTransactions() {
+        return new ArrayList<>((Collection<? extends Transaction>) transactionRepository.findAll());
     }
 }
