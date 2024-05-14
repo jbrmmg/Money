@@ -260,7 +260,6 @@ public class ReconciliationTest extends Support {
     @Test
     public void testSetTransactionCategoryUpdate() {
         Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
-//        this.transactionRepository.save(testTransaction);
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
