@@ -4,9 +4,7 @@ import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.Support;
 import com.jbr.middletier.money.data.Statement;
 import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dto.TransactionDataDTO;
-import com.jbr.middletier.money.dto.TransactionFilterDTO;
-import com.jbr.middletier.money.dto.TransactionReportDTO;
+import com.jbr.middletier.money.dto.*;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -26,6 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.List;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.*;
@@ -226,6 +225,109 @@ public class MoneyReportIT extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(35)))
                 .andExpect(jsonPath("openBalance.value", is(630.16)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterNotLockedBank() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+        account.setClosed(false);
+        account.setColour("FF0000");
+        account.setName("Bank");
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setLocked(false);
+        filter.setAccounts(List.of(account));
+
+        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(3)))
+                .andExpect(jsonPath("openBalance.value", is(620.16)))
+                .andExpect(jsonPath("openDate", is("2023-05-01")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterCategory() throws Exception {
+        CategoryDTO category = new CategoryDTO();
+        category.setId("HSE");
+        category.setName("House");
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setCategories(List.of(category));
+
+        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(11)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-11")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterDate() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setDateRange(new DateRangeDTO("2023-04-20",null));
+
+        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(19)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-20")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterValue() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setValueRange(new ValueRangeDTO(-20,15));
+
+        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(23)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())

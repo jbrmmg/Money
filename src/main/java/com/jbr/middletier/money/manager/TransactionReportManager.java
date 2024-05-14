@@ -180,6 +180,27 @@ public class TransactionReportManager {
         return result;
     }
 
+    private FinancialAmount calculateOpeningBalanceFromStatements(List<Statement> includedStatements) {
+        double openingBalance = 0;
+
+        // Get the oldest date.
+        Map<String,StatementDateDTO> oldestPerAccount = getOldestStatementPerAccount(includedStatements);
+
+        // Some the opening balances from the oldest statements.
+        if(!oldestPerAccount.isEmpty()) {
+            for(Map.Entry<String,StatementDateDTO> nextEntry : oldestPerAccount.entrySet()) {
+                for (Statement statement : includedStatements) {
+                    if (statement.getId().getAccount().getId().equals(nextEntry.getKey()) && statement.getId().getYear().equals(nextEntry.getValue().getYear()) && statement.getId().getMonth().equals(nextEntry.getValue().getMonth())) {
+                        openingBalance += statement.getOpenBalance().getValue();
+                        break;
+                    }
+                }
+            }
+        }
+
+        return new FinancialAmount(openingBalance);
+    }
+
     private FinancialAmount calculateOpeningBalance(TransactionFilterDTO filter) {
         // Opening balance not provided if the following filters are present.
 
@@ -205,27 +226,10 @@ public class TransactionReportManager {
         }
 
         // Opening balance can be derived from the statements.
-        double openingBalance = 0;
-
         List<Statement> includedStatements = getIncludedStatements(filter);
 
-        // Get the oldest date.
-        Map<String,StatementDateDTO> oldestPerAccount = getOldestStatementPerAccount(includedStatements);
-
-        // Some the opening balances from the oldest statements.
-        if(!oldestPerAccount.isEmpty()) {
-            for(Map.Entry<String,StatementDateDTO> nextEntry : oldestPerAccount.entrySet()) {
-                for (Statement statement : includedStatements) {
-                    if (statement.getId().getAccount().getId().equals(nextEntry.getKey()) && statement.getId().getYear().equals(nextEntry.getValue().getYear()) && statement.getId().getMonth().equals(nextEntry.getValue().getMonth())) {
-                        openingBalance += statement.getOpenBalance().getValue();
-                        break;
-                    }
-                }
-            }
-        }
-
         // Opening balance only makes sense if the only filter relates to the statement.
-        return new FinancialAmount(openingBalance);
+        return calculateOpeningBalanceFromStatements(includedStatements);
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {
