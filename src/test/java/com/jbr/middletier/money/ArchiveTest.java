@@ -136,13 +136,13 @@ public class ArchiveTest extends Support {
 
         // Statements should be deleted
         count = 0;
-        for(@SuppressWarnings("UnusedAssignment") Statement ignored : statementRepository.findAll()) {
+        for(Statement ignored : statementRepository.findAll()) {
             count++;
         }
         Assert.assertEquals(0,count);
 
         count = 0;
-        for(@SuppressWarnings("UnusedAssignment") Transaction ignored : transactionRepository.findAll()) {
+        for(Transaction ignored : transactionRepository.findAll()) {
             count++;
         }
         Assert.assertEquals(0,count);

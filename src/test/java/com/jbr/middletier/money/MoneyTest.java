@@ -536,7 +536,6 @@ public class MoneyTest extends Support {
         String path = "src/test/resources/reconciliation";
 
         File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
 
         ReconciliationFileDTO loadFileRequest = new ReconciliationFileDTO();
         loadFileRequest.setFilename (filename);

@@ -3,7 +3,6 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.manager.ReconcileFileLine;
-import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,9 +20,6 @@ import java.util.List;
 public class ReconciliationFileTest {
     @Autowired
     ReconciliationFileManager reconciliationFileManager;
-
-    @Autowired
-    private UtilityMapper utilityMapper;
 
     @Test
     public void testFilesAvailable() {
