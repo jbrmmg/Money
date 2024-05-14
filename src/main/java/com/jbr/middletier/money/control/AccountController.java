@@ -40,7 +40,7 @@ public class AccountController {
     }
 
     @GetMapping(path="/int/money/account/logo")
-    public ResponseEntity<String> getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") @Pattern(regexp="^[a-zA-Z]{4}$",message="Id must be a four letter code") String id,
+    public ResponseEntity<String> getIntAccountLogo(@RequestParam(value="id", defaultValue="UNKN") @Pattern(regexp="^[\\da-zA-Z]{4}$",message="Id must be a four letter code") String id,
                                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (int)");
         HttpHeaders headers = new HttpHeaders();
@@ -49,7 +49,7 @@ public class AccountController {
     }
 
     @GetMapping(path="/ext/money/account/logo")
-    public ResponseEntity<String> getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") @Pattern(regexp="^[a-zA-Z]{4}$",message="Id must be a four letter code") String id,
+    public ResponseEntity<String> getExtAccountLogo(@RequestParam(value="id", defaultValue="UNKN") @Pattern(regexp="^[\\da-zA-Z]{4}$",message="Id must be a four letter code") String id,
                                                                   @RequestParam(value="disabled", defaultValue="false") Boolean disabled) {
         LOG.info("Account Logo (ext)");
         return getIntAccountLogo(id, disabled);
