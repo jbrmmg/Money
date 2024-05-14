@@ -5,7 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 
 /**
@@ -16,21 +16,21 @@ import java.io.Serializable;
 @Table(name="Account")
 public class Account implements Serializable {
     @Id
-    @Size(max=4)
     @Column(name="id")
     @NotNull(message = "Account ID cannot be null.")
+    @Pattern(regexp="^[0-9A-Z]{4}$",message="Account id must be uppercase and/or numbers of length 4.")
     private String id;
 
-    @Size(max=45)
     @Column(name="name")
+    @Pattern(regexp="^[0-9A-Za-z\\s]{1,45}$",message="Account name must be alpha numeric upto 45 characters.")
     private String name;
 
-    @Size(max=45)
     @Column(name="image_prefix")
+    @Pattern(regexp="^[0-9a-zA-Z]{1,45}$",message="Image Prefix can only contain letters or digits up to 45 characters.")
     private String imagePrefix;
 
-    @Size(max=6)
     @Column(name="colour")
+    @Pattern(regexp="^[0-9a-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
     private String colour;
 
     @Column(name="closed")

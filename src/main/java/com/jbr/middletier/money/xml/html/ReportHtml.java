@@ -15,11 +15,8 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ReportHtml extends HyperTextMarkupLanguage {
-    private static final String BODY = "body";
-
     public enum ReportType { ANNUAL, MONTH }
 
     private final List<Transaction> transactions;
@@ -28,8 +25,19 @@ public class ReportHtml extends HyperTextMarkupLanguage {
     private final String workingDirectory;
     private final ReportType type;
 
+    private static final String HTML_TD_DATE = "date";
+    private static final String HTML_TD_DESCRIPTION = "description";
+    private static final String HTML_TD_AMOUNT = "amount";
+    private static final String HTML_TD_AMOUNT_DEBIT = "amount-debit";
+    private static final String HTML_TD_CENTER = "center-column";
+    private static final String HTML_TD_TOTAL = "total-column";
+    private static final String HTML_TD_ROW = "total-row";
+    private static final String HTML_FONT_ARIAL = "Arial";
+    private static final String HTML_FONT_HELVETICA = "Helvetica";
+    private static final String HTML_PIE = "pie";
+
     public ReportHtml(List<Transaction> transactions, List<Transaction> previousTransactions, LocalDate reportDate, String workingDirectory, ReportType type) {
-        super(Map.of("&amp;#xA0;","&#xA0;","&lt;br/&gt;","<br/>"));
+        super(Map.of(HTML_NO_BREAK_SPACE_ESC, HTML_NO_BREAK_SPACE, HTML_BR_ESC, HTML_BR));
         this.transactions = transactions;
         this.transactions.sort(Comparator.comparing(Transaction::getDate));
         this.previousTransactions = previousTransactions;
@@ -42,20 +50,20 @@ public class ReportHtml extends HyperTextMarkupLanguage {
     private CascadingStyleSheet generateCSS() {
         CascadingStyleSheet result = new CascadingStyleSheet();
 
-        result.addRule(getCssRule("@page", Map.of("margin", "10pt")));
-        result.addRule(getCssRule("body", Map.of("font-family","Arial, Helvetica, sans-serif", "font-size", "12px")));
-        result.addRule(getCssRule("h1", Map.of("font-size", "24px", "font-weight", "bolder")));
-        result.addRule(getCssRule("h2", Map.of("font-size", "14px", "font-weight", "bold")));
-        result.addRule(getCssRule("table", Map.of("border-spacing", "0")));
-        result.addRule(getCssRule("td", Map.of("font-size", "10px", "white-space", "nowrap")));
-        result.addRule(getCssRule("td.date", Map.of("text-align", "right")));
-        result.addRule(getCssRule("td.description", Map.of("font-size", "8px", "white-space", "nowrap")));
-        result.addRule(getCssRule("td.amount", Map.of("color","#000000", "text-align", "right")));
-        result.addRule(getCssRule("td.amount-debit", Map.of("color","#FF0000")));
-        result.addRule(getCssRule("td.center-column", Map.of("border-right","2px solid darkblue", "width", "10px")));
-        result.addRule(getCssRule("th.total-column", Map.of("padding-left", "30px")));
-        result.addRule(getCssRule("td.total-row", Map.of("border-top", "2px solid black", "padding-top","4px","font-size", "14px","font-weight", "bold")));
-        result.addRule(getCssRule("img.pie", Map.of("display", "block", "margin-left","auto","margin-right","auto")));
+        result.addRule(getCssRule("@page", Map.of(HTML_CSS_MARGIN, formatedUnit(UnitType.PT,10))));
+        result.addRule(getCssRule(HTML_BODY, Map.of(HTML_CSS_FONT_FAMILY, fontString(HTML_FONT_ARIAL,HTML_FONT_HELVETICA,HTML_CSS_FONT_SAN_SERIF), HTML_CSS_FONT_SIZE, formatedUnit(UnitType.PX,12))));
+        result.addRule(getCssRule(HTML_STYLE_H1, Map.of(HTML_CSS_FONT_SIZE, formatedUnit(UnitType.PX,24), HTML_CSS_FONT_WEIGHT, HTML_CSS_BOLDER)));
+        result.addRule(getCssRule(HTML_STYLE_H2, Map.of(HTML_CSS_FONT_SIZE, formatedUnit(UnitType.PX,14), HTML_CSS_FONT_WEIGHT, HTML_CSS_BOLD)));
+        result.addRule(getCssRule(HTML_TABLE, Map.of(HTML_BORDER_SPACING, formatedUnit(UnitType.PX,0))));
+        result.addRule(getCssRule(HTML_TD, Map.of(HTML_CSS_FONT_SIZE, formatedUnit(UnitType.PX,10), HTML_WHITESPACE, HTML_NOWRAP)));
+        result.addRule(getCssRule(selector(HTML_TD,HTML_TD_DATE), Map.of(HTML_CSS_TEXT_ALIGN, HTML_CSS_RIGHT)));
+        result.addRule(getCssRule(selector(HTML_TD,HTML_TD_DESCRIPTION), Map.of(HTML_CSS_FONT_SIZE, formatedUnit(UnitType.PX,8), HTML_WHITESPACE, HTML_NOWRAP)));
+        result.addRule(getCssRule(selector(HTML_TD,HTML_TD_AMOUNT), Map.of(HTML_CSS_COLOUR,"#000000", HTML_CSS_TEXT_ALIGN, HTML_CSS_RIGHT)));
+        result.addRule(getCssRule(selector(HTML_TD,HTML_TD_AMOUNT_DEBIT), Map.of(HTML_CSS_COLOUR,"#FF0000")));
+        result.addRule(getCssRule(selector(HTML_TD,HTML_TD_CENTER), Map.of(HTML_BORDER_RIGHT, borderString("darkblue"), HTML_CSS_WIDTH,  formatedUnit(UnitType.PX,10))));
+        result.addRule(getCssRule(selector(HTML_TD,HTML_TD_ROW), Map.of(HTML_BORDER_TOP, borderString("black"), HTML_PADDING_TOP, formatedUnit(UnitType.PX,4), HTML_CSS_FONT_SIZE, formatedUnit(UnitType.PX,14), HTML_CSS_FONT_WEIGHT, HTML_CSS_BOLD)));
+        result.addRule(getCssRule(selector(HTML_TH,HTML_TD_TOTAL), Map.of(HTML_PADDING_LEFT, formatedUnit(UnitType.PX,30))));
+        result.addRule(getCssRule("img.pie", Map.of(HTML_DISPLAY, HTML_BLOCK, HTML_CSS_MARGIN_RIGHT, HTML_CSS_MARGIN_AUTO, HTML_CSS_MARGIN_LEFT, HTML_CSS_MARGIN_AUTO)));
 
         return result;
     }
@@ -70,32 +78,32 @@ public class ReportHtml extends HyperTextMarkupLanguage {
 
     @Override
     protected Element getHeader() {
-        Element title = new Element("title")
+        Element title = new Element(HTML_TITLE)
                 .setContent(new Text("Report"));
 
-        Element style = new Element("style")
+        Element style = new Element(HTML_STYLE)
                 .setContent(new Text(getStyleSheet()));
 
-        return new Element("head")
+        return new Element(HTML_HEAD)
                 .addContent(title)
                 .addContent(style);
     }
 
     private static void addDateToRow(Element row, LocalDate transactionDate) {
-        Element date = new Element("td");
-        date.setAttribute("class","date");
+        Element date = new Element(HTML_TD);
+        date.setAttribute(HTML_CSS_CLASS,HTML_TD_DATE);
         date.setText(DateTimeFormatter.ofPattern("dd-MMM").format(transactionDate) +
-                "<br/>" +
+                HTML_BR +
                 DateTimeFormatter.ofPattern("yyyy").format(transactionDate));
         row.addContent(date);
     }
 
     private static void addImageToRow(Element row, String imagePath, String imageName) {
-        Element column = new Element("td");
-        Element image = new Element("img");
-        image.setAttribute("height","25px");
-        image.setAttribute("width","25px");
-        image.setAttribute("src", imagePath + imageName + ".png");
+        Element column = new Element(HTML_TD);
+        Element image = new Element(HTML_IMG);
+        image.setAttribute(HTML_CSS_HEIGHT,formatedUnit(UnitType.PX,25));
+        image.setAttribute(HTML_CSS_WIDTH,formatedUnit(UnitType.PX,25));
+        image.setAttribute(HTML_SRC_ATTRIBUTE, imagePath + imageName + ".png");
         column.addContent(image);
         row.addContent(column);
     }
@@ -105,21 +113,21 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         String[] lines = WordUtils.wrap(description,30,"\n",true," ").split("\n");
 
         // Split that into separate string.
-        Element descriptionElement = new Element("td")
-                .setAttribute("class","description");
+        Element descriptionElement = new Element(HTML_TD)
+                .setAttribute(HTML_CSS_CLASS,HTML_TD_DESCRIPTION);
 
         if(lines.length <= 1) {
             descriptionElement.setText(lines[0]);
         } else {
-            descriptionElement.setText(lines[0] + "<br/>" + lines[1]);
+            descriptionElement.setText(lines[0] + HTML_BR + lines[1]);
         }
 
         row.addContent(descriptionElement);
     }
 
     private static void addAmountToRow(Element row, FinancialAmount amount, String positiveClass, String negativeClass) {
-        row.addContent(new Element("td")
-                .setAttribute("class", amount.getValue() < 0 ? negativeClass : positiveClass)
+        row.addContent(new Element(HTML_TD)
+                .setAttribute(HTML_CSS_CLASS, amount.getValue() < 0 ? negativeClass : positiveClass)
                 .setText(amount.toString()));
     }
 
@@ -127,7 +135,7 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         if(transaction == null) {
             // Add blank columns
             for(int i = 0; i < 5; i++) {
-                row.addContent(new Element("td"));
+                row.addContent(new Element(HTML_TD));
             }
             return;
         }
@@ -145,7 +153,7 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         addDescriptionToRow(row, Optional.of(transaction.getDescription()).orElse(""));
 
         // Amount
-        addAmountToRow(row,transaction.getAmount(),"amount","amount amount-debit");
+        addAmountToRow(row,transaction.getAmount(), HTML_TD_AMOUNT, concatenateClass(HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
     }
 
     private static class TransactionPair {
@@ -175,21 +183,21 @@ public class ReportHtml extends HyperTextMarkupLanguage {
     }
 
     private Element getTransactionsTable() {
-        Element result = new Element("table");
+        Element result = new Element(HTML_TABLE);
 
         // Add the title
-        result.addContent(new Element("tr")
-                .addContent(new Element("th").setText("Date"))
-                .addContent(new Element("th").setText(""))
-                .addContent(new Element("th").setText(""))
-                .addContent(new Element("th").setText("Description"))
-                .addContent(new Element("th").setText("Amount"))
-                .addContent(new Element("th").setText(""))
-                .addContent(new Element("th").setText("Date"))
-                .addContent(new Element("th").setText(""))
-                .addContent(new Element("th").setText(""))
-                .addContent(new Element("th").setText("Description"))
-                .addContent(new Element("th").setText("Amount")));
+        result.addContent(new Element(HTML_TR)
+                .addContent(new Element(HTML_TH).setText("Date"))
+                .addContent(new Element(HTML_TH).setText(""))
+                .addContent(new Element(HTML_TH).setText(""))
+                .addContent(new Element(HTML_TH).setText("Description"))
+                .addContent(new Element(HTML_TH).setText("Amount"))
+                .addContent(new Element(HTML_TH).setText(""))
+                .addContent(new Element(HTML_TH).setText("Date"))
+                .addContent(new Element(HTML_TH).setText(""))
+                .addContent(new Element(HTML_TH).setText(""))
+                .addContent(new Element(HTML_TH).setText("Description"))
+                .addContent(new Element(HTML_TH).setText("Amount")));
 
         // Divide the transactions into columns.
         List<TransactionPair> transactionPairs = new ArrayList<>();
@@ -208,12 +216,12 @@ public class ReportHtml extends HyperTextMarkupLanguage {
 
         // Create rows for each pair.
         for(TransactionPair nextPair : transactionPairs) {
-            Element row = new Element("tr");
+            Element row = new Element(HTML_TR);
 
             addTransactionToRow(row,nextPair.getLeft(),this.workingDirectory);
 
-            Element centerColumn = new Element("td");
-            centerColumn.setAttribute("class", "center-column");
+            Element centerColumn = new Element(HTML_TD);
+            centerColumn.setAttribute(HTML_CSS_CLASS, HTML_TD_CENTER);
             row.addContent(centerColumn);
 
             addTransactionToRow(row,nextPair.getRight(),this.workingDirectory);
@@ -225,23 +233,23 @@ public class ReportHtml extends HyperTextMarkupLanguage {
     }
 
     private Element getComparisonRow(String categoryId, CategoryComparison categoryComparison) {
-        Element comparisonRow = new Element("tr");
+        Element comparisonRow = new Element(HTML_TR);
 
         // Image and name
         addImageToRow(comparisonRow,workingDirectory,categoryId);
-        comparisonRow.addContent(new Element("td").setText(categoryComparison.getCategory().getName()));
+        comparisonRow.addContent(new Element(HTML_TD).setText(categoryComparison.getCategory().getName()));
 
         // Amounts
-        addAmountToRow(comparisonRow,categoryComparison.getThisMonth(),"amount","amount amount-debit");
-        addAmountToRow(comparisonRow,categoryComparison.getPreviousMonth(),"amount","amount amount-debit");
+        addAmountToRow(comparisonRow,categoryComparison.getThisMonth(), HTML_TD_AMOUNT, concatenateClass(HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
+        addAmountToRow(comparisonRow,categoryComparison.getPreviousMonth(), HTML_TD_AMOUNT, concatenateClass(HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
 
         // Percentage change, if anything.
         if(categoryComparison.getPreviousMonth().getValue() != 0.0 && categoryComparison.getPercentageChange() != 0.0) {
-            comparisonRow.addContent(new Element("td")
-                    .setAttribute("class", categoryComparison.getPercentageChange() < 0 ? "amount amount-debit" : "amount")
+            comparisonRow.addContent(new Element(HTML_TD)
+                    .setAttribute(HTML_CSS_CLASS, categoryComparison.getPercentageChange() < 0 ? concatenateClass(HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT) : HTML_TD_AMOUNT)
                     .setText(new DecimalFormat("#").format(categoryComparison.getPercentageChange()) + "%"));
         } else {
-            comparisonRow.addContent(new Element("td"));
+            comparisonRow.addContent(new Element(HTML_TD));
         }
 
         return comparisonRow;
@@ -256,15 +264,15 @@ public class ReportHtml extends HyperTextMarkupLanguage {
     }
 
     private Element getComparisonTable(List<Transaction> transactions, List<Transaction> previousTransactions,  boolean month) {
-        Element result = new Element("table");
+        Element result = new Element(HTML_TABLE);
 
         // Add the header.
-        result.addContent(new Element("tr")
-                .addContent(new Element("th"))
-                .addContent(new Element("th"))
-                .addContent(new Element("th").setAttribute("class","total-column").setText("Current Spend"))
-                .addContent(new Element("th").setAttribute("class","total-column").setText(getPreviousTitle(month)))
-                .addContent(new Element("th").setAttribute("class","total-column").setText("Change in Spend")));
+        result.addContent(new Element(HTML_TR)
+                .addContent(new Element(HTML_TH))
+                .addContent(new Element(HTML_TH))
+                .addContent(new Element(HTML_TH).setAttribute(HTML_CSS_CLASS,HTML_TD_TOTAL).setText("Current Spend"))
+                .addContent(new Element(HTML_TH).setAttribute(HTML_CSS_CLASS,HTML_TD_TOTAL).setText(getPreviousTitle(month)))
+                .addContent(new Element(HTML_TH).setAttribute(HTML_CSS_CLASS,HTML_TD_TOTAL).setText("Change in Spend")));
 
         Map<String,CategoryComparison> comparisons = CategoryComparison.categoryCompare(transactions,previousTransactions);
 
@@ -278,16 +286,16 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         }
 
         // Add the totals
-        Element totalRow = new Element("tr");
+        Element totalRow = new Element(HTML_TR);
         result.addContent(totalRow);
 
         totalRow
-            .addContent(new Element("td"))
-            .addContent(new Element("td")
-                .setAttribute("class","total-row")
+            .addContent(new Element(HTML_TD))
+            .addContent(new Element(HTML_TD)
+                .setAttribute(HTML_CSS_CLASS,HTML_TD_ROW)
                 .setText("Total"));
-        addAmountToRow(totalRow, totalThis,"total-row amount","total-row amount amount-debit");
-        addAmountToRow(totalRow, totalPrevious,"total-row amount","total-row amount amount-debit");
+        addAmountToRow(totalRow, totalThis, concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT), concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
+        addAmountToRow(totalRow, totalPrevious, concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT), concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
 
         double totalPercentage = 0.0;
         if(totalPrevious.getValue() != 0.0) {
@@ -296,31 +304,31 @@ public class ReportHtml extends HyperTextMarkupLanguage {
 
         // Add the percentage total.
         if(totalPrevious.getValue() != 0.0 && totalPercentage != 0.0) {
-            totalRow.addContent(new Element("td")
-                    .setAttribute("class", totalPercentage < 0 ? "total-row amount amount-debit" : "total-row amount")
+            totalRow.addContent(new Element(HTML_TD)
+                    .setAttribute(HTML_CSS_CLASS, totalPercentage < 0 ? concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT) : concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT))
                     .setText(new DecimalFormat("#").format(totalPercentage) + "%"));
         } else {
-            totalRow.addContent(new Element("td"));
+            totalRow.addContent(new Element(HTML_TD));
         }
 
         return result;
     }
 
     private Element getMonthReportBody() {
-        Element titleText = new Element("h1")
+        Element titleText = new Element(HTML_STYLE_H1)
                 .addContent(DateTimeFormatter.ofPattern("MMMM yyyy").format(this.reportDate));
 
-        Element pie = new Element("img")
-                .setAttribute("class", "pie")
-                .setAttribute("height", "400px")
-                .setAttribute("width", "400px")
-                .setAttribute("src", this.workingDirectory + "/pie-.png");
+        Element pie = new Element(HTML_IMG)
+                .setAttribute(HTML_CSS_CLASS, HTML_PIE)
+                .setAttribute(HTML_CSS_HEIGHT, formatedUnit(UnitType.PX,400))
+                .setAttribute(HTML_CSS_WIDTH, formatedUnit(UnitType.PX,400))
+                .setAttribute(HTML_SRC_ATTRIBUTE, this.workingDirectory + "/pie-.png");
 
-        Element pageBreak = new Element("p")
-                .setAttribute("style", "page-break-after: always;")
-                .setText("&#xA0;");
+        Element pageBreak = new Element(HTML_P)
+                .setAttribute(HTML_STYLE, "page-break-after: always;")
+                .setText(HTML_NO_BREAK_SPACE);
 
-        return new Element(BODY)
+        return new Element(HTML_BODY)
                 .addContent(titleText)
                 .addContent(pie)
                 .addContent(getComparisonTable(this.transactions, this.previousTransactions, true))
@@ -332,35 +340,35 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         return transactions
                 .stream()
                 .filter(t -> t.getStatement().getId().getMonth() == month)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private Element getAnnualReportBody() {
-        Element titleText = new Element("h1")
+        Element titleText = new Element(HTML_STYLE_H1)
                 .addContent(DateTimeFormatter.ofPattern("yyyy").format(this.reportDate) + " Summary");
 
-        Element pie = new Element("img")
-                .setAttribute("class", "pie")
-                .setAttribute("height", "400px")
-                .setAttribute("width", "400px")
-                .setAttribute("src", this.workingDirectory + "/pie-yr.png");
+        Element pie = new Element(HTML_IMG)
+                .setAttribute(HTML_CSS_CLASS, HTML_PIE)
+                .setAttribute(HTML_CSS_HEIGHT, formatedUnit(UnitType.PX,400))
+                .setAttribute(HTML_CSS_WIDTH, formatedUnit(UnitType.PX,400))
+                .setAttribute(HTML_SRC_ATTRIBUTE, this.workingDirectory + "/pie-yr.png");
 
-        Element body = new Element(BODY)
+        Element body = new Element(HTML_BODY)
                 .addContent(titleText)
                 .addContent(pie)
                 .addContent(getComparisonTable(this.transactions, this.previousTransactions,false));
 
         for(int i = 0; i < 12; i++) {
-            body.addContent(new Element("p")
-                    .setAttribute("style", "page-break-after: always;")
-                    .setText("&#xA0;"));
-            body.addContent(new Element("h1")
+            body.addContent(new Element(HTML_P)
+                    .setAttribute(HTML_STYLE, "page-break-after: always;")
+                    .setText(HTML_NO_BREAK_SPACE));
+            body.addContent(new Element(HTML_STYLE_H1)
                     .addContent(DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of(this.reportDate.getYear(),i + 1,1))));
-            body.addContent(new Element("img")
-                    .setAttribute("class", "pie")
-                    .setAttribute("height", "400px")
-                    .setAttribute("width", "400px")
-                    .setAttribute("src", this.workingDirectory + "/pie-" + i + ".png"));
+            body.addContent(new Element(HTML_IMG)
+                    .setAttribute(HTML_CSS_CLASS, HTML_PIE)
+                    .setAttribute(HTML_CSS_HEIGHT, formatedUnit(UnitType.PX,400))
+                    .setAttribute(HTML_CSS_WIDTH, formatedUnit(UnitType.PX,400))
+                    .setAttribute(HTML_SRC_ATTRIBUTE, this.workingDirectory + "/pie-" + i + ".png"));
 
             List<Transaction> currentMonth = filterTransactions(this.transactions, i+1);
             List<Transaction> previousMonth;

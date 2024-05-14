@@ -10,7 +10,7 @@ public class ReconcileFileLine {
 
     public ReconcileFileLine(int lineNumber, String line) {
         this.line = line;
-        this.columns = Arrays.asList(line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1));
+        this.columns = Arrays.asList(line.split(",(?=(?:[^\"]*+\"[^\"]*\")*+[^\"]*$)", -1));
         this.lineNumber = lineNumber;
     }
 

@@ -46,7 +46,7 @@ public class ReconciliationFileMonitor extends FileSystemWatcher {
         File reconciliationFileLocation = new File(this.applicationProperties.getReconcileFileLocation());
 
         if(!Files.exists(reconciliationFileLocation.toPath())) {
-            LOG.info("Reconciliation file location does not exist " + this.applicationProperties.getReconcileFileLocation() + " - not monitoring.");
+            LOG.info("Reconciliation file location does not exist {} - not monitoring.", this.applicationProperties.getReconcileFileLocation());
             return;
         }
 
@@ -65,7 +65,7 @@ public class ReconciliationFileMonitor extends FileSystemWatcher {
         this.addSourceDirectory(reconciliationFileLocation);
         this.addListener(this.reconciliationFileManager);
 
-        LOG.info(this.applicationProperties.getReconcileFileLocation() + " - monitoring");
+        LOG.info("{}- monitoring", this.applicationProperties.getReconcileFileLocation());
         this.start();
     }
 }

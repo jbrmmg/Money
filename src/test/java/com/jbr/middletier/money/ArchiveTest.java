@@ -21,7 +21,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import java.io.File;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -135,17 +137,17 @@ public class ArchiveTest extends Support {
         archiveManager.scheduledArchive();
 
         // Statements should be deleted
-        count = 0;
-        for(@SuppressWarnings("UnusedAssignment") Statement ignored : statementRepository.findAll()) {
-            count++;
+        List<Statement> statements = new ArrayList<>();
+        for(Statement checkStatement : statementRepository.findAll()) {
+            statements.add(checkStatement);
         }
-        Assert.assertEquals(0,count);
+        Assert.assertEquals(0, statements.size());
 
-        count = 0;
-        for(@SuppressWarnings("UnusedAssignment") Transaction ignored : transactionRepository.findAll()) {
-            count++;
+        List<Transaction> transactions = new ArrayList<>();
+        for(Transaction checkTransaction : transactionRepository.findAll()) {
+            transactions.add(checkTransaction);
         }
-        Assert.assertEquals(0,count);
+        Assert.assertEquals(0,transactions.size());
 
         applicationProperties.setArchiveEnabled(false);
     }

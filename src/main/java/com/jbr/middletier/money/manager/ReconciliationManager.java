@@ -10,6 +10,7 @@ import com.jbr.middletier.money.dto.MatchDataDTO;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
@@ -37,6 +38,7 @@ public class ReconciliationManager {
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
     private final ReconciliationFileRepository reconciliationFileRepository;
 
+    @Autowired
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
                                  CategoryRepository categoryRepository,
                                  AccountRepository accountRepository,
@@ -249,11 +251,11 @@ public class ReconciliationManager {
             Optional<Category> category =  categoryRepository.findById(reconciliationUpdate.getCategoryId());
 
             if(category.isPresent()) {
-                LOG.info("Category updated for - {}", reconciliationUpdate.getId());
+                LOG.info("Category updated for - {} (reconciliation)", reconciliationUpdate.getId());
                 reconciliationData.get().setCategory(category.get());
                 reconciliationRepository.save(reconciliationData.get());
             } else {
-                LOG.info("Invalid category.");
+                LOG.info("Invalid category (reconciliation).");
             }
         } else {
             LOG.info("Invalid id.");
@@ -320,5 +322,16 @@ public class ReconciliationManager {
         }
 
         return result;
+    }
+
+    public List<MatchData> match(String accountId) throws UpdateDeleteAccountException {
+        Optional<Account> account = accountRepository.findById(accountId);
+
+        if(account.isEmpty()) {
+            throw new UpdateDeleteAccountException("Invalid account id." + accountId);
+        }
+
+        lastAccount = account.get();
+        return matchData(account.get());
     }
 }

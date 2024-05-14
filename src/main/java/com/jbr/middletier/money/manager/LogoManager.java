@@ -25,7 +25,7 @@ public class LogoManager {
     }
 
     public ScalableVectorGraphics getSvgLogoForAccount(String accountId, boolean disabled) {
-        LOG.info("Find logo for account id {} (disabled={})", accountId,disabled);
+        LOG.info("Find logo for account id {} (disabled={})", accountId, disabled);
 
         // determine the logo id.
         String logoId = accountId + (disabled ? "T" : "F");

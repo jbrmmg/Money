@@ -1,17 +1,22 @@
 package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.util.FinancialAmount;
+import jakarta.validation.constraints.Pattern;
 
 public class TransactionDTO {
     private int id;
+    @Pattern(regexp="^[\\da-zA-Z]{4}$",message="Account can only contain letters or digits of 4 characters.")
     private String accountId;
+    @Pattern(regexp="^[\\da-zA-Z]{3}$",message="Category can only contain letters or digits of 3 characters.")
     private String categoryId;
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String date;
     private double amount;
     private Integer statementMonth;
 
     private Integer statementYear;
     private Integer oppositeId;
+    @Pattern(regexp="^[\\da-zA-Z\\s!]{1,45}$",message="Description can only contain letters or digits up to 45 characters.")
     private String description;
 
     private Boolean hasStatement;

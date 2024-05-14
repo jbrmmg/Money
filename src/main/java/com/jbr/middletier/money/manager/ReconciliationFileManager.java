@@ -12,6 +12,7 @@ import com.jbr.middletier.money.dto.TransactionFileDetailsDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class ReconciliationFileManager implements FileChangeListener {
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
     private LocalDateTime lastUpdateTime;
 
+    @Autowired
     public ReconciliationFileManager(ApplicationProperties applicationProperties,
                                      ReconcileFormatRepository reconcileFormatRepository,
                                      TransactionMapper transactionMapper,
@@ -57,44 +59,46 @@ public class ReconciliationFileManager implements FileChangeListener {
         this.lastUpdateTime = LocalDateTime.now();
     }
 
-    public List<ReconciliationFileDTO> getFiles() {
+    private void processFile(ReconciliationFile next, TransactionSummaryData fileData) {
+        for(ReconciliationFileTransaction nextTran : reconciliationFileTransactionRepository.findById_File(next)) {
+            fileData.incrementCount();
+
+            if(nextTran.getAmount() > 0) {
+                fileData.incrementCredit(nextTran.getAmount());
+            } else {
+                fileData.incrementDebit(nextTran.getAmount());
+            }
+
+            fileData.updateEarliest(nextTran.getDate());
+            fileData.updateLatest(nextTran.getDate());
+        }
+    }
+
+    private List<ReconciliationFileDTO> processFiles() {
         List<ReconciliationFileDTO> result = new ArrayList<>();
 
         for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
             ReconciliationFileDTO nextFile = transactionMapper.map(next,ReconciliationFileDTO.class);
 
             // Get the details of the file.
-            int transactionCount = 0;
-            double debitSum = 0.0;
-            double creditSum = 0.0;
-            LocalDate earliest = null;
-            LocalDate latest = null;
-            for(ReconciliationFileTransaction nextTran : reconciliationFileTransactionRepository.findById_File(next)) {
-                transactionCount++;
+            TransactionSummaryData fileData = new TransactionSummaryData();
 
-                if(nextTran.getAmount() > 0) {
-                    creditSum += nextTran.getAmount();
-                } else {
-                    debitSum += nextTran.getAmount();
-                }
+            processFile(next,fileData);
 
-                if(earliest == null || nextTran.getDate().isBefore(earliest)) {
-                    earliest = nextTran.getDate();
-                }
-
-                if(latest == null || nextTran.getDate().isAfter(latest)) {
-                    latest = nextTran.getDate();
-                }
-            }
-
-            nextFile.setTransactionCount(transactionCount);
-            nextFile.setCreditSum(creditSum);
-            nextFile.setDebitSum(debitSum);
-            nextFile.setEarliestTransaction(earliest);
-            nextFile.setLatestTransaction(latest);
+            nextFile.setTransactionCount(fileData.getTransactionCount());
+            nextFile.setCreditSum(fileData.getCreditSum());
+            nextFile.setDebitSum(fileData.getDebitSum());
+            nextFile.setEarliestTransaction(fileData.getEarliest());
+            nextFile.setLatestTransaction(fileData.getLatest());
 
             result.add(nextFile);
         }
+
+        return result;
+    }
+
+    public List<ReconciliationFileDTO> getFiles() {
+        List<ReconciliationFileDTO> result = processFiles();
 
         // Sort the list so any bad files are at the bottom.
         result.sort((lhs, rhs) -> {
@@ -137,7 +141,6 @@ public class ReconciliationFileManager implements FileChangeListener {
         return result;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     private boolean validFormattedDate(String dateFormat, String dateValue) {
         try {
             DateTimeFormatter formatter = new DateTimeFormatterBuilder()
@@ -336,18 +339,6 @@ public class ReconciliationFileManager implements FileChangeListener {
         return new ReconcileFileDataUpdateDTO(this.lastUpdateTime,applicationProperties.getReconcileFileLocation());
     }
 
-    @Transactional
-    public void fileDeleted(File deleted) {
-        Optional<ReconciliationFile> dbFile = this.reconciliationFileRepository.findById(deleted.getName());
-        if(dbFile.isPresent()) {
-            this.reconciliationFileTransactionRepository.deleteById_File(dbFile.get());
-            this.reconciliationFileRepository.delete(dbFile.get());
-            this.lastUpdateTime = LocalDateTime.now();
-        }
-
-        LOG.info("Deleted file: {}", deleted);
-    }
-
     @Override
     @Transactional
     public void onChange(Set<ChangedFiles> changeSet) {
@@ -360,13 +351,17 @@ public class ReconciliationFileManager implements FileChangeListener {
                 }
 
                 // What is the change?
-                switch (nextFile.getType()) {
-                    case ADD, MODIFY:
-                        fileUpdated(nextFile.getFile());
-                        break;
-                    case DELETE:
-                        fileDeleted(nextFile.getFile());
-                        break;
+                if (Objects.requireNonNull(nextFile.getType()) == ChangedFile.Type.ADD || nextFile.getType() == ChangedFile.Type.MODIFY) {
+                    fileUpdated(nextFile.getFile());
+                } else if (nextFile.getType() == ChangedFile.Type.DELETE) {
+                    Optional<ReconciliationFile> dbFile = this.reconciliationFileRepository.findById(nextFile.getFile().getName());
+                    if(dbFile.isPresent()) {
+                        this.reconciliationFileTransactionRepository.deleteById_File(dbFile.get());
+                        this.reconciliationFileRepository.delete(dbFile.get());
+                        this.lastUpdateTime = LocalDateTime.now();
+                    }
+
+                    LOG.info("Deleted file: {}", nextFile.getFile());
                 }
             }
         }
