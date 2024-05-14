@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.validation.constraints.Pattern;
 
@@ -109,6 +110,7 @@ public class TransactionDTO {
         this.statementLocked = statementLocked;
     }
 
+    @JsonIgnore
     public FinancialAmount getFinancialAmount() {
         return new FinancialAmount(this.amount);
     }
