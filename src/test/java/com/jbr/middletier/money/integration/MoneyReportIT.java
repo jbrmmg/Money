@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
@@ -117,7 +117,7 @@ public class MoneyReportIT extends Support {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setReconciliationAccount("BANK");
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -139,7 +139,7 @@ public class MoneyReportIT extends Support {
         filter.setReconciliationAccount("BANK");
         filter.setFromReconciled(true);
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -160,7 +160,7 @@ public class MoneyReportIT extends Support {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(true);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
@@ -175,7 +175,7 @@ public class MoneyReportIT extends Support {
         filter.setFromReconciled(false);
         filter.setPredicted(true);
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -197,7 +197,7 @@ public class MoneyReportIT extends Support {
         filter.setFromReconciled(false);
         filter.setPredicted(false);
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -220,7 +220,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setLocked(false);
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -250,7 +250,7 @@ public class MoneyReportIT extends Support {
         filter.setLocked(false);
         filter.setAccounts(List.of(account));
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -277,7 +277,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setCategories(List.of(category));
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -300,7 +300,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setDateRange(new DateRangeDTO("2023-04-20",null));
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -323,12 +323,48 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setValueRange(new ValueRangeDTO(-20,15));
 
-        MvcResult result = getMockMvc().perform(get("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(23)))
                 .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testNull() throws Exception {
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content("{\"reconciliationAccount\": \"BANK\"}")
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(59)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFromString() throws Exception {
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content("{\"accounts\":[],\"categories\":[],\"reconciliationAccount\":\"BANK\",\"predicated\":false,\"locked\":false,\"fromReconciled\":false}")
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(41)))
+                .andExpect(jsonPath("openBalance.value", is(630.16)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
