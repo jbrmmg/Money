@@ -36,7 +36,7 @@ public class TransactionController {
                                                                         @RequestParam(value="from", required = false) @Pattern(regexp="^\\d{4}-\\d{2}-\\d{2}$",message="From must be valid date in format yyyy-dd-mm") String from,
                                                                         @RequestParam(value="to", required = false) @Pattern(regexp="^\\d{4}-\\d{2}-\\d{2}$",message="To must be valid date in format yyyy-dd-mm") String to,
                                                                         @RequestParam(value="category", required = false) @Pattern(regexp="^[a-zA-Z,]*$",message="Category must be a comma separated list of ids") String category,
-                                                                        @RequestParam(value="account", required = false) @Pattern(regexp="^[a-zA-Z,]*$",message="Account must be a comma separated list of ids") String account,
+                                                                        @RequestParam(value="account", required = false) @Pattern(regexp="^[\\da-zA-Z,]*$",message="Account must be a comma separated list of ids") String account,
                                                                         @RequestParam(value="sortAscending", required = false) Boolean sortAscending) throws InvalidTransactionSearchException {
 
         LOG.info("Get Transactions {} {} {} {} {} {}", type, from, to, category, account, sortAscending);
@@ -52,7 +52,7 @@ public class TransactionController {
                                                           @RequestParam(value="from", required = false) @Pattern(regexp="^\\d{4}-\\d{2}-\\d{2}$",message="From must be valid date in format yyyy-dd-mm") String from,
                                                           @RequestParam(value="to", required = false) @Pattern(regexp="^\\d{4}-\\d{2}-\\d{2}$",message="To must be valid date in format yyyy-dd-mm") String to,
                                                           @RequestParam(value="category", required = false) @Pattern(regexp="^[a-zA-Z,]*$",message="Category must be a comma separated list of ids") String category,
-                                                          @RequestParam(value="account", required = false) @Pattern(regexp="^[a-zA-Z,]*$",message="Account must be a comma separated list of ids") String account,
+                                                          @RequestParam(value="account", required = false) @Pattern(regexp="^[\\da-zA-Z,]*$",message="Account must be a comma separated list of ids") String account,
                                                           @RequestParam(value="sortAscending", required = false) Boolean sortAscending) throws InvalidTransactionSearchException {
         return this.getExtTransactionsExt(type,from,to,category,account,sortAscending);
     }
