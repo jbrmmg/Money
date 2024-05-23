@@ -17,7 +17,7 @@ public class TransactionDTO {
 
     private Integer statementYear;
     private Integer oppositeId;
-    @Pattern(regexp= "^\\P{C}{1,45}$",message="Description can contain any character that is not a control character.")
+    @Pattern(regexp= "^[\\da-zA-Z ./?\\-*#'&():+-,!]{1,40}$",message="Description can contain only digits, letters or ./?-*#'&():+-,!.")
     private String description;
 
     private Boolean hasStatement;
