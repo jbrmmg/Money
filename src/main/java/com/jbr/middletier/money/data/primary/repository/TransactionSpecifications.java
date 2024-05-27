@@ -1,8 +1,8 @@
-package com.jbr.middletier.money.dataaccess;
+package com.jbr.middletier.money.data.primary.repository;
 
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.Category;
+import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.util.DateRange;
 import org.springframework.data.jpa.domain.Specification;
 

@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.Regular;
+import com.jbr.middletier.money.data.primary.Regular;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;

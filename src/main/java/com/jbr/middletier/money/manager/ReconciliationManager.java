@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.*;
+import com.jbr.middletier.money.data.primary.*;
+import com.jbr.middletier.money.data.primary.repository.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.ReconciliationMapper;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
@@ -19,8 +19,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
-import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.accountIs;
-import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.notLocked;
+import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.accountIs;
+import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.notLocked;
 
 @Controller
 public class ReconciliationManager {

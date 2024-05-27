@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.dto.mapper;
 
-import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.dto.AccountDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;

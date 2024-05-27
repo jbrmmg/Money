@@ -1,4 +1,4 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.data.primary;
 
 import com.jbr.middletier.money.util.TransactionString;
 

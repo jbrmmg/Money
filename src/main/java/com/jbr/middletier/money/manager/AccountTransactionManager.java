@@ -1,10 +1,10 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.Constants;
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.CategoryRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.data.primary.*;
+import com.jbr.middletier.money.data.primary.repository.AccountRepository;
+import com.jbr.middletier.money.data.primary.repository.CategoryRepository;
+import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
@@ -22,8 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.*;
 
-import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.*;
-import static com.jbr.middletier.money.dataaccess.TransactionSpecifications.categoryIn;
+import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.*;
+import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.categoryIn;
 
 
 @Controller

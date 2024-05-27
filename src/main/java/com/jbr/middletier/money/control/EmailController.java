@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.OkStatus;
+import com.jbr.middletier.money.data.primary.OkStatus;
 import com.jbr.middletier.money.dto.EmailRequestDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.reporting.EmailGenerator;

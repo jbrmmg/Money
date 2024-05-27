@@ -1,6 +1,6 @@
-package com.jbr.middletier.money.dataaccess;
+package com.jbr.middletier.money.data.primary.repository;
 
-import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.data.primary.Account;
 import org.springframework.data.repository.CrudRepository;
 
 /**

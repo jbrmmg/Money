@@ -1,7 +1,10 @@
 package com.jbr.middletier.money.reporting;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.StatementId;
+import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.dto.EmailRequestDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.manager.AccountManager;
@@ -70,7 +73,7 @@ public class EmailGenerator {
                     emailTransactions.add(nextTransaction);
                 }
 
-                transactions = transactionManager.getInternalTransactionsForStatement(nextAccount,StatementId.getPreviousId(nextStatement.getId()));
+                transactions = transactionManager.getInternalTransactionsForStatement(nextAccount, StatementId.getPreviousId(nextStatement.getId()));
                 for (Transaction nextTransaction : transactions) {
                     if (nextTransaction.getDate().isAfter(oldest)) {
                         transactionTotal2.increment(nextTransaction.getAmount().getValue());

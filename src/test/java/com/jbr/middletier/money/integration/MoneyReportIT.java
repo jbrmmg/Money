@@ -2,8 +2,8 @@ package com.jbr.middletier.money.integration;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.Support;
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
+import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import org.junit.*;
 import org.junit.runner.RunWith;

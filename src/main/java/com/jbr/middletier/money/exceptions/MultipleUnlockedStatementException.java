@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.exceptions;
 
-import com.jbr.middletier.money.data.Account;
+import com.jbr.middletier.money.data.primary.Account;
 import org.springframework.http.HttpStatus;
 
 public class MultipleUnlockedStatementException extends MoneyException {

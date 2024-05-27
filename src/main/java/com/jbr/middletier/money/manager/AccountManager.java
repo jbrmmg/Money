@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
+import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.mapper.AccountMapper;
 import com.jbr.middletier.money.exceptions.CreateAccountException;

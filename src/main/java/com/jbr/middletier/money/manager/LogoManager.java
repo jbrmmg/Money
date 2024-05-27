@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.data.LogoDefinition;
-import com.jbr.middletier.money.dataaccess.LogoDefinitionRepository;
+import com.jbr.middletier.money.data.primary.LogoDefinition;
+import com.jbr.middletier.money.data.primary.repository.LogoDefinitionRepository;
 import com.jbr.middletier.money.xml.svg.LogoSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.slf4j.Logger;

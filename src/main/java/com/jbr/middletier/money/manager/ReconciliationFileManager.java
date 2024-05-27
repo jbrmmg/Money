@@ -1,12 +1,12 @@
 package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.ReconciliationFileRepository;
-import com.jbr.middletier.money.dataaccess.ReconciliationFileTransactionRepository;
+import com.jbr.middletier.money.data.primary.*;
+import com.jbr.middletier.money.data.primary.repository.ReconciliationFileRepository;
+import com.jbr.middletier.money.data.primary.repository.ReconciliationFileTransactionRepository;
 import com.jbr.middletier.money.dto.ReconcileFileDataUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
-import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
+import com.jbr.middletier.money.data.primary.repository.ReconcileFormatRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.TransactionFileDetailsDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;

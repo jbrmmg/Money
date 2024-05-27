@@ -1,4 +1,4 @@
-package com.jbr.middletier.money.data;
+package com.jbr.middletier.money.data.primary;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
