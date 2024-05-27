@@ -116,6 +116,18 @@ public class TransactionFilter {
         return true;
     }
 
+    private boolean transactionPassDescription(TransactionReportDTO transaction, TransactionFilterDTO filter) {
+        if(filter.getDescription() == null) {
+            return true;
+        }
+
+        // Check if the description contains the filter.
+        String description = transaction.getDescription().replaceAll("\\s+", " ");
+        description = description.replaceAll("[^\\da-zA-Z ]", "").toLowerCase();
+
+        return description.contains(filter.getDescription().toLowerCase());
+    }
+
     private Optional<TransactionReportDTO> internalPassTransaction(TransactionReportDTO transaction, TransactionFilterDTO filter) {
         // Make sure the transaction passes the filters.
         if(!transactionPassFilterLocked(transaction, filter)) {
@@ -140,6 +152,26 @@ public class TransactionFilter {
 
         if(!transactionPassFilterStatement(transaction, filter)) {
             return Optional.empty();
+        }
+
+        if(!transactionPassDescription(transaction, filter)) {
+            return Optional.empty();
+        }
+
+        // Set the actions that are allowed.
+        if(transaction.getFromReconciliation() && transaction.getId() == null) {
+            transaction.addAction(TransactionAction.UPDATE_CATEGORY);
+        } else if ( transaction.getPredicted() ) {
+            transaction.addAction(TransactionAction.UPDATE_CATEGORY);
+        } else if(transaction.getStatement() != null) {
+            transaction.addAction(TransactionAction.UPDATE_CATEGORY);
+            if(!transaction.getStatement().getLocked()) {
+                transaction.addAction(TransactionAction.UNRECONCILE);
+            }
+        } else {
+            transaction.addAction(TransactionAction.DELETE);
+            transaction.addAction(TransactionAction.UPDATE_DETAILS);
+            transaction.addAction(TransactionAction.RECONCILE);
         }
 
         return Optional.of(transaction);
