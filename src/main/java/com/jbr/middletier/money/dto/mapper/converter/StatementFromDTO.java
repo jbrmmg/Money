@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.data.StatementId;
+import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.StatementId;
 import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.manager.AccountManager;
 import org.modelmapper.AbstractConverter;

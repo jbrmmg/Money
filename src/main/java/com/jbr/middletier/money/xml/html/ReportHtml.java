@@ -4,7 +4,7 @@ import com.helger.css.ECSSVersion;
 import com.helger.css.decl.*;
 import com.helger.css.writer.CSSWriter;
 import com.helger.css.writer.CSSWriterSettings;
-import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.util.CategoryComparison;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.apache.commons.text.WordUtils;

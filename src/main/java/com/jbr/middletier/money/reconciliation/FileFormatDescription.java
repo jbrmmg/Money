@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.reconciliation;
 
-import com.jbr.middletier.money.data.ReconcileFormat;
-import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
+import com.jbr.middletier.money.data.primary.ReconcileFormat;
+import com.jbr.middletier.money.data.primary.repository.ReconcileFormatRepository;
 import com.jbr.middletier.money.manager.ReconcileFileLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -4,7 +4,7 @@ import com.helger.css.ECSSVersion;
 import com.helger.css.decl.*;
 import com.helger.css.writer.CSSWriter;
 import com.helger.css.writer.CSSWriterSettings;
-import com.jbr.middletier.money.data.LogoDefinition;
+import com.jbr.middletier.money.data.primary.LogoDefinition;
 import org.jdom2.*;
 
 public class LogoSvg extends ScalableVectorGraphics {

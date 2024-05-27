@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.xml.svg;
 
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.data.primary.Category;
+import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.util.CategoryPercentageHelper;
 import org.jdom2.Element;
 import org.jdom2.Namespace;

@@ -1,7 +1,7 @@
-package com.jbr.middletier.money.dataaccess;
+package com.jbr.middletier.money.data.primary.repository;
 
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Transaction;
+import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.Transaction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;

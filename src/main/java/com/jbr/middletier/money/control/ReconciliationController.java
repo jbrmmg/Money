@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.data.primary.OkStatus;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;

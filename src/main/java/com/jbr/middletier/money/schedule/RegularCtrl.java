@@ -1,10 +1,10 @@
 package com.jbr.middletier.money.schedule;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.Regular;
-import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dataaccess.RegularRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.data.primary.Regular;
+import com.jbr.middletier.money.data.primary.Transaction;
+import com.jbr.middletier.money.data.primary.repository.RegularRepository;
+import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

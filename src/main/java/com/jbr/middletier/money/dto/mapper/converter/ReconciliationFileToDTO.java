@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
-import com.jbr.middletier.money.data.ReconciliationFile;
+import com.jbr.middletier.money.data.primary.ReconciliationFile;
 import com.jbr.middletier.money.dto.AccountDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.mapper.AccountMapper;

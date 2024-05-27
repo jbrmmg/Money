@@ -1,8 +1,8 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.Regular;
-import com.jbr.middletier.money.dataaccess.RegularRepository;
+import com.jbr.middletier.money.data.primary.Regular;
+import com.jbr.middletier.money.data.primary.repository.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
 import com.jbr.middletier.money.dto.mapper.RegularMapper;
 import org.junit.Assert;
