@@ -72,8 +72,34 @@ public class MoneyReportIT extends Support {
         return String.format(format, value == null ? "" : value);
     }
 
+    private String getActionString(List<TransactionAction> actions) {
+        StringBuilder result = new StringBuilder();
+        for(TransactionAction action : actions) {
+            switch (action) {
+                case DELETE -> result.append("D");
+                case UNRECONCILE -> result.append("U");
+                case RECONCILE -> result.append("R");
+                case UPDATE_CATEGORY -> result.append("C");
+                case UPDATE_DETAILS -> result.append("A");
+            }
+        }
+
+        return result.toString();
+    }
+
+    private String cleanResponseJson(String json) {
+        // Change the action JSON to just the value.
+        String result = json.replace("{\"icon\":\"fa-align-justify\",\"colour\":\"FFFFFF\",\"actionName\":\"category\"}","\"UPDATE_CATEGORY\"");
+        result = result.replace("{\"icon\":\"fa-pencil\",\"colour\":\"FFFFFF\",\"actionName\":\"update\"}","\"UPDATE_DETAILS\"");
+        result = result.replace("{\"icon\":\"fa-check\",\"colour\":\"FFFFFF\",\"actionName\":\"reconcile\"}","\"RECONCILE\"");
+        result = result.replace("{\"icon\":\"fa-times\",\"colour\":\"FFFFFF\",\"actionName\":\"un-reconcile\"}","\"UNRECONCILE\"");
+        result = result.replace("{\"icon\":\"fa-trash\",\"colour\":\"FF0000\",\"actionName\":\"delete\"}","\"DELETE\"");
+
+        return result;
+    }
+
     private void logTransactionData(TransactionDataDTO transactionData) {
-        LOG.info("-----------------------------------------------------------------------------------------------------------------------------------------------------------");
+        LOG.info("-----------------------------------------------------------------------------------------------------------------------------------------------------------------");
         LOG.info("TRANSACTION DETAILS");
         LOG.info("  Open    {} {}", transactionData.getOpenDate(), transactionData.getOpenBalance().toFormattedString(12));
         LOG.info("  Today   {} {}", transactionData.getToday(), transactionData.getTodayBalance().toFormattedString(12));
@@ -81,7 +107,7 @@ public class MoneyReportIT extends Support {
         LOG.info("");
         int row = 1;
         for(TransactionReportDTO next : transactionData.getTransactions()) {
-            LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} |",
+            LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} |",
                     getNumberString(row,3),
                     getNumberString(next.getId(),6),
                     next.getDate(),
@@ -94,12 +120,13 @@ public class MoneyReportIT extends Support {
                     getPaddedString(next.getStatement() == null ? "" : next.getStatement().getYear().toString(),4),
                     getPaddedString(next.getStatement() == null ? "" : next.getStatement().getMonth().toString(),2),
                     getPaddedString(next.getStatement() == null ? "" : next.getStatement().getLocked() ? "locked" : "",6),
+                    getPaddedString(getActionString(next.getActions()),5),
                     getPaddedString(next.getFromReconciliation() ? "Rec" : "",3),
                     getPaddedString(next.getPredicted() ? "Predict" : "",7),
                     getPaddedString(next.getDescription(),40));
             row++;
         }
-        LOG.info("-----------------------------------------------------------------------------------------------------------------------------------------------------------");
+        LOG.info("-----------------------------------------------------------------------------------------------------------------------------------------------------------------");
     }
 
     @Before
@@ -129,7 +156,29 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterDescription() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setReconciliationAccount("BANK");
+        filter.setDescription("sainsburys");
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(2)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-27")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -151,7 +200,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -187,7 +236,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -209,7 +258,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -232,7 +281,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -262,7 +311,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -289,7 +338,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -312,7 +361,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -335,7 +384,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -353,7 +402,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -371,7 +420,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 }

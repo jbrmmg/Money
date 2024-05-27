@@ -21,6 +21,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
@@ -756,5 +758,52 @@ public class PoJoTest {
 
         FinancialAmount financialAmount = new FinancialAmount(12.89);
         Assert.assertEquals(12.89,utilityMapper.map(financialAmount,Double.class),0.01);
+    }
+
+    @Test
+    public void testTransactionAction() {
+        TransactionAction test = TransactionAction.getTransactionAction("delete");
+        Assert.assertEquals("delete", test.getActionName());
+        Assert.assertEquals("fa-trash", test.getIcon());
+        Assert.assertEquals("FF0000", test.getColour());
+        Assert.assertEquals(TransactionAction.DELETE,test);
+    }
+
+    @Test
+    public void testTransactionReport() {
+        List<TransactionAction> actions = new ArrayList<>();
+        actions.add(TransactionAction.getTransactionAction("delete"));
+
+        AccountDTO account = new AccountDTO();
+        account.setId("BBCD");
+
+        StatementDTO statement = new StatementDTO();
+        statement.setAccountId(account.getId());
+        statement.setYear(2023);
+        statement.setMonth(3);
+
+        TransactionReportDTO test = new TransactionReportDTO();
+        test.setActions(actions);
+        test.setBalance(new FinancialAmount(12.3));
+        test.setId(10);
+        test.setOppositeId(90);
+        test.setPredicted(false);
+        test.setAccount(account);
+        test.setFromReconciliation(false);
+        test.setAmount(new FinancialAmount(84.32));
+        test.setStatement(statement);
+        test.setDescription("Testing");
+
+        Assert.assertEquals(1,test.getActions().size());
+        Assert.assertEquals(12.3,test.getBalance().getValue(),0.1);
+        Assert.assertEquals(10,test.getId().intValue());
+        Assert.assertEquals(90,test.getOppositeId().intValue());
+        Assert.assertEquals(false,test.getPredicted());
+        Assert.assertEquals("BBCD",test.getAccount().getId());
+        Assert.assertEquals(false,test.getFromReconciliation());
+        Assert.assertEquals(84.32,test.getAmount().getValue(),0.1);
+        Assert.assertEquals(2023,test.getStatement().getYear().intValue());
+        Assert.assertEquals(3,test.getStatement().getMonth().intValue());
+        Assert.assertEquals("Testing",test.getDescription());
     }
 }
