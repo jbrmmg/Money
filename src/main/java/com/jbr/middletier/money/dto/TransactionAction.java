@@ -1,14 +1,15 @@
 package com.jbr.middletier.money.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.jbr.middletier.money.config.Constants;
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum TransactionAction {
-    UPDATE_CATEGORY("category", "fa-align-justify", "FFFFFF"),
-    UPDATE_DETAILS("update", "fa-pencil", "FFFFFF"),
-    RECONCILE("reconcile", "fa-check", "FFFFFF"),
-    UNRECONCILE("un-reconcile", "fa-times", "FFFFFF"),
-    DELETE("delete", "fa-trash", "FF0000");
+    UPDATE_CATEGORY("category", "fa-align-justify", Constants.COLOUR_WHITE),
+    UPDATE_DETAILS("update", "fa-pencil", Constants.COLOUR_WHITE),
+    RECONCILE("reconcile", "fa-check", Constants.COLOUR_WHITE),
+    UNRECONCILE("un-reconcile", "fa-times", Constants.COLOUR_WHITE),
+    DELETE("delete", "fa-trash", Constants.COLOUR_RED);
 
     private final String action;
     private final String icon;
