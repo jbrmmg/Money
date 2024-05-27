@@ -13,6 +13,9 @@ public class Constants {
     public static final String MONEY_LATEST_DATE_STRING = "2199-12-31";
     public static final LocalDate MONEY_LATEST_DATE = LocalDate.parse(MONEY_LATEST_DATE_STRING,MONEY_DATE_FORMATTER);
 
+    public static final String COLOUR_WHITE = "FFFFFF";
+    public static final String COLOUR_RED = "FF0000";
+
     private Constants() {
         // Prevent instantiation.
     }

@@ -159,9 +159,9 @@ public class TransactionFilter {
         }
 
         // Set the actions that are allowed.
-        if(transaction.getFromReconciliation() && transaction.getId() == null) {
+        if(Boolean.TRUE.equals(transaction.getFromReconciliation()) && transaction.getId() == null) {
             transaction.addAction(TransactionAction.UPDATE_CATEGORY);
-        } else if ( transaction.getPredicted() ) {
+        } else if (Boolean.TRUE.equals(transaction.getPredicted())) {
             transaction.addAction(TransactionAction.UPDATE_CATEGORY);
         } else if(transaction.getStatement() != null) {
             transaction.addAction(TransactionAction.UPDATE_CATEGORY);
