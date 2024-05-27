@@ -233,8 +233,19 @@ public class TransactionReportManager {
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {
+        // Opening date is the earliest date.
         if(!transactions.isEmpty()) {
-            return transactions.get(0).getDate();
+            LocalDate earliestDate = LocalDate.parse(transactions.get(0).getDate(),Constants.MONEY_DATE_FORMATTER);
+
+            for(TransactionReportDTO transaction : transactions) {
+                LocalDate nextDate = LocalDate.parse(transaction.getDate(),Constants.MONEY_DATE_FORMATTER);
+
+                if(nextDate.isBefore(earliestDate)) {
+                    earliestDate = nextDate;
+                }
+            }
+
+            return earliestDate.format(Constants.MONEY_DATE_FORMATTER);
         }
 
         return "";
@@ -292,7 +303,7 @@ public class TransactionReportManager {
         result.getTransactions().addAll(getStandardTransactions(filter));
 
         // Remove any reconciled transaction where the transaction is also present, then sort the transactions.
-        result.removeDuplicatesAndSort();
+        result.removeDuplicatesAndSort(filter);
 
         // Calculate the opening details
         result.setOpenBalance(calculateOpeningBalance(filter));

@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -416,6 +417,145 @@ public class MoneyReportIT extends Support {
                 .andExpect(jsonPath("openBalance.value", is(630.16)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testSorting() throws Exception {
+        List<TransactionSortDTO> transactionSortList = new ArrayList<>();
+        transactionSortList.add(new TransactionSortDTO(TransactionSortField.DATE,TransactionSortType.ASCENDING));
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(true);
+        filter.setTransactionSorts(transactionSortList);
+
+        Assert.assertEquals(1,filter.getTransactionSorts().size());
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-05-24")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andExpect(jsonPath("$.transactions[0].description", is("Octopus")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testSortingAmount() throws Exception {
+        List<TransactionSortDTO> transactionSortList = new ArrayList<>();
+        transactionSortList.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.DESCENDING));
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(true);
+        filter.setTransactionSorts(transactionSortList);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-05-24")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andExpect(jsonPath("$.transactions[0].description", is("Wages")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testSortingAccount() throws Exception {
+        List<TransactionSortDTO> transactionSortList = new ArrayList<>();
+        transactionSortList.add(new TransactionSortDTO(TransactionSortField.ACCOUNT,TransactionSortType.ASCENDING));
+        transactionSortList.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.DESCENDING));
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(true);
+        filter.setTransactionSorts(transactionSortList);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-05-24")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andExpect(jsonPath("$.transactions[0].description", is("Disney Plus")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testSortingCategory() throws Exception {
+        List<TransactionSortDTO> transactionSortList = new ArrayList<>();
+        transactionSortList.add(new TransactionSortDTO(TransactionSortField.CATEGORY,TransactionSortType.ASCENDING));
+        transactionSortList.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.DESCENDING));
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(true);
+        filter.setTransactionSorts(transactionSortList);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-05-24")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andExpect(jsonPath("$.transactions[0].description", is("Council Tax")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testSortingDescription() throws Exception {
+        List<TransactionSortDTO> transactionSortList = new ArrayList<>();
+        transactionSortList.add(new TransactionSortDTO(TransactionSortField.DESCRIPTION,TransactionSortType.DESCENDING));
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(true);
+        filter.setTransactionSorts(transactionSortList);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openDate", is("2023-05-24")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andExpect(jsonPath("$.transactions[3].description", is("Netflix")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 

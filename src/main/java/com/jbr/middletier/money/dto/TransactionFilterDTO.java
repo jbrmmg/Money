@@ -22,6 +22,7 @@ public class TransactionFilterDTO {
     private String reconciliationAccount;
     @Pattern(regexp="^[\\da-zA-Z ]*$",message="Description can only contain digits, letters and spaces.")
     private String description;
+    private List<TransactionSortDTO> transactionSorts;
 
     public ValueRangeDTO getValueRange() {
         if(this.valueRange == null) {
@@ -121,6 +122,22 @@ public class TransactionFilterDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<TransactionSortDTO> getTransactionSorts() {
+        // If the sort definition is null or empty then return the minimum.
+        if(this.transactionSorts == null || this.transactionSorts.isEmpty()) {
+            List<TransactionSortDTO> defaultSorting = new ArrayList<>();
+            defaultSorting.add(new TransactionSortDTO(TransactionSortField.DATE,TransactionSortType.ASCENDING));
+            defaultSorting.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.ASCENDING));
+            return defaultSorting;
+        }
+
+        return transactionSorts;
+    }
+
+    public void setTransactionSorts(List<TransactionSortDTO> transactionSorts) {
+        this.transactionSorts = transactionSorts;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.util.FinancialAmount;
+import com.jbr.middletier.money.util.TransactionSorting;
 import jakarta.validation.constraints.Pattern;
 
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public class TransactionDataDTO {
         this.forwardBalance = forwardBalance;
     }
 
-    public void removeDuplicatesAndSort() {
+    public void removeDuplicatesAndSort(TransactionFilterDTO filter) {
         List<TransactionReportDTO> duplicates = new ArrayList<>();
 
         // Look for duplicates
@@ -100,14 +101,6 @@ public class TransactionDataDTO {
         this.transactions.removeAll(duplicates);
 
         // Sort the transactions.
-        this.transactions.sort((t1,t2) -> {
-            // Sort first by date.
-            if(!t1.getDate().equals(t2.getDate())) {
-                return t1.getDate().compareTo(t2.getDate());
-            }
-
-            // Sort by the amounts.
-            return Double.compare(t1.getAmount().getValue(),t2.getAmount().getValue());
-        });
+        this.transactions.sort((t1,t2) -> TransactionSorting.compare(t1,t2,filter.getTransactionSorts()));
     }
 }

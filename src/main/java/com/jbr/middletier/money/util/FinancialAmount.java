@@ -2,12 +2,13 @@ package com.jbr.middletier.money.util;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 
 @JsonSerialize(using = FinancialAmountSerializer.class)
 @JsonDeserialize(using = FinancialAmountDeserializer.class)
-public class FinancialAmount {
+public class FinancialAmount implements Comparable<FinancialAmount> {
     private double value;
 
     public FinancialAmount(double value) {
@@ -72,5 +73,11 @@ public class FinancialAmount {
     @Override
     public String toString() {
         return internalToString(this.value);
+    }
+
+    @Override
+    public int compareTo(@NotNull FinancialAmount financialAmount) {
+        Double internalValue = this.value;
+        return internalValue.compareTo(financialAmount.value);
     }
 }

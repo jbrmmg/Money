@@ -19,6 +19,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -805,5 +808,21 @@ public class PoJoTest {
         Assert.assertEquals(2023,test.getStatement().getYear().intValue());
         Assert.assertEquals(3,test.getStatement().getMonth().intValue());
         Assert.assertEquals("Testing",test.getDescription());
+    }
+
+    @Test
+    public void testTransactionSort() throws IOException {
+        TransactionSortDTO test = new TransactionSortDTO();
+        test.setField(TransactionSortField.CATEGORY);
+        test.setType(TransactionSortType.DESCENDING);
+
+        Assert.assertEquals(TransactionSortField.CATEGORY,test.getField());
+        Assert.assertEquals(TransactionSortType.DESCENDING,test.getType());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        test = objectMapper.readValue("{\"field\":\"AMOUNT\",\"type\":\"ASCENDING\"}", TransactionSortDTO.class);
+        Assert.assertEquals(TransactionSortField.AMOUNT,test.getField());
+        Assert.assertEquals(TransactionSortType.ASCENDING,test.getType());
     }
 }
