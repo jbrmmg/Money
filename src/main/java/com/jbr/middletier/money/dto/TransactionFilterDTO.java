@@ -20,6 +20,8 @@ public class TransactionFilterDTO {
     private Boolean fromReconciled;
     @Pattern(regexp="^[\\da-zA-Z]{4}$",message="Account can only contain letters or digits of 4 characters.")
     private String reconciliationAccount;
+    @Pattern(regexp="^[\\da-zA-Z ]*$",message="Description can only contain digits, letters and spaces.")
+    private String description;
 
     public ValueRangeDTO getValueRange() {
         if(this.valueRange == null) {
@@ -113,6 +115,14 @@ public class TransactionFilterDTO {
         this.reconciliationAccount = reconciliationAccount;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -165,6 +175,13 @@ public class TransactionFilterDTO {
             builder.append("any");
         } else {
             builder.append(this.getReconciliationAccount());
+        }
+
+        builder.append(", description: ");
+        if(this.getDescription() == null) {
+            builder.append("all");
+        } else {
+            builder.append(this.getDescription());
         }
 
         return builder.toString();

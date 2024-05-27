@@ -1,7 +1,11 @@
 package com.jbr.middletier.money.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.validation.constraints.Pattern;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TransactionReportDTO {
     private Integer id;
@@ -17,6 +21,12 @@ public class TransactionReportDTO {
     private StatementDTO statement;
     private Boolean predicted;
     private Boolean fromReconciliation;
+
+    private List<TransactionAction> actions;
+
+    public TransactionReportDTO() {
+        this.actions = new ArrayList<>();
+    }
 
     public Integer getId() {
         return id;
@@ -104,6 +114,19 @@ public class TransactionReportDTO {
 
     public void setStatement(StatementDTO statement) {
         this.statement = statement;
+    }
+
+    public List<TransactionAction> getActions() {
+        return actions;
+    }
+
+    public void setActions(List<TransactionAction> actions) {
+        this.actions = actions;
+    }
+
+    @JsonIgnore
+    public void addAction(TransactionAction action) {
+        this.actions.add(action);
     }
 
     @Override
