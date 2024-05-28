@@ -6,7 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="logoDefinition")
+@Table(name="logo_definition")
 public class LogoDefinition {
     @Id
     @Column(name = "id", nullable = false)

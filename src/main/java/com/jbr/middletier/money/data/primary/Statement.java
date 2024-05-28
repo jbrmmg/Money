@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
  */
 
 @Entity
-@Table(name="Statement")
+@Table(name="statement")
 public class Statement {
     @EmbeddedId
     private StatementId id;

@@ -13,7 +13,7 @@ import java.io.Serializable;
  */
 
 @Entity
-@Table(name="Account")
+@Table(name="account")
 public class Account implements Serializable {
     @Id
     @Column(name="id")

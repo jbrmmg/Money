@@ -11,7 +11,7 @@ import javax.validation.constraints.Size;
  * Created by jason on 04/03/17.
  */
 @Entity
-@Table(name="Category")
+@Table(name="category")
 public class Category {
     @Id
     @NotNull
@@ -44,7 +44,7 @@ public class Category {
     private String group;
 
     @NotNull
-    @Column(name="systemUse")
+    @Column(name="system_use")
     private Boolean systemUse;
 
     public String getId() {

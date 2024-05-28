@@ -13,7 +13,7 @@ import java.time.LocalDate;
  * Created by jason on 07/03/17.
  */
 @Entity
-@Table(name="Transaction")
+@Table(name="transaction")
 public class Transaction {
     @Id
     @Column(name="id")

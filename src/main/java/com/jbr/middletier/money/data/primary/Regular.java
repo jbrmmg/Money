@@ -11,7 +11,7 @@ import javax.validation.constraints.Size;
 import java.time.LocalDate;
 
 @Entity
-@Table(name="Regular")
+@Table(name="regular")
 public class Regular {
     @Id
     @Column(name="id")
