@@ -73,7 +73,7 @@ public class ConfigDbPrimary {
     @Value("${spring.jpa.properties.hibernate.format_sql:false}")
     private String hibernateFormatSql;
 
-    Map<String,?> additionalJpaProperties() {
+    Map<String,String> additionalJpaProperties() {
         Map<String,String> map = new HashMap<>();
 
         map.put("hibernate.hbm2ddl.auto", hibernateHbm2ddlAuto);
