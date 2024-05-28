@@ -9,7 +9,7 @@ import java.time.LocalDate;
  * Created by jason on 11/04/17.
  */
 @Entity
-@Table(name="ReconciliationData")
+@Table(name="reconciliation_data")
 public class ReconciliationData {
     @Id
     @Column(name="id")

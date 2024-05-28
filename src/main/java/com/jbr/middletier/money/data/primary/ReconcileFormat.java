@@ -9,25 +9,25 @@ public class ReconcileFormat {
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column
+    @Column(name="header_line")
     private String headerLine;
 
-    @Column
+    @Column(name="first_line")
     private Integer firstLine;
 
-    @Column
+    @Column(name="date_column")
     private Integer dateColumn;
 
-    @Column
+    @Column(name="date_format")
     private String dateFormat;
 
-    @Column
+    @Column(name="description_column")
     private Integer descriptionColumn;
 
-    @Column
+    @Column(name="amount_in_column")
     private Integer amountInColumn;
 
-    @Column
+    @Column(name="amount_out_column")
     private Integer amountOutColumn;
 
     @Column

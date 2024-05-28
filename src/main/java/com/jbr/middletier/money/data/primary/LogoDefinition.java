@@ -12,28 +12,28 @@ public class LogoDefinition {
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column
+    @Column(name="font_size")
     private Integer fontSize;
 
     @Column
     private Integer y;
 
-    @Column
+    @Column(name="fill_colour")
     private String fillColour;
 
-    @Column
+    @Column(name="border_colour")
     private String borderColour;
 
-    @Column
+    @Column(name="text_colour")
     private String textColour;
 
-    @Column
+    @Column(name="logo_text")
     private String logoText;
 
-    @Column
+    @Column(name="second_border")
     private Boolean secondBorder;
 
-    @Column
+    @Column(name="border_two_colour")
     private String borderTwoColour;
 
     public String getId() {
