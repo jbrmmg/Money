@@ -35,11 +35,6 @@ spring:
         default-schema:
         change-log: classpath:/db/changelog/db.changelog-master.yaml
         contexts: default
-#
-#        internal:
-#            default-schema:
-#            change-log: classpath:/db/changelog/internal/db.changelog-master.yaml
-#            contexts: default
 
     mvc:
         pathmatch:
