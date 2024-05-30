@@ -1,0 +1,4 @@
+databaseChangeLog:
+
+  - include:
+      file: /db/changelog/internal/db.changelog-001-transaction-report.yaml
