@@ -18,54 +18,47 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 
-//check:
-//https://stackoverflow.com/questions/72505311/entitymanager-doesnt-translate-camel-case-to-snake-case
-//https://stackoverflow.com/questions/45663025/spring-data-jpa-multiple-enablejparepositories
-
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = "com.jbr.middletier.money.data.primary.repository",
-        transactionManagerRef = "primaryTransactionManager"
+        basePackages = "com.jbr.middletier.money.data.internal.repository",
+        entityManagerFactoryRef = "internalEntityManagerFactory",
+        transactionManagerRef = "internalTransactionManager"
 )
-public class ConfigDbPrimary extends ConfigDbCommon {
-    @Primary
+public class ConfigDbInternal extends ConfigDbCommon {
     @Bean
-    @ConfigurationProperties("spring.datasource")
-    public DataSourceProperties primaryDataSourceProperties() {
+    @ConfigurationProperties("spring.datasource.internal")
+    public DataSourceProperties internalDataSourceProperties() {
         return new DataSourceProperties();
     }
 
-    @Primary
     @Bean
-    @ConfigurationProperties("spring.datasource.hikari")
-    public DataSource primaryDataSource() {
-        return primaryDataSourceProperties().initializeDataSourceBuilder().build();
+    @ConfigurationProperties("spring.datasource.internal.hikari")
+    public DataSource internalDataSource() {
+        return internalDataSourceProperties().initializeDataSourceBuilder().build();
     }
 
-    @Primary
     @Bean
-    public JdbcTemplate primaryJdbcTemplate(@Qualifier("primaryDataSource") DataSource dataSource) {
+    public JdbcTemplate internalJdbcTemplate(@Qualifier("internalDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
-    @Value("${spring.jpa.properties.hibernate.dialect:#{null}}")
+    @Value("${spring.jpa.properties.internal.hibernate.dialect:#{null}}")
     private String hibernateDialect;
-    @Value("${spring.jpa.properties.hibernate.show-sql:true}")
+    @Value("${spring.jpa.properties.internal.hibernate.show-sql:true}")
     private String hibernateShowSql;
-    @Value("${spring.jpa.properties.hibernate.hbm2ddl.auto:none}")
+    @Value("${spring.jpa.properties.internal.hibernate.hbm2ddl.auto:none}")
     private String hibernateHbm2ddlAuto;
-    @Value("${spring.jpa.properties.hibernate.format_sql:false}")
+    @Value("${spring.jpa.properties.internal.hibernate.format_sql:false}")
     private String hibernateFormatSql;
 
-    @Primary
     @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(@Qualifier("primaryDataSource") DataSource dataSource,
+    public LocalContainerEntityManagerFactoryBean internalEntityManagerFactory(@Qualifier("internalDataSource") DataSource dataSource,
                                                                        EntityManagerFactoryBuilder builder) {
         return builder
                 .dataSource(dataSource)
-                .persistenceUnit("primary")
-                .packages("com.jbr.middletier.money.data.primary")
+                .persistenceUnit("internal")
+                .packages("com.jbr.middletier.money.data.internal")
                 .properties(additionalJpaProperties(
                         hibernateHbm2ddlAuto,
                         hibernateShowSql,
@@ -75,26 +68,24 @@ public class ConfigDbPrimary extends ConfigDbCommon {
                 .build();
     }
 
-    @Primary
     @Bean
-    public JpaTransactionManager primaryTransactionManager(@Qualifier("entityManagerFactory") EntityManagerFactory entityManagerFactory) {
+    public JpaTransactionManager internalTransactionManager(@Qualifier("internalEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
         transactionManager.setEntityManagerFactory(entityManagerFactory);
 
         return transactionManager;
     }
 
-    @Primary
     @Bean
-    @ConfigurationProperties(prefix = "spring.liquibase")
-    public LiquibaseProperties primaryLiquibaseProperties() {
+    @ConfigurationProperties(prefix = "internal.liquibase")
+    public LiquibaseProperties internalLiquibaseProperties() {
         return new LiquibaseProperties();
     }
 
     @Primary
     @Bean
-    public SpringLiquibase primaryLiquibase(@Qualifier("primaryDataSource") DataSource dataSource,
-                                             @Qualifier("primaryLiquibaseProperties") LiquibaseProperties properties) {
+    public SpringLiquibase internalLiquibase(@Qualifier("internalDataSource") DataSource dataSource,
+                                             @Qualifier("internalLiquibaseProperties") LiquibaseProperties properties) {
         return springLiquibase(dataSource, properties);
     }
 }

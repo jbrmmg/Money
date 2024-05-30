@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: jason
+      changes:
+        - createTable:
+            tableName: transaction_report
+            columns:
+              - column:
+                  name: id
+                  type: char(4)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(45)
