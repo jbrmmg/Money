@@ -21,12 +21,11 @@ public class TransactionReportDTO {
     private StatementDTO statement;
     private Boolean predicted;
     private Boolean fromReconciliation;
-
-    private List<TransactionAction> actions;
-
-    public TransactionReportDTO() {
-        this.actions = new ArrayList<>();
-    }
+    private Boolean actionUpdateCategory;
+    private Boolean actionUpdate;
+    private Boolean actionReconcile;
+    private Boolean actionUnreconcile;
+    private Boolean actionDelete;
 
     public Integer getId() {
         return id;
@@ -116,17 +115,44 @@ public class TransactionReportDTO {
         this.statement = statement;
     }
 
-    public List<TransactionAction> getActions() {
-        return actions;
+    public Boolean getActionUpdateCategory() {
+        return actionUpdateCategory;
     }
 
-    public void setActions(List<TransactionAction> actions) {
-        this.actions = actions;
+    public void setActionUpdateCategory(Boolean actionUpdateCategory) {
+        this.actionUpdateCategory = actionUpdateCategory;
     }
 
-    @JsonIgnore
-    public void addAction(TransactionAction action) {
-        this.actions.add(action);
+    public Boolean getActionUpdate() {
+        return actionUpdate;
+    }
+
+    public void setActionUpdate(Boolean actionUpdate) {
+        this.actionUpdate = actionUpdate;
+    }
+
+    public Boolean getActionReconcile() {
+        return actionReconcile;
+    }
+
+    public void setActionReconcile(Boolean actionReconcile) {
+        this.actionReconcile = actionReconcile;
+    }
+
+    public Boolean getActionUnreconcile() {
+        return actionUnreconcile;
+    }
+
+    public void setActionUnreconcile(Boolean actionUnreconcile) {
+        this.actionUnreconcile = actionUnreconcile;
+    }
+
+    public Boolean getActionDelete() {
+        return actionDelete;
+    }
+
+    public void setActionDelete(Boolean actionDelete) {
+        this.actionDelete = actionDelete;
     }
 
     @Override

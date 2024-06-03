@@ -8,10 +8,65 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: char(4)
+                  type: int(11)
+                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: name
-                  type: varchar(45)
+                  name: transaction_id
+                  type: int(11)
+              - column:
+                  name: amount
+                  type: decimal(10,2)
+              - column:
+                  name: date
+                  type: char(10)
+              - column:
+                  name: account_id
+                  type: char(4)
+              - column:
+                  name: category_id
+                  type: char(3)
+              - column:
+                  name: description
+                  type: varchar(40)
+              - column:
+                  name: search_description
+                  type: varchar(40)
+              - column:
+                  name: opposite_id
+                  type: int(11)
+              - column:
+                  name: statement_open_balance
+                  type: decimal(10,2)
+              - column:
+                  name: statement_month
+                  type: int(11)
+              - column:
+                  name: statement_year
+                  type: int(11)
+              - column:
+                  name: predicted
+                  type: boolean
+              - column:
+                  name: locked
+                  type: boolean
+              - column:
+                  name: from_reconciliation
+                  type: boolean
+              - column:
+                  name: action_update_category
+                  type: boolean
+              - column:
+                  name: action_update
+                  type: boolean
+              - column:
+                  name: action_reconcile
+                  type: boolean
+              - column:
+                  name: action_unreconcile
+                  type: boolean
+              - column:
+                  name: action_delete
+                  type: boolean

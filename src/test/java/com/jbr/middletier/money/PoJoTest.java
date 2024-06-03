@@ -786,7 +786,6 @@ public class PoJoTest {
         statement.setMonth(3);
 
         TransactionReportDTO test = new TransactionReportDTO();
-        test.setActions(actions);
         test.setBalance(new FinancialAmount(12.3));
         test.setId(10);
         test.setOppositeId(90);
@@ -797,7 +796,6 @@ public class PoJoTest {
         test.setStatement(statement);
         test.setDescription("Testing");
 
-        Assert.assertEquals(1,test.getActions().size());
         Assert.assertEquals(12.3,test.getBalance().getValue(),0.1);
         Assert.assertEquals(10,test.getId().intValue());
         Assert.assertEquals(90,test.getOppositeId().intValue());

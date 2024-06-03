@@ -23,13 +23,13 @@ public class TransactionReportController {
     }
 
     @PostMapping(path="/ext/money/transaction/list")
-    TransactionDataDTO getTransactionsExternal(@Valid @RequestBody TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
+    TransactionDataDTO getTransactionsExternal(@Valid @RequestBody TransactionFilterDTO filter) {
         LOG.trace("EXT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }
 
     @PostMapping(path="/int/money/transaction/list")
-    TransactionDataDTO getTransactionsInternal(@Valid @RequestBody TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
+    TransactionDataDTO getTransactionsInternal(@Valid @RequestBody TransactionFilterDTO filter) {
         LOG.trace("INT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }
