@@ -2,19 +2,25 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.Constants;
+import com.jbr.middletier.money.data.internal.TransactionReport;
+import com.jbr.middletier.money.data.internal.repository.TransactionReportRepository;
 import com.jbr.middletier.money.data.primary.Regular;
 import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
-import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -29,207 +35,71 @@ public class TransactionReportManager {
     private final AccountTransactionManager transactionManager;
     private final RegularPaymentManager regularPaymentManager;
     private final ReconciliationManager reconciliationManager;
-    private final TransactionFilter filter;
     private final TransactionMapper mapper;
     private final ApplicationProperties applicationProperties;
     private final StatementRepository statementRepository;
+    private final TransactionReportRepository transactionReportRepository;
 
     @Autowired
     public TransactionReportManager(AccountTransactionManager transactionManager,
                                     RegularPaymentManager regularPaymentManager,
                                     ReconciliationManager reconciliationManager,
-                                    TransactionFilter filter,
                                     TransactionMapper mapper,
                                     StatementRepository statementRepository,
+                                    TransactionReportRepository transactionReportRepository,
                                     ApplicationProperties applicationProperties) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
         this.reconciliationManager = reconciliationManager;
-        this.filter = filter;
         this.mapper = mapper;
         this.statementRepository = statementRepository;
         this.applicationProperties = applicationProperties;
+        this.transactionReportRepository = transactionReportRepository;
     }
 
     private String getDateString(LocalDate date) {
         return date.format(Constants.MONEY_DATE_FORMATTER);
     }
 
-    private List<TransactionReportDTO> getPredicted(TransactionFilterDTO filter) {
-        // If predicted are excluded then return empty list.
-        if(filter.getPredicted() != null && filter.getPredicted().equals(Boolean.FALSE)) {
-            return new ArrayList<>();
-        }
-
-        ArrayList<TransactionReportDTO> result = new ArrayList<>();
-
+    private void getPredicted() {
         for(Regular next : regularPaymentManager.getAllRegularPayments()) {
-            this.filter.passTransaction(next, filter).ifPresent(result::add);
+            // Insert the regular payment into transaction report.
+            this.transactionReportRepository.save(this.mapper.map(next, TransactionReport.class));
         }
-
-        return result;
     }
 
-    private List<TransactionReportDTO> getFromReconciled(TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
-        // If reconciled are excluded then return empty list.
-        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.FALSE)) {
-            return new ArrayList<>();
+    private void getFromReconciled(String reconciliationAccount) {
+        if(reconciliationAccount == null || reconciliationAccount.isEmpty()) {
+            return;
         }
 
-        // There must be a reconciliation account specified.
-        if(filter.getReconciliationAccount() == null || filter.getReconciliationAccount().isEmpty()) {
-            throw new NullOrBlankAccountIdException();
-        }
-
+        // Get the transactions
         try {
-            ArrayList<TransactionReportDTO> result = new ArrayList<>();
-
-            for (MatchData next : reconciliationManager.match(filter.getReconciliationAccount())) {
-                this.filter.passTransaction(next, filter).ifPresent(result::add);
+            for (MatchData next : reconciliationManager.match(reconciliationAccount)) {
+                if(next.getTransaction() == null) {
+                    // Add data to the transaction report.
+                    //TODO fix
+                    TransactionReport tmp = this.mapper.map(next, TransactionReport.class);
+                    this.transactionReportRepository.save(tmp);
+                }
             }
-
-            return result;
         } catch (UpdateDeleteAccountException e) {
-            return new ArrayList<>();
+            LOG.error("Problem reading the reconciled data {}", e.getMessage());
         }
     }
 
-    private List<TransactionReportDTO> getStandardTransactions(TransactionFilterDTO filter) {
-        // If predicated or from reconciled then we don't need standard transactions.
-        if(filter.getPredicted() != null && filter.getPredicted().equals(Boolean.TRUE)) {
-            return new ArrayList<>();
-        }
-
-        if(filter.getFromReconciled() != null && filter.getFromReconciled().equals(Boolean.TRUE)) {
-            return new ArrayList<>();
-        }
-
-        ArrayList<TransactionReportDTO> result = new ArrayList<>();
-
+    private void getStandardTransactions() {
         for(Transaction next : transactionManager.getAllTransactions()) {
-            this.filter.passTransaction(next, filter).ifPresent(result::add);
+            // Add this to the transaction report.
+            // TODO fix
+            TransactionReport tmp = mapper.map(next,TransactionReport.class);
+            this.transactionReportRepository.save(tmp);
         }
-
-        return result;
     }
 
-    private boolean includeStatement(Statement statement, List<AccountDTO> accounts, Boolean locked, StatementDateDTO statementDate) {
-        if(!accounts.isEmpty()) {
-            // Check the account.
-            boolean matchAccount = false;
-            for (AccountDTO nextAccount : accounts) {
-                if (statement.getId().getAccount().getId().equals(nextAccount.getId())) {
-                    matchAccount = true;
-                    break;
-                }
-            }
-
-            if (!matchAccount) {
-                return false;
-            }
-        }
-
-        // If specified, check the date.
-        if(statementDate != null &&
-                ((statementDate.getYear() != null && !statement.getId().getYear().equals(statementDate.getYear())) ||
-                 (statementDate.getMonth() != null && !statement.getId().getMonth().equals(statementDate.getMonth())))) {
-            return false;
-        }
-
-        // Check the locked status.
-        return locked == null || locked.equals(statement.getLocked());
-    }
-
-    private List<Statement> getIncludedStatements(TransactionFilterDTO filter) {
-        List<Statement> result = new ArrayList<>();
-
-        for(Statement statement : this.statementRepository.findAll()) {
-            if(includeStatement(statement,filter.getAccounts(),filter.getLocked(),filter.getStatementDate())) {
-                result.add(statement);
-            }
-        }
-
-        return result;
-    }
-
-    private Map<String,StatementDateDTO> getOldestStatementPerAccount(List<Statement> statements) {
-        Map<String,StatementDateDTO> result = new HashMap<>();
-
-        for(Statement statement : statements) {
-            // If this account has not been seen before then add this as the oldest.
-            if(!result.containsKey(statement.getId().getAccount().getId())) {
-                StatementDateDTO accountOldest = new StatementDateDTO();
-                accountOldest.setYear(statement.getId().getYear());
-                accountOldest.setMonth(statement.getId().getMonth());
-                result.put(statement.getId().getAccount().getId(),accountOldest);
-            } else {
-                StatementDateDTO accountOldest = result.get(statement.getId().getAccount().getId());
-
-                // Is the next statement older?
-                if(accountOldest.getYear() > statement.getId().getYear()) {
-                    // Older year.
-                    accountOldest.setYear(statement.getId().getYear());
-                    accountOldest.setMonth(statement.getId().getMonth());
-                } else if(accountOldest.getYear().equals(statement.getId().getYear()) && (accountOldest.getMonth() > statement.getId().getMonth())) {
-                    // Same year, older month.
-                    accountOldest.setMonth(statement.getId().getMonth());
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private FinancialAmount calculateOpeningBalanceFromStatements(List<Statement> includedStatements) {
-        double openingBalance = 0;
-
-        // Get the oldest date.
-        Map<String,StatementDateDTO> oldestPerAccount = getOldestStatementPerAccount(includedStatements);
-
-        // Some the opening balances from the oldest statements.
-        if(!oldestPerAccount.isEmpty()) {
-            for(Map.Entry<String,StatementDateDTO> nextEntry : oldestPerAccount.entrySet()) {
-                for (Statement statement : includedStatements) {
-                    if (statement.getId().getAccount().getId().equals(nextEntry.getKey()) && statement.getId().getYear().equals(nextEntry.getValue().getYear()) && statement.getId().getMonth().equals(nextEntry.getValue().getMonth())) {
-                        openingBalance += statement.getOpenBalance().getValue();
-                        break;
-                    }
-                }
-            }
-        }
-
-        return new FinancialAmount(openingBalance);
-    }
-
-    private FinancialAmount calculateOpeningBalance(TransactionFilterDTO filter) {
-        // Opening balance not provided if the following filters are present.
-
-        // If a value range is specified, then no opening balance.
-        if(filter.getValueRange().getMinimum() != Double.NEGATIVE_INFINITY) {
-            return new FinancialAmount();
-        }
-        if(filter.getValueRange().getMaximum() != Double.POSITIVE_INFINITY) {
-            return new FinancialAmount();
-        }
-
-        // If a date range is specified, then no opening balance.
-        if(!filter.getDateRange().getFrom().equals(Constants.MONEY_EARLIEST_DATE_STRING)) {
-            return new FinancialAmount();
-        }
-        if(!filter.getDateRange().getTo().equals(Constants.MONEY_LATEST_DATE_STRING)) {
-            return new FinancialAmount();
-        }
-
-        // If categories specified then no open balance.
-        if(!filter.getCategories().isEmpty()) {
-            return new FinancialAmount();
-        }
-
-        // Opening balance can be derived from the statements.
-        List<Statement> includedStatements = getIncludedStatements(filter);
-
-        // Opening balance only makes sense if the only filter relates to the statement.
-        return calculateOpeningBalanceFromStatements(includedStatements);
+    private FinancialAmount calculateOpeningBalance(TransactionDataDTO transactionData) {
+        // Determine the opening balance.
+        return null;
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {
@@ -252,6 +122,10 @@ public class TransactionReportManager {
     }
 
     private FinancialAmount calculateTodayBalance(FinancialAmount openBalance, List<TransactionReportDTO> transactions) {
+        if(openBalance == null) {
+            return null;
+        }
+
         LocalDate today = this.applicationProperties.getToday();
 
         double balance = openBalance.getValue();
@@ -283,6 +157,10 @@ public class TransactionReportManager {
     }
 
     private FinancialAmount calculateFutureBalance(FinancialAmount openBalance, List<TransactionReportDTO> transactions) {
+        if(openBalance == null) {
+            return null;
+        }
+
         double balance = openBalance.getValue();
 
         for(TransactionReportDTO transaction : transactions) {
@@ -292,29 +170,123 @@ public class TransactionReportManager {
         return new FinancialAmount(balance);
     }
 
-    public TransactionDataDTO getTransactions(TransactionFilterDTO filter) throws NullOrBlankAccountIdException {
+    private Specification<TransactionReport> findByCriteria(TransactionFilterDTO filter) {
+        return new Specification<TransactionReport>() {
+            @Override
+            public Predicate toPredicate(Root<TransactionReport> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                List<Predicate> predicates = new ArrayList<>();
+
+                if(filter.getPredicted() != null) {
+                    predicates.add(cb.equal(root.get("predicted"),filter.getPredicted()));
+                }
+
+                if(filter.getFromReconciled() != null) {
+                    predicates.add(cb.equal(root.get("fromReconciliation"),filter.getFromReconciled()));
+                }
+
+                if(filter.getLocked() != null) {
+                    predicates.add(cb.equal(root.get("locked"),filter.getLocked()));
+                }
+
+                if(filter.getDescription() != null) {
+                    predicates.add(cb.like(root.get("searchDescription"),"%"+filter.getDescription().toLowerCase().replaceAll("[^a-z0-9]","")+"%"));
+                }
+
+                if(filter.getStatementDate() != null) {
+                    if(filter.getStatementDate().getMonth() != null) {
+                        predicates.add(cb.equal(root.get("statementMonth"),filter.getStatementDate().getMonth()));
+                    }
+                    if(filter.getStatementDate().getYear() != null) {
+                        predicates.add(cb.equal(root.get("statementYear"),filter.getStatementDate().getYear()));
+                    }
+                }
+
+                if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+                    predicates.add(root.get("categoryId").in(filter.getCategories()));
+                }
+
+                if(filter.getDateRange() != null) {
+                    if(filter.getDateRange().getFrom() != null && filter.getDateRange().getTo() != null) {
+                        predicates.add(cb.between(root.get("date"),filter.getDateRange().getFrom(),filter.getDateRange().getTo()));
+                    } else if(filter.getDateRange().getFrom() != null) {
+                        predicates.add(cb.greaterThanOrEqualTo(root.get("date"),filter.getDateRange().getFrom()));
+                    } else if(filter.getDateRange().getTo() != null) {
+                        predicates.add(cb.lessThanOrEqualTo(root.get("date"),filter.getDateRange().getTo()));
+                    }
+                }
+
+                if(filter.getValueRange() != null) {
+                    if(filter.getValueRange().getMinimum() != null && filter.getValueRange().getMaximum() != null) {
+                        predicates.add(cb.between(root.get("amount"),filter.getValueRange().getMinimum(),filter.getValueRange().getMaximum()));
+                    } else if(filter.getValueRange().getMinimum() != null) {
+                        predicates.add(cb.greaterThanOrEqualTo(root.get("amount"),filter.getValueRange().getMinimum()));
+                    } else if(filter.getValueRange().getMaximum() != null) {
+                        predicates.add(cb.lessThanOrEqualTo(root.get("amount"),filter.getValueRange().getMaximum()));
+                    }
+                }
+
+                if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
+                    predicates.add(cb.equal(root.get("accountId"),filter.getAccounts()));
+                }
+
+                return cb.and(predicates.toArray(new Predicate[] {}));
+            }
+        };
+    }
+
+    public TransactionDataDTO getTransactions(TransactionFilterDTO filter) {
         LOG.info("Get Transactions based on {}",filter);
+
+        /*
+        TEST FILTER:
+        {
+            "fromReconciled":false,
+            "predicted":false,
+            "locked":false
+        }
+         */
 
         TransactionDataDTO result = new TransactionDataDTO();
 
-        // Add the transactions.
-        result.getTransactions().addAll(getPredicted(filter));
-        result.getTransactions().addAll(getFromReconciled(filter));
-        result.getTransactions().addAll(getStandardTransactions(filter));
+        // Delete the transaction report details.
+        this.transactionReportRepository.deleteAll();
 
-        // Remove any reconciled transaction where the transaction is also present, then sort the transactions.
-        result.removeDuplicatesAndSort(filter);
+        // Populate the transaction data.
+//        getPredicted();
+        getFromReconciled(filter.getReconciliationAccount());
+        getStandardTransactions();
+
+        //TODO
+        // page
+
+        for(TransactionReport x : this.transactionReportRepository.findAll()) {
+            LOG.info(x.getDescription());
+            if(x.getFromReconciliation()) {
+                LOG.info(x.getDescription());
+            }
+        }
+
+        // Get the transactions that meet the filter.
+        int max = 50;
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            result.getTransactions().add(this.mapper.map(next,TransactionReportDTO.class));
+            if(max-- == 0) {
+                break;
+            }
+        }
 
         // Calculate the opening details
-        result.setOpenBalance(calculateOpeningBalance(filter));
+        result.setOpenBalance(calculateOpeningBalance(result));
         result.setOpenDate(calculateOpenDate(result.getTransactions()));
 
-        // Calculate the balances on the transactions.
-        double balance = result.getOpenBalance().getValue();
-        for(TransactionReportDTO next : result.getTransactions()) {
-            next.setBalance(new FinancialAmount(balance));
+        if(result.getOpenBalance() != null) {
+            // Calculate the balances on the transactions.
+            double balance = result.getOpenBalance().getValue();
+            for(TransactionReportDTO next : result.getTransactions()) {
+                next.setBalance(new FinancialAmount(balance));
 
-            balance += next.getAmount().getValue();
+                balance += next.getAmount().getValue();
+            }
         }
 
         // Calculate today's date.

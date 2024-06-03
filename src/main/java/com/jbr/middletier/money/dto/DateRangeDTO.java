@@ -12,11 +12,6 @@ public class DateRangeDTO {
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String to;
 
-    public DateRangeDTO() {
-        this.from = null;
-        this.to = null;
-    }
-
     public DateRangeDTO(String from, String to) {
         if(from != null) {
             this.setFrom(from);
@@ -35,10 +30,6 @@ public class DateRangeDTO {
     }
 
     public String getFrom() {
-        if(this.from == null) {
-            return Constants.MONEY_EARLIEST_DATE_STRING;
-        }
-
         return this.from;
     }
 
@@ -58,10 +49,6 @@ public class DateRangeDTO {
     }
 
     public String getTo() {
-        if(this.to == null) {
-            return Constants.MONEY_LATEST_DATE_STRING;
-        }
-
         return this.to;
     }
 

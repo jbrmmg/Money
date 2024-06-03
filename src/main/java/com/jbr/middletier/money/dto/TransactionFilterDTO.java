@@ -25,10 +25,6 @@ public class TransactionFilterDTO {
     private List<TransactionSortDTO> transactionSorts;
 
     public ValueRangeDTO getValueRange() {
-        if(this.valueRange == null) {
-            return new ValueRangeDTO();
-        }
-
         return valueRange;
     }
 
@@ -37,10 +33,6 @@ public class TransactionFilterDTO {
     }
 
     public DateRangeDTO getDateRange() {
-        if(this.dateRange == null) {
-            return new DateRangeDTO();
-        }
-
         return dateRange;
     }
 
