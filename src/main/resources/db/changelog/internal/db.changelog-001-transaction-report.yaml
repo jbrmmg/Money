@@ -47,6 +47,9 @@ databaseChangeLog:
                   name: statement_year
                   type: int(11)
               - column:
+                  name: statement_sort
+                  type: int(11)
+              - column:
                   name: predicted
                   type: boolean
               - column:

@@ -82,24 +82,7 @@ public class TransactionDataDTO {
         this.forwardBalance = forwardBalance;
     }
 
-    public void removeDuplicatesAndSort(TransactionFilterDTO filter) {
-        List<TransactionReportDTO> duplicates = new ArrayList<>();
-
-        // Look for duplicates
-        for(TransactionReportDTO transaction : this.transactions) {
-            if(transaction.getFromReconciliation().equals(Boolean.TRUE) && transaction.getId() != null) {
-                // Find the transaction.
-                for(TransactionReportDTO innerTransaction : this.transactions) {
-                    if(!innerTransaction.getFromReconciliation().equals(Boolean.TRUE) && innerTransaction.getPredicted().equals(Boolean.FALSE) && innerTransaction.getId().equals(transaction.getId())) {
-                        duplicates.add(transaction);
-                    }
-                }
-            }
-        }
-
-        // Remove duplicates
-        this.transactions.removeAll(duplicates);
-
+    public void sortTransactions(TransactionFilterDTO filter) {
         // Sort the transactions.
         this.transactions.sort((t1,t2) -> TransactionSorting.compare(t1,t2,filter.getTransactionSorts()));
     }

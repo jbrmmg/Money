@@ -32,12 +32,14 @@ public class TransactionToReport extends AbstractConverter<Transaction, Transact
         if(transaction.getStatement() != null) {
             result.setStatementYear(transaction.getStatement().getId().getYear());
             result.setStatementMonth(transaction.getStatement().getId().getMonth());
+            result.setStatementSort(transaction.getStatement().getId().getYear() * 100 + transaction.getStatement().getId().getMonth());
             result.setStatementOpenBalance(transaction.getStatement().getOpenBalance().getValue());
             result.setLocked(transaction.getStatement().getLocked());
             if(!transaction.getStatement().getLocked()) {
                 result.setActionUnreconcile(true);
             }
         } else {
+            result.setStatementSort(999999);
             result.setActionReconcile(true);
             result.setActionDelete(true);
             result.setActionUpdate(true);

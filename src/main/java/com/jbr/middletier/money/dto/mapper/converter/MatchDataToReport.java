@@ -41,6 +41,7 @@ public class MatchDataToReport extends AbstractConverter<MatchData, TransactionR
         if(matchData.getCategory() != null) {
             result.setCategoryId(matchData.getCategory().getId());
         }
+        result.setStatementSort(999999);
         result.setLocked(false);
         result.setActionUpdateCategory(true);
 

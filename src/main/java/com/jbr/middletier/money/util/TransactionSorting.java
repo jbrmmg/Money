@@ -57,11 +57,11 @@ public class TransactionSorting {
         String t2Category = "";
 
         if(t1.getCategory() != null) {
-            t1Category = t1.getCategory().getName();
+            t1Category = t1.getCategory().getId();
         }
 
         if(t2.getCategory() != null) {
-            t2Category = t2.getCategory().getName();
+            t2Category = t2.getCategory().getId();
         }
 
         return t1Category.compareTo(t2Category);
@@ -69,7 +69,7 @@ public class TransactionSorting {
 
     private static int compareAccount(TransactionReportDTO t1, TransactionReportDTO t2) {
         // Compare on account name.
-        return t1.getAccount().getName().compareTo(t2.getAccount().getName());
+        return t1.getAccount().getId().compareTo(t2.getAccount().getId());
     }
 
     public static int compare(TransactionReportDTO t1, TransactionReportDTO t2, List<TransactionSortDTO> sorting) {

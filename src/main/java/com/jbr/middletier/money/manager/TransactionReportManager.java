@@ -5,7 +5,6 @@ import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.internal.TransactionReport;
 import com.jbr.middletier.money.data.internal.repository.TransactionReportRepository;
 import com.jbr.middletier.money.data.primary.Regular;
-import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
@@ -13,6 +12,7 @@ import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -20,13 +20,12 @@ import jakarta.persistence.criteria.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class TransactionReportManager {
@@ -57,6 +56,23 @@ public class TransactionReportManager {
         this.transactionReportRepository = transactionReportRepository;
     }
 
+    @PostConstruct
+    public void initialise() {
+        // Set up the in memory database.
+        LOG.info("Initialising TransactionReportManager...");
+
+        // Delete the transaction report details.
+        this.transactionReportRepository.deleteAll();
+
+        // Populate the transaction data (reconciliation must be last.).
+        //TODO
+        // Do something sensible here (Reconciled) - probably best use one of the files.
+        // Need to be able to refresh these when the account changes.
+        getPredicted();
+        getStandardTransactions();
+        getFromReconciled("BANK");
+    }
+
     private String getDateString(LocalDate date) {
         return date.format(Constants.MONEY_DATE_FORMATTER);
     }
@@ -73,6 +89,8 @@ public class TransactionReportManager {
             return;
         }
 
+        //TODO when updating; remove the reconciliation only data + remove the reconciliation flag on standard transaction.
+
         // Get the transactions
         try {
             for (MatchData next : reconciliationManager.match(reconciliationAccount)) {
@@ -81,6 +99,14 @@ public class TransactionReportManager {
                     //TODO fix
                     TransactionReport tmp = this.mapper.map(next, TransactionReport.class);
                     this.transactionReportRepository.save(tmp);
+                } else {
+                    // Update the 'standard' transaction to be from reconciliation as well.
+                    List<TransactionReport> standards = this.transactionReportRepository.findByTransactionId(next.getTransaction().getId());
+
+                    for(TransactionReport standard : standards) {
+                        standard.setFromReconciliation(true);
+                        this.transactionReportRepository.save(standard);
+                    }
                 }
             }
         } catch (UpdateDeleteAccountException e) {
@@ -97,9 +123,49 @@ public class TransactionReportManager {
         }
     }
 
-    private FinancialAmount calculateOpeningBalance(TransactionDataDTO transactionData) {
-        // Determine the opening balance.
-        return null;
+    private FinancialAmount calculateOpeningBalance(TransactionDataDTO transactionData, TransactionFilterDTO filter) {
+        // Determine the opening balance - this is only valid if there is no filter on the following:
+        //   Value Range, Date Range, Category, Description, Predicted (true)
+        if(filter.getValueRange() != null) {
+            LOG.debug("No opening balance - value filter");
+            return null;
+        }
+
+        if(filter.getDateRange() != null) {
+            LOG.debug("No opening balance - date filter");
+            return null;
+        }
+
+        if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+            LOG.debug("No opening balance - categories filter");
+            return null;
+        }
+
+        if(filter.getDescription() != null && !filter.getDescription().isEmpty()) {
+            LOG.debug("No opening balance - description filter");
+            return null;
+        }
+
+        if(filter.getPredicted() != null && filter.getPredicted()) {
+            LOG.debug("No opening balance - predicted filter is true");
+            return null;
+        }
+
+        // Opening balance is the sum of the earliest opening balance from each account present in the data.
+        List<String> accountIds = new ArrayList<>();
+        double openBalance = 0;
+        for(TransactionReportDTO next : transactionData.getTransactions()) {
+            // Has this account been seen?
+            if(!accountIds.contains(next.getAccount().getId())) {
+                // If there is a balance, then update the value.
+                if(next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
+                    openBalance += next.getStatement().getOpenBalance().getValue();
+                    accountIds.add(next.getAccount().getId());
+                }
+            }
+        }
+
+        return new FinancialAmount(openBalance);
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {
@@ -248,16 +314,8 @@ public class TransactionReportManager {
 
         TransactionDataDTO result = new TransactionDataDTO();
 
-        // Delete the transaction report details.
-        this.transactionReportRepository.deleteAll();
-
-        // Populate the transaction data.
-//        getPredicted();
-        getFromReconciled(filter.getReconciliationAccount());
-        getStandardTransactions();
-
         //TODO
-        // page
+        // page if more than a specific number
 
         for(TransactionReport x : this.transactionReportRepository.findAll()) {
             LOG.info(x.getDescription());
@@ -267,8 +325,9 @@ public class TransactionReportManager {
         }
 
         // Get the transactions that meet the filter.
-        int max = 50;
-        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+        //TODO - remove this when paging is implemented.
+        int max = 600;
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,"statementSort","date","accountId"))) {
             result.getTransactions().add(this.mapper.map(next,TransactionReportDTO.class));
             if(max-- == 0) {
                 break;
@@ -276,7 +335,7 @@ public class TransactionReportManager {
         }
 
         // Calculate the opening details
-        result.setOpenBalance(calculateOpeningBalance(result));
+        result.setOpenBalance(calculateOpeningBalance(result,filter));
         result.setOpenDate(calculateOpenDate(result.getTransactions()));
 
         if(result.getOpenBalance() != null) {
@@ -300,6 +359,9 @@ public class TransactionReportManager {
 
         // Calculate future balance.
         result.setForwardBalance(calculateFutureBalance(result.getOpenBalance(), result.getTransactions()));
+
+        // Sort the transactions as per the filter definition.
+        result.sortTransactions(filter);
 
         // Return the data.
         return result;
