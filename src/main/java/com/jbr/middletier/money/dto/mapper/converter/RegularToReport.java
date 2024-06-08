@@ -50,6 +50,7 @@ public class RegularToReport extends AbstractConverter<Regular, TransactionRepor
         if(regular.getCategory() != null) {
             result.setCategoryId(regular.getCategory().getId());
         }
+        result.setStatementSort(999999);
         result.setLocked(false);
         result.setActionUpdateCategory(true);
 

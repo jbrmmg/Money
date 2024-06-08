@@ -7,7 +7,7 @@ logging:
 spring:
     liquibase:
       default-schema:
-      change-log: classpath:/db/changelog/db.changelog-master-dbg.yaml
+      change-log: classpath:/db/changelog/dbg/db.changelog-master.yaml
 
     jpa:
       properties:

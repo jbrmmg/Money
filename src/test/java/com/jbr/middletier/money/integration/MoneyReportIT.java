@@ -74,12 +74,12 @@ public class MoneyReportIT extends Support {
         return String.format(format, value == null ? "" : value);
     }
 
-    private String getFinancialAmountString(FinancialAmount financialAmount, int size) {
+    private String getFinancialAmountString(FinancialAmount financialAmount) {
         if(financialAmount == null) {
-            return " ".repeat(size);
+            return " ".repeat(12);
         }
 
-        return financialAmount.toFormattedString(size);
+        return financialAmount.toFormattedString(12);
     }
 
     private String spacing(int size) {
@@ -93,9 +93,9 @@ public class MoneyReportIT extends Support {
     private void logTransactionData(TransactionDataDTO transactionData) {
         LOG.info("-".repeat(160));
         LOG.info("TRANSACTION DETAILS{}|",spacing(140));
-        LOG.info("  Open    {} {} {}|", transactionData.getOpenDate(), getFinancialAmountString(transactionData.getOpenBalance(),12),spacing(125));
-        LOG.info("  Today   {} {} {}|", transactionData.getToday(), getFinancialAmountString(transactionData.getTodayBalance(),12),spacing(125));
-        LOG.info("  Forward {} {} {}|", getPaddedString(transactionData.getForwardDate(),10), getFinancialAmountString(transactionData.getForwardBalance(),12),spacing(125));
+        LOG.info("  Open    {} {} {}|", transactionData.getOpenDate(), getFinancialAmountString(transactionData.getOpenBalance()),spacing(125));
+        LOG.info("  Today   {} {} {}|", transactionData.getToday(), getFinancialAmountString(transactionData.getTodayBalance()),spacing(125));
+        LOG.info("  Forward {} {} {}|", getPaddedString(transactionData.getForwardDate(),10), getFinancialAmountString(transactionData.getForwardBalance()),spacing(125));
         LOG.info("{}|", spacing(159));
         int row = 1;
         for(TransactionReportDTO next : transactionData.getTransactions()) {
@@ -155,14 +155,13 @@ public class MoneyReportIT extends Support {
     @Test
     public void testFilterAll() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setReconciliationAccount("BANK");
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(59)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openBalance.value", is(1029.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -176,14 +175,13 @@ public class MoneyReportIT extends Support {
     @Test
     public void testFilterDescription() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setReconciliationAccount("BANK");
         filter.setDescription("sainsburys");
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(1)))
+                .andExpect(jsonPath("$.transactions", hasSize(2)))
                 .andExpect(jsonPath("openDate", is("2023-04-27")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -197,7 +195,6 @@ public class MoneyReportIT extends Support {
     @Test
     public void testFilterFromRec() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setReconciliationAccount("BANK");
         filter.setFromReconciled(true);
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
@@ -205,7 +202,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(18)))
-//                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -285,7 +281,7 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(35)))
+                .andExpect(jsonPath("$.transactions", hasSize(32)))
                 .andExpect(jsonPath("openBalance.value", is(630.16)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
@@ -424,7 +420,7 @@ public class MoneyReportIT extends Support {
                         .content("{\"accounts\":[],\"categories\":[],\"reconciliationAccount\":\"BANK\",\"predicated\":false,\"locked\":false,\"fromReconciled\":false}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(41)))
+                .andExpect(jsonPath("$.transactions", hasSize(38)))
                 .andExpect(jsonPath("openBalance.value", is(630.16)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))

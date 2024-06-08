@@ -43,6 +43,9 @@ public class TransactionReport {
     @Column(name="statement_year")
     private Integer statementYear;
 
+    @Column(name="statement_sort")
+    private Integer statementSort;
+
     @Column(name="predicted")
     private Boolean predicted;
 
@@ -225,5 +228,13 @@ public class TransactionReport {
 
     public void setSearchDescription(String searchDescription) {
         this.searchDescription = searchDescription;
+    }
+
+    public Integer getStatementSort() {
+        return statementSort;
+    }
+
+    public void setStatementSort(Integer statementSort) {
+        this.statementSort = statementSort;
     }
 }
