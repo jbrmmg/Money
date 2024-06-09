@@ -48,6 +48,9 @@ databaseChangeLog:
   - include:
       file: /db/changelog/db.changelog-015-reconcile-files.yaml
 
+  - include:
+      file: /db/changelog/db.changelog-016-reconcile-updates.yaml
+
 # Load test data for reporting.
 
   - include:

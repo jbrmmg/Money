@@ -24,6 +24,7 @@ public class ReconciliationFileToDTO extends AbstractConverter<ReconciliationFil
         result.setError(reconciliationFile.getError());
         result.setSize(reconciliationFile.getSize());
         result.setLastModified(reconciliationFile.getLastModified());
+        result.setLoaded(reconciliationFile.getLoaded());
 
         return result;
     }

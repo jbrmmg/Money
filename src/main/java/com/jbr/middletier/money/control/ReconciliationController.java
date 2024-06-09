@@ -58,6 +58,18 @@ public class ReconciliationController {
         return getListOfFiles();
     }
 
+    @PutMapping(path = "/int/money/reconciliation/updatefileaccount")
+    public Iterable<ReconciliationFileDTO> updateFileAccountInt(@Valid @RequestBody ReconciliationFileUpdateAccountDTO reconciliationFileUpdateAccount) throws IOException {
+        LOG.info("Request to update account on file (sanitized) - {}", reconciliationFileUpdateAccount);
+        reconciliationManager.updateAccount(reconciliationFileUpdateAccount);
+        return getListOfFiles();
+    }
+
+    @PutMapping(path = "/ext/money/reconciliation/updatefileaccount")
+    public Iterable<ReconciliationFileDTO> updateFileAccountExt(@Valid @RequestBody ReconciliationFileUpdateAccountDTO reconciliationFileUpdateAccount) throws IOException {
+        return updateFileAccountInt(reconciliationFileUpdateAccount);
+    }
+
     @GetMapping(path = "/int/money/reconciliation/files")
     public Iterable<ReconciliationFileDTO> getListOfFiles() {
         LOG.info("Request to get list of files");
@@ -77,14 +89,14 @@ public class ReconciliationController {
     }
 
     @GetMapping(path = "/ext/money/match")
-    public List<MatchDataDTO> matchExt(@Valid @RequestParam(value = "account", defaultValue = "UNKN") String accountId) throws UpdateDeleteAccountException {
+    public List<MatchDataDTO> matchExt() throws UpdateDeleteAccountException {
         LOG.info("External match data - reconciliation data with reconciled transactions");
-        return reconciliationManager.matchImpl(accountId);
+        return reconciliationManager.matchImpl();
     }
 
     @GetMapping(path = "/int/money/match")
-    public List<MatchDataDTO> matchInt(@Valid @RequestParam(value = "account", defaultValue = "UNKN") String accountId) throws UpdateDeleteAccountException {
-        return matchExt(accountId);
+    public List<MatchDataDTO> matchInt() throws UpdateDeleteAccountException {
+        return matchExt();
     }
 
     @PutMapping(path = "/ext/money/reconciliation/auto")

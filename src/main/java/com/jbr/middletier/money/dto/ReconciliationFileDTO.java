@@ -18,77 +18,78 @@ public class ReconciliationFileDTO {
     private double debitSum;
     private LocalDate earliestTransaction;
     private LocalDate latestTransaction;
-
-    public String getFilename() {
-        return filename;
-    }
+    private Boolean loaded;
 
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    public AccountDTO getAccount() {
-        return account;
+    public String getFilename() {
+        return filename;
     }
 
     public void setAccount(AccountDTO account) {
         this.account = account;
     }
 
-    public LocalDateTime getLastModified() {
-        return lastModified;
+    public AccountDTO getAccount() {
+        return account;
     }
 
     public void setLastModified(LocalDateTime lastModified) {
         this.lastModified = lastModified;
     }
 
-    public Long getSize() {
-        return size;
+    public LocalDateTime getLastModified() {
+        return lastModified;
     }
 
     public void setSize(Long size) {
         this.size = size;
     }
 
-    public String getError() {
-        return error;
+    public Long getSize() {
+        return size;
     }
 
     public void setError(String error) {
         this.error = error;
     }
 
-    public int getTransactionCount() {
-        return transactionCount;
+    public String getError() {
+        return error;
     }
 
     public void setTransactionCount(int transactionCount) {
         this.transactionCount = transactionCount;
     }
 
-    public double getCreditSum() {
-        return creditSum;
+    public int getTransactionCount() {
+        return transactionCount;
     }
 
-    public void setCreditSum(double creditSum) {
-        this.creditSum = creditSum;
+    public double getCreditSum() {
+        return creditSum;
     }
 
     public double getDebitSum() {
         return debitSum;
     }
 
+    public void setCreditSum(double creditSum) {
+        this.creditSum = creditSum;
+    }
+
     public void setDebitSum(double debitSum) {
         this.debitSum = debitSum;
     }
 
-    public LocalDate getEarliestTransaction() {
-        return earliestTransaction;
-    }
-
     public void setEarliestTransaction(LocalDate earliestTransaction) {
         this.earliestTransaction = earliestTransaction;
+    }
+
+    public LocalDate getEarliestTransaction() {
+        return earliestTransaction;
     }
 
     public LocalDate getLatestTransaction() {
@@ -97,5 +98,13 @@ public class ReconciliationFileDTO {
 
     public void setLatestTransaction(LocalDate latestTransaction) {
         this.latestTransaction = latestTransaction;
+    }
+
+    public void setLoaded(Boolean loaded) {
+        this.loaded = loaded;
+    }
+
+    public Boolean getLoaded() {
+        return loaded;
     }
 }
