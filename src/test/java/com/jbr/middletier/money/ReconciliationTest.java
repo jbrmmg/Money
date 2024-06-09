@@ -207,10 +207,10 @@ public class ReconciliationTest extends Support {
     @Test
     public void testInvalidAccountId() {
         try {
-            this.reconciliationManager.matchImpl("XXXX");
+            this.reconciliationManager.matchImpl();
             Assert.fail();
         } catch(UpdateDeleteAccountException ex) {
-            Assert.assertEquals("Cannot find account with id Invalid account id.XXXX", ex.getMessage());
+            Assert.assertEquals("Cannot find account with id No file has been selected, cannot determine account", ex.getMessage());
         }
     }
 
@@ -441,14 +441,14 @@ public class ReconciliationTest extends Support {
         this.reconciliationManager.loadFile(reconciliationFile);
 
         // Find the statement that is not locked.
-        Statement unlocked = getUnlockedStatement("BANK");
+        Statement unlocked = getUnlockedStatement("AMEX");
 
         // Create a transaction
-        Transaction testTransaction = createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", -1.9, LocalDate.of(2022,10,10));
         testTransaction.setStatement(unlocked);
         this.transactionRepository.save(testTransaction);
 
-        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
         int setCategory = 0;
         int none = 0;
         for(MatchDataDTO next : matchData) {
@@ -470,9 +470,9 @@ public class ReconciliationTest extends Support {
         this.reconciliationManager.loadFile(reconciliationFile);
 
         // Create a transaction
-        createTransaction("BANK", "HSE", -1.9, LocalDate.of(2022,10,10));
+        createTransaction("AMEX", "HSE", -1.9, LocalDate.of(2022,10,10));
 
-        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
         int setCategory = 0;
         int reconcile = 0;
         for(MatchDataDTO next : matchData) {
@@ -493,14 +493,14 @@ public class ReconciliationTest extends Support {
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
 
-        Statement unlocked = getUnlockedStatement("BANK");
+        Statement unlocked = getUnlockedStatement("AMEX");
 
         // Create a transaction
-        Transaction transaction = createTransaction("BANK", "HSE", -36, LocalDate.of(2022,10,10));
+        Transaction transaction = createTransaction("AMEX", "HSE", -36, LocalDate.of(2022,10,10));
         transaction.setStatement(unlocked);
         this.transactionRepository.save(transaction);
 
-        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
         int setCategory = 0;
         int unreconcile = 0;
         for(MatchDataDTO next : matchData) {
@@ -521,7 +521,7 @@ public class ReconciliationTest extends Support {
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
 
-        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl("BANK");
+        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
         int reconcile = 0;
         for(MatchDataDTO next : matchData) {
             if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {

@@ -29,6 +29,9 @@ public class ReconciliationData {
     @Column(name="amount")
     private double amount;
 
+    @Column(name="account_id")
+    private String accountId;
+
     @Override
     public String toString() {
         return TransactionString.formattedTransactionString(this.date,this.amount);
@@ -60,5 +63,13 @@ public class ReconciliationData {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 }

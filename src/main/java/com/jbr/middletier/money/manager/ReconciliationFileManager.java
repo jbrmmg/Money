@@ -290,6 +290,7 @@ public class ReconciliationFileManager implements FileChangeListener {
             if(dbFile.isEmpty()) {
                 dbFile = Optional.of(new ReconciliationFile());
                 dbFile.get().setName(update.getName());
+                dbFile.get().setLoaded(false);
             }
 
             dbFile.get().setAccount(null);

@@ -29,6 +29,9 @@ public class ReconciliationFile implements Serializable {
     @Column(name="error")
     private String error;
 
+    @Column(name="loaded")
+    private Boolean loaded;
+
     public String getName() {
         return name;
     }
@@ -67,5 +70,13 @@ public class ReconciliationFile implements Serializable {
 
     public void setError(String error) {
         this.error = error;
+    }
+
+    public Boolean getLoaded() {
+        return loaded;
+    }
+
+    public void setLoaded(Boolean loaded) {
+        this.loaded = loaded;
     }
 }

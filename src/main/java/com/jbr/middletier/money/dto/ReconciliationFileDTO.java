@@ -18,6 +18,7 @@ public class ReconciliationFileDTO {
     private double debitSum;
     private LocalDate earliestTransaction;
     private LocalDate latestTransaction;
+    private Boolean loaded;
 
     public String getFilename() {
         return filename;
@@ -97,5 +98,13 @@ public class ReconciliationFileDTO {
 
     public void setLatestTransaction(LocalDate latestTransaction) {
         this.latestTransaction = latestTransaction;
+    }
+
+    public Boolean getLoaded() {
+        return loaded;
+    }
+
+    public void setLoaded(Boolean loaded) {
+        this.loaded = loaded;
     }
 }
