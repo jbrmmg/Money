@@ -531,7 +531,19 @@ public class MoneyTest extends Support {
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
-    private void testReconciliationData(String filename, int expectedCount, double expectedSum) throws Exception {
+    private void testReconciliationData(String filename, int expectedCount, double expectedSum, boolean overrideAccount) throws Exception {
+        if(overrideAccount) {
+            // Override the account on the file
+            ReconciliationFileUpdateAccountDTO updateAccount = new ReconciliationFileUpdateAccountDTO();
+            updateAccount.setFilename(filename);
+            updateAccount.setAccountId("BANK");
+
+            getMockMvc().perform(put("/jbr/int/money/reconciliation/updatefileaccount")
+                            .contentType(getContentType())
+                            .content(this.json(updateAccount)))
+                    .andExpect(status().isOk());
+        }
+
         ReconciliationFileDTO loadFileRequest = new ReconciliationFileDTO();
         loadFileRequest.setFilename (filename);
 
@@ -553,22 +565,22 @@ public class MoneyTest extends Support {
 
     @Test
     public void testLoadReconciliationDataJLP() throws Exception {
-        testReconciliationData("test.JLP.csv", 19, -7110.34);
+        testReconciliationData("test.JLP.csv", 19, -7110.34, true);
     }
 
     @Test
     public void testLoadReconciliationDataAMEX() throws Exception {
-        testReconciliationData("test.AMEX.csv", 15, -132.64);
+        testReconciliationData("test.AMEX.csv", 15, -132.64, false);
     }
 
     @Test
     public void testLoadReconciliationDataBARC() throws Exception {
-        testReconciliationData("test.BARC.csv", 57, -1142.47);
+        testReconciliationData("test.BARC.csv", 57, -1142.47, true);
     }
 
     @Test
     public void testLoadReconciliationDataBank() throws Exception {
-        testReconciliationData("test.FirstDirect.csv", 18, -1004.52);
+        testReconciliationData("test.FirstDirect.csv", 18, -1004.52, false);
     }
 
     @Test

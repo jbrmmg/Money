@@ -64,6 +64,12 @@ public class ReconciliationManager {
 
     public void clearRepositoryData() {
         reconciliationRepository.deleteAll();
+
+        // Mark all files as not loaded.
+        for(ReconciliationFile nextFile : reconciliationFileRepository.findAll()) {
+            nextFile.setLoaded(false);
+            reconciliationFileRepository.save(nextFile);
+        }
     }
 
     public void loadFile(ReconciliationFileLoadDTO fileLoad) throws IOException {
@@ -73,18 +79,49 @@ public class ReconciliationManager {
         Optional<ReconciliationFile> file = reconciliationFileRepository.findById(fileLoad.getFilename());
 
         if(file.isPresent()) {
-            // Copy the transactions.
+            // Copy the transactions (set the account on each)
             for(ReconciliationFileTransaction next : reconciliationFileTransactionRepository.findById_File(file.get())) {
                 ReconciliationData newReconciliationData = transactionMapper.map(next,ReconciliationData.class);
+                newReconciliationData.setAccountId(file.get().getAccount().getId());
 
                 reconciliationRepository.save(newReconciliationData);
             }
+
+            // Mark the file as loaded.
+            file.get().setLoaded(true);
+            reconciliationFileRepository.save(file.get());
 
             return;
         }
 
         LOG.warn("{} not found, nothing loaded", fileLoad.getFilename());
         throw new FileNotFoundException("Cannot find " + fileLoad.getFilename());
+    }
+
+    public void updateAccount(ReconciliationFileUpdateAccountDTO updateAccount) throws IOException {
+        // Get the reconciliation file.
+        Optional<ReconciliationFile> file = reconciliationFileRepository.findById(updateAccount.getFilename());
+
+        if(file.isPresent()) {
+            // Get the account.
+            Account newAccount = transactionMapper.map(updateAccount.getAccountId(), Account.class);
+
+            // Update the account on this file.
+            file.get().setAccount(newAccount);
+            reconciliationFileRepository.save(file.get());
+
+            // If this is the loaded file, then update the transactions too
+            if(Boolean.TRUE.equals(file.get().getLoaded())) {
+                for(ReconciliationData transaction :reconciliationRepository.findAll()) {
+                    transaction.setAccountId(file.get().getAccount().getId());
+                }
+            }
+
+            return;
+        }
+
+        LOG.warn("{} not found, nothing loaded", updateAccount.getFilename());
+        throw new FileNotFoundException("Cannot find " + updateAccount.getFilename());
     }
 
     public void autoReconcileData() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
@@ -305,16 +342,21 @@ public class ReconciliationManager {
         throw new InvalidTransactionIdException(transactionId);
     }
 
-    public List<MatchDataDTO> matchImpl(String accountId) throws UpdateDeleteAccountException {
-
-        Optional<Account> account = accountRepository.findById(accountId);
-
-        if(account.isEmpty()) {
-            throw new UpdateDeleteAccountException("Invalid account id." + accountId);
+    public List<MatchDataDTO> matchImpl() throws UpdateDeleteAccountException {
+        // Find the file that is loaded.
+        Account account = null;
+        for(ReconciliationFile nextFile : reconciliationFileRepository.findAll()) {
+            if(Boolean.TRUE.equals(nextFile.getLoaded())) {
+                account = nextFile.getAccount();
+            }
         }
 
-        lastAccount = account.get();
-        List<MatchData> matchData = matchData(account.get());
+        if(account == null) {
+            throw new UpdateDeleteAccountException("No file has been selected, cannot determine account");
+        }
+
+        lastAccount = account;
+        List<MatchData> matchData = matchData(account);
 
         List<MatchDataDTO> result = new ArrayList<>();
         for(MatchData next : matchData) {

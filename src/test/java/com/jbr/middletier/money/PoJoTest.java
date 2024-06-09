@@ -19,6 +19,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -553,6 +556,13 @@ public class PoJoTest {
         Double test = 290.2;
         FinancialAmount financialAmount = utilityMapper.map(test,FinancialAmount.class);
         Assert.assertEquals(290.2,financialAmount.getValue(),0.001);
+
+        //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes
+        Assert.assertTrue(financialAmount.equals(test));
+
+        FinancialAmount financialAmount2 = new FinancialAmount(290.2);
+        //noinspection SimplifiableAssertion
+        Assert.assertTrue(financialAmount.equals(financialAmount2));
     }
 
     @Test
@@ -649,14 +659,14 @@ public class PoJoTest {
 
     @Test
     public void matchDataToDTO3() {
-        ReconciliationData reconcilationData = new ReconciliationData();
-        reconcilationData.setAmount(20.21);
-        reconcilationData.setDescription("Testing");
-        reconcilationData.setDate(LocalDate.of(2018,2,15));
-        reconcilationData.setCategory(null);
+        ReconciliationData reconciliationData = new ReconciliationData();
+        reconciliationData.setAmount(20.21);
+        reconciliationData.setDescription("Testing");
+        reconciliationData.setDate(LocalDate.of(2018,2,15));
+        reconciliationData.setCategory(null);
         Account account = new Account();
         account.setId("WHAT");
-        MatchData source = new MatchData(reconcilationData,account);
+        MatchData source = new MatchData(reconciliationData,account);
         source.setAfterAmount(0.74);
         source.setBeforeAmount(112.72);
 
@@ -679,6 +689,7 @@ public class PoJoTest {
         reconciliationFile.setSize(321L);
         reconciliationFile.setName("FredFlinstone.txt");
         reconciliationFile.setLastModified(LocalDateTime.of(2023,1,2,6,32,4));
+        reconciliationFile.setLoaded(false);
 
         Account account = new Account();
         account.setId("BLAH");
@@ -690,6 +701,7 @@ public class PoJoTest {
         Assert.assertEquals("BLAH",reconciliationFileDTO.getAccount().getId());
         Assert.assertEquals("FredFlinstone.txt",reconciliationFileDTO.getFilename());
         Assert.assertEquals("Error", reconciliationFileDTO.getError());
+        Assert.assertFalse(reconciliationFileDTO.getLoaded());
 
         reconciliationFile.setError("Another");
         reconciliationFile.setSize(921L);
@@ -721,7 +733,7 @@ public class PoJoTest {
     }
 
     @Test
-    public void testReconiliationFileTranId() {
+    public void testReconciliationFileTranId() {
         Account account = new Account();
         account.setId("TEST");
         account.setClosed(false);
@@ -805,5 +817,21 @@ public class PoJoTest {
         Assert.assertEquals(2023,test.getStatement().getYear().intValue());
         Assert.assertEquals(3,test.getStatement().getMonth().intValue());
         Assert.assertEquals("Testing",test.getDescription());
+    }
+
+    @Test
+    public void testTransactionSort() throws IOException {
+        TransactionSortDTO test = new TransactionSortDTO();
+        test.setField(TransactionSortField.CATEGORY);
+        test.setType(TransactionSortType.DESCENDING);
+
+        Assert.assertEquals(TransactionSortField.CATEGORY,test.getField());
+        Assert.assertEquals(TransactionSortType.DESCENDING,test.getType());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        test = objectMapper.readValue("{\"field\":\"AMOUNT\",\"type\":\"ASCENDING\"}", TransactionSortDTO.class);
+        Assert.assertEquals(TransactionSortField.AMOUNT,test.getField());
+        Assert.assertEquals(TransactionSortType.ASCENDING,test.getType());
     }
 }
