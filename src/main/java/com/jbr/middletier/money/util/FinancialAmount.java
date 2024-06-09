@@ -80,4 +80,19 @@ public class FinancialAmount implements Comparable<FinancialAmount> {
         Double internalValue = this.value;
         return internalValue.compareTo(financialAmount.value);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o instanceof FinancialAmount financialAmount) {
+            Double internalValue = this.value;
+            return internalValue.equals(financialAmount.value);
+        }
+
+        if(o instanceof Double doubleAmount) {
+            Double internalValue = this.value;
+            return internalValue.equals(doubleAmount);
+        }
+
+        return false;
+    }
 }

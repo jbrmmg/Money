@@ -111,7 +111,7 @@ public class ReconciliationManager {
             reconciliationFileRepository.save(file.get());
 
             // If this is the loaded file, then update the transactions too
-            if(file.get().getLoaded()) {
+            if(Boolean.TRUE.equals(file.get().getLoaded())) {
                 for(ReconciliationData transaction :reconciliationRepository.findAll()) {
                     transaction.setAccountId(file.get().getAccount().getId());
                 }
@@ -346,7 +346,7 @@ public class ReconciliationManager {
         // Find the file that is loaded.
         Account account = null;
         for(ReconciliationFile nextFile : reconciliationFileRepository.findAll()) {
-            if(nextFile.getLoaded()) {
+            if(Boolean.TRUE.equals(nextFile.getLoaded())) {
                 account = nextFile.getAccount();
             }
         }

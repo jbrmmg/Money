@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionSorting {
+    private TransactionSorting() {
+    }
+
     private static boolean listContainsField(List<TransactionSortDTO> list, TransactionSortField field) {
         for(TransactionSortDTO next : list) {
             if(next.getField().equals(field)) {
