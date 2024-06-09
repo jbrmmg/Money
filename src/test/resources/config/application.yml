@@ -22,7 +22,7 @@ spring:
                 enabled: false
 
     liquibase:
-        change-log: classpath:/db/changelog/db.changelog-master-dbg.yaml
+        change-log: classpath:/db/changelog/dbg/db.changelog-master.yaml
         contexts: default
 
     jpa:
