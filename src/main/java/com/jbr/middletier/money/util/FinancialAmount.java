@@ -95,4 +95,9 @@ public class FinancialAmount implements Comparable<FinancialAmount> {
 
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        return Double.hashCode(this.value);
+    }
 }
