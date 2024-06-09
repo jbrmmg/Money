@@ -207,6 +207,7 @@ public class ReconciliationTest extends Support {
     @Test
     public void testInvalidAccountId() {
         try {
+            this.reconciliationManager.clearRepositoryData();
             this.reconciliationManager.matchImpl();
             Assert.fail();
         } catch(UpdateDeleteAccountException ex) {
