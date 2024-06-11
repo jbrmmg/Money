@@ -17,7 +17,6 @@ public class TransactionMapper extends ModelMapper {
     public TransactionMapper(AccountManager accountManager,
                              CategoryManager categoryManager,
                              StatementManager statementManager,
-                             AccountMapper accountMapper,
                              ApplicationProperties applicationProperties) {
         StringLocalDateConverter stringLocalDateConverter = new StringLocalDateConverter();
         LocalDateStringConverter localDateStringConverter = new LocalDateStringConverter();
@@ -31,10 +30,11 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new DoubleFinancialAmountConverter());
         this.addConverter(new TransactionFromDTO(accountManager,categoryManager,statementManager,stringLocalDateConverter));
         this.addConverter(new TransactionToDTO(localDateStringConverter));
-        this.addConverter(new ReconciliationFileToDTO(accountMapper));
+        this.addConverter(new ReconciliationFileToDTO(accountManager));
         this.addConverter(new TransactionToReport(localDateStringConverter));
         this.addConverter(new RegularToReport(applicationProperties,localDateStringConverter));
         this.addConverter(new MatchDataToReport(localDateStringConverter));
+        this.addConverter(new TransactionReportToDTO(accountManager,categoryManager,statementManager));
         this.createTypeMap(DateRange.class, DateRangeDTO.class);
         this.createTypeMap(DateRangeDTO.class, DateRange.class);
     }

@@ -80,6 +80,12 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
         throw getUpdateDeleteException(id);
     }
 
+    public E getExternal(I id) throws U {
+        O internal = get(id);
+
+        return modelMapper.map(internal,this.externalClass);
+    }
+
     public List<E> create(E instance) throws A {
         this.loadCache();
 

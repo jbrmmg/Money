@@ -28,20 +28,17 @@ public class ReconciliationManager {
 
     private final ReconciliationRepository reconciliationRepository;
     private final CategoryRepository categoryRepository;
-    private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final AccountTransactionManager accountTransactionManager;
     private final TransactionMapper transactionMapper;
     private final ReconciliationMapper reconciliationMapper;
-    private Account lastAccount;
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
     private final ReconciliationFileRepository reconciliationFileRepository;
 
     @Autowired
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
                                  CategoryRepository categoryRepository,
-                                 AccountRepository accountRepository,
                                  TransactionRepository transactionRepository,
                                  StatementRepository statementRepository,
                                  AccountTransactionManager accountTransactionManager,
@@ -51,13 +48,11 @@ public class ReconciliationManager {
                                  ReconciliationFileRepository reconciliationFileRepository) {
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
-        this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
         this.accountTransactionManager = accountTransactionManager;
         this.transactionMapper = transactionMapper;
         this.reconciliationMapper = reconciliationMapper;
-        this.lastAccount = null;
         this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
         this.reconciliationFileRepository = reconciliationFileRepository;
     }
@@ -120,13 +115,13 @@ public class ReconciliationManager {
             return;
         }
 
-        LOG.warn("{} not found, nothing loaded", updateAccount.getFilename());
+        LOG.warn("{} not found, cannot update account", updateAccount.getFilename());
         throw new FileNotFoundException("Cannot find " + updateAccount.getFilename());
     }
 
-    public void autoReconcileData() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public void autoReconcileData() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException, NullOrBlankAccountIdException {
         // Get the match data an automatically perform the roll forward action (create or reconcile)
-        List<MatchData> matchData = matchFromLastData();
+        List<MatchData> matchData = match();
 
         // Process the data.
         for (MatchData next : matchData ) {
@@ -160,13 +155,6 @@ public class ReconciliationManager {
                 throw ex;
             }
         }
-    }
-
-    private List<MatchData> matchFromLastData() {
-        if (lastAccount == null)
-            return new ArrayList<>();
-
-        return matchData(lastAccount);
     }
 
     private void innerLookForMatches(boolean reconciled, int daysAway, List<MatchData> result, List<Transaction> transactions) {
@@ -206,8 +194,25 @@ public class ReconciliationManager {
         }
     }
 
-    private List<MatchData> matchData(Account account) {
-        // Attempt to match the reconciliation with the data in the account specified.
+    public List<MatchData> match() throws NullOrBlankAccountIdException {
+        // Get the account of the data that is in the reconcile data.
+        Account account = null;
+        for(ReconciliationFile nextFile : reconciliationFileRepository.findAll()) {
+            if(Boolean.TRUE.equals(nextFile.getLoaded())) {
+                if(nextFile.getAccount() == null) {
+                    throw new NullOrBlankAccountIdException();
+                }
+
+                account = nextFile.getAccount();
+                break;
+            }
+        }
+
+        // If the account is null, then no file is loaded - just return empty.
+        List<MatchData> result = new ArrayList<>();
+        if(account == null) {
+            return result;
+        }
 
         // Get all transactions that are 'unlocked' on the account.
         List<Transaction> transactions = transactionRepository.findAll(Specification.where(notLocked()).and(accountIs(account)), Sort.by(Sort.Direction.ASC, "date", "amount"));
@@ -215,8 +220,6 @@ public class ReconciliationManager {
         // Get all the reconciliation data.
         List<ReconciliationData> reconciliationData = reconciliationRepository.findAllByOrderByDateAsc();
 
-        // Create the match data.
-        List<MatchData> result = new ArrayList<>();
 
         // Create a result for each reconciliation data.
         for(ReconciliationData next : reconciliationData) {
@@ -342,38 +345,12 @@ public class ReconciliationManager {
         throw new InvalidTransactionIdException(transactionId);
     }
 
-    public List<MatchDataDTO> matchImpl() throws UpdateDeleteAccountException {
-        // Find the file that is loaded.
-        Account account = null;
-        for(ReconciliationFile nextFile : reconciliationFileRepository.findAll()) {
-            if(Boolean.TRUE.equals(nextFile.getLoaded())) {
-                account = nextFile.getAccount();
-            }
-        }
-
-        if(account == null) {
-            throw new UpdateDeleteAccountException("No file has been selected, cannot determine account");
-        }
-
-        lastAccount = account;
-        List<MatchData> matchData = matchData(account);
-
+    public List<MatchDataDTO> matchImpl() throws NullOrBlankAccountIdException {
         List<MatchDataDTO> result = new ArrayList<>();
-        for(MatchData next : matchData) {
+        for(MatchData next : match()) {
             result.add(reconciliationMapper.map(next,MatchDataDTO.class));
         }
 
         return result;
-    }
-
-    public List<MatchData> match(String accountId) throws UpdateDeleteAccountException {
-        Optional<Account> account = accountRepository.findById(accountId);
-
-        if(account.isEmpty()) {
-            throw new UpdateDeleteAccountException("Invalid account id." + accountId);
-        }
-
-        lastAccount = account.get();
-        return matchData(account.get());
     }
 }

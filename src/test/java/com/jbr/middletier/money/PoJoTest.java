@@ -508,6 +508,14 @@ public class PoJoTest {
         DateRange dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
         Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
         Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
+
+        dateRangeDTO = new DateRangeDTO(null,"2010-06-21");
+        dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
+        Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
+
+        dateRangeDTO = new DateRangeDTO("2010-05-03",null);
+        dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
+        Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
     }
 
     @Test

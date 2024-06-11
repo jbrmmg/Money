@@ -3,10 +3,7 @@ package com.jbr.middletier.money.dto.mapper.converter;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.internal.TransactionReport;
 import com.jbr.middletier.money.data.primary.Regular;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
-import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.AbstractConverter;
 
 import java.time.LocalDate;
@@ -40,7 +37,9 @@ public class RegularToReport extends AbstractConverter<Regular, TransactionRepor
             result.setDate(this.localDateStringConverter.convert(nextDate));
         }
         result.setDescription(regular.getDescription());
-        result.setSearchDescription(regular.getDescription().toLowerCase().replaceAll("[^a-z0-9]",""));
+        if(regular.getDescription() != null) {
+            result.setSearchDescription(regular.getDescription().toLowerCase().replaceAll("[^a-z0-9]", ""));
+        }
         result.setFromReconciliation(false);
         result.setPredicted(true);
         if(regular.getAccount() != null) {

@@ -40,9 +40,11 @@ public class DateRangeDTO {
             throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);
         }
 
-        LocalDate toDate = convertToLocalDate(this.getTo());
-        if(date.isAfter(toDate)) {
-            throw new IllegalArgumentException("Date Range: the from date MUST be before the to date.");
+        if(this.getTo() != null) {
+            LocalDate toDate = convertToLocalDate(this.getTo());
+            if(date.isAfter(toDate)) {
+                throw new IllegalArgumentException("Date Range: the from date MUST be before the to date.");
+            }
         }
 
         this.from = from;
@@ -54,14 +56,16 @@ public class DateRangeDTO {
 
     public void setTo(String to) {
         // String must be in the format yyyy-MM-dd and if provided then must be after the 'from' date.
-        LocalDate date = convertToLocalDate(from);
+        LocalDate date = convertToLocalDate(to);
         if(date == null) {
             throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);
         }
 
-        LocalDate fromDate = convertToLocalDate(this.getFrom());
-        if(date.isBefore(fromDate)) {
-            throw new IllegalArgumentException("Date Range: the from date MUST be after the from date.");
+        if(this.getFrom() != null) {
+            LocalDate fromDate = convertToLocalDate(this.getFrom());
+            if(date.isBefore(fromDate)) {
+                throw new IllegalArgumentException("Date Range: the from date MUST be after the from date.");
+            }
         }
 
         this.to = to;

@@ -6,17 +6,13 @@ import com.jbr.middletier.money.data.internal.TransactionReport;
 import com.jbr.middletier.money.data.internal.repository.TransactionReportRepository;
 import com.jbr.middletier.money.data.primary.Regular;
 import com.jbr.middletier.money.data.primary.Transaction;
-import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
-import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
+import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +32,6 @@ public class TransactionReportManager {
     private final ReconciliationManager reconciliationManager;
     private final TransactionMapper mapper;
     private final ApplicationProperties applicationProperties;
-    private final StatementRepository statementRepository;
     private final TransactionReportRepository transactionReportRepository;
 
     @Autowired
@@ -44,14 +39,12 @@ public class TransactionReportManager {
                                     RegularPaymentManager regularPaymentManager,
                                     ReconciliationManager reconciliationManager,
                                     TransactionMapper mapper,
-                                    StatementRepository statementRepository,
                                     TransactionReportRepository transactionReportRepository,
                                     ApplicationProperties applicationProperties) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
         this.reconciliationManager = reconciliationManager;
         this.mapper = mapper;
-        this.statementRepository = statementRepository;
         this.applicationProperties = applicationProperties;
         this.transactionReportRepository = transactionReportRepository;
     }
@@ -70,7 +63,7 @@ public class TransactionReportManager {
         // Need to be able to refresh these when the account changes.
         getPredicted();
         getStandardTransactions();
-        getFromReconciled("BANK");
+        getFromReconciled();
     }
 
     private String getDateString(LocalDate date) {
@@ -84,16 +77,12 @@ public class TransactionReportManager {
         }
     }
 
-    private void getFromReconciled(String reconciliationAccount) {
-        if(reconciliationAccount == null || reconciliationAccount.isEmpty()) {
-            return;
-        }
-
+    private void getFromReconciled() {
         //TODO when updating; remove the reconciliation only data + remove the reconciliation flag on standard transaction.
 
         // Get the transactions
         try {
-            for (MatchData next : reconciliationManager.match(reconciliationAccount)) {
+            for (MatchData next : reconciliationManager.match()) {
                 if(next.getTransaction() == null) {
                     // Add data to the transaction report.
                     //TODO fix
@@ -109,8 +98,8 @@ public class TransactionReportManager {
                     }
                 }
             }
-        } catch (UpdateDeleteAccountException e) {
-            LOG.error("Problem reading the reconciled data {}", e.getMessage());
+        } catch (NullOrBlankAccountIdException e) {
+            LOG.error("Cannot determine the reconciliation transactions. {}", e.getMessage());
         }
     }
 
@@ -237,66 +226,63 @@ public class TransactionReportManager {
     }
 
     private Specification<TransactionReport> findByCriteria(TransactionFilterDTO filter) {
-        return new Specification<TransactionReport>() {
-            @Override
-            public Predicate toPredicate(Root<TransactionReport> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-                List<Predicate> predicates = new ArrayList<>();
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-                if(filter.getPredicted() != null) {
-                    predicates.add(cb.equal(root.get("predicted"),filter.getPredicted()));
-                }
-
-                if(filter.getFromReconciled() != null) {
-                    predicates.add(cb.equal(root.get("fromReconciliation"),filter.getFromReconciled()));
-                }
-
-                if(filter.getLocked() != null) {
-                    predicates.add(cb.equal(root.get("locked"),filter.getLocked()));
-                }
-
-                if(filter.getDescription() != null) {
-                    predicates.add(cb.like(root.get("searchDescription"),"%"+filter.getDescription().toLowerCase().replaceAll("[^a-z0-9]","")+"%"));
-                }
-
-                if(filter.getStatementDate() != null) {
-                    if(filter.getStatementDate().getMonth() != null) {
-                        predicates.add(cb.equal(root.get("statementMonth"),filter.getStatementDate().getMonth()));
-                    }
-                    if(filter.getStatementDate().getYear() != null) {
-                        predicates.add(cb.equal(root.get("statementYear"),filter.getStatementDate().getYear()));
-                    }
-                }
-
-                if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
-                    predicates.add(root.get("categoryId").in(filter.getCategories()));
-                }
-
-                if(filter.getDateRange() != null) {
-                    if(filter.getDateRange().getFrom() != null && filter.getDateRange().getTo() != null) {
-                        predicates.add(cb.between(root.get("date"),filter.getDateRange().getFrom(),filter.getDateRange().getTo()));
-                    } else if(filter.getDateRange().getFrom() != null) {
-                        predicates.add(cb.greaterThanOrEqualTo(root.get("date"),filter.getDateRange().getFrom()));
-                    } else if(filter.getDateRange().getTo() != null) {
-                        predicates.add(cb.lessThanOrEqualTo(root.get("date"),filter.getDateRange().getTo()));
-                    }
-                }
-
-                if(filter.getValueRange() != null) {
-                    if(filter.getValueRange().getMinimum() != null && filter.getValueRange().getMaximum() != null) {
-                        predicates.add(cb.between(root.get("amount"),filter.getValueRange().getMinimum(),filter.getValueRange().getMaximum()));
-                    } else if(filter.getValueRange().getMinimum() != null) {
-                        predicates.add(cb.greaterThanOrEqualTo(root.get("amount"),filter.getValueRange().getMinimum()));
-                    } else if(filter.getValueRange().getMaximum() != null) {
-                        predicates.add(cb.lessThanOrEqualTo(root.get("amount"),filter.getValueRange().getMaximum()));
-                    }
-                }
-
-                if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
-                    predicates.add(cb.equal(root.get("accountId"),filter.getAccounts()));
-                }
-
-                return cb.and(predicates.toArray(new Predicate[] {}));
+            if(filter.getPredicted() != null) {
+                predicates.add(cb.equal(root.get("predicted"),filter.getPredicted()));
             }
+
+            if(filter.getFromReconciled() != null) {
+                predicates.add(cb.equal(root.get("fromReconciliation"),filter.getFromReconciled()));
+            }
+
+            if(filter.getLocked() != null) {
+                predicates.add(cb.equal(root.get("locked"),filter.getLocked()));
+            }
+
+            if(filter.getDescription() != null) {
+                predicates.add(cb.like(root.get("searchDescription"),"%"+filter.getDescription().toLowerCase().replaceAll("[^a-z0-9]","")+"%"));
+            }
+
+            if(filter.getStatementDate() != null) {
+                if(filter.getStatementDate().getMonth() != null) {
+                    predicates.add(cb.equal(root.get("statementMonth"),filter.getStatementDate().getMonth()));
+                }
+                if(filter.getStatementDate().getYear() != null) {
+                    predicates.add(cb.equal(root.get("statementYear"),filter.getStatementDate().getYear()));
+                }
+            }
+
+            if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+                predicates.add(root.get("categoryId").in(filter.getCategories()));
+            }
+
+            if(filter.getDateRange() != null) {
+                if(filter.getDateRange().getFrom() != null && filter.getDateRange().getTo() != null) {
+                    predicates.add(cb.between(root.get("date"),filter.getDateRange().getFrom(),filter.getDateRange().getTo()));
+                } else if(filter.getDateRange().getFrom() != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("date"),filter.getDateRange().getFrom()));
+                } else if(filter.getDateRange().getTo() != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("date"),filter.getDateRange().getTo()));
+                }
+            }
+
+            if(filter.getValueRange() != null) {
+                if(filter.getValueRange().getMinimum() != null && filter.getValueRange().getMaximum() != null) {
+                    predicates.add(cb.between(root.get("amount"),filter.getValueRange().getMinimum(),filter.getValueRange().getMaximum()));
+                } else if(filter.getValueRange().getMinimum() != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("amount"),filter.getValueRange().getMinimum()));
+                } else if(filter.getValueRange().getMaximum() != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("amount"),filter.getValueRange().getMaximum()));
+                }
+            }
+
+            if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
+                predicates.add(cb.equal(root.get("accountId"),filter.getAccounts()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[] {}));
         };
     }
 

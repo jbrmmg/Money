@@ -1,13 +1,7 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
 import com.jbr.middletier.money.data.internal.TransactionReport;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.dto.TransactionReportDTO;
-import com.jbr.middletier.money.dto.mapper.AccountMapper;
-import com.jbr.middletier.money.dto.mapper.CategoryMapper;
 import com.jbr.middletier.money.reconciliation.MatchData;
-import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.AbstractConverter;
 
 public class MatchDataToReport extends AbstractConverter<MatchData, TransactionReport> {
@@ -31,7 +25,9 @@ public class MatchDataToReport extends AbstractConverter<MatchData, TransactionR
             result.setDate(this.localDateStringConverter.convert(matchData.getDate()));
         }
         result.setDescription(matchData.getDescription());
-        result.setSearchDescription(matchData.getDescription().toLowerCase().replaceAll("[^a-z0-9]",""));
+        if(matchData.getDescription() != null) {
+            result.setSearchDescription(matchData.getDescription().toLowerCase().replaceAll("[^a-z0-9]", ""));
+        }
         result.setFromReconciliation(true);
         result.setPredicted(false);
         if(matchData.getAccount() != null) {

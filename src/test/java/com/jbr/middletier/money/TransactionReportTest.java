@@ -3,6 +3,7 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.Constants;
+import com.jbr.middletier.money.data.internal.TransactionReport;
 import com.jbr.middletier.money.data.primary.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
@@ -17,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import java.time.LocalDate;
-import java.util.stream.Stream;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
@@ -120,12 +120,13 @@ public class TransactionReportTest {
     public void testMapperFromRegular() throws CannotDetermineNextDateException {
         // Test mapping a transaction to a report transaction.
         Regular test = createRegular();
-        TransactionReportDTO dto = transactionMapper.map(test,TransactionReportDTO.class);
+        TransactionReport transactionReport = transactionMapper.map(test,TransactionReport.class);
+        TransactionReportDTO dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         // Main test.
         Assert.assertNotNull(dto);
         Assert.assertEquals(test.getAmount(), dto.getAmount().getValue(), 0.001);
-        Assert.assertNull(dto.getId());
+        Assert.assertEquals(0,dto.getId().intValue());
         Assert.assertTrue(dto.getPredicted());
         Assert.assertFalse(dto.getFromReconciliation());
         Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getNextDate(applicationProperties.getToday())), dto.getDate());
@@ -138,7 +139,8 @@ public class TransactionReportTest {
         test.setDescription(null);
         test.setAccount(null);
         test.setCategory(null);
-        dto = transactionMapper.map(test,TransactionReportDTO.class);
+        transactionReport = transactionMapper.map(test,TransactionReport.class);
+        dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         Assert.assertNull(dto.getStatement());
         Assert.assertNull(dto.getAccount());
@@ -149,8 +151,24 @@ public class TransactionReportTest {
     @Test
     public void testMapperFromTransaction() {
         // Test mapping a transaction to a report transaction.
+        Account testAccount = new Account();
+        testAccount.setId("BANK");
+        Category testCategory = new Category();
+        testCategory.setId("HSE");
+        Statement testStatement = new Statement();
+        StatementId testStatementId = new StatementId();
+        testStatementId.setAccount(testAccount);
+        testStatementId.setYear(2010);
+        testStatementId.setMonth(1);
+        testStatement.setId(testStatementId);
+        testStatement.setLocked(false);
+        testStatement.setOpenBalance(0);
         Transaction test = createTestTransaction();
-        TransactionReportDTO dto = transactionMapper.map(test,TransactionReportDTO.class);
+        test.setAccount(testAccount);
+        test.setCategory(testCategory);
+        test.setStatement(testStatement);
+        TransactionReport transactionReport = transactionMapper.map(test,TransactionReport.class);
+        TransactionReportDTO dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         // Main test.
         Assert.assertNotNull(dto);
@@ -170,7 +188,8 @@ public class TransactionReportTest {
         test.setDescription(null);
         test.setAccount(null);
         test.setCategory(null);
-        dto = transactionMapper.map(test,TransactionReportDTO.class);
+        transactionReport = transactionMapper.map(test,TransactionReport.class);
+        dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         Assert.assertNull(dto.getStatement());
         Assert.assertNull(dto.getAccount());
@@ -182,7 +201,8 @@ public class TransactionReportTest {
     public void testMapperFromMatch() {
         // Test mapping a transaction to a report transaction.
         MatchData test = createMatchWithTransaction();
-        TransactionReportDTO dto = transactionMapper.map(test,TransactionReportDTO.class);
+        TransactionReport transactionReport = transactionMapper.map(test,TransactionReport.class);
+        TransactionReportDTO dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         // Main test.
         Assert.assertNotNull(dto);
@@ -197,12 +217,13 @@ public class TransactionReportTest {
 
         // Check its ok when created from reconciliation data.
         test = createMatch(false);
-        dto = transactionMapper.map(test,TransactionReportDTO.class);
+        transactionReport = transactionMapper.map(test,TransactionReport.class);
+        dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         Assert.assertNull(dto.getStatement());
         Assert.assertNotNull(dto);
         Assert.assertEquals(test.getAmount(), dto.getAmount().getValue(), 0.001);
-        Assert.assertNull(dto.getId());
+        Assert.assertEquals(0, dto.getId().intValue());
         Assert.assertFalse(dto.getPredicted());
         Assert.assertTrue(dto.getFromReconciliation());
         Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
@@ -212,7 +233,8 @@ public class TransactionReportTest {
 
         // Check that it still works when contained objects are
         test = createMatch(true);
-        dto = transactionMapper.map(test,TransactionReportDTO.class);
+        transactionReport = transactionMapper.map(test,TransactionReport.class);
+        dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
         Assert.assertNull(dto.getStatement());
         Assert.assertNull(dto.getCategory());
         Assert.assertNull(dto.getDescription());

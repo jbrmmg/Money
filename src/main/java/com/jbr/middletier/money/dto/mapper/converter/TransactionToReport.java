@@ -23,7 +23,9 @@ public class TransactionToReport extends AbstractConverter<Transaction, Transact
             result.setDate(this.localDateStringConverter.convert(transaction.getDate()));
         }
         result.setDescription(transaction.getDescription());
-        result.setSearchDescription(transaction.getDescription().toLowerCase().replaceAll("[^a-z0-9]",""));
+        if(transaction.getDescription() != null) {
+            result.setSearchDescription(transaction.getDescription().toLowerCase().replaceAll("[^a-z0-9]", ""));
+        }
         result.setFromReconciliation(false);
         result.setPredicted(false);
         if(transaction.getAccount() != null) {

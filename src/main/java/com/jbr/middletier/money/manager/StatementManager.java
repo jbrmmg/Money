@@ -195,4 +195,10 @@ public class StatementManager {
 
         return statementRepository.findById(id);
     }
+
+    public Optional<StatementDTO> getStatementExternal(Account account, Integer month, Integer year) {
+        Optional<Statement> statement = getStatement(account,month,year);
+
+        return statement.map(value -> statementMapper.map(value, StatementDTO.class));
+    }
 }
