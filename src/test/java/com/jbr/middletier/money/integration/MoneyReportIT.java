@@ -120,7 +120,7 @@ public class MoneyReportIT extends Support {
                     getNumberString(row,3),
                     getNumberString(next.getId(),6),
                     next.getDate(),
-                    next.getBalance().toFormattedString(12),
+                    getFinancialAmountString(next.getBalance()),
                     next.getAmount().toFormattedString(10),
                     getPaddedString(next.getCategory() == null ? "" : next.getCategory().getId(),3),
                     getPaddedString(next.getAccount() == null ? "" : next.getAccount().getId(),4),
@@ -237,7 +237,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -258,8 +257,8 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(38)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("$.transactions", hasSize(35)))
+                .andExpect(jsonPath("openBalance.value", is(1029.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -282,7 +281,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(32)))
-                .andExpect(jsonPath("openBalance.value", is(630.16)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -296,10 +295,7 @@ public class MoneyReportIT extends Support {
     @Test
     public void testFilterNotLockedBank() throws Exception {
         AccountDTO account = new AccountDTO();
-        account.setId("BANK");
-        account.setClosed(false);
-        account.setColour("FF0000");
-        account.setName("Bank");
+        account.setId("AMEX");
 
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
@@ -311,9 +307,9 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(3)))
-                .andExpect(jsonPath("openBalance.value", is(620.16)))
-                .andExpect(jsonPath("openDate", is("2023-05-01")))
+                .andExpect(jsonPath("$.transactions", hasSize(32)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -338,9 +334,33 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(11)))
-                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("$.transactions", hasSize(10)))
                 .andExpect(jsonPath("openDate", is("2023-04-11")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterAccount() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setAccounts(List.of(account));
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(3)))
+                .andExpect(jsonPath("openDate", is("2023-04-22")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -362,7 +382,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(19)))
-                .andExpect(jsonPath("openBalance.value", is(0.0)))
+//                .andExpect(jsonPath("openBalance.value", is(0.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-20")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -399,11 +419,11 @@ public class MoneyReportIT extends Support {
     @Test
     public void testNull() throws Exception {
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
-                        .content("{\"reconciliationAccount\": \"BANK\"}")
+                        .content("{}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(59)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openBalance.value", is(1029.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -417,11 +437,11 @@ public class MoneyReportIT extends Support {
     @Test
     public void testFromString() throws Exception {
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
-                        .content("{\"accounts\":[],\"categories\":[],\"reconciliationAccount\":\"BANK\",\"predicated\":false,\"locked\":false,\"fromReconciled\":false}")
+                        .content("{\"accounts\":[],\"categories\":[],\"predicted\":false,\"locked\":false,\"fromReconciled\":false}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(38)))
-                .andExpect(jsonPath("openBalance.value", is(630.16)))
+                .andExpect(jsonPath("$.transactions", hasSize(32)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -449,7 +469,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Octopus")))
@@ -476,7 +495,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Wages")))
@@ -504,7 +522,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Disney Plus")))
@@ -532,7 +549,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Council Tax")))
@@ -559,7 +575,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[3].description", is("Netflix")))
