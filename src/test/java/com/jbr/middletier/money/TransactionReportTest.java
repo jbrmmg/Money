@@ -8,6 +8,10 @@ import com.jbr.middletier.money.data.primary.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
+import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
+import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
+import com.jbr.middletier.money.manager.AccountManager;
+import com.jbr.middletier.money.manager.CategoryManager;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import org.junit.Assert;
@@ -29,33 +33,14 @@ public class TransactionReportTest {
     @Autowired
     public ApplicationProperties applicationProperties;
 
-    private Account createAccount() {
-        Account testAccount = new Account();
-        testAccount.setId("TEST");
-        testAccount.setName("Testing");
-        testAccount.setColour("FFFFFF");
-        testAccount.setClosed(false);
-        testAccount.setImagePrefix("Blah");
+    @Autowired
+    public AccountManager accountManager;
 
-        return testAccount;
-    }
+    @Autowired
+    public CategoryManager categoryManager;
 
-    private Category createCategory() {
-        Category testCategory = new Category();
-        testCategory.setId("TEST");
-        testCategory.setName("Testing");
-        testCategory.setColour("FFFFFF");
-        testCategory.setExpense(false);
-        testCategory.setGroup("BLH");
-        testCategory.setRestricted(false);
-        testCategory.setSort(100L);
-        testCategory.setSystemUse(false);
-
-        return testCategory;
-    }
-
-    private Transaction createTestTransaction() {
-        Account testAccount = createAccount();
+    private Transaction createTestTransaction() throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
+        Account testAccount = accountManager.get("BANK");
 
         StatementId testStatementId = new StatementId();
         testStatementId.setAccount(testAccount);
@@ -73,17 +58,17 @@ public class TransactionReportTest {
         result.setDescription("Testing");
         result.setOppositeTransactionId(73);
         result.setAccount(testAccount);
-        result.setCategory(createCategory());
+        result.setCategory(categoryManager.get("HSE"));
         result.setStatement(testStatement);
 
         return result;
     }
 
-    private Regular createRegular() {
+    private Regular createRegular() throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
         Regular result = new Regular();
-        result.setAccount(createAccount());
+        result.setAccount(accountManager.get("BANK"));
         result.setAmount(-112.92);
-        result.setCategory(createCategory());
+        result.setCategory(categoryManager.get("HSE"));
         result.setId(1);
         result.setDescription("Test");
         result.setFrequency("1M");
@@ -94,30 +79,24 @@ public class TransactionReportTest {
         return result;
     }
 
-    private MatchData createMatchWithTransaction() {
+    private MatchData createMatchWithTransaction() throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         return new MatchData(createTestTransaction());
     }
 
-    private MatchData createMatch(boolean withNulls) {
+    private MatchData createMatch(boolean withNulls) throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         ReconciliationData reconciliationData = new ReconciliationData();
         reconciliationData.setAmount(-291.21);
         reconciliationData.setDate(LocalDate.of(2023,9, 12));
         if(!withNulls) {
             reconciliationData.setDescription("Test Reconciliation");
-            reconciliationData.setCategory(createCategory());
+            reconciliationData.setCategory(categoryManager.get("HSE"));
         }
 
-        return new MatchData(reconciliationData,createAccount());
-    }
-
-    private DateRangeDTO getRegularFilterDateRange(Regular regular) throws CannotDetermineNextDateException {
-        LocalDate from = regular.getNextDate(applicationProperties.getToday()).minusDays(1);
-        LocalDate to = regular.getNextDate(applicationProperties.getToday()).plusDays(1);
-        return new DateRangeDTO(Constants.MONEY_DATE_FORMATTER.format(from),Constants.MONEY_DATE_FORMATTER.format(to));
+        return new MatchData(reconciliationData,accountManager.get("BANK"));
     }
 
     @Test
-    public void testMapperFromRegular() throws CannotDetermineNextDateException {
+    public void testMapperFromRegular() throws CannotDetermineNextDateException, UpdateDeleteCategoryException, UpdateDeleteAccountException {
         // Test mapping a transaction to a report transaction.
         Regular test = createRegular();
         TransactionReport transactionReport = transactionMapper.map(test,TransactionReport.class);
@@ -149,7 +128,7 @@ public class TransactionReportTest {
     }
 
     @Test
-    public void testMapperFromTransaction() {
+    public void testMapperFromTransaction() throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         // Test mapping a transaction to a report transaction.
         Account testAccount = new Account();
         testAccount.setId("BANK");
@@ -198,7 +177,7 @@ public class TransactionReportTest {
     }
 
     @Test
-    public void testMapperFromMatch() {
+    public void testMapperFromMatch() throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         // Test mapping a transaction to a report transaction.
         MatchData test = createMatchWithTransaction();
         TransactionReport transactionReport = transactionMapper.map(test,TransactionReport.class);

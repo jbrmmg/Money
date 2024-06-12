@@ -87,3 +87,23 @@ databaseChangeLog:
             encoding: UTF-8
             file: /db/changelog/test-data/report/regular.csv
             separator: ","
+        - loadData:
+            tableName: reconciliation_file
+            columns:
+              - column:
+                  name: name
+              - column:
+                  name: account_id
+              - column:
+                  name: last_modified
+              - column:
+                  name: size
+              - column:
+                  name: error
+              - column:
+                  name: loaded
+            commentLineStartsWith: //
+            encoding: UTF-8
+            file: /db/changelog/test-data/report/reconciliation_file.csv
+            separator: ","
+

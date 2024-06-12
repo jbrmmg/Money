@@ -93,29 +93,29 @@ public class MoneyReportIT extends Support {
     private void logTransactionData(TransactionDataDTO transactionData) {
         LOG.info("-".repeat(160));
         LOG.info("TRANSACTION DETAILS{}|",spacing(140));
-        LOG.info("  Open    {} {} {}|", transactionData.getOpenDate(), getFinancialAmountString(transactionData.getOpenBalance()),spacing(125));
-        LOG.info("  Today   {} {} {}|", transactionData.getToday(), getFinancialAmountString(transactionData.getTodayBalance()),spacing(125));
-        LOG.info("  Forward {} {} {}|", getPaddedString(transactionData.getForwardDate(),10), getFinancialAmountString(transactionData.getForwardBalance()),spacing(125));
+        LOG.info("  Open    {} {} {}|", transactionData.getOpenDate(), getFinancialAmountString(transactionData.getOpenBalance()),spacing(122));
+        LOG.info("  Today   {} {} {}|", transactionData.getToday(), getFinancialAmountString(transactionData.getTodayBalance()),spacing(122));
+        LOG.info("  Forward {} {} {}|", getPaddedString(transactionData.getForwardDate(),10), getFinancialAmountString(transactionData.getForwardBalance()),spacing(122));
         LOG.info("{}|", spacing(159));
         int row = 1;
+        LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}|",
+                "Row",
+                "Id    ",
+                "Date      ",
+                "Balance        ",
+                "Amount       ",
+                "Cat",
+                "Acc ",
+                "Op. Id",
+                "Open Balance   ",
+                "Year",
+                "Mn",
+                "Locked",
+                "Rec",
+                "Predict",
+                "Description                             ",
+                "Act. ");
         for(TransactionReportDTO next : transactionData.getTransactions()) {
-            LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}|",
-                    "Row",
-                    "Id    ",
-                    "Date      ",
-                    "Balance        ",
-                    "Amount       ",
-                    "Cat",
-                    "Acc ",
-                    "Op. Id",
-                    "Open Balance   ",
-                    "Year",
-                    "Mn",
-                    "Locked",
-                    "Rec",
-                    "Predict",
-                    "Description                             ",
-                    "Act. ");
             LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}{}{}{}{}|",
                     getNumberString(row,3),
                     getNumberString(next.getId(),6),

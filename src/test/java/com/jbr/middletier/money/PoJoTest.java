@@ -700,13 +700,13 @@ public class PoJoTest {
         reconciliationFile.setLoaded(false);
 
         Account account = new Account();
-        account.setId("BLAH");
+        account.setId("BANK");
         reconciliationFile.setAccount(account);
 
         ReconciliationFileDTO reconciliationFileDTO = transactionMapper.map(reconciliationFile,ReconciliationFileDTO.class);
         Assert.assertEquals(321L,reconciliationFileDTO.getSize(),0.1);
         Assert.assertEquals(LocalDateTime.of(2023,1,2,6,32,4),reconciliationFileDTO.getLastModified());
-        Assert.assertEquals("BLAH",reconciliationFileDTO.getAccount().getId());
+        Assert.assertEquals("BANK",reconciliationFileDTO.getAccount().getId());
         Assert.assertEquals("FredFlinstone.txt",reconciliationFileDTO.getFilename());
         Assert.assertEquals("Error", reconciliationFileDTO.getError());
         Assert.assertFalse(reconciliationFileDTO.getLoaded());

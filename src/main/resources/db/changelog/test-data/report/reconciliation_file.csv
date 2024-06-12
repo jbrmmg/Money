@@ -1,0 +1,2 @@
+name,account_id,last_modified,size,error,loaded
+test_file.csv,BANK,NULL,NULL,false,true

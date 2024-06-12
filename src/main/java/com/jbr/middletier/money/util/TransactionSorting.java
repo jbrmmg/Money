@@ -1,9 +1,6 @@
 package com.jbr.middletier.money.util;
 
-import com.jbr.middletier.money.dto.TransactionReportDTO;
-import com.jbr.middletier.money.dto.TransactionSortDTO;
-import com.jbr.middletier.money.dto.TransactionSortField;
-import com.jbr.middletier.money.dto.TransactionSortType;
+import com.jbr.middletier.money.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,10 +69,28 @@ public class TransactionSorting {
         return t1.getAccount().getId().compareTo(t2.getAccount().getId());
     }
 
+    private static String getStatementSort(StatementDTO statement, AccountDTO account) {
+        if(statement == null) {
+            return "999999" + account.getId();
+        } else {
+            int sortValue = statement.getYear() * 100 + statement.getMonth();
+            return sortValue + statement.getAccountId();
+        }
+    }
+
+    private static int compareStatement(TransactionReportDTO t1, TransactionReportDTO t2){
+        // Compare on statement (null treated higher)
+        String t1StatementSort = getStatementSort(t1.getStatement(),t1.getAccount());
+        String t2StatementSort = getStatementSort(t2.getStatement(),t2.getAccount());
+
+        return t1StatementSort.compareTo(t2StatementSort);
+    }
+
     public static int compare(TransactionReportDTO t1, TransactionReportDTO t2, List<TransactionSortDTO> sorting) {
         for(TransactionSortDTO sort : getFullSort(sorting)) {
             // Get the next sort field result.
             int nextResult = switch (sort.getField()) {
+                case STATEMENT -> compareStatement(t1,t2);
                 case DATE -> compareDate(t1, t2);
                 case AMOUNT -> compareAmount(t1, t2);
                 case DESCRIPTION -> compareDescription(t1, t2);

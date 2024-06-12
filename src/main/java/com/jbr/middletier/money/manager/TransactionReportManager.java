@@ -313,7 +313,7 @@ public class TransactionReportManager {
         // Get the transactions that meet the filter.
         //TODO - remove this when paging is implemented.
         int max = 600;
-        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,"statementSort","date","accountId"))) {
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,"statementSort","date","amount","accountId"))) {
             result.getTransactions().add(this.mapper.map(next,TransactionReportDTO.class));
             if(max-- == 0) {
                 break;

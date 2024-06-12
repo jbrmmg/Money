@@ -5,3 +5,4 @@ spring:
 
 money:
   today: 2023-05-24
+  reconcile-file-location:
