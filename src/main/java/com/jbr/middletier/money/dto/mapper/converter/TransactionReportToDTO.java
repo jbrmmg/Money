@@ -58,6 +58,7 @@ public class TransactionReportToDTO extends AbstractConverter<TransactionReport,
                 return statement.get();
             }
         } catch (UpdateDeleteAccountException ignored) {
+            return null;
         }
 
         return null;

@@ -12,7 +12,9 @@ import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ import java.util.stream.Collectors;
 @Controller
 public class TransactionReportManager {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionReportManager.class);
+
+    private static final String DATE_COLUMN = "date";
+    private static final String AMOUNT_COLUMN = "amount";
 
     private final AccountTransactionManager transactionManager;
     private final RegularPaymentManager regularPaymentManager;
@@ -146,12 +151,9 @@ public class TransactionReportManager {
         double openBalance = 0;
         for(TransactionReportDTO next : transactionData.getTransactions()) {
             // Has this account been seen?
-            if(!accountIds.contains(next.getAccount().getId())) {
-                // If there is a balance, then update the value.
-                if(next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
-                    openBalance += next.getStatement().getOpenBalance().getValue();
-                    accountIds.add(next.getAccount().getId());
-                }
+            if(!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
+                openBalance += next.getStatement().getOpenBalance().getValue();
+                accountIds.add(next.getAccount().getId());
             }
         }
 
@@ -226,66 +228,88 @@ public class TransactionReportManager {
         return new FinancialAmount(balance);
     }
 
+    private void addFlagPredicates(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getPredicted() != null) {
+            predicates.add(cb.equal(root.get("predicted"),filter.getPredicted()));
+        }
+
+        if(filter.getFromReconciled() != null) {
+            predicates.add(cb.equal(root.get("fromReconciliation"),filter.getFromReconciled()));
+        }
+
+        if(filter.getLocked() != null) {
+            predicates.add(cb.equal(root.get("locked"),filter.getLocked()));
+        }
+    }
+
+    private void addDescriptionPredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getDescription() != null) {
+            predicates.add(cb.like(root.get("searchDescription"),"%"+filter.getDescription().toLowerCase().replaceAll("[^a-z0-9]","")+"%"));
+        }
+    }
+
+    private void addStatementPredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getStatementDate() != null) {
+            if(filter.getStatementDate().getMonth() != null) {
+                predicates.add(cb.equal(root.get("statementMonth"),filter.getStatementDate().getMonth()));
+            }
+            if(filter.getStatementDate().getYear() != null) {
+                predicates.add(cb.equal(root.get("statementYear"),filter.getStatementDate().getYear()));
+            }
+        }
+    }
+
+    private void addCategoryPredicate(Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
+            predicates.add(root.get("categoryId").in(filter.getCategories().stream()
+                    .map(CategoryDTO::getId)
+                    .collect(Collectors.toList())));
+        }
+    }
+
+    private void addDateRangePredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getDateRange() != null) {
+            if(filter.getDateRange().getFrom() != null && filter.getDateRange().getTo() != null) {
+                predicates.add(cb.between(root.get(DATE_COLUMN),filter.getDateRange().getFrom(),filter.getDateRange().getTo()));
+            } else if(filter.getDateRange().getFrom() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get(DATE_COLUMN),filter.getDateRange().getFrom()));
+            } else if(filter.getDateRange().getTo() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get(DATE_COLUMN),filter.getDateRange().getTo()));
+            }
+        }
+    }
+
+    private void addValueRangePredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getValueRange() != null) {
+            if(filter.getValueRange().getMinimum() != null && filter.getValueRange().getMaximum() != null) {
+                predicates.add(cb.between(root.get(AMOUNT_COLUMN),filter.getValueRange().getMinimum(),filter.getValueRange().getMaximum()));
+            } else if(filter.getValueRange().getMinimum() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get(AMOUNT_COLUMN),filter.getValueRange().getMinimum()));
+            } else if(filter.getValueRange().getMaximum() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get(AMOUNT_COLUMN),filter.getValueRange().getMaximum()));
+            }
+        }
+    }
+
+    private void addAccountPredicate(Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
+            predicates.add(root.get("accountId").in(filter.getAccounts().stream()
+                    .map(AccountDTO::getId)
+                    .collect(Collectors.toList())));
+        }
+    }
+
     private Specification<TransactionReport> findByCriteria(TransactionFilterDTO filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if(filter.getPredicted() != null) {
-                predicates.add(cb.equal(root.get("predicted"),filter.getPredicted()));
-            }
-
-            if(filter.getFromReconciled() != null) {
-                predicates.add(cb.equal(root.get("fromReconciliation"),filter.getFromReconciled()));
-            }
-
-            if(filter.getLocked() != null) {
-                predicates.add(cb.equal(root.get("locked"),filter.getLocked()));
-            }
-
-            if(filter.getDescription() != null) {
-                predicates.add(cb.like(root.get("searchDescription"),"%"+filter.getDescription().toLowerCase().replaceAll("[^a-z0-9]","")+"%"));
-            }
-
-            if(filter.getStatementDate() != null) {
-                if(filter.getStatementDate().getMonth() != null) {
-                    predicates.add(cb.equal(root.get("statementMonth"),filter.getStatementDate().getMonth()));
-                }
-                if(filter.getStatementDate().getYear() != null) {
-                    predicates.add(cb.equal(root.get("statementYear"),filter.getStatementDate().getYear()));
-                }
-            }
-
-            if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
-                predicates.add(root.get("categoryId").in(filter.getCategories().stream()
-                        .map(CategoryDTO::getId)
-                        .collect(Collectors.toList())));
-            }
-
-            if(filter.getDateRange() != null) {
-                if(filter.getDateRange().getFrom() != null && filter.getDateRange().getTo() != null) {
-                    predicates.add(cb.between(root.get("date"),filter.getDateRange().getFrom(),filter.getDateRange().getTo()));
-                } else if(filter.getDateRange().getFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("date"),filter.getDateRange().getFrom()));
-                } else if(filter.getDateRange().getTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("date"),filter.getDateRange().getTo()));
-                }
-            }
-
-            if(filter.getValueRange() != null) {
-                if(filter.getValueRange().getMinimum() != null && filter.getValueRange().getMaximum() != null) {
-                    predicates.add(cb.between(root.get("amount"),filter.getValueRange().getMinimum(),filter.getValueRange().getMaximum()));
-                } else if(filter.getValueRange().getMinimum() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("amount"),filter.getValueRange().getMinimum()));
-                } else if(filter.getValueRange().getMaximum() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("amount"),filter.getValueRange().getMaximum()));
-                }
-            }
-
-            if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
-                predicates.add(root.get("accountId").in(filter.getAccounts().stream()
-                        .map(AccountDTO::getId)
-                        .collect(Collectors.toList())));
-            }
+            addFlagPredicates(cb,root,filter,predicates);
+            addDescriptionPredicate(cb,root,filter,predicates);
+            addStatementPredicate(cb,root,filter,predicates);
+            addCategoryPredicate(root,filter,predicates);
+            addDateRangePredicate(cb,root,filter,predicates);
+            addValueRangePredicate(cb,root,filter,predicates);
+            addAccountPredicate(root,filter,predicates);
 
             return cb.and(predicates.toArray(new Predicate[] {}));
         };
