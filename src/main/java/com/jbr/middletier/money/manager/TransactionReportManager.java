@@ -294,26 +294,7 @@ public class TransactionReportManager {
     public TransactionDataDTO getTransactions(TransactionFilterDTO filter) {
         LOG.info("Get Transactions based on {}",filter);
 
-        /*
-        TEST FILTER:
-        {
-            "fromReconciled":false,
-            "predicted":false,
-            "locked":false
-        }
-         */
-
         TransactionDataDTO result = new TransactionDataDTO();
-
-        //TODO
-        // page if more than a specific number
-
-        for(TransactionReport x : this.transactionReportRepository.findAll()) {
-            LOG.info(x.getDescription());
-            if(x.getFromReconciliation()) {
-                LOG.info(x.getDescription());
-            }
-        }
 
         // Get the transactions that meet the filter.
         //TODO - remove this when paging is implemented.

@@ -6,6 +6,11 @@ public class ValueRangeDTO {
     private Double minimum;
     private Double maximum;
 
+    public ValueRangeDTO() {
+        this.minimum = null;
+        this.maximum = null;
+    }
+
     public ValueRangeDTO(double minimum, double maximum) {
         if(minimum > maximum) {
             throw new IllegalArgumentException("Range cannot be specified with minimum greater than maximum");

@@ -12,6 +12,11 @@ public class DateRangeDTO {
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String to;
 
+    public DateRangeDTO() {
+        this.from = null;
+        this.to = null;
+    }
+
     public DateRangeDTO(String from, String to) {
         if(from != null) {
             this.setFrom(from);
@@ -24,7 +29,7 @@ public class DateRangeDTO {
     private LocalDate convertToLocalDate(String date) {
         try {
             return LocalDate.parse(date, Constants.MONEY_DATE_FORMATTER);
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException ignored) {
             return null;
         }
     }
@@ -34,6 +39,11 @@ public class DateRangeDTO {
     }
 
     public void setFrom(String from) {
+        if(from == null) {
+            this.from = null;
+            return;
+        }
+
         // String must be in the format yyyy-MM-dd and if provided then must be before the 'to' date.
         LocalDate date = convertToLocalDate(from);
         if(date == null) {
@@ -55,6 +65,11 @@ public class DateRangeDTO {
     }
 
     public void setTo(String to) {
+        if(to == null) {
+            this.to = null;
+            return;
+        }
+
         // String must be in the format yyyy-MM-dd and if provided then must be after the 'from' date.
         LocalDate date = convertToLocalDate(to);
         if(date == null) {

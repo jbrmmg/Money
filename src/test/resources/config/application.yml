@@ -49,6 +49,7 @@ money:
     report-working: ./target/testfiles/PdnReport/
     reconcile-file-location: src/test/resources/reconciliation
     smtp-port: 25
+    today: 2023-05-24
 
 logging:
     level:

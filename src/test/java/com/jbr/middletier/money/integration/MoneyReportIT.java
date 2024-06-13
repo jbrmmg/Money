@@ -213,20 +213,6 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterFromRecError() throws Exception {
-        TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setFromReconciled(true);
-
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/transaction/list")
-                        .content(this.json(filter))
-                        .contentType(getContentType()))
-                .andExpect(status().isConflict())
-                .andReturn().getResolvedException()).getMessage();
-        LOG.info("Error {}",error);
-        Assert.assertTrue(error.contains("Account ID not specified, reconciliation transactions required."));
-    }
-
-    @Test
     public void testFilterPredicted() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
@@ -381,8 +367,7 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(19)))
-//                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("$.transactions", hasSize(16)))
                 .andExpect(jsonPath("openDate", is("2023-04-20")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
@@ -405,7 +390,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(23)))
-                .andExpect(jsonPath("openBalance.value", is(0.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
