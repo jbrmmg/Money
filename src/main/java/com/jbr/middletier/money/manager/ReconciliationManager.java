@@ -220,7 +220,6 @@ public class ReconciliationManager {
         // Get all the reconciliation data.
         List<ReconciliationData> reconciliationData = reconciliationRepository.findAllByOrderByDateAsc();
 
-
         // Create a result for each reconciliation data.
         for(ReconciliationData next : reconciliationData) {
             result.add(new MatchData(next, account));

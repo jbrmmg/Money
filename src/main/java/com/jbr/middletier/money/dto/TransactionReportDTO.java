@@ -1,11 +1,7 @@
 package com.jbr.middletier.money.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.validation.constraints.Pattern;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class TransactionReportDTO {
     private Integer id;

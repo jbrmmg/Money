@@ -24,7 +24,6 @@ import org.springframework.stereotype.Controller;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 public class TransactionReportManager {
@@ -263,7 +262,7 @@ public class TransactionReportManager {
         if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
             predicates.add(root.get("categoryId").in(filter.getCategories().stream()
                     .map(CategoryDTO::getId)
-                    .collect(Collectors.toList())));
+                    .toList()));
         }
     }
 
@@ -295,7 +294,7 @@ public class TransactionReportManager {
         if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
             predicates.add(root.get("accountId").in(filter.getAccounts().stream()
                     .map(AccountDTO::getId)
-                    .collect(Collectors.toList())));
+                    .toList()));
         }
     }
 
