@@ -8,6 +8,9 @@ import com.jbr.middletier.money.data.primary.Regular;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.events.CreateTransactionEvent;
+import com.jbr.middletier.money.events.DeleteTransactionEvent;
+import com.jbr.middletier.money.events.UpdateTransactionEvent;
 import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -18,6 +21,7 @@ import jakarta.persistence.criteria.Root;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
@@ -363,5 +367,45 @@ public class TransactionReportManager {
 
         // Return the data.
         return result;
+    }
+
+    @EventListener
+    public void onCreateTransaction(CreateTransactionEvent create) {
+        // Process the event.
+        LOG.info("Save transaction in report table.");
+        for(Transaction next : create.getTransactions()) {
+            this.transactionReportRepository.save(mapper.map(next, TransactionReport.class));
+        }
+    }
+
+    @EventListener
+    public void onUpdateTransaction(UpdateTransactionEvent update) {
+        LOG.info("Update transaction in report table.");
+        for(Transaction next : update.getTransactions()) {
+            // Map this transaction to a report.
+            TransactionReport updatedReport = this.mapper.map(next,TransactionReport.class);
+
+            // Get the report transaction.
+            List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next.getId());
+
+            for(TransactionReport nextReport : report) {
+                // Save the updated details
+                updatedReport.setId(nextReport.getId());
+
+                this.transactionReportRepository.save(updatedReport);
+            }
+        }
+    }
+
+    @EventListener
+    public void onDeleteTransaction(DeleteTransactionEvent delete) {
+        LOG.info("Delete transaction in report table.");
+        for(Integer next : delete.getTransactionIds()) {
+            // Get the report transaction.
+            List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next);
+
+            // Delete details across and save.
+            this.transactionReportRepository.deleteAll(report);
+        }
     }
 }

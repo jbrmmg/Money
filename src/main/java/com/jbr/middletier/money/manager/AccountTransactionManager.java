@@ -8,12 +8,16 @@ import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.events.CreateTransactionEvent;
+import com.jbr.middletier.money.events.DeleteTransactionEvent;
+import com.jbr.middletier.money.events.UpdateTransactionEvent;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.DateRange;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
@@ -34,16 +38,18 @@ public class AccountTransactionManager {
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public AccountTransactionManager(AccountRepository accountRepository,
                                      CategoryRepository categoryRepository,
                                      TransactionRepository transactionRepository,
-                                     TransactionMapper transactionMapper) {
+                                     TransactionMapper transactionMapper, ApplicationEventPublisher applicationEventPublisher) {
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public FinancialAmount getFinalBalanceForStatement(Statement statement) {
@@ -253,6 +259,10 @@ public class AccountTransactionManager {
         Transaction newTransaction = internalCreateTransaction(transaction);
 
         result.add(transactionMapper.map(newTransaction,TransactionDTO.class));
+
+        // Fire event to create the new individual transaction.
+        this.applicationEventPublisher.publishEvent(new CreateTransactionEvent(this, Collections.singletonList(newTransaction)));
+
         return result;
     }
 
@@ -301,6 +311,9 @@ public class AccountTransactionManager {
         result.get(0).setOppositeTransactionId(fromTransaction.getOppositeTransactionId());
         transactionRepository.save(fromTransaction);
 
+        // Generate the event.
+        this.applicationEventPublisher.publishEvent(new CreateTransactionEvent(this,Collections.singletonList(fromTransaction)));
+
         return result;
     }
 
@@ -341,6 +354,7 @@ public class AccountTransactionManager {
             }
 
             transactionRepository.saveAll(toBeSaved);
+            this.applicationEventPublisher.publishEvent(new UpdateTransactionEvent(this,toBeSaved));
 
             return result;
         }
@@ -367,9 +381,18 @@ public class AccountTransactionManager {
 
         if(existingTransaction.isPresent() && !existingTransaction.get().reconciled() && !oppositeLocked) {
             // If the transaction is not reconciled then it can be deleted.
+            List<Integer> deleteIds = new ArrayList<>();
             transactionRepository.deleteById(transaction.getId());
+            deleteIds.add(transaction.getId());
 
-            oppositeTransaction.ifPresent(value -> transactionRepository.deleteById(value.getId()));
+            oppositeTransaction.ifPresent(value -> {
+                transactionRepository.deleteById(value.getId());
+                deleteIds.add(value.getId());
+            });
+
+            // Send delete event.
+            this.applicationEventPublisher.publishEvent(new DeleteTransactionEvent(this,deleteIds));
+
             return new ArrayList<>();
         }
 
