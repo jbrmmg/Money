@@ -760,10 +760,19 @@ public class PoJoTest {
         id.setFile(file);
         id.setLine(10);
 
+
+        ReconciliationFileTransactionId id2 = new ReconciliationFileTransactionId();
+        id2.setFile(file);
+        id2.setLine(10);
+
         Assert.assertEquals(file,id.getFile());
         Assert.assertEquals(10,id.getLine().intValue());
         Assert.assertEquals("Fred.txt-10",id.toString());
         Assert.assertEquals(-531378337,id.hashCode());
+
+        Assert.assertEquals(id,id2);
+        id2.setLine(11);
+        Assert.assertNotEquals(id,id2);
     }
 
     @Test
@@ -839,5 +848,37 @@ public class PoJoTest {
         test = objectMapper.readValue("{\"field\":\"AMOUNT\",\"type\":\"ASCENDING\"}", TransactionSortDTO.class);
         Assert.assertEquals(TransactionSortField.AMOUNT,test.getField());
         Assert.assertEquals(TransactionSortType.ASCENDING,test.getType());
+    }
+
+    @Test
+    public void testDateRange2() {
+        DateRangeDTO dateRange = new DateRangeDTO();
+
+        try {
+            dateRange.setTo("1929-01-32");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
+        }
+
+        try {
+            dateRange.setFrom("2022-05-21");
+            dateRange.setTo("2022-05-19");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the to date MUST be after the from date.",e.getMessage());
+        }
+
+        try {
+            dateRange.setFrom("1929-01-32");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
+        }
+
+        try {
+            dateRange.setFrom(null);
+            dateRange.setTo("2022-05-19");
+            dateRange.setFrom("2022-05-21");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the from date MUST be before the to date.",e.getMessage());
+        }
     }
 }

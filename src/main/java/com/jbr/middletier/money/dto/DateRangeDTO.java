@@ -79,7 +79,7 @@ public class DateRangeDTO {
         if(this.getFrom() != null) {
             LocalDate fromDate = convertToLocalDate(this.getFrom());
             if(date.isBefore(fromDate)) {
-                throw new IllegalArgumentException("Date Range: the from date MUST be after the from date.");
+                throw new IllegalArgumentException("Date Range: the to date MUST be after the from date.");
             }
         }
 

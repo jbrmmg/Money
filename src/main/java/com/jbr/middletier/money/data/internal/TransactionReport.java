@@ -70,84 +70,84 @@ public class TransactionReport {
     @Column(name="action_delete")
     private Boolean actionDelete;
 
-    public int getId() {
-        return id;
-    }
-
     public void setId(int id) {
         this.id = id;
     }
 
-    public Integer getTransactionId() {
-        return transactionId;
+    public int getId() {
+        return id;
     }
 
     public void setTransactionId(Integer transactionId) {
         this.transactionId = transactionId;
     }
 
-    public Double getAmount() {
-        return amount;
+    public Integer getTransactionId() {
+        return transactionId;
     }
 
     public void setAmount(Double amount) {
         this.amount = amount;
     }
 
-    public String getDate() {
-        return date;
+    public Double getAmount() {
+        return amount;
     }
 
     public void setDate(String date) {
         this.date = date;
     }
 
-    public String getAccountId() {
-        return accountId;
+    public String getDate() {
+        return date;
     }
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
 
-    public String getCategoryId() {
-        return categoryId;
+    public String getAccountId() {
+        return accountId;
     }
 
     public void setCategoryId(String categoryId) {
         this.categoryId = categoryId;
     }
 
-    public String getDescription() {
-        return description;
+    public String getCategoryId() {
+        return categoryId;
     }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public Integer getOppositeId() {
-        return oppositeId;
+    public String getDescription() {
+        return description;
     }
 
     public void setOppositeId(Integer oppositeId) {
         this.oppositeId = oppositeId;
     }
 
-    public Integer getStatementMonth() {
-        return statementMonth;
+    public Integer getOppositeId() {
+        return oppositeId;
     }
 
     public void setStatementMonth(Integer statementMonth) {
         this.statementMonth = statementMonth;
     }
 
-    public Integer getStatementYear() {
-        return statementYear;
+    public Integer getStatementMonth() {
+        return statementMonth;
     }
 
     public void setStatementYear(Integer statementYear) {
         this.statementYear = statementYear;
+    }
+
+    public Integer getStatementYear() {
+        return statementYear;
     }
 
     public Boolean getPredicted() {
@@ -158,12 +158,12 @@ public class TransactionReport {
         this.predicted = predicted;
     }
 
-    public Boolean getFromReconciliation() {
-        return fromReconciliation;
-    }
-
     public void setFromReconciliation(Boolean fromReconciliation) {
         this.fromReconciliation = fromReconciliation;
+    }
+
+    public Boolean getFromReconciliation() {
+        return fromReconciliation;
     }
 
     public Double getStatementOpenBalance() {
@@ -178,63 +178,63 @@ public class TransactionReport {
         return actionUpdateCategory;
     }
 
-    public Boolean getLocked() {
-        return locked;
-    }
-
     public void setLocked(Boolean locked) {
         this.locked = locked;
+    }
+
+    public Boolean getLocked() {
+        return locked;
     }
 
     public void setActionUpdateCategory(Boolean actionUpdateCategory) {
         this.actionUpdateCategory = actionUpdateCategory;
     }
 
-    public Boolean getActionUpdate() {
-        return actionUpdate;
-    }
-
     public void setActionUpdate(Boolean actionUpdate) {
         this.actionUpdate = actionUpdate;
     }
 
-    public Boolean getActionReconcile() {
-        return actionReconcile;
+    public Boolean getActionUpdate() {
+        return actionUpdate;
     }
 
     public void setActionReconcile(Boolean actionReconcile) {
         this.actionReconcile = actionReconcile;
     }
 
-    public Boolean getActionUnreconcile() {
-        return actionUnreconcile;
+    public Boolean getActionReconcile() {
+        return actionReconcile;
     }
 
     public void setActionUnreconcile(Boolean actionUnreconcile) {
         this.actionUnreconcile = actionUnreconcile;
     }
 
-    public Boolean getActionDelete() {
-        return actionDelete;
+    public Boolean getActionUnreconcile() {
+        return actionUnreconcile;
     }
 
     public void setActionDelete(Boolean actionDelete) {
         this.actionDelete = actionDelete;
     }
 
-    public String getSearchDescription() {
-        return searchDescription;
+    public Boolean getActionDelete() {
+        return actionDelete;
     }
 
     public void setSearchDescription(String searchDescription) {
         this.searchDescription = searchDescription;
     }
 
-    public Integer getStatementSort() {
-        return statementSort;
+    public String getSearchDescription() {
+        return searchDescription;
     }
 
     public void setStatementSort(Integer statementSort) {
         this.statementSort = statementSort;
+    }
+
+    public Integer getStatementSort() {
+        return statementSort;
     }
 }
