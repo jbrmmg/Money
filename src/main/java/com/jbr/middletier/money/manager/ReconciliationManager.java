@@ -194,19 +194,42 @@ public class ReconciliationManager {
         }
     }
 
-    public List<MatchData> match() throws NullOrBlankAccountIdException {
-        // Get the account of the data that is in the reconcile data.
-        Account account = null;
+    private Account getSelectedAccount() throws NullOrBlankAccountIdException {
         for(ReconciliationFile nextFile : reconciliationFileRepository.findAll()) {
             if(Boolean.TRUE.equals(nextFile.getLoaded())) {
                 if(nextFile.getAccount() == null) {
                     throw new NullOrBlankAccountIdException();
                 }
 
-                account = nextFile.getAccount();
-                break;
+                return nextFile.getAccount();
             }
         }
+
+        return null;
+    }
+
+    private void updateOpenBalance(Account account, List<MatchData> matchData) {
+        // Update the opening balance information.
+        List<Statement> unlockedStatement = statementRepository.findByIdAccountAndLocked(account,false);
+        if(unlockedStatement.size() != 1) {
+            LOG.info("Number of statements was not 1.");
+        } else {
+            double rollingAmount = unlockedStatement.get(0).getOpenBalance().getValue();
+
+            // Set the open balance data.
+            for(MatchData nextMatchData : matchData) {
+                if(!nextMatchData.getForwardAction().equalsIgnoreCase("UNRECONCILE")) {
+                    nextMatchData.setBeforeAmount(rollingAmount);
+                    rollingAmount += nextMatchData.getAmount();
+                    nextMatchData.setAfterAmount(rollingAmount);
+                }
+            }
+        }
+    }
+
+    public List<MatchData> match() throws NullOrBlankAccountIdException {
+        // Get the account of the data that is in the reconcile data.
+        Account account = getSelectedAccount();
 
         // If the account is null, then no file is loaded - just return empty.
         List<MatchData> result = new ArrayList<>();
@@ -236,24 +259,9 @@ public class ReconciliationManager {
             }
         }
 
+        // Sort and update balance information
         Collections.sort(result);
-
-        // Update the opening balance information.
-        List<Statement> unlockedStatement = statementRepository.findByIdAccountAndLocked(account,false);
-        if(unlockedStatement.size() != 1) {
-            LOG.info("Number of statements was not 1.");
-        } else {
-            double rollingAmount = unlockedStatement.get(0).getOpenBalance().getValue();
-
-            // Set the open balance data.
-            for(MatchData nextMatchData : result) {
-                if(!nextMatchData.getForwardAction().equalsIgnoreCase("UNRECONCILE")) {
-                    nextMatchData.setBeforeAmount(rollingAmount);
-                    rollingAmount += nextMatchData.getAmount();
-                    nextMatchData.setAfterAmount(rollingAmount);
-                }
-            }
-        }
+        updateOpenBalance(account,result);
 
         return result;
     }
