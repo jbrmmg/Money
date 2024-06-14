@@ -112,7 +112,7 @@ public class FileFormatDescription {
         String value = getColumnValue(getDateColumn(),line);
 
         // If the date is a specific value then ignore it.
-        // TODO make this part of the format description database data
+        // JBR-441: make this part of the format description database data
         if(value.equalsIgnoreCase("pending")) {
             return null;
         }

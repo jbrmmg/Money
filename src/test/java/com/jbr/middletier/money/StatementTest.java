@@ -169,7 +169,7 @@ public class StatementTest extends Support {
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        // TODO check that the previous statement is now unlocked.
+        // JBR-439: check that the previous statement is now unlocked.
     }
 
     @Test

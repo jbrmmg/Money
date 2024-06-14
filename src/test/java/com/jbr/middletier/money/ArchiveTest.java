@@ -197,7 +197,7 @@ public class ArchiveTest extends Support {
         request.setMonth(1);
         request.setYear(2010);
 
-        // TODO improve the checks in this
+        // JBR-440: improve the checks in this
         getMockMvc().perform(post("/jbr/int/money/transaction/archive")
                         .content(this.json(request))
                         .contentType(getContentType()))

@@ -31,6 +31,15 @@ public class TransactionReportManager {
 
     private static final String DATE_COLUMN = "date";
     private static final String AMOUNT_COLUMN = "amount";
+    private static final String STATEMENT_SORT_COLUMN = "statementSort";
+    private static final String STATEMENT_YEAR_COLUMN = "statementYear";
+    private static final String STATEMENT_MONTH_COLUMN = "statementMonth";
+    private static final String ACCOUNT_ID_COLUMN = "accountId";
+    private static final String CATEGORY_ID_COLUMN = "categoryId";
+    private static final String PREDICTED_COLUMN = "predicted";
+    private static final String FROM_RECONCILIATION_COLUMN = "fromReconciliation";
+    private static final String LOCKED_COLUMN = "locked";
+    private static final String SEARCH_DESCRIPTION_COLUMN = "searchDescription";
 
     private final AccountTransactionManager transactionManager;
     private final RegularPaymentManager regularPaymentManager;
@@ -63,9 +72,7 @@ public class TransactionReportManager {
         this.transactionReportRepository.deleteAll();
 
         // Populate the transaction data (reconciliation must be last.).
-        //TODO
-        // Do something sensible here (Reconciled) - probably best use one of the files.
-        // Need to be able to refresh these when the account changes.
+        // JBR-443: Need to be able to refresh these when the account changes.
         getPredicted();
         getStandardTransactions();
         getFromReconciled();
@@ -83,16 +90,14 @@ public class TransactionReportManager {
     }
 
     private void getFromReconciled() {
-        //TODO when updating; remove the reconciliation only data + remove the reconciliation flag on standard transaction.
+        //JBR-442: when updating; remove the reconciliation only data + remove the reconciliation flag on standard transaction.
 
         // Get the transactions
         try {
             for (MatchData next : reconciliationManager.match()) {
                 if(next.getTransaction() == null) {
                     // Add data to the transaction report.
-                    //TODO fix
-                    TransactionReport tmp = this.mapper.map(next, TransactionReport.class);
-                    this.transactionReportRepository.save(tmp);
+                    this.transactionReportRepository.save(this.mapper.map(next, TransactionReport.class));
                 } else {
                     // Update the 'standard' transaction to be from reconciliation as well.
                     List<TransactionReport> standards = this.transactionReportRepository.findByTransactionId(next.getTransaction().getId());
@@ -111,9 +116,7 @@ public class TransactionReportManager {
     private void getStandardTransactions() {
         for(Transaction next : transactionManager.getAllTransactions()) {
             // Add this to the transaction report.
-            // TODO fix
-            TransactionReport tmp = mapper.map(next,TransactionReport.class);
-            this.transactionReportRepository.save(tmp);
+            this.transactionReportRepository.save(mapper.map(next,TransactionReport.class));
         }
     }
 
@@ -229,38 +232,38 @@ public class TransactionReportManager {
 
     private void addFlagPredicates(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
         if(filter.getPredicted() != null) {
-            predicates.add(cb.equal(root.get("predicted"),filter.getPredicted()));
+            predicates.add(cb.equal(root.get(PREDICTED_COLUMN),filter.getPredicted()));
         }
 
         if(filter.getFromReconciled() != null) {
-            predicates.add(cb.equal(root.get("fromReconciliation"),filter.getFromReconciled()));
+            predicates.add(cb.equal(root.get(FROM_RECONCILIATION_COLUMN),filter.getFromReconciled()));
         }
 
         if(filter.getLocked() != null) {
-            predicates.add(cb.equal(root.get("locked"),filter.getLocked()));
+            predicates.add(cb.equal(root.get(LOCKED_COLUMN),filter.getLocked()));
         }
     }
 
     private void addDescriptionPredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
         if(filter.getDescription() != null) {
-            predicates.add(cb.like(root.get("searchDescription"),"%"+filter.getDescription().toLowerCase().replaceAll("[^a-z0-9]","")+"%"));
+            predicates.add(cb.like(root.get(SEARCH_DESCRIPTION_COLUMN),"%"+filter.getDescription().toLowerCase().replaceAll("[^a-z0-9]","")+"%"));
         }
     }
 
     private void addStatementPredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
         if(filter.getStatementDate() != null) {
             if(filter.getStatementDate().getMonth() != null) {
-                predicates.add(cb.equal(root.get("statementMonth"),filter.getStatementDate().getMonth()));
+                predicates.add(cb.equal(root.get(STATEMENT_MONTH_COLUMN),filter.getStatementDate().getMonth()));
             }
             if(filter.getStatementDate().getYear() != null) {
-                predicates.add(cb.equal(root.get("statementYear"),filter.getStatementDate().getYear()));
+                predicates.add(cb.equal(root.get(STATEMENT_YEAR_COLUMN),filter.getStatementDate().getYear()));
             }
         }
     }
 
     private void addCategoryPredicate(Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
         if(filter.getCategories() != null && !filter.getCategories().isEmpty()) {
-            predicates.add(root.get("categoryId").in(filter.getCategories().stream()
+            predicates.add(root.get(CATEGORY_ID_COLUMN).in(filter.getCategories().stream()
                     .map(CategoryDTO::getId)
                     .toList()));
         }
@@ -292,7 +295,7 @@ public class TransactionReportManager {
 
     private void addAccountPredicate(Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
         if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
-            predicates.add(root.get("accountId").in(filter.getAccounts().stream()
+            predicates.add(root.get(ACCOUNT_ID_COLUMN).in(filter.getAccounts().stream()
                     .map(AccountDTO::getId)
                     .toList()));
         }
@@ -320,9 +323,9 @@ public class TransactionReportManager {
         TransactionDataDTO result = new TransactionDataDTO();
 
         // Get the transactions that meet the filter.
-        //TODO - remove this when paging is implemented.
+        // JBR-444 - remove this when paging is implemented.
         int max = 600;
-        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,"statementSort","date","amount","accountId"))) {
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,STATEMENT_SORT_COLUMN,DATE_COLUMN,AMOUNT_COLUMN,ACCOUNT_ID_COLUMN))) {
             result.getTransactions().add(this.mapper.map(next,TransactionReportDTO.class));
             if(max-- == 0) {
                 break;
