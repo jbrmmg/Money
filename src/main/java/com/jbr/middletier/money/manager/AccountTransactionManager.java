@@ -376,7 +376,7 @@ public class AccountTransactionManager {
             // Get the transaction category (if this is not a transfer).
             Optional<Category> newCategory = Optional.empty();
             if(oppositeTransaction.isEmpty()) {
-                newCategory = this.categoryManager.getIfValid(transaction.getCategoryId());
+                newCategory = Optional.of(this.categoryManager.get(transaction.getCategoryId()));
             }
 
             // Is either transaction locked?
