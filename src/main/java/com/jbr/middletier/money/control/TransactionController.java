@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.data.primary.TransactionRequestType;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.exceptions.*;

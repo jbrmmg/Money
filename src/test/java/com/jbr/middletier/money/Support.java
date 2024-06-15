@@ -1,10 +1,10 @@
 package com.jbr.middletier.money;
 
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.data.StatementId;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
+import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.StatementId;
+import com.jbr.middletier.money.data.primary.repository.AccountRepository;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

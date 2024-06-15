@@ -1,8 +1,8 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.Regular;
-import com.jbr.middletier.money.dataaccess.RegularRepository;
+import com.jbr.middletier.money.data.primary.Regular;
+import com.jbr.middletier.money.data.primary.repository.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
 import com.jbr.middletier.money.dto.mapper.RegularMapper;
 import org.junit.Assert;
@@ -37,7 +37,7 @@ public class RegularTest extends Support {
         regularRepository.deleteAll();
     }
 
-    private RegularDTO createTestRegular(String accountId, String categoryId, String adjustmentType, double amount, String description, String frequency) {
+    private RegularDTO createTestRegular(String accountId, String categoryId, String adjustmentType, double amount, String description, String frequency, String start) {
         RegularDTO regular = new RegularDTO();
         regular.setAccountId(accountId);
         regular.setCategoryId(categoryId);
@@ -45,6 +45,7 @@ public class RegularTest extends Support {
         regular.setAmount(amount);
         regular.setDescription(description);
         regular.setFrequency(frequency);
+        regular.setStart(start);
 
         return regular;
     }
@@ -64,7 +65,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testCreate() throws Exception {
-        RegularDTO newRegular = createTestRegular("AMEX", "HSE", "FW", 102.21, "Testing", "1W");
+        RegularDTO newRegular = createTestRegular("AMEX", "HSE", "FW", 102.21, "Testing", "1W", "2023-06-01");
 
         getMockMvc().perform(post("/jbr/int/money/transaction/regulars")
                         .content(this.json(newRegular))
@@ -81,7 +82,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testUpdate() throws Exception {
-        RegularDTO updateRegular = createTestRegular("BANK", "FDG", "BW", 122.39, "Testing 2", "1M");
+        RegularDTO updateRegular = createTestRegular("BANK", "FDG", "BW", 122.39, "Testing 2", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(updateRegular,Regular.class));
 
@@ -103,7 +104,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testDelete() throws Exception {
-        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M");
+        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
 
@@ -118,7 +119,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testInvalidException() throws Exception {
-        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M");
+        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
 
@@ -134,7 +135,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testAlreadyExist() throws Exception {
-        RegularDTO createRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M");
+        RegularDTO createRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(createRegular,Regular.class));
 

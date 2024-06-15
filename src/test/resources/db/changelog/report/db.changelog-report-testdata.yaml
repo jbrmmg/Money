@@ -3,6 +3,8 @@ databaseChangeLog:
       id: report-test-data
       author: jason
       changes:
+        - delete:
+            tableName: statement
         - loadData:
             tableName: statement
             columns:
@@ -20,7 +22,7 @@ databaseChangeLog:
                   name: deleted
             commentLineStartsWith: //
             encoding: UTF-8
-            file: /db/changelog/report/data/statement.csv
+            file: /db/changelog/test-data/report/statement.csv
             separator: ","
         - loadData:
             tableName: transaction
@@ -43,7 +45,7 @@ databaseChangeLog:
                   name: statement_year
             commentLineStartsWith: //
             encoding: UTF-8
-            file: /db/changelog/report/data/transaction.csv
+            file: /db/changelog/test-data/report/transaction.csv
             separator: ","
         - loadData:
             tableName: reconciliation_data
@@ -58,7 +60,7 @@ databaseChangeLog:
                   name: description
             commentLineStartsWith: //
             encoding: UTF-8
-            file: /db/changelog/report/data/reconciliation.csv
+            file: /db/changelog/test-data/report/reconciliation.csv
             separator: ","
         - loadData:
             tableName: regular
@@ -83,5 +85,25 @@ databaseChangeLog:
                   name: description
             commentLineStartsWith: //
             encoding: UTF-8
-            file: /db/changelog/report/data/regular.csv
+            file: /db/changelog/test-data/report/regular.csv
             separator: ","
+        - loadData:
+            tableName: reconciliation_file
+            columns:
+              - column:
+                  name: name
+              - column:
+                  name: account_id
+              - column:
+                  name: last_modified
+              - column:
+                  name: size
+              - column:
+                  name: error
+              - column:
+                  name: loaded
+            commentLineStartsWith: //
+            encoding: UTF-8
+            file: /db/changelog/test-data/report/reconciliation_file.csv
+            separator: ","
+

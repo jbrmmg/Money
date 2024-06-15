@@ -1,14 +1,11 @@
 package com.jbr.middletier.money.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.validation.constraints.Pattern;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class TransactionReportDTO {
     private Integer id;
+    private Integer transactionId;
     private FinancialAmount amount;
     private FinancialAmount balance;
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
@@ -21,12 +18,11 @@ public class TransactionReportDTO {
     private StatementDTO statement;
     private Boolean predicted;
     private Boolean fromReconciliation;
-
-    private List<TransactionAction> actions;
-
-    public TransactionReportDTO() {
-        this.actions = new ArrayList<>();
-    }
+    private Boolean actionUpdateCategory;
+    private Boolean actionUpdate;
+    private Boolean actionReconcile;
+    private Boolean actionUnreconcile;
+    private Boolean actionDelete;
 
     public Integer getId() {
         return id;
@@ -116,17 +112,44 @@ public class TransactionReportDTO {
         this.statement = statement;
     }
 
-    public List<TransactionAction> getActions() {
-        return actions;
+    public Boolean getActionUpdateCategory() {
+        return actionUpdateCategory;
     }
 
-    public void setActions(List<TransactionAction> actions) {
-        this.actions = actions;
+    public void setActionUpdateCategory(Boolean actionUpdateCategory) {
+        this.actionUpdateCategory = actionUpdateCategory;
     }
 
-    @JsonIgnore
-    public void addAction(TransactionAction action) {
-        this.actions.add(action);
+    public Boolean getActionUpdate() {
+        return actionUpdate;
+    }
+
+    public void setActionUpdate(Boolean actionUpdate) {
+        this.actionUpdate = actionUpdate;
+    }
+
+    public Boolean getActionReconcile() {
+        return actionReconcile;
+    }
+
+    public void setActionReconcile(Boolean actionReconcile) {
+        this.actionReconcile = actionReconcile;
+    }
+
+    public Boolean getActionUnreconcile() {
+        return actionUnreconcile;
+    }
+
+    public void setActionUnreconcile(Boolean actionUnreconcile) {
+        this.actionUnreconcile = actionUnreconcile;
+    }
+
+    public Boolean getActionDelete() {
+        return actionDelete;
+    }
+
+    public void setActionDelete(Boolean actionDelete) {
+        this.actionDelete = actionDelete;
     }
 
     @Override
@@ -144,5 +167,13 @@ public class TransactionReportDTO {
                 this.getFromReconciliation() +
                 " " +
                 "]";
+    }
+
+    public Integer getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(Integer transactionId) {
+        this.transactionId = transactionId;
     }
 }

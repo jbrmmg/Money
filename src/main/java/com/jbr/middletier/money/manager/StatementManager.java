@@ -1,9 +1,9 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.data.StatementId;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
+import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.StatementId;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.dto.StatementIdDTO;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
@@ -194,5 +194,11 @@ public class StatementManager {
         id.setYear(year);
 
         return statementRepository.findById(id);
+    }
+
+    public Optional<StatementDTO> getStatementExternal(Account account, Integer month, Integer year) {
+        Optional<Statement> statement = getStatement(account,month,year);
+
+        return statement.map(value -> statementMapper.map(value, StatementDTO.class));
     }
 }

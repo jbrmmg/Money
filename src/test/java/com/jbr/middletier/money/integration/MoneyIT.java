@@ -2,7 +2,7 @@ package com.jbr.middletier.money.integration;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.Support;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import org.junit.*;
 import org.junit.runner.RunWith;

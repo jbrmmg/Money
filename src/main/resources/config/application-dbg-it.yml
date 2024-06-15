@@ -1,0 +1,8 @@
+spring:
+  liquibase:
+    default-schema:
+    change-log: classpath:/db/changelog/dbg-it/db.changelog-master.yaml
+
+money:
+  today: 2023-05-24
+  reconcile-file-location:

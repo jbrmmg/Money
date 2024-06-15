@@ -1,8 +1,8 @@
 package com.jbr.middletier.money.health;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import com.jbr.middletier.money.data.primary.Category;
+import com.jbr.middletier.money.data.primary.repository.CategoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

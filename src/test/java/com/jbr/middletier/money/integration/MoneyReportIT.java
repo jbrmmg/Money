@@ -2,9 +2,10 @@ package com.jbr.middletier.money.integration;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.Support;
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
+import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -26,7 +27,6 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -73,46 +73,53 @@ public class MoneyReportIT extends Support {
         return String.format(format, value == null ? "" : value);
     }
 
-    private String getActionString(List<TransactionAction> actions) {
-        StringBuilder result = new StringBuilder();
-        for(TransactionAction action : actions) {
-            switch (action) {
-                case DELETE -> result.append("D");
-                case UNRECONCILE -> result.append("U");
-                case RECONCILE -> result.append("R");
-                case UPDATE_CATEGORY -> result.append("C");
-                case UPDATE_DETAILS -> result.append("A");
-            }
+    private String getFinancialAmountString(FinancialAmount financialAmount) {
+        if(financialAmount == null) {
+            return " ".repeat(12);
         }
 
-        return result.toString();
+        return financialAmount.toFormattedString(12);
     }
 
-    private String cleanResponseJson(String json) {
-        // Change the action JSON to just the value.
-        String result = json.replace("{\"icon\":\"fa-align-justify\",\"colour\":\"FFFFFF\",\"actionName\":\"category\"}","\"UPDATE_CATEGORY\"");
-        result = result.replace("{\"icon\":\"fa-pencil\",\"colour\":\"FFFFFF\",\"actionName\":\"update\"}","\"UPDATE_DETAILS\"");
-        result = result.replace("{\"icon\":\"fa-check\",\"colour\":\"FFFFFF\",\"actionName\":\"reconcile\"}","\"RECONCILE\"");
-        result = result.replace("{\"icon\":\"fa-times\",\"colour\":\"FFFFFF\",\"actionName\":\"un-reconcile\"}","\"UNRECONCILE\"");
-        result = result.replace("{\"icon\":\"fa-trash\",\"colour\":\"FF0000\",\"actionName\":\"delete\"}","\"DELETE\"");
+    private String spacing(int size) {
+        return " ".repeat(size);
+    }
 
-        return result;
+    private String outputFlag(Boolean flag, String value) {
+        return Boolean.TRUE.equals(flag) ? value : " ";
     }
 
     private void logTransactionData(TransactionDataDTO transactionData) {
-        LOG.info("-----------------------------------------------------------------------------------------------------------------------------------------------------------------");
-        LOG.info("TRANSACTION DETAILS");
-        LOG.info("  Open    {} {}", transactionData.getOpenDate(), transactionData.getOpenBalance().toFormattedString(12));
-        LOG.info("  Today   {} {}", transactionData.getToday(), transactionData.getTodayBalance().toFormattedString(12));
-        LOG.info("  Forward {} {}", getPaddedString(transactionData.getForwardDate(),10), transactionData.getForwardBalance().toFormattedString(12));
-        LOG.info("");
+        LOG.info("-".repeat(160));
+        LOG.info("TRANSACTION DETAILS{}|",spacing(140));
+        LOG.info("  Open    {} {} {}|", transactionData.getOpenDate(), getFinancialAmountString(transactionData.getOpenBalance()),spacing(122));
+        LOG.info("  Today   {} {} {}|", transactionData.getToday(), getFinancialAmountString(transactionData.getTodayBalance()),spacing(122));
+        LOG.info("  Forward {} {} {}|", getPaddedString(transactionData.getForwardDate(),10), getFinancialAmountString(transactionData.getForwardBalance()),spacing(122));
+        LOG.info("{}|", spacing(159));
         int row = 1;
+        LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}|",
+                "Row",
+                "Id    ",
+                "Date      ",
+                "Balance        ",
+                "Amount       ",
+                "Cat",
+                "Acc ",
+                "Op. Id",
+                "Open Balance   ",
+                "Year",
+                "Mn",
+                "Locked",
+                "Rec",
+                "Predict",
+                "Description                             ",
+                "Act. ");
         for(TransactionReportDTO next : transactionData.getTransactions()) {
-            LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} |",
+            LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}{}{}{}{}|",
                     getNumberString(row,3),
                     getNumberString(next.getId(),6),
                     next.getDate(),
-                    next.getBalance().toFormattedString(12),
+                    getFinancialAmountString(next.getBalance()),
                     next.getAmount().toFormattedString(10),
                     getPaddedString(next.getCategory() == null ? "" : next.getCategory().getId(),3),
                     getPaddedString(next.getAccount() == null ? "" : next.getAccount().getId(),4),
@@ -121,13 +128,17 @@ public class MoneyReportIT extends Support {
                     getPaddedString(next.getStatement() == null ? "" : next.getStatement().getYear().toString(),4),
                     getPaddedString(next.getStatement() == null ? "" : next.getStatement().getMonth().toString(),2),
                     getPaddedString(next.getStatement() == null ? "" : next.getStatement().getLocked() ? "locked" : "",6),
-                    getPaddedString(getActionString(next.getActions()),5),
                     getPaddedString(next.getFromReconciliation() ? "Rec" : "",3),
                     getPaddedString(next.getPredicted() ? "Predict" : "",7),
-                    getPaddedString(next.getDescription(),40));
+                    getPaddedString(next.getDescription(),40),
+                    outputFlag(next.getActionDelete(),"d"),
+                    outputFlag(next.getActionReconcile(),"r"),
+                    outputFlag(next.getActionUnreconcile(),"u"),
+                    outputFlag(next.getActionUpdate(),"U"),
+                    outputFlag(next.getActionUpdateCategory(),"c"));
             row++;
         }
-        LOG.info("-----------------------------------------------------------------------------------------------------------------------------------------------------------------");
+        LOG.info("-".repeat(160));
     }
 
     @Before
@@ -143,28 +154,26 @@ public class MoneyReportIT extends Support {
     @Test
     public void testFilterAll() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setReconciliationAccount("BANK");
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(59)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("openBalance.value", is(1029.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
     @Test
     public void testFilterDescription() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setReconciliationAccount("BANK");
         filter.setDescription("sainsburys");
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
@@ -172,21 +181,19 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(2)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-27")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
     @Test
     public void testFilterFromRec() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setReconciliationAccount("BANK");
         filter.setFromReconciled(true);
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
@@ -194,29 +201,14 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(18)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
-    }
-
-    @Test
-    public void testFilterFromRecError() throws Exception {
-        TransactionFilterDTO filter = new TransactionFilterDTO();
-        filter.setFromReconciled(true);
-
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/transaction/list")
-                        .content(this.json(filter))
-                        .contentType(getContentType()))
-                .andExpect(status().isConflict())
-                .andReturn().getResolvedException()).getMessage();
-        LOG.info("Error {}",error);
-        Assert.assertTrue(error.contains("Account ID not specified, reconciliation transactions required."));
     }
 
     @Test
@@ -230,14 +222,13 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -251,15 +242,15 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(38)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
+                .andExpect(jsonPath("$.transactions", hasSize(35)))
+                .andExpect(jsonPath("openBalance.value", is(1029.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -274,25 +265,22 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(35)))
-                .andExpect(jsonPath("openBalance.value", is(630.16)))
+                .andExpect(jsonPath("$.transactions", hasSize(32)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
     @Test
     public void testFilterNotLockedBank() throws Exception {
         AccountDTO account = new AccountDTO();
-        account.setId("BANK");
-        account.setClosed(false);
-        account.setColour("FF0000");
-        account.setName("Bank");
+        account.setId("AMEX");
 
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
@@ -304,15 +292,15 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(3)))
-                .andExpect(jsonPath("openBalance.value", is(620.16)))
-                .andExpect(jsonPath("openDate", is("2023-05-01")))
+                .andExpect(jsonPath("$.transactions", hasSize(32)))
+                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -331,15 +319,39 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(11)))
-                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("$.transactions", hasSize(10)))
                 .andExpect(jsonPath("openDate", is("2023-04-11")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFilterAccount() throws Exception {
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setAccounts(List.of(account));
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(3)))
+                .andExpect(jsonPath("openDate", is("2023-04-22")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -354,15 +366,14 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(19)))
-                .andExpect(jsonPath("openBalance.value", is(0.0)))
+                .andExpect(jsonPath("$.transactions", hasSize(16)))
                 .andExpect(jsonPath("openDate", is("2023-04-20")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -378,6 +389,41 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(23)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testNull() throws Exception {
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content("{}")
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(59)))
+                .andExpect(jsonPath("openBalance.value", is(1029.0)))
+                .andExpect(jsonPath("openDate", is("2023-04-06")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void testFromString() throws Exception {
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content("{\"accounts\":[],\"categories\":[],\"predicted\":false,\"locked\":false,\"fromReconciled\":false}")
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(32)))
                 .andExpect(jsonPath("openBalance.value", is(0.0)))
                 .andExpect(jsonPath("openDate", is("2023-04-06")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
@@ -385,43 +431,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
-        logTransactionData(transactionData);
-    }
-
-    @Test
-    public void testNull() throws Exception {
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
-                        .content("{\"reconciliationAccount\": \"BANK\"}")
-                        .contentType(getContentType()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(59)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
-                .andExpect(jsonPath("openDate", is("2023-04-06")))
-                .andExpect(jsonPath("today", is("2023-05-24")))
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
-        logTransactionData(transactionData);
-    }
-
-    @Test
-    public void testFromString() throws Exception {
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
-                        .content("{\"accounts\":[],\"categories\":[],\"reconciliationAccount\":\"BANK\",\"predicated\":false,\"locked\":false,\"fromReconciled\":false}")
-                        .contentType(getContentType()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactions", hasSize(41)))
-                .andExpect(jsonPath("openBalance.value", is(630.16)))
-                .andExpect(jsonPath("openDate", is("2023-04-06")))
-                .andExpect(jsonPath("today", is("2023-05-24")))
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -442,7 +452,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Octopus")))
@@ -450,7 +459,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -469,7 +478,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Wages")))
@@ -477,7 +485,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -497,7 +505,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Disney Plus")))
@@ -505,7 +512,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -525,7 +532,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[0].description", is("Council Tax")))
@@ -533,7 +539,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 
@@ -552,7 +558,6 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions", hasSize(6)))
-                .andExpect(jsonPath("openBalance.value", is(1039.0)))
                 .andExpect(jsonPath("openDate", is("2023-05-24")))
                 .andExpect(jsonPath("today", is("2023-05-24")))
                 .andExpect(jsonPath("$.transactions[3].description", is("Netflix")))
@@ -560,7 +565,7 @@ public class MoneyReportIT extends Support {
                 .andReturn();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        TransactionDataDTO transactionData = objectMapper.readValue(cleanResponseJson(result.getResponse().getContentAsString()),TransactionDataDTO.class);
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
         logTransactionData(transactionData);
     }
 }

@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.reconciliation;
 
-import com.jbr.middletier.money.data.ReconcileFormat;
-import com.jbr.middletier.money.dataaccess.ReconcileFormatRepository;
+import com.jbr.middletier.money.data.primary.ReconcileFormat;
+import com.jbr.middletier.money.data.primary.repository.ReconcileFormatRepository;
 import com.jbr.middletier.money.manager.ReconcileFileLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +112,7 @@ public class FileFormatDescription {
         String value = getColumnValue(getDateColumn(),line);
 
         // If the date is a specific value then ignore it.
-        // TODO make this part of the format description database data
+        // JBR-441: make this part of the format description database data
         if(value.equalsIgnoreCase("pending")) {
             return null;
         }
