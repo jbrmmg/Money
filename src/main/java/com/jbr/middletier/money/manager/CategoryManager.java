@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.dataaccess.CategoryRepository;
+import com.jbr.middletier.money.data.primary.Category;
+import com.jbr.middletier.money.data.primary.repository.CategoryRepository;
 import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.dto.mapper.CategoryMapper;
 import com.jbr.middletier.money.exceptions.*;
@@ -20,6 +20,9 @@ public class CategoryManager extends AbstractManager<
         CategoryRepository,
         CreateCategoryException,
         UpdateDeleteCategoryException> {
+
+    public static final String CATEGORY_TRANSFER = "TRF";
+
     @Autowired
     public CategoryManager(CategoryMapper modelMapper, CategoryRepository categoryRepository) {
         super(CategoryDTO.class,Category.class,modelMapper,categoryRepository);

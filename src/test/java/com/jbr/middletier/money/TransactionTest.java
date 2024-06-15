@@ -1,10 +1,10 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.Account;
-import com.jbr.middletier.money.data.Category;
-import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.Category;
+import com.jbr.middletier.money.data.primary.Transaction;
+import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;

@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
-import com.jbr.middletier.money.data.Category;
+import com.jbr.middletier.money.data.primary.Category;
 import org.modelmapper.AbstractConverter;
 
 public class CategoryStringConverter extends AbstractConverter<Category,String> {

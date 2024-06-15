@@ -1,0 +1,98 @@
+package com.jbr.middletier.money.data.primary;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * Created by jason on 04/03/17.
+ */
+@Entity
+@Table(name="category")
+public class Category implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @NotNull
+    @Size(max=3)
+    @Column(name="id")
+    private String id;
+
+    @Size(max=45)
+    @Column(name="name")
+    private String name;
+
+    @Size(max=1000000)
+    @Column(name="sort")
+    private Long sort;
+
+    @NotNull
+    @Column(name="restricted")
+    private Boolean restricted;
+
+    @Size(max=6)
+    @Column(name="colour")
+    private String colour;
+
+    @Size(max=6)
+    @Column(name="expense")
+    private Boolean expense;
+
+    @Size(max=45)
+    @Column(name="groupid")
+    private String group;
+
+    @NotNull
+    @Column(name="system_use")
+    private Boolean systemUse;
+
+    public String getId() {
+        return this.id;
+    }
+
+    public void setId(String id) { this.id = id; }
+
+    public Long getSort() {
+        return this.sort;
+    }
+
+    public void setSort(Long sort) { this.sort = sort; }
+
+    public Boolean getRestricted() {
+        return this.restricted;
+    }
+
+    public void setRestricted(Boolean restricted) { this.restricted = restricted; }
+
+    public String getColour() {
+        return this.colour;
+    }
+
+    public void setColour(String colour) { this.colour = colour; }
+
+    public String getGroup() {
+        return this.group;
+    }
+
+    public void setGroup(String group) { this.group = group; }
+
+    public Boolean getSystemUse() {
+        return this.systemUse;
+    }
+
+    public void setSystemUse(Boolean systemUse) { this.systemUse = systemUse; }
+
+    public Boolean getExpense() { return this.expense; }
+
+    public void setExpense(Boolean expense) { this.expense = expense; }
+
+    public String getName() { return this.name; }
+
+    public void setName(String name) { this.name = name; }
+}

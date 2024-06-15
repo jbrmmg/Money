@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.xml.svg;
 
-import com.jbr.middletier.money.data.Category;
+import com.jbr.middletier.money.data.primary.Category;
 import org.jdom2.Element;
 import org.jdom2.Namespace;
 

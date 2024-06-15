@@ -2,10 +2,10 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.dto.ArchiveOrReportRequestDTO;
-import com.jbr.middletier.money.data.Statement;
-import com.jbr.middletier.money.data.Transaction;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.Transaction;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
+import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

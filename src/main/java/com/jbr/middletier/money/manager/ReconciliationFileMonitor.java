@@ -33,13 +33,8 @@ public class ReconciliationFileMonitor extends FileSystemWatcher {
     @PostConstruct
     private void startup() {
         // Just exit if no reconciliation location
-        if(this.applicationProperties.getReconcileFileLocation() == null) {
+        if(this.applicationProperties.getReconcileFileLocation() == null || this.applicationProperties.getReconcileFileLocation().trim().isEmpty()) {
             LOG.info("No reconciliation file location - not monitoring.");
-            return;
-        }
-
-        if(this.applicationProperties.getReconcileFileLocation().trim().isEmpty()) {
-            LOG.info("Blank reconciliation file location - not monitoring.");
             return;
         }
 

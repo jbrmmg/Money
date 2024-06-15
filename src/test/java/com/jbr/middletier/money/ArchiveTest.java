@@ -2,10 +2,10 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.AccountRepository;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.data.primary.*;
+import com.jbr.middletier.money.data.primary.repository.AccountRepository;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
+import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
 import com.jbr.middletier.money.utils.UtilityMapper;
@@ -197,7 +197,7 @@ public class ArchiveTest extends Support {
         request.setMonth(1);
         request.setYear(2010);
 
-        // TODO improve the checks in this
+        // JBR-440: improve the checks in this
         getMockMvc().perform(post("/jbr/int/money/transaction/archive")
                         .content(this.json(request))
                         .contentType(getContentType()))

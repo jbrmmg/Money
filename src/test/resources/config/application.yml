@@ -8,12 +8,21 @@ spring:
             poolName: Hikari
             auto-commit: false
 
+        internal:
+            type: com.zaxxer.hikari.HikariDataSource
+            url: jdbc:h2:mem:internal;INIT=CREATE SCHEMA IF NOT EXISTS TEST;DB_CLOSE_ON_EXIT=FALSE
+            username: sa
+            password:
+            hikari:
+                poolName: Hikari2
+                auto-commit: false
+
         h2:
             console:
                 enabled: false
 
     liquibase:
-        change-log: classpath:/db/changelog/db.changelog-master-dbg.yaml
+        change-log: classpath:/db/changelog/dbg/db.changelog-master.yaml
         contexts: default
 
     jpa:
@@ -21,6 +30,12 @@ spring:
             hibernate:
                 format_sql: true
                 show-sql: true
+
+internal:
+    liquibase:
+        default-schema:
+        change-log: classpath:/db/changelog/internal/db.changelog-master.yaml
+        contexts: default
 
 money:
     service-name: Middle Tier Test
@@ -34,6 +49,7 @@ money:
     report-working: ./target/testfiles/PdnReport/
     reconcile-file-location: src/test/resources/reconciliation
     smtp-port: 25
+    today: 2023-05-24
 
 logging:
     level:

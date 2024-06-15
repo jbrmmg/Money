@@ -18,17 +18,11 @@ public class TransactionFilterDTO {
     private Boolean locked;
     private Boolean predicted;
     private Boolean fromReconciled;
-    @Pattern(regexp="^[\\da-zA-Z]{4}$",message="Account can only contain letters or digits of 4 characters.")
-    private String reconciliationAccount;
     @Pattern(regexp="^[\\da-zA-Z ]*$",message="Description can only contain digits, letters and spaces.")
     private String description;
     private List<TransactionSortDTO> transactionSorts;
 
     public ValueRangeDTO getValueRange() {
-        if(this.valueRange == null) {
-            return new ValueRangeDTO();
-        }
-
         return valueRange;
     }
 
@@ -37,10 +31,6 @@ public class TransactionFilterDTO {
     }
 
     public DateRangeDTO getDateRange() {
-        if(this.dateRange == null) {
-            return new DateRangeDTO();
-        }
-
         return dateRange;
     }
 
@@ -108,14 +98,6 @@ public class TransactionFilterDTO {
         this.fromReconciled = fromReconciled;
     }
 
-    public String getReconciliationAccount() {
-        return reconciliationAccount;
-    }
-
-    public void setReconciliationAccount(String reconciliationAccount) {
-        this.reconciliationAccount = reconciliationAccount;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -128,8 +110,10 @@ public class TransactionFilterDTO {
         // If the sort definition is null or empty then return the minimum.
         if(this.transactionSorts == null || this.transactionSorts.isEmpty()) {
             List<TransactionSortDTO> defaultSorting = new ArrayList<>();
+            defaultSorting.add(new TransactionSortDTO(TransactionSortField.STATEMENT,TransactionSortType.ASCENDING));
             defaultSorting.add(new TransactionSortDTO(TransactionSortField.DATE,TransactionSortType.ASCENDING));
             defaultSorting.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.ASCENDING));
+            defaultSorting.add(new TransactionSortDTO(TransactionSortField.ACCOUNT,TransactionSortType.ASCENDING));
             return defaultSorting;
         }
 
@@ -185,13 +169,6 @@ public class TransactionFilterDTO {
             builder.append("any");
         } else {
             builder.append(this.getPredicted());
-        }
-
-        builder.append(", from Reconciled: ");
-        if(this.getReconciliationAccount() == null) {
-            builder.append("any");
-        } else {
-            builder.append(this.getReconciliationAccount());
         }
 
         builder.append(", description: ");

@@ -29,52 +29,58 @@ public class DateRangeDTO {
     private LocalDate convertToLocalDate(String date) {
         try {
             return LocalDate.parse(date, Constants.MONEY_DATE_FORMATTER);
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException ignored) {
             return null;
         }
     }
 
     public String getFrom() {
-        if(this.from == null) {
-            return Constants.MONEY_EARLIEST_DATE_STRING;
-        }
-
         return this.from;
     }
 
     public void setFrom(String from) {
+        if(from == null) {
+            this.from = null;
+            return;
+        }
+
         // String must be in the format yyyy-MM-dd and if provided then must be before the 'to' date.
         LocalDate date = convertToLocalDate(from);
         if(date == null) {
             throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);
         }
 
-        LocalDate toDate = convertToLocalDate(this.getTo());
-        if(date.isAfter(toDate)) {
-            throw new IllegalArgumentException("Date Range: the from date MUST be before the to date.");
+        if(this.getTo() != null) {
+            LocalDate toDate = convertToLocalDate(this.getTo());
+            if(date.isAfter(toDate)) {
+                throw new IllegalArgumentException("Date Range: the from date MUST be before the to date.");
+            }
         }
 
         this.from = from;
     }
 
     public String getTo() {
-        if(this.to == null) {
-            return Constants.MONEY_LATEST_DATE_STRING;
-        }
-
         return this.to;
     }
 
     public void setTo(String to) {
+        if(to == null) {
+            this.to = null;
+            return;
+        }
+
         // String must be in the format yyyy-MM-dd and if provided then must be after the 'from' date.
-        LocalDate date = convertToLocalDate(from);
+        LocalDate date = convertToLocalDate(to);
         if(date == null) {
             throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);
         }
 
-        LocalDate fromDate = convertToLocalDate(this.getFrom());
-        if(date.isBefore(fromDate)) {
-            throw new IllegalArgumentException("Date Range: the from date MUST be after the from date.");
+        if(this.getFrom() != null) {
+            LocalDate fromDate = convertToLocalDate(this.getFrom());
+            if(date.isBefore(fromDate)) {
+                throw new IllegalArgumentException("Date Range: the to date MUST be after the from date.");
+            }
         }
 
         this.to = to;

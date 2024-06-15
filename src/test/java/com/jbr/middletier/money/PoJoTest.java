@@ -2,8 +2,8 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
+import com.jbr.middletier.money.data.primary.*;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.*;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
@@ -508,6 +508,14 @@ public class PoJoTest {
         DateRange dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
         Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
         Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
+
+        dateRangeDTO = new DateRangeDTO(null,"2010-06-21");
+        dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
+        Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
+
+        dateRangeDTO = new DateRangeDTO("2010-05-03",null);
+        dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
+        Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
     }
 
     @Test
@@ -692,13 +700,13 @@ public class PoJoTest {
         reconciliationFile.setLoaded(false);
 
         Account account = new Account();
-        account.setId("BLAH");
+        account.setId("BANK");
         reconciliationFile.setAccount(account);
 
         ReconciliationFileDTO reconciliationFileDTO = transactionMapper.map(reconciliationFile,ReconciliationFileDTO.class);
         Assert.assertEquals(321L,reconciliationFileDTO.getSize(),0.1);
         Assert.assertEquals(LocalDateTime.of(2023,1,2,6,32,4),reconciliationFileDTO.getLastModified());
-        Assert.assertEquals("BLAH",reconciliationFileDTO.getAccount().getId());
+        Assert.assertEquals("BANK",reconciliationFileDTO.getAccount().getId());
         Assert.assertEquals("FredFlinstone.txt",reconciliationFileDTO.getFilename());
         Assert.assertEquals("Error", reconciliationFileDTO.getError());
         Assert.assertFalse(reconciliationFileDTO.getLoaded());
@@ -752,10 +760,19 @@ public class PoJoTest {
         id.setFile(file);
         id.setLine(10);
 
+
+        ReconciliationFileTransactionId id2 = new ReconciliationFileTransactionId();
+        id2.setFile(file);
+        id2.setLine(10);
+
         Assert.assertEquals(file,id.getFile());
         Assert.assertEquals(10,id.getLine().intValue());
         Assert.assertEquals("Fred.txt-10",id.toString());
         Assert.assertEquals(-531378337,id.hashCode());
+
+        Assert.assertEquals(id,id2);
+        id2.setLine(11);
+        Assert.assertNotEquals(id,id2);
     }
 
     @Test
@@ -795,7 +812,6 @@ public class PoJoTest {
         statement.setMonth(3);
 
         TransactionReportDTO test = new TransactionReportDTO();
-        test.setActions(actions);
         test.setBalance(new FinancialAmount(12.3));
         test.setId(10);
         test.setOppositeId(90);
@@ -806,7 +822,6 @@ public class PoJoTest {
         test.setStatement(statement);
         test.setDescription("Testing");
 
-        Assert.assertEquals(1,test.getActions().size());
         Assert.assertEquals(12.3,test.getBalance().getValue(),0.1);
         Assert.assertEquals(10,test.getId().intValue());
         Assert.assertEquals(90,test.getOppositeId().intValue());
@@ -833,5 +848,37 @@ public class PoJoTest {
         test = objectMapper.readValue("{\"field\":\"AMOUNT\",\"type\":\"ASCENDING\"}", TransactionSortDTO.class);
         Assert.assertEquals(TransactionSortField.AMOUNT,test.getField());
         Assert.assertEquals(TransactionSortType.ASCENDING,test.getType());
+    }
+
+    @Test
+    public void testDateRange2() {
+        DateRangeDTO dateRange = new DateRangeDTO();
+
+        try {
+            dateRange.setTo("1929-01-32");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
+        }
+
+        try {
+            dateRange.setFrom("2022-05-21");
+            dateRange.setTo("2022-05-19");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the to date MUST be after the from date.",e.getMessage());
+        }
+
+        try {
+            dateRange.setFrom("1929-01-32");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
+        }
+
+        try {
+            dateRange.setFrom(null);
+            dateRange.setTo("2022-05-19");
+            dateRange.setFrom("2022-05-21");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("Date Range: the from date MUST be before the to date.",e.getMessage());
+        }
     }
 }

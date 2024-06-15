@@ -1,6 +1,6 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.data.*;
+import com.jbr.middletier.money.data.primary.OkStatus;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.ReconciliationFileManager;
@@ -89,25 +89,25 @@ public class ReconciliationController {
     }
 
     @GetMapping(path = "/ext/money/match")
-    public List<MatchDataDTO> matchExt() throws UpdateDeleteAccountException {
+    public List<MatchDataDTO> matchExt() throws NullOrBlankAccountIdException {
         LOG.info("External match data - reconciliation data with reconciled transactions");
         return reconciliationManager.matchImpl();
     }
 
     @GetMapping(path = "/int/money/match")
-    public List<MatchDataDTO> matchInt() throws UpdateDeleteAccountException {
+    public List<MatchDataDTO> matchInt() throws NullOrBlankAccountIdException {
         return matchExt();
     }
 
     @PutMapping(path = "/ext/money/reconciliation/auto")
-    public OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException, NullOrBlankAccountIdException {
         LOG.info("Auto Reconciliation Data (ext) ");
         reconciliationManager.autoReconcileData();
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path = "/int/money/reconciliation/auto")
-    public OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException, NullOrBlankAccountIdException {
         return reconcileDataExt();
     }
 

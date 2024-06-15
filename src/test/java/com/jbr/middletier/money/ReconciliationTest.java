@@ -1,10 +1,11 @@
 package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.*;
-import com.jbr.middletier.money.dataaccess.ReconciliationRepository;
-import com.jbr.middletier.money.dataaccess.StatementRepository;
-import com.jbr.middletier.money.dataaccess.TransactionRepository;
+import com.jbr.middletier.money.data.primary.*;
+import com.jbr.middletier.money.data.primary.repository.ReconciliationFileRepository;
+import com.jbr.middletier.money.data.primary.repository.ReconciliationRepository;
+import com.jbr.middletier.money.data.primary.repository.StatementRepository;
+import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.ReconcileUpdateDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileDTO;
 import com.jbr.middletier.money.dto.ReconciliationFileLoadDTO;
@@ -49,6 +50,8 @@ public class ReconciliationTest extends Support {
     private ReconciliationManager reconciliationManager;
     @Autowired
     private StatementRepository statementRepository;
+    @Autowired
+    private ReconciliationFileRepository reconciliationFileRepository;
 
     @Before
     public void cleanUp() {
@@ -206,13 +209,35 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testInvalidAccountId() {
+        ReconciliationFile updateFile = null;
+        Account account = null;
+        boolean loaded = false;
         try {
             this.reconciliationManager.clearRepositoryData();
+
+            // Temporarily break the reconciliation file data.
+            for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
+                updateFile = next;
+            }
+            Assert.assertNotNull(updateFile);
+            loaded = updateFile.getLoaded();
+            updateFile.setLoaded(true);
+
+            account = updateFile.getAccount();
+            updateFile.setAccount(null);
+            reconciliationFileRepository.save(updateFile);
+
             this.reconciliationManager.matchImpl();
             Assert.fail();
-        } catch(UpdateDeleteAccountException ex) {
-            Assert.assertEquals("Cannot find account with id No file has been selected, cannot determine account", ex.getMessage());
+        } catch(NullOrBlankAccountIdException ex) {
+            Assert.assertEquals("Account ID not specified, reconciliation transactions required.", ex.getMessage());
         }
+
+        // Restore the file
+        Assert.assertNotNull(updateFile);
+        updateFile.setLoaded(loaded);
+        updateFile.setAccount(account);
+        reconciliationFileRepository.save(updateFile);
     }
 
     @Test
@@ -436,7 +461,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchExactly() throws IOException, UpdateDeleteAccountException {
+    public void testMatchExactly() throws IOException, NullOrBlankAccountIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -465,7 +490,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchExactlyPlusRecon() throws IOException, UpdateDeleteAccountException {
+    public void testMatchExactlyPlusRecon() throws IOException, NullOrBlankAccountIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -489,7 +514,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchMoreTransactions() throws IOException, UpdateDeleteAccountException {
+    public void testMatchMoreTransactions() throws IOException, NullOrBlankAccountIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -517,7 +542,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testAutomaticRec() throws IOException, UpdateDeleteAccountException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException {
+    public void testAutomaticRec() throws IOException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException, NullOrBlankAccountIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
