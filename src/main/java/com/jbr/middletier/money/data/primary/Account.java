@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -15,6 +16,9 @@ import java.io.Serializable;
 @Entity
 @Table(name="account")
 public class Account implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @Id
     @Column(name="id")
     @NotNull(message = "Account ID cannot be null.")

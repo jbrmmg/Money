@@ -4,6 +4,8 @@ import com.jbr.middletier.money.util.FinancialAmount;
 
 import jakarta.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serial;
+import java.io.Serializable;
 
 /**
  * Created by jason on 07/03/17.
@@ -11,7 +13,10 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name="statement")
-public class Statement {
+public class Statement implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @EmbeddedId
     private StatementId id;
 

@@ -6,13 +6,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serial;
+import java.io.Serializable;
 
 /**
  * Created by jason on 04/03/17.
  */
 @Entity
 @Table(name="category")
-public class Category {
+public class Category implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @Id
     @NotNull
     @Size(max=3)
