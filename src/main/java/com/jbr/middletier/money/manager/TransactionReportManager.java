@@ -68,6 +68,11 @@ public class TransactionReportManager {
     @PostConstruct
     public void initialise() {
         // Set up the in memory database.
+        reset();
+    }
+
+    public void reset() {
+        // Set up the in memory database.
         LOG.info("Initialising TransactionReportManager...");
 
         // Delete the transaction report details.

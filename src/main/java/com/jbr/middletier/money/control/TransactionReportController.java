@@ -32,4 +32,10 @@ public class TransactionReportController {
         LOG.trace("INT: transaction report");
         return this.accountTransactionManager.getTransactions(filter);
     }
+
+    @PostMapping(path="/int/money/transaction/reset")
+    void resetTransactions() {
+        LOG.info("Reset the transaction data");
+        this.accountTransactionManager.reset();
+    }
 }
