@@ -8,9 +8,7 @@ import com.jbr.middletier.money.data.primary.Regular;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
-import com.jbr.middletier.money.events.CreateTransactionEvent;
-import com.jbr.middletier.money.events.DeleteTransactionEvent;
-import com.jbr.middletier.money.events.UpdateTransactionEvent;
+import com.jbr.middletier.money.events.*;
 import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -76,7 +74,6 @@ public class TransactionReportManager {
         this.transactionReportRepository.deleteAll();
 
         // Populate the transaction data (reconciliation must be last.).
-        // JBR-443: Need to be able to refresh these when the account changes.
         getPredicted();
         getStandardTransactions();
         getFromReconciled();
@@ -94,8 +91,6 @@ public class TransactionReportManager {
     }
 
     private void getFromReconciled() {
-        //JBR-442: when updating; remove the reconciliation only data + remove the reconciliation flag on standard transaction.
-
         // Get the transactions
         try {
             for (MatchData next : reconciliationManager.match()) {
@@ -378,22 +373,26 @@ public class TransactionReportManager {
         }
     }
 
+    private void updateTransaction(Transaction next) {
+        // Map this transaction to a report.
+        TransactionReport updatedReport = this.mapper.map(next,TransactionReport.class);
+
+        // Get the report transaction.
+        List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next.getId());
+
+        for(TransactionReport nextReport : report) {
+            // Save the updated details
+            updatedReport.setId(nextReport.getId());
+
+            this.transactionReportRepository.save(updatedReport);
+        }
+    }
+
     @EventListener
     public void onUpdateTransaction(UpdateTransactionEvent update) {
         LOG.info("Update transaction in report table.");
         for(Transaction next : update.getTransactions()) {
-            // Map this transaction to a report.
-            TransactionReport updatedReport = this.mapper.map(next,TransactionReport.class);
-
-            // Get the report transaction.
-            List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next.getId());
-
-            for(TransactionReport nextReport : report) {
-                // Save the updated details
-                updatedReport.setId(nextReport.getId());
-
-                this.transactionReportRepository.save(updatedReport);
-            }
+            updateTransaction(next);
         }
     }
 
@@ -407,5 +406,42 @@ public class TransactionReportManager {
             // Delete details across and save.
             this.transactionReportRepository.deleteAll(report);
         }
+    }
+
+    @EventListener
+    public void onReconcileTransactions(ReconcileTransactionEvent reconcile) {
+        LOG.info("Update the transaction");
+        for(Transaction next : reconcile.getTransactions()) {
+            updateTransaction(next);
+        }
+    }
+
+    @EventListener
+    public void onReconciliationFileLoad(ReconciliationFileLoadEvent load) {
+        LOG.info("Update the reconciled report.{}", load.getSource());
+
+        // Remove all transactions that are from reconciliation
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(true);
+        List<TransactionReport> updates = new ArrayList<>();
+        List<TransactionReport> deletes = new ArrayList<>();
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            // If this is a real transaction that is also from reconciliation - then just remove the flag.
+            if(next.getTransactionId() != null) {
+                next.setFromReconciliation(false);
+                updates.add(next);
+            } else {
+                deletes.add(next);
+            }
+        }
+
+        // Save updates
+        this.transactionReportRepository.saveAll(updates);
+
+        // Delete the updates.
+        this.transactionReportRepository.deleteAll(deletes);
+
+        // Re-create the reconciliation transactions.
+        getFromReconciled();
     }
 }

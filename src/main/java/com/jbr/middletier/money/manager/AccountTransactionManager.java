@@ -2,8 +2,6 @@ package com.jbr.middletier.money.manager;
 
 import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.primary.*;
-import com.jbr.middletier.money.data.primary.repository.AccountRepository;
-import com.jbr.middletier.money.data.primary.repository.CategoryRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
@@ -34,19 +32,19 @@ import static com.jbr.middletier.money.data.primary.repository.TransactionSpecif
 public class AccountTransactionManager {
     private static final Logger LOG = LoggerFactory.getLogger(AccountTransactionManager.class);
 
-    private final AccountRepository accountRepository;
-    private final CategoryRepository categoryRepository;
+    private final AccountManager accountManager;
+    private final CategoryManager categoryManager;
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
-    public AccountTransactionManager(AccountRepository accountRepository,
-                                     CategoryRepository categoryRepository,
+    public AccountTransactionManager(AccountManager accountManager,
+                                     CategoryManager categoryManager,
                                      TransactionRepository transactionRepository,
                                      TransactionMapper transactionMapper, ApplicationEventPublisher applicationEventPublisher) {
-        this.accountRepository = accountRepository;
-        this.categoryRepository = categoryRepository;
+        this.accountManager = accountManager;
+        this.categoryManager = categoryManager;
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
         this.applicationEventPublisher = applicationEventPublisher;
@@ -163,8 +161,10 @@ public class AccountTransactionManager {
         List<Account> accounts = null;
         if(accountIds != null) {
             accounts = new ArrayList<>();
-            for(Account next : accountRepository.findAllById(accountIds)) {
-                accounts.add(next);
+            for(Account next : accountManager.getAllExternal()) {
+                if(accountIds.contains(next.getId())) {
+                    accounts.add(next);
+                }
             }
         }
 
@@ -172,8 +172,10 @@ public class AccountTransactionManager {
         List<Category> categories = null;
         if(categoryIds != null) {
             categories = new ArrayList<>();
-            for(Category next : categoryRepository.findAllById(categoryIds)) {
-                categories.add(next);
+            for(Category next : categoryManager.getAllExternal()) {
+                if(categoryIds.contains(next.getId())) {
+                    categories.add(next);
+                }
             }
         }
 
@@ -285,13 +287,13 @@ public class AccountTransactionManager {
         }
 
         // Category must be Transfer on both transactions
-        Optional<Category> transfer = categoryRepository.findById("TRF");
+        Optional<Category> transfer = categoryManager.getIfValid(CategoryManager.CATEGORY_TRANSFER);
         if(transfer.isEmpty()) {
             throw new InvalidTransactionException("Cannot find the transfer category");
         }
 
-        from.setCategoryId("TRF");
-        to.setCategoryId("TRF");
+        from.setCategoryId(CategoryManager.CATEGORY_TRANSFER);
+        to.setCategoryId(CategoryManager.CATEGORY_TRANSFER);
 
         // Ensure the amount is the reverse
         to.setAmount(from.getAmount() * -1);
@@ -317,44 +319,80 @@ public class AccountTransactionManager {
         return result;
     }
 
+    private boolean updateLocked(Boolean locked, Optional<Transaction> transaction) {
+        // Only a transaction can affect the status
+        if(transaction.isEmpty()) {
+            return locked;
+        }
+
+        if(transaction.get().getStatement() == null) {
+            return locked;
+        }
+
+        if(!transaction.get().getStatement().getLocked()) {
+            return locked;
+        }
+
+        return true;
+    }
+
+    private void updateTransaction(Optional<Transaction> transaction, boolean locked, double factor, Optional<Category> category, TransactionDTO source) {
+        if(transaction.isEmpty()) {
+            return;
+        }
+
+        // Description can always be updated.
+        transaction.get().setDescription(source.getDescription());
+
+        // If there is a new category, update it.
+        category.ifPresent(value -> transaction.get().setCategory(value));
+
+        // If the transaction is locked, cannot change date or amount.
+        if(locked) {
+            return;
+        }
+
+        // Set the amount and the date.
+        transaction.get().setDate(this.transactionMapper.map(source.getDate(),LocalDate.class));
+        transaction.get().setAmount(source.getAmount() * factor);
+    }
+
     public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
         // Find the transaction.
         Optional<Transaction> existingTransaction = transactionRepository.findById(transaction.getId());
+        Optional<Transaction> oppositeTransaction = Optional.empty();
         if(existingTransaction.isPresent()) {
-            List<TransactionDTO> result = new ArrayList<>();
             List<Transaction> toBeSaved = new ArrayList<>();
 
-            result.add(transactionMapper.map(existingTransaction.get(),TransactionDTO.class));
             toBeSaved.add(existingTransaction.get());
 
             // Is there an opposite transaction?
             if(existingTransaction.get().getOppositeTransactionId() != null) {
-                Optional<Transaction> oppositeTransaction = transactionRepository.findById(existingTransaction.get().getOppositeTransactionId());
+                oppositeTransaction = transactionRepository.findById(existingTransaction.get().getOppositeTransactionId());
 
-                if(oppositeTransaction.isPresent()) {
-                    result.add(transactionMapper.map(oppositeTransaction.get(), TransactionDTO.class));
-                    toBeSaved.add(oppositeTransaction.get());
-                }
+                oppositeTransaction.ifPresent(toBeSaved::add);
             }
 
-            // Perform the update
-            for(Transaction next : toBeSaved) {
-                next.setAmount(transaction.getAmount());
-                next.setDescription(transaction.getDescription());
-
-                if(toBeSaved.size() == 1) {
-                    Optional<Category> category = categoryRepository.findById(transaction.getCategoryId());
-
-                    if(category.isEmpty()) {
-                        throw new UpdateDeleteCategoryException(transaction.getCategoryId());
-                    }
-
-                    next.setCategory(category.get());
-                }
+            // Get the transaction category (if this is not a transfer).
+            Optional<Category> newCategory = Optional.empty();
+            if(oppositeTransaction.isEmpty()) {
+                newCategory = this.categoryManager.getIfValid(transaction.getCategoryId());
             }
+
+            // Is either transaction locked?
+            boolean locked = updateLocked(false, existingTransaction);
+            locked = updateLocked(locked, oppositeTransaction);
+
+            // Update the transaction (date, amount, category and description).
+            updateTransaction(existingTransaction, locked, 1.0, newCategory, transaction);
+            updateTransaction(oppositeTransaction, locked, -1.0, newCategory, transaction);
 
             transactionRepository.saveAll(toBeSaved);
             this.applicationEventPublisher.publishEvent(new UpdateTransactionEvent(this,toBeSaved));
+
+            List<TransactionDTO> result = new ArrayList<>();
+            existingTransaction.ifPresent(value -> result.add(this.transactionMapper.map(value, TransactionDTO.class)));
+            oppositeTransaction.ifPresent(value -> result.add(this.transactionMapper.map(value, TransactionDTO.class)));
 
             return result;
         }

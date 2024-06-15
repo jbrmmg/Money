@@ -69,6 +69,7 @@ public class TransactionReportToDTO extends AbstractConverter<TransactionReport,
         TransactionReportDTO result = new TransactionReportDTO();
 
         result.setId(transactionReport.getId());
+        result.setTransactionId(transactionReport.getTransactionId());
         result.setDate(transactionReport.getDate());
         result.setAmount(getAmount(transactionReport.getAmount()));
         result.setAccount(getAccount(transactionReport.getAccountId()));

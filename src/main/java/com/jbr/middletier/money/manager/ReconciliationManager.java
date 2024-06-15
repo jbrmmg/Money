@@ -5,12 +5,15 @@ import com.jbr.middletier.money.data.primary.repository.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.ReconciliationMapper;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.events.ReconcileTransactionEvent;
+import com.jbr.middletier.money.events.ReconciliationFileLoadEvent;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.dto.MatchDataDTO;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
@@ -35,6 +38,7 @@ public class ReconciliationManager {
     private final ReconciliationMapper reconciliationMapper;
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
     private final ReconciliationFileRepository reconciliationFileRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public ReconciliationManager(ReconciliationRepository reconciliationRepository,
@@ -45,7 +49,8 @@ public class ReconciliationManager {
                                  TransactionMapper transactionMapper,
                                  ReconciliationMapper reconciliationMapper,
                                  ReconciliationFileTransactionRepository reconciliationFileTransactionRepository,
-                                 ReconciliationFileRepository reconciliationFileRepository) {
+                                 ReconciliationFileRepository reconciliationFileRepository,
+                                 ApplicationEventPublisher applicationEventPublisher) {
         this.reconciliationRepository = reconciliationRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
@@ -55,6 +60,7 @@ public class ReconciliationManager {
         this.reconciliationMapper = reconciliationMapper;
         this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
         this.reconciliationFileRepository = reconciliationFileRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public void clearRepositoryData() {
@@ -85,6 +91,9 @@ public class ReconciliationManager {
             // Mark the file as loaded.
             file.get().setLoaded(true);
             reconciliationFileRepository.save(file.get());
+
+            // Trigger the event.
+            applicationEventPublisher.publishEvent(new ReconciliationFileLoadEvent(this));
 
             return;
         }
@@ -346,6 +355,8 @@ public class ReconciliationManager {
 
             // Save the transaction.
             transactionRepository.save(transaction.get());
+
+            this.applicationEventPublisher.publishEvent(new ReconcileTransactionEvent(this,Collections.singletonList(transaction.get())));
             return;
         }
 

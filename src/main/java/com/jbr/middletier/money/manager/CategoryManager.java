@@ -20,6 +20,9 @@ public class CategoryManager extends AbstractManager<
         CategoryRepository,
         CreateCategoryException,
         UpdateDeleteCategoryException> {
+
+    public static final String CATEGORY_TRANSFER = "TRF";
+
     @Autowired
     public CategoryManager(CategoryMapper modelMapper, CategoryRepository categoryRepository) {
         super(CategoryDTO.class,Category.class,modelMapper,categoryRepository);

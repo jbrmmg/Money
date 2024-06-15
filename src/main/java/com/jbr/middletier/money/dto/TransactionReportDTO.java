@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 
 public class TransactionReportDTO {
     private Integer id;
+    private Integer transactionId;
     private FinancialAmount amount;
     private FinancialAmount balance;
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
@@ -166,5 +167,13 @@ public class TransactionReportDTO {
                 this.getFromReconciliation() +
                 " " +
                 "]";
+    }
+
+    public Integer getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(Integer transactionId) {
+        this.transactionId = transactionId;
     }
 }
