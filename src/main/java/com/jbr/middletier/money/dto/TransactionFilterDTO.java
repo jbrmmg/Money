@@ -10,6 +10,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionFilterDTO {
+    private static final int MAXIMUM_PAGE_SIZE = 600;
+
     private ValueRangeDTO valueRange;
     private DateRangeDTO dateRange;
     private StatementDateDTO statementDate;
@@ -21,6 +23,8 @@ public class TransactionFilterDTO {
     @Pattern(regexp="^[\\da-zA-Z ]*$",message="Description can only contain digits, letters and spaces.")
     private String description;
     private List<TransactionSortDTO> transactionSorts;
+    private Integer maxPageSize;
+    private Integer pageNumber;
 
     public ValueRangeDTO getValueRange() {
         return valueRange;
@@ -179,5 +183,29 @@ public class TransactionFilterDTO {
         }
 
         return builder.toString();
+    }
+
+    public Integer getMaxPageSize() {
+        if(this.maxPageSize == null) {
+            return MAXIMUM_PAGE_SIZE;
+        }
+
+        return maxPageSize;
+    }
+
+    public void setMaxPageSize(Integer maxPageSize) {
+        this.maxPageSize = maxPageSize;
+    }
+
+    public Integer getPageNumber() {
+        if(this.pageNumber == null) {
+            return 0;
+        }
+
+        return pageNumber;
+    }
+
+    public void setPageNumber(Integer pageNumber) {
+        this.pageNumber = pageNumber;
     }
 }
