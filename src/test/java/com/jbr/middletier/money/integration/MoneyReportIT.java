@@ -400,6 +400,29 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
+    public void testFilterValueLimit() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setValueRange(new ValueRangeDTO(-20,15));
+        filter.setMaxPageSize(1);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactions", hasSize(1)))
+                .andExpect(jsonPath("openDate", is("2023-04-22")))
+                .andExpect(jsonPath("today", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        TransactionDataDTO transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),TransactionDataDTO.class);
+        logTransactionData(transactionData);
+    }
+
+    @Test
     public void testNull() throws Exception {
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content("{}")
