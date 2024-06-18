@@ -7,7 +7,9 @@ import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.*;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
+import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.manager.AccountManager;
+import com.jbr.middletier.money.manager.CategoryManager;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.util.DateRange;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
@@ -53,6 +56,9 @@ public class PoJoTest {
 
     @Autowired
     private AccountManager accountManager;
+
+    @Autowired
+    private CategoryManager categoryManager;
 
     @Autowired
     private StatementRepository statementRepository;
@@ -880,5 +886,42 @@ public class PoJoTest {
         } catch (IllegalArgumentException e) {
             Assert.assertEquals("Date Range: the from date MUST be before the to date.",e.getMessage());
         }
+    }
+
+    @Test
+    public void testFilterDTO() throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
+        TransactionFilterDTO test = new TransactionFilterDTO();
+
+        // Check the defaults.
+        Assert.assertEquals(600,test.getMaxPageSize().intValue());
+        Assert.assertEquals(0,test.getPageNumber().intValue());
+        Assert.assertEquals(4,test.getTransactionSorts().size());
+
+        // Check get and sets.
+        test.setPageNumber(3);
+        test.setMaxPageSize(602);
+        test.setFromReconciled(true);
+        test.setAccounts(Collections.singletonList(this.accountManager.getExternal("BANK")));
+        test.setCategories(Collections.singletonList(this.categoryManager.getExternal("HSE")));
+        test.setFromReconciled(true);
+        test.setValueRange(new ValueRangeDTO());
+        test.setLocked(true);
+        test.setPredicted(true);
+        test.setStatementDate(new StatementDateDTO());
+        test.setDateRange(new DateRangeDTO());
+        test.setDescription("Hello");
+
+        Assert.assertEquals(3,test.getPageNumber().intValue());
+        Assert.assertEquals(602,test.getMaxPageSize().intValue());
+        Assert.assertTrue(test.getFromReconciled());
+        Assert.assertEquals(1,test.getAccounts().size());
+        Assert.assertEquals(1,test.getCategories().size());
+        Assert.assertTrue(test.getFromReconciled());
+        Assert.assertNull(test.getValueRange().getMaximum());
+        Assert.assertTrue(test.getLocked());
+        Assert.assertTrue(test.getPredicted());
+        Assert.assertEquals("Hello",test.getDescription());
+        Assert.assertNull(test.getStatementDate().getMonth());
+        Assert.assertNull(test.getDateRange().getTo());
     }
 }

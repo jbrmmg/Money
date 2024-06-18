@@ -328,10 +328,10 @@ public class TransactionReportManager {
 
         // Get the transactions that meet the filter.
         // JBR-444 - remove this when paging is implemented.
-        int max = 600;
+        int max = filter.getMaxPageSize();
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,STATEMENT_SORT_COLUMN,DATE_COLUMN,AMOUNT_COLUMN,ACCOUNT_ID_COLUMN))) {
             result.getTransactions().add(this.mapper.map(next,TransactionReportDTO.class));
-            if(max-- == 0) {
+            if(--max == 0) {
                 break;
             }
         }
