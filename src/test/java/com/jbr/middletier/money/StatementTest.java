@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -184,7 +185,8 @@ public class StatementTest extends Support {
                 .andExpect(jsonPath("$[0].accountId", is("AMEX")))
                 .andExpect(jsonPath("$[1].accountId", is("BANK")))
                 .andExpect(jsonPath("$[0].openBalance.value", is(0.0)))
-                .andExpect(jsonPath("$[1].openBalance.value", is(0.0)));
+                .andExpect(jsonPath("$[1].openBalance.value", is(0.0)))
+                .andDo(MockMvcResultHandlers.print());
 
         // Check the url.
         getMockMvc().perform(get("/jbr/int/money/statement")
