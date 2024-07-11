@@ -12,6 +12,7 @@ import com.jbr.middletier.money.dto.TransactionFileDetailsDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -63,7 +64,7 @@ public class ReconciliationFileManager implements FileChangeListener {
         for(ReconciliationFileTransaction nextTran : reconciliationFileTransactionRepository.findById_File(next)) {
             fileData.incrementCount();
 
-            if(nextTran.getAmount() > 0) {
+            if(FinancialAmount.positive(nextTran.getAmount())) {
                 fileData.incrementCredit(nextTran.getAmount());
             } else {
                 fileData.incrementDebit(nextTran.getAmount());

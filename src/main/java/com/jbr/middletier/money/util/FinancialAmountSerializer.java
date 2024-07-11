@@ -10,7 +10,7 @@ public class FinancialAmountSerializer extends JsonSerializer<FinancialAmount> {
     @Override
     public void serialize(FinancialAmount financialAmount, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeNumberField("value", financialAmount.getValue());
+        jsonGenerator.writeStringField("value", FinancialAmount.internalToStringNoComma(financialAmount));
         jsonGenerator.writeStringField("type", financialAmount.getType().toString());
         jsonGenerator.writeEndObject();
     }

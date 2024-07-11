@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * Created by jason on 07/03/17.
@@ -21,7 +22,7 @@ public class Statement implements Serializable {
     private StatementId id;
 
     @Column(name="open_balance")
-    private double openBalance;
+    private BigDecimal openBalance;
 
     @Column(name="locked")
     @NotNull
@@ -37,7 +38,7 @@ public class Statement implements Serializable {
     public Statement() {
     }
 
-    public Statement(Account account, int month, int year, double openBalance, boolean locked) {
+    public Statement(Account account, int month, int year, BigDecimal openBalance, boolean locked) {
         this.id = new StatementId(account,year,month);
         this.openBalance = openBalance;
         this.locked = locked;
@@ -53,7 +54,7 @@ public class Statement implements Serializable {
         return new FinancialAmount(this.openBalance);
     }
 
-    public void setOpenBalance(double openBalance) { this.openBalance = openBalance; }
+    public void setOpenBalance(BigDecimal openBalance) { this.openBalance = openBalance; }
 
     public boolean getLocked() {
         return this.locked;

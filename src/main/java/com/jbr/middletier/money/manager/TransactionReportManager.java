@@ -12,6 +12,7 @@ import com.jbr.middletier.money.events.*;
 import com.jbr.middletier.money.exceptions.NullOrBlankAccountIdException;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.util.FinancialAmount;
+import com.jbr.middletier.money.util.TransactionSorting;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -23,6 +24,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -124,7 +127,7 @@ public class TransactionReportManager {
         }
     }
 
-    private FinancialAmount calculateOpeningBalance(TransactionDataDTO transactionData, TransactionFilterDTO filter) {
+    private FinancialAmount calculateOpeningBalance(List<TransactionReportDTO> transactionData, TransactionFilterDTO filter) {
         // Determine the opening balance - this is only valid if there is no filter on the following:
         //   Value Range, Date Range, Category, Description, Predicted (true)
         if(filter.getValueRange() != null) {
@@ -154,11 +157,11 @@ public class TransactionReportManager {
 
         // Opening balance is the sum of the earliest opening balance from each account present in the data.
         List<String> accountIds = new ArrayList<>();
-        double openBalance = 0;
-        for(TransactionReportDTO next : transactionData.getTransactions()) {
+        BigDecimal openBalance = BigDecimal.ZERO;
+        for(TransactionReportDTO next : transactionData) {
             // Has this account been seen?
             if(!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
-                openBalance += next.getStatement().getOpenBalance().getValue();
+                openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
                 accountIds.add(next.getAccount().getId());
             }
         }
@@ -185,26 +188,6 @@ public class TransactionReportManager {
         return "";
     }
 
-    private FinancialAmount calculateTodayBalance(FinancialAmount openBalance, List<TransactionReportDTO> transactions) {
-        if(openBalance == null) {
-            return null;
-        }
-
-        LocalDate today = this.applicationProperties.getToday();
-
-        double balance = openBalance.getValue();
-
-        for(TransactionReportDTO transaction : transactions) {
-            LocalDate transactionDate = mapper.map(transaction.getDate(),LocalDate.class);
-
-            if(transactionDate.isBefore(today)) {
-                balance += transaction.getAmount().getValue();
-            }
-        }
-
-        return new FinancialAmount(balance);
-    }
-
     private String calculateFutureDate(List<TransactionReportDTO> transactions) {
         // Get the last transaction.
         if(!transactions.isEmpty()) {
@@ -218,20 +201,6 @@ public class TransactionReportManager {
         }
 
         return "";
-    }
-
-    private FinancialAmount calculateFutureBalance(FinancialAmount openBalance, List<TransactionReportDTO> transactions) {
-        if(openBalance == null) {
-            return null;
-        }
-
-        double balance = openBalance.getValue();
-
-        for(TransactionReportDTO transaction : transactions) {
-            balance += transaction.getAmount().getValue();
-        }
-
-        return new FinancialAmount(balance);
     }
 
     private void addFlagPredicates(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
@@ -321,49 +290,63 @@ public class TransactionReportManager {
         };
     }
 
-    public TransactionDataDTO getTransactions(TransactionFilterDTO filter) {
+    public List<TransactionReportDTO> getTransactions(TransactionFilterDTO filter) {
         LOG.info("Get Transactions based on {}",filter);
 
-        TransactionDataDTO result = new TransactionDataDTO();
+        List<TransactionReportDTO> result = new ArrayList<>();
 
         // Get the transactions that meet the filter.
         // JBR-444 - remove this when paging is implemented.
         int max = filter.getMaxPageSize();
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,STATEMENT_SORT_COLUMN,DATE_COLUMN,AMOUNT_COLUMN,ACCOUNT_ID_COLUMN))) {
-            result.getTransactions().add(this.mapper.map(next,TransactionReportDTO.class));
+            result.add(this.mapper.map(next,TransactionReportDTO.class));
             if(--max == 0) {
                 break;
             }
         }
 
-        // Calculate the opening details
-        result.setOpenBalance(calculateOpeningBalance(result,filter));
-        result.setOpenDate(calculateOpenDate(result.getTransactions()));
+        // If possible add an opening balance row.
+        FinancialAmount openingBalanceAmount = calculateOpeningBalance(result,filter);
+        if(openingBalanceAmount != null) {
+            TransactionReportDTO openingBalance = new TransactionReportDTO();
+            openingBalance.setType(TransactionReportTypeDTO.OPEN_BALANCE);
+            openingBalance.setBalance(openingBalanceAmount);
+            openingBalance.setDate(calculateOpenDate(result));
 
-        if(result.getOpenBalance() != null) {
-            // Calculate the balances on the transactions.
-            double balance = result.getOpenBalance().getValue();
-            for(TransactionReportDTO next : result.getTransactions()) {
-                next.setBalance(new FinancialAmount(balance));
-
-                balance += next.getAmount().getValue();
-            }
+            result.add(openingBalance);
         }
 
-        // Calculate today's date.
-        result.setToday(getDateString(applicationProperties.getToday()));
+        // Add today's balance.
+        TransactionReportDTO todayBalance = new TransactionReportDTO();
+        todayBalance.setType(TransactionReportTypeDTO.TODAY_BALANCE);
+        todayBalance.setDate(getDateString(applicationProperties.getToday()));
+        result.add(todayBalance);
 
-        // Calculate today's balance.
-        result.setTodayBalance(calculateTodayBalance(result.getOpenBalance(), result.getTransactions()));
+        // If there are transactions in the future, then add a future balance.
+        String futureDate = calculateFutureDate(result);
 
-        // Calculate future date.
-        result.setForwardDate(calculateFutureDate(result.getTransactions()));
+        if(futureDate != null && !futureDate.isEmpty()) {
+            TransactionReportDTO futureBalance = new TransactionReportDTO();
+            futureBalance.setType(TransactionReportTypeDTO.FUTURE_BALANCE);
+            futureBalance.setDate(futureDate);
 
-        // Calculate future balance.
-        result.setForwardBalance(calculateFutureBalance(result.getOpenBalance(), result.getTransactions()));
+            result.add(futureBalance);
+        }
 
         // Sort the transactions as per the filter definition.
-        result.sortTransactions(filter);
+        result.sort((t1,t2) -> TransactionSorting.compare(t1,t2,filter.getTransactionSorts(),applicationProperties.getToday()));
+
+        // Now we can calculate the balance information on each row.
+        BigDecimal balance = ( openingBalanceAmount != null) ? openingBalanceAmount.getValue() : BigDecimal.ZERO;
+        for(TransactionReportDTO next : result) {
+            // If opening balance, then the balance is already known.
+            if(next.getType() != TransactionReportTypeDTO.OPEN_BALANCE) {
+                BigDecimal nextAmount = ( next.getAmount() != null ) ? next.getAmount().getValue() : BigDecimal.ZERO;
+                next.setBalance(new FinancialAmount(balance.add(nextAmount)));
+
+                balance = balance.add(nextAmount);
+            }
+        }
 
         // Return the data.
         return result;

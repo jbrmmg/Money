@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import jakarta.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -25,7 +26,7 @@ public class Regular {
 
     @Column(name="amount")
     @NotNull
-    private double amount;
+    private BigDecimal amount;
 
     @JoinColumn(name="category")
     @NotNull
@@ -170,11 +171,11 @@ public class Regular {
         this.category = category;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return this.amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

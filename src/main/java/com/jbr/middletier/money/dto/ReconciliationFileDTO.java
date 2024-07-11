@@ -2,6 +2,7 @@ package com.jbr.middletier.money.dto;
 
 import jakarta.validation.constraints.Pattern;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -14,8 +15,8 @@ public class ReconciliationFileDTO {
     @Pattern(regexp="^[\\da-zA-Z]{1,100}$",message="Error can only contain letters or digits up to 45 characters.")
     private String error;
     private int transactionCount;
-    private double creditSum;
-    private double debitSum;
+    private BigDecimal creditSum;
+    private BigDecimal debitSum;
     private LocalDate earliestTransaction;
     private LocalDate latestTransaction;
     private Boolean loaded;
@@ -68,19 +69,19 @@ public class ReconciliationFileDTO {
         return transactionCount;
     }
 
-    public double getCreditSum() {
+    public BigDecimal getCreditSum() {
         return creditSum;
     }
 
-    public double getDebitSum() {
+    public BigDecimal getDebitSum() {
         return debitSum;
     }
 
-    public void setCreditSum(double creditSum) {
+    public void setCreditSum(BigDecimal creditSum) {
         this.creditSum = creditSum;
     }
 
-    public void setDebitSum(double debitSum) {
+    public void setDebitSum(BigDecimal debitSum) {
         this.debitSum = debitSum;
     }
 

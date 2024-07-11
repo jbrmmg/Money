@@ -81,9 +81,4 @@ public class TransactionDataDTO {
     public void setForwardBalance(FinancialAmount forwardBalance) {
         this.forwardBalance = forwardBalance;
     }
-
-    public void sortTransactions(TransactionFilterDTO filter) {
-        // Sort the transactions.
-        this.transactions.sort((t1,t2) -> TransactionSorting.compare(t1,t2,filter.getTransactionSorts()));
-    }
 }

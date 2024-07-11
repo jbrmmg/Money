@@ -20,6 +20,7 @@ import org.springframework.stereotype.Controller;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.accountIs;
@@ -223,13 +224,13 @@ public class ReconciliationManager {
         if(unlockedStatement.size() != 1) {
             LOG.info("Number of statements was not 1.");
         } else {
-            double rollingAmount = unlockedStatement.get(0).getOpenBalance().getValue();
+            BigDecimal rollingAmount = unlockedStatement.get(0).getOpenBalance().getValue();
 
             // Set the open balance data.
             for(MatchData nextMatchData : matchData) {
                 if(!nextMatchData.getForwardAction().equalsIgnoreCase("UNRECONCILE")) {
                     nextMatchData.setBeforeAmount(rollingAmount);
-                    rollingAmount += nextMatchData.getAmount();
+                    rollingAmount = rollingAmount.add(nextMatchData.getAmount());
                     nextMatchData.setAfterAmount(rollingAmount);
                 }
             }
