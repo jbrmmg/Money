@@ -25,6 +25,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.testcontainers.containers.MySQLContainer;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 @RunWith(SpringRunner.class)
@@ -74,7 +75,7 @@ public class MoneyEventIT extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("HSE");
-        transaction.setAmount(12.21);
+        transaction.setAmount(BigDecimal.valueOf(12.21));
         transaction.setDate("2023-02-12");
         transaction.setDescription("Testing");
 
@@ -90,7 +91,7 @@ public class MoneyEventIT extends Support {
         TransactionReportDTO reportTransaction = reportTransactions.get(0);
         Assert.assertEquals(transaction.getAccountId(),reportTransaction.getAccount().getId());
         Assert.assertEquals(transaction.getDate(),reportTransaction.getDate());
-        Assert.assertEquals(transaction.getAmount(),reportTransaction.getAmount().getValue(),0.001);
+        Assert.assertEquals(transaction.getAmount().doubleValue(),reportTransaction.getAmount().getValue().doubleValue(),0.001);
         Assert.assertEquals(transaction.getDescription(),reportTransaction.getDescription());
         Assert.assertEquals(transaction.getCategoryId(),reportTransaction.getCategory().getId());
         Assert.assertEquals(false,reportTransaction.getPredicted());
@@ -99,7 +100,7 @@ public class MoneyEventIT extends Support {
 
         // Check that amending the transaction is replicated.
         Assert.assertEquals(1,saved.size());
-        saved.get(0).setAmount(13.31);
+        saved.get(0).setAmount(BigDecimal.valueOf(13.31));
         saved.get(0).setDate("2023-02-11");
         saved.get(0).setCategoryId("UTT");
         saved.get(0).setDescription("Testing 2");
@@ -109,7 +110,7 @@ public class MoneyEventIT extends Support {
         reportTransaction = reportTransactions.get(0);
         Assert.assertEquals(saved.get(0).getAccountId(),reportTransaction.getAccount().getId());
         Assert.assertEquals(saved.get(0).getDate(),reportTransaction.getDate());
-        Assert.assertEquals(saved.get(0).getAmount(),reportTransaction.getAmount().getValue(),0.001);
+        Assert.assertEquals(saved.get(0).getAmount().doubleValue(),reportTransaction.getAmount().getValue().doubleValue(),0.001);
         Assert.assertEquals(saved.get(0).getDescription(),reportTransaction.getDescription());
         Assert.assertEquals(saved.get(0).getCategoryId(),reportTransaction.getCategory().getId());
         Assert.assertEquals(false,reportTransaction.getPredicted());
@@ -129,7 +130,7 @@ public class MoneyEventIT extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("HSE");
-        transaction.setAmount(12.21);
+        transaction.setAmount(BigDecimal.valueOf(12.21));
         transaction.setDate("2023-02-12");
         transaction.setDescription("Transfer");
         transactions.add(transaction);
@@ -137,7 +138,7 @@ public class MoneyEventIT extends Support {
         transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setAmount(-12.21);
+        transaction.setAmount(BigDecimal.valueOf(-12.21));
         transaction.setDate("2023-02-12");
         transaction.setDescription("Transfer");
         transactions.add(transaction);
@@ -166,8 +167,8 @@ public class MoneyEventIT extends Support {
         Assert.assertEquals("AMEX",amex.getAccount().getId());
         Assert.assertEquals(transaction.getDate(),bank.getDate());
         Assert.assertEquals(transaction.getDate(),amex.getDate());
-        Assert.assertEquals(-1 * transaction.getAmount(),bank.getAmount().getValue(),0.001);
-        Assert.assertEquals(transaction.getAmount(),amex.getAmount().getValue(),0.001);
+        Assert.assertEquals(-1 * transaction.getAmount().doubleValue(),bank.getAmount().getValue().doubleValue(),0.001);
+        Assert.assertEquals(transaction.getAmount().doubleValue(),amex.getAmount().getValue().doubleValue(),0.001);
         Assert.assertEquals(transaction.getDescription(),bank.getDescription());
         Assert.assertEquals(transaction.getDescription(),amex.getDescription());
         Assert.assertEquals(CategoryManager.CATEGORY_TRANSFER,bank.getCategory().getId());
@@ -181,7 +182,7 @@ public class MoneyEventIT extends Support {
 
         // Check that amending the transaction is replicated.
         Assert.assertEquals(2,saved.size());
-        saved.get(0).setAmount(13.31);
+        saved.get(0).setAmount(BigDecimal.valueOf(13.31));
         saved.get(0).setDate("2023-02-11");
         saved.get(0).setCategoryId("UTT");
         saved.get(0).setDescription("Transfer 2");
@@ -203,8 +204,8 @@ public class MoneyEventIT extends Support {
         Assert.assertEquals("AMEX",amex.getAccount().getId());
         Assert.assertEquals(saved.get(0).getDate(),bank.getDate());
         Assert.assertEquals(saved.get(0).getDate(),amex.getDate());
-        Assert.assertEquals(saved.get(0).getAmount(),bank.getAmount().getValue(),0.001);
-        Assert.assertEquals(-1 * saved.get(0).getAmount(),amex.getAmount().getValue(),0.001);
+        Assert.assertEquals(saved.get(0).getAmount().doubleValue(),bank.getAmount().getValue().doubleValue(),0.001);
+        Assert.assertEquals(-1 * saved.get(0).getAmount().doubleValue(),amex.getAmount().getValue().doubleValue(),0.001);
         Assert.assertEquals(saved.get(0).getDescription(),bank.getDescription());
         Assert.assertEquals(saved.get(0).getDescription(),amex.getDescription());
         Assert.assertEquals(CategoryManager.CATEGORY_TRANSFER,bank.getCategory().getId());
@@ -228,7 +229,7 @@ public class MoneyEventIT extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("HSE");
-        transaction.setAmount(12.21);
+        transaction.setAmount(BigDecimal.valueOf(12.21));
         transaction.setDate("2023-02-12");
         transaction.setDescription("Testing");
 
@@ -299,7 +300,7 @@ public class MoneyEventIT extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("UTT");
-        transaction.setAmount(156.21);
+        transaction.setAmount(BigDecimal.valueOf(156.21));
         transaction.setDate("2023-02-05");
         transaction.setDescription("Testing x");
 
@@ -330,7 +331,7 @@ public class MoneyEventIT extends Support {
         transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("HSE");
-        transaction.setAmount(19.21);
+        transaction.setAmount(BigDecimal.valueOf(19.21));
         transaction.setDate("2023-02-25");
         transaction.setDescription("Testing y");
 
@@ -381,7 +382,7 @@ public class MoneyEventIT extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setAmount(-8.99);
+        transaction.setAmount(BigDecimal.valueOf(-8.99));
         transaction.setDate("2022-10-07");
         transaction.setDescription("OCADO TEST");
 

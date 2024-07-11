@@ -31,6 +31,7 @@ import org.xmlunit.diff.Diff;
 import org.xmlunit.diff.Difference;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -97,7 +98,7 @@ public class EmailTest extends Support {
 
     @Test
     public void testEmailFormat() throws IOException {
-        FinancialAmount start = new FinancialAmount(-10.02);
+        FinancialAmount start = new FinancialAmount(BigDecimal.valueOf(-10.02));
         List<Transaction> transactions = new ArrayList<>();
 
         Account account = new Account();
@@ -110,7 +111,7 @@ public class EmailTest extends Support {
         Transaction transaction = new Transaction();
         transaction.setDescription("Test");
         transaction.setCategory(category);
-        transaction.setAmount(192.92);
+        transaction.setAmount(BigDecimal.valueOf(192.92));
         transaction.setDate(LocalDate.of(2021,1,3));
         transaction.setAccount(account);
         transactions.add(transaction);
@@ -118,7 +119,7 @@ public class EmailTest extends Support {
         transaction = new Transaction();
         transaction.setDescription("Test");
         transaction.setCategory(category);
-        transaction.setAmount(-312.92);
+        transaction.setAmount(BigDecimal.valueOf(-312.92));
         transaction.setDate(LocalDate.of(2021,1,12));
         transaction.setAccount(account);
         transactions.add(transaction);
@@ -163,7 +164,7 @@ public class EmailTest extends Support {
         Statement current = new Statement();
         current.setId(currentId);
         current.setLocked(true);
-        current.setOpenBalance(0);
+        current.setOpenBalance(BigDecimal.ZERO);
         statementRepository.save(current);
 
         StatementId nextId = new StatementId();
@@ -173,7 +174,7 @@ public class EmailTest extends Support {
         Statement next = new Statement();
         next.setId(nextId);
         next.setLocked(false);
-        next.setOpenBalance(10);
+        next.setOpenBalance(BigDecimal.valueOf(10));
         statementRepository.save(next);
 
         // Create a transaction that will be deleted.
@@ -181,7 +182,7 @@ public class EmailTest extends Support {
         category.setId("HSE");
 
         Transaction transaction = new Transaction();
-        transaction.setAmount(10);
+        transaction.setAmount(BigDecimal.valueOf(10));
         transaction.setDate(applicationProperties.getToday().plusDays(-30));
         transaction.setDescription("Testing");
         transaction.setAccount(account);
@@ -190,7 +191,7 @@ public class EmailTest extends Support {
         transactionRepository.save(transaction);
 
         transaction = new Transaction();
-        transaction.setAmount(20);
+        transaction.setAmount(BigDecimal.valueOf(20));
         transaction.setDate(applicationProperties.getToday().plusDays(-7));
         transaction.setDescription("Testing 2");
         transaction.setAccount(account);
@@ -199,7 +200,7 @@ public class EmailTest extends Support {
         transactionRepository.save(transaction);
 
         transaction = new Transaction();
-        transaction.setAmount(5);
+        transaction.setAmount(BigDecimal.valueOf(5));
         transaction.setDate(applicationProperties.getToday().plusDays(-6));
         transaction.setDescription("Testing 3");
         transaction.setAccount(account);

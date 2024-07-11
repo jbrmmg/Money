@@ -30,6 +30,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -273,19 +274,19 @@ public class LogoTest {
         Transaction transaction1 = new Transaction();
         transaction1.setCategory(categoryHSE);
         transaction1.setAccount(account);
-        transaction1.setAmount(-10.02);
+        transaction1.setAmount(BigDecimal.valueOf(-10.02));
         transaction1.setDescription("Test");
 
         Transaction transaction2 = new Transaction();
         transaction2.setCategory(categoryHSE);
         transaction2.setAccount(account);
-        transaction2.setAmount(-210.02);
+        transaction2.setAmount(BigDecimal.valueOf(-210.02));
         transaction2.setDescription("Test");
 
         Transaction transaction3 = new Transaction();
         transaction3.setCategory(categoryFDG);
         transaction3.setAccount(account);
-        transaction3.setAmount(-84.12);
+        transaction3.setAmount(BigDecimal.valueOf(-84.12));
         transaction3.setDescription("Test");
 
         List<Transaction> transactions = new ArrayList<>();

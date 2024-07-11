@@ -22,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Objects;
@@ -59,7 +60,7 @@ public class StatementTest extends Support {
             Statement statement = new Statement();
             statement.setId(new StatementId(next,2010,1));
             statement.setLocked(false);
-            statement.setOpenBalance(0);
+            statement.setOpenBalance(BigDecimal.ZERO);
 
             statementRepository.save(statement);
         }
@@ -73,7 +74,7 @@ public class StatementTest extends Support {
         TransactionDTO transaction1 = new TransactionDTO();
         transaction1.setAccountId("BANK");
         transaction1.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
-        transaction1.setAmount(1280.32);
+        transaction1.setAmount(BigDecimal.valueOf(1280.32));
 
         TransactionDTO transaction2 = new TransactionDTO();
         transaction2.setAccountId("AMEX");
@@ -126,11 +127,11 @@ public class StatementTest extends Support {
                 if(!nextStatement.getLocked()) {
                     bankUnlocked++;
 
-                    assertEquals(1280.32, nextStatement.getOpenBalance().getValue(),0.001);
+                    assertEquals(1280.32, nextStatement.getOpenBalance().getValue().doubleValue(),0.001);
                 } else {
                     bankLocked++;
 
-                    assertEquals(0, nextStatement.getOpenBalance().getValue(),0.001);
+                    assertEquals(0, nextStatement.getOpenBalance().getValue().doubleValue(),0.001);
                 }
             } else {
                 other++;
@@ -275,7 +276,7 @@ public class StatementTest extends Support {
         statement.setMonth(4);
         statement.setYear(2010);
         statement.setLocked(false);
-        statement.setOpenBalance(new FinancialAmount(1023.9));
+        statement.setOpenBalance(new FinancialAmount(BigDecimal.valueOf(1023.9)));
         getMockMvc().perform(post("/jbr/int/money/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -295,7 +296,7 @@ public class StatementTest extends Support {
         statement.setMonth(1);
         statement.setYear(2010);
         statement.setLocked(false);
-        statement.setOpenBalance(new FinancialAmount(100));
+        statement.setOpenBalance(new FinancialAmount(BigDecimal.valueOf(100)));
 
         InvalidStatementIdException test = new InvalidStatementIdException(statement);
         Assert.assertEquals("Cannot find statement with id AMEX 1 2010", test.getMessage());

@@ -24,6 +24,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
@@ -89,7 +91,7 @@ public class MoneyTest extends Support {
             Statement statement = new Statement();
             statement.setId(new StatementId(next,2010,1));
             statement.setLocked(false);
-            statement.setOpenBalance(0);
+            statement.setOpenBalance(BigDecimal.ZERO);
 
             statementRepository.save(statement);
         }
@@ -111,7 +113,7 @@ public class MoneyTest extends Support {
         transaction.setAccountId("BANK");
         transaction.setCategoryId("FDW");
         transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
-        transaction.setAmount(1280.32);
+        transaction.setAmount(BigDecimal.valueOf(1280.32));
         transaction.setDescription("Test transaction");
 
         getMockMvc().perform(post("/jbr/int/money/transaction")
@@ -125,9 +127,9 @@ public class MoneyTest extends Support {
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
             TransactionDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
-            updateTransaction.setAmount(1283.21);
+            updateTransaction.setAmount(BigDecimal.valueOf(1283.21));
 
-            assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
+            assertEquals(1280.32, nextTransaction.getAmount().getValue().doubleValue(),0.001);
             getMockMvc().perform(put("/jbr/ext/money/transaction")
                     .content(this.json(updateTransaction))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -140,7 +142,7 @@ public class MoneyTest extends Support {
             TransactionDTO deleteTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
 
             // Delete this item.
-            assertEquals(1283.21,nextTransaction.getAmount().getValue(),0.001);
+            assertEquals(1283.21,nextTransaction.getAmount().getValue().doubleValue(),0.001);
             getMockMvc().perform(delete("/jbr/int/money/transaction")
                     .content(this.json(deleteTransaction))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -156,7 +158,7 @@ public class MoneyTest extends Support {
         transaction.setAccountId("BANK");
         transaction.setCategoryId("FDG");
         transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
-        transaction.setAmount(1280.32);
+        transaction.setAmount(BigDecimal.valueOf(1280.32));
         transaction.setDescription("Test transaction");
 
         // Add transaction.
@@ -171,11 +173,11 @@ public class MoneyTest extends Support {
         Iterable<Transaction> transactions = transactionRepository.findAll();
 
         Transaction nextTransaction = transactions.iterator().next();
-        assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
+        assertEquals(1280.32, nextTransaction.getAmount().getValue().doubleValue(),0.001);
         TransactionDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
-        updateTransaction.setAmount(1283.21);
+        updateTransaction.setAmount(BigDecimal.valueOf(1283.21));
 
-        assertEquals(1280.32, nextTransaction.getAmount().getValue(),0.001);
+        assertEquals(1280.32, nextTransaction.getAmount().getValue().doubleValue(),0.001);
         getMockMvc().perform(put("/jbr/int/money/transaction")
                 .content(this.json(updateTransaction))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -187,7 +189,7 @@ public class MoneyTest extends Support {
             TransactionDTO deleteTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
 
             // Delete this item.
-            assertEquals(1283.21, abs(nextTransactionToDelete.getAmount().getValue()),0.001);
+            assertEquals(1283.21, abs(nextTransactionToDelete.getAmount().getValue().doubleValue()),0.001);
             getMockMvc().perform(delete("/jbr/ext/money/transaction")
                     .content(this.json(deleteTransaction))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -203,7 +205,7 @@ public class MoneyTest extends Support {
         TransactionDTO transaction1 = new TransactionDTO();
         transaction1.setAccountId("BANK");
         transaction1.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
-        transaction1.setAmount(1280.32);
+        transaction1.setAmount(BigDecimal.valueOf(1280.32));
 
         TransactionDTO transaction2 = new TransactionDTO();
         transaction2.setAccountId("AMEX");
@@ -272,7 +274,7 @@ public class MoneyTest extends Support {
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("FDG");
         transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
-        transaction.setAmount(1.23);
+        transaction.setAmount(BigDecimal.valueOf(1.23));
 
         // Create transactions in each account.
         getMockMvc().perform(post("/jbr/int/money/transaction")
@@ -281,7 +283,7 @@ public class MoneyTest extends Support {
                 .andExpect(status().isOk());
 
         transaction.setAccountId("JLPC");
-        transaction.setAmount(3.45);
+        transaction.setAmount(BigDecimal.valueOf(3.45));
         getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
@@ -302,7 +304,7 @@ public class MoneyTest extends Support {
         // Create another transaction
         transaction.setAccountId("JLPC");
         transaction.setCategoryId("UTT");
-        transaction.setAmount(2.78);
+        transaction.setAmount(BigDecimal.valueOf(2.78));
         getMockMvc().perform(post("/jbr/int/money/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
@@ -348,7 +350,7 @@ public class MoneyTest extends Support {
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(10.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(10.0));
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
@@ -362,7 +364,7 @@ public class MoneyTest extends Support {
         testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(11.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(11.0));
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setWeekendAdj(AdjustmentType.AT_NONE);
@@ -375,7 +377,7 @@ public class MoneyTest extends Support {
         testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(12.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(12.0));
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
@@ -390,7 +392,7 @@ public class MoneyTest extends Support {
         testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(13.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(13.0));
         testRegularPayment.setFrequency("1X");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
@@ -401,7 +403,7 @@ public class MoneyTest extends Support {
         testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(14.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(14.0));
         testRegularPayment.setFrequency("1M");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
@@ -412,7 +414,7 @@ public class MoneyTest extends Support {
         testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(15.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(15.0));
         testRegularPayment.setFrequency("1Y");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setLastDate(testDate);
@@ -464,7 +466,7 @@ public class MoneyTest extends Support {
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(10.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(10.0));
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setWeekendAdj(AdjustmentType.AT_FORWARD);
@@ -510,7 +512,7 @@ public class MoneyTest extends Support {
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(10.0);
+        testRegularPayment.setAmount(BigDecimal.valueOf(10.0));
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setWeekendAdj(AdjustmentType.AT_BACKWARD);
@@ -553,14 +555,14 @@ public class MoneyTest extends Support {
                 .andExpect(status().isOk());
 
         int actualCount = 0;
-        double actualSum = 0.0;
+        BigDecimal actualSum = BigDecimal.ZERO;
         for(ReconciliationData next : reconciliationRepository.findAll()) {
             actualCount++;
-            actualSum += next.getAmount();
+            actualSum = actualSum.add(next.getAmount());
         }
 
         Assert.assertEquals(expectedCount,actualCount);
-        Assert.assertEquals(expectedSum,actualSum,0.001);
+        Assert.assertEquals(expectedSum,actualSum.doubleValue(),0.001);
     }
 
     @Test
@@ -612,6 +614,6 @@ public class MoneyTest extends Support {
 
     @Test
     public void testTransactionString() {
-        Assert.assertEquals("20100522120.32", TransactionString.formattedTransactionString(LocalDate.of(2010,5,22),120.32));
+        Assert.assertEquals("20100522120.32", TransactionString.formattedTransactionString(LocalDate.of(2010,5,22),BigDecimal.valueOf(120.32)));
     }
 }

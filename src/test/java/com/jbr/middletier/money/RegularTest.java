@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+
+import java.math.BigDecimal;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -37,7 +39,7 @@ public class RegularTest extends Support {
         regularRepository.deleteAll();
     }
 
-    private RegularDTO createTestRegular(String accountId, String categoryId, String adjustmentType, double amount, String description, String frequency, String start) {
+    private RegularDTO createTestRegular(String accountId, String categoryId, String adjustmentType, BigDecimal amount, String description, String frequency, String start) {
         RegularDTO regular = new RegularDTO();
         regular.setAccountId(accountId);
         regular.setCategoryId(categoryId);
@@ -65,7 +67,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testCreate() throws Exception {
-        RegularDTO newRegular = createTestRegular("AMEX", "HSE", "FW", 102.21, "Testing", "1W", "2023-06-01");
+        RegularDTO newRegular = createTestRegular("AMEX", "HSE", "FW", BigDecimal.valueOf(102.21), "Testing", "1W", "2023-06-01");
 
         getMockMvc().perform(post("/jbr/int/money/transaction/regulars")
                         .content(this.json(newRegular))
@@ -82,7 +84,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testUpdate() throws Exception {
-        RegularDTO updateRegular = createTestRegular("BANK", "FDG", "BW", 122.39, "Testing 2", "1M", "2023-06-01");
+        RegularDTO updateRegular = createTestRegular("BANK", "FDG", "BW", BigDecimal.valueOf(122.39), "Testing 2", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(updateRegular,Regular.class));
 
@@ -104,7 +106,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testDelete() throws Exception {
-        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M", "2023-06-01");
+        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", BigDecimal.valueOf(21.21), "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
 
@@ -119,7 +121,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testInvalidException() throws Exception {
-        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M", "2023-06-01");
+        RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", BigDecimal.valueOf(21.21), "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
 
@@ -135,7 +137,7 @@ public class RegularTest extends Support {
 
     @Test
     public void testAlreadyExist() throws Exception {
-        RegularDTO createRegular = createTestRegular("BANK", "HSE", "BW", 21.21, "Testing", "1M", "2023-06-01");
+        RegularDTO createRegular = createTestRegular("BANK", "HSE", "BW", BigDecimal.valueOf(21.21), "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(createRegular,Regular.class));
 

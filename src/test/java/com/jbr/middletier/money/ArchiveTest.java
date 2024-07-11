@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class ArchiveTest extends Support {
             Statement statement = new Statement();
             statement.setId(new StatementId(next,2010,1));
             statement.setLocked(false);
-            statement.setOpenBalance(0);
+            statement.setOpenBalance(BigDecimal.ZERO);
 
             statementRepository.save(statement);
         }
@@ -93,7 +94,7 @@ public class ArchiveTest extends Support {
         account.setId("AMEX");
 
         Transaction transaction = new Transaction();
-        transaction.setAmount(10);
+        transaction.setAmount(BigDecimal.TEN);
         transaction.setDate(LocalDate.of(2010,1,1));
         transaction.setDescription("Testing");
         transaction.setAccount(account);
@@ -165,7 +166,7 @@ public class ArchiveTest extends Support {
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
         transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
-        transaction.setAmount(10.02);
+        transaction.setAmount(BigDecimal.valueOf(10.02));
         transaction.setDescription("Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")

@@ -2,11 +2,13 @@ package com.jbr.middletier.money.dto;
 
 import jakarta.validation.constraints.Pattern;
 
+import java.math.BigDecimal;
+
 public class RegularDTO {
     private Integer id;
     @Pattern(regexp="^[0-9a-zA-Z]{4}$",message="Account can only contain letters or digits of 4 characters.")
     private String accountId;
-    private double amount;
+    private BigDecimal amount;
     @Pattern(regexp="^[0-9a-zA-Z]{3}$",message="Category can only contain letters or digits of 3 characters.")
     private String categoryId;
     @Pattern(regexp= "^\\d[a-zA-Z]$",message="Frequency can only contain letters or digits of 2 or 3 characters.")
@@ -36,11 +38,11 @@ public class RegularDTO {
         this.accountId = accountId;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
