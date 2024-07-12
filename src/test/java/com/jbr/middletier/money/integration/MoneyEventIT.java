@@ -151,16 +151,16 @@ public class MoneyEventIT extends Support {
 
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertEquals(4,reportTransactions.size());
 
         TransactionReportDTO bank;
         TransactionReportDTO amex;
-        if(reportTransactions.get(0).getAccount().getId().equals("BANK")) {
-            bank = reportTransactions.get(0);
-            amex = reportTransactions.get(1);
-        } else {
+        if(reportTransactions.get(1).getAccount().getId().equals("BANK")) {
             bank = reportTransactions.get(1);
-            amex = reportTransactions.get(0);
+            amex = reportTransactions.get(2);
+        } else {
+            bank = reportTransactions.get(2);
+            amex = reportTransactions.get(1);
         }
 
         Assert.assertEquals("BANK",bank.getAccount().getId());
@@ -190,14 +190,14 @@ public class MoneyEventIT extends Support {
 
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertEquals(4,reportTransactions.size());
 
-        if(reportTransactions.get(0).getAccount().getId().equals("BANK")) {
-            bank = reportTransactions.get(0);
-            amex = reportTransactions.get(1);
-        } else {
+        if(reportTransactions.get(1).getAccount().getId().equals("BANK")) {
             bank = reportTransactions.get(1);
-            amex = reportTransactions.get(0);
+            amex = reportTransactions.get(2);
+        } else {
+            bank = reportTransactions.get(2);
+            amex = reportTransactions.get(1);
         }
 
         Assert.assertEquals("BANK",bank.getAccount().getId());
@@ -220,7 +220,7 @@ public class MoneyEventIT extends Support {
         // Check that deleting the transaction is replicated
         this.accountTransactionManager.deleteTransaction(saved.get(0));
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(0,reportTransactions.size());
+        Assert.assertEquals(1,reportTransactions.size());
     }
 
     @Test
@@ -397,21 +397,21 @@ public class MoneyEventIT extends Support {
 
         // There should be one transaction (which is not from the reconciliation).
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(new TransactionFilterDTO());
-        Assert.assertEquals(1, reportTransactions.size());
-        Assert.assertEquals("OCADO TEST",reportTransactions.get(0).getDescription());
-        Assert.assertFalse(reportTransactions.get(0).getFromReconciliation());
+        Assert.assertEquals(3, reportTransactions.size());
+        Assert.assertEquals("OCADO TEST",reportTransactions.get(1).getDescription());
+        Assert.assertFalse(reportTransactions.get(1).getFromReconciliation());
 
         ReconciliationFileLoadDTO file = new ReconciliationFileLoadDTO();
         file.setFilename("test.AMEX.csv");
         this.reconciliationManager.loadFile(file);
 
         reportTransactions = transactionReportManager.getTransactions(new TransactionFilterDTO());
-        Assert.assertEquals(15, reportTransactions.size());
+        Assert.assertEquals(17, reportTransactions.size());
 
         // Check that the reconciled transaction is still there.
         boolean found = false;
         for(TransactionReportDTO next : reportTransactions) {
-            if(next.getDescription().equals("OCADO TEST")) {
+            if(next.getType() == TransactionReportTypeDTO.TRANSACTION && next.getDescription().equals("OCADO TEST")) {
                 found = true;
                 Assert.assertEquals(saved.get(0).getId(),(int)next.getTransactionId());
                 Assert.assertTrue(next.getFromReconciliation());
@@ -425,12 +425,12 @@ public class MoneyEventIT extends Support {
         this.reconciliationManager.loadFile(file);
 
         reportTransactions = transactionReportManager.getTransactions(new TransactionFilterDTO());
-        Assert.assertEquals(19, reportTransactions.size());
+        Assert.assertEquals(21, reportTransactions.size());
 
         // Check that the original transaction is still there but not from reconciliation.
         found = false;
         for(TransactionReportDTO next : reportTransactions) {
-            if(next.getDescription().equals("OCADO TEST")) {
+            if(next.getType() == TransactionReportTypeDTO.TRANSACTION && next.getDescription().equals("OCADO TEST")) {
                 found = true;
                 Assert.assertEquals(saved.get(0).getId(),(int)next.getTransactionId());
                 Assert.assertFalse(next.getFromReconciliation());
@@ -443,6 +443,6 @@ public class MoneyEventIT extends Support {
         this.accountTransactionManager.deleteTransaction(saved.get(0));
 
         reportTransactions = transactionReportManager.getTransactions(new TransactionFilterDTO());
-        Assert.assertEquals(18, reportTransactions.size());
+        Assert.assertEquals(20, reportTransactions.size());
     }
 }
