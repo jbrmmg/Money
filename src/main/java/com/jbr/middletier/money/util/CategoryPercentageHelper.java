@@ -28,7 +28,7 @@ public class CategoryPercentageHelper {
                     categoryMap.put(nextTransaction.getCategory(), categoryMap.get(nextTransaction.getCategory()).add(nextTransaction.getAmount().getValue()));
                 }
 
-                total = total.add(nextTransaction.getAmount().getValue());
+                total = total.add(nextTransaction.getAmount().getValue()).setScale(4, RoundingMode.HALF_UP);
             }
         }
     }
@@ -49,10 +49,10 @@ public class CategoryPercentageHelper {
         }
 
         if(this.categoryMap.containsKey(category)) {
-            BigDecimal amount = this.categoryMap.get(category);
+            BigDecimal amount = this.categoryMap.get(category).setScale(4,RoundingMode.HALF_UP);
 
             if(FinancialAmount.negative(amount)) {
-                return amount.divide(this.total, RoundingMode.HALF_DOWN).doubleValue() * 100.0;
+                return amount.divide(this.total, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue();
             }
         }
 

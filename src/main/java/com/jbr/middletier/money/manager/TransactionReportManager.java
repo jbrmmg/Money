@@ -150,6 +150,11 @@ public class TransactionReportManager {
             return null;
         }
 
+        if(transactionData.isEmpty()) {
+            LOG.debug("No opening balance - no transactions");
+            return null;
+        }
+
         if(filter.getPredicted() != null && filter.getPredicted()) {
             LOG.debug("No opening balance - predicted filter is true");
             return null;

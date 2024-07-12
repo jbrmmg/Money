@@ -300,7 +300,7 @@ public class ReportHtml extends HyperTextMarkupLanguage {
 
         double totalPercentage = 0.0;
         if(!FinancialAmount.zero(totalPrevious)) {
-            totalPercentage = totalThis.getValue().subtract(totalPrevious.getValue()).divide(totalPrevious.getValue(), RoundingMode.HALF_DOWN).doubleValue() * 100.0;
+            totalPercentage = totalThis.getValue().subtract(totalPrevious.getValue()).divide(totalPrevious.getValue(), RoundingMode.HALF_UP).doubleValue() * 100.0;
         }
 
         // Add the percentage total.

@@ -86,9 +86,9 @@ public class MoneyEventIT extends Support {
         filter.setFromReconciled(false);
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(1,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
 
-        TransactionReportDTO reportTransaction = reportTransactions.get(0);
+        TransactionReportDTO reportTransaction = reportTransactions.get(1);
         Assert.assertEquals(transaction.getAccountId(),reportTransaction.getAccount().getId());
         Assert.assertEquals(transaction.getDate(),reportTransaction.getDate());
         Assert.assertEquals(transaction.getAmount().doubleValue(),reportTransaction.getAmount().getValue().doubleValue(),0.001);
@@ -107,7 +107,7 @@ public class MoneyEventIT extends Support {
         this.accountTransactionManager.updateTransaction(saved.get(0));
 
         reportTransactions = transactionReportManager.getTransactions(filter);
-        reportTransaction = reportTransactions.get(0);
+        reportTransaction = reportTransactions.get(1);
         Assert.assertEquals(saved.get(0).getAccountId(),reportTransaction.getAccount().getId());
         Assert.assertEquals(saved.get(0).getDate(),reportTransaction.getDate());
         Assert.assertEquals(saved.get(0).getAmount().doubleValue(),reportTransaction.getAmount().getValue().doubleValue(),0.001);
@@ -120,7 +120,7 @@ public class MoneyEventIT extends Support {
         // Check that deleting the transaction is replicated
         this.accountTransactionManager.deleteTransaction(saved.get(0));
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(0,reportTransactions.size());
+        Assert.assertEquals(1,reportTransactions.size());
     }
 
     @Test
@@ -240,24 +240,24 @@ public class MoneyEventIT extends Support {
 
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(1,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
         Assert.assertEquals(1,saved.size());
-        Assert.assertNull(reportTransactions.get(0).getStatement());
+        Assert.assertNull(reportTransactions.get(1).getStatement());
 
         // Reconcile the transaction.
         this.reconciliationManager.reconcile(saved.get(0).getId(),true);
 
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(1,reportTransactions.size());
-        Assert.assertNotNull(reportTransactions.get(0).getStatement());
-        Assert.assertFalse(reportTransactions.get(0).getStatement().getLocked());
+        Assert.assertEquals(3,reportTransactions.size());
+        Assert.assertNotNull(reportTransactions.get(1).getStatement());
+        Assert.assertFalse(reportTransactions.get(1).getStatement().getLocked());
 
         // Lock the statement.
         StatementIdDTO statementId = new StatementIdDTO();
-        statementId.setAccountId(reportTransactions.get(0).getStatement().getAccountId());
-        statementId.setYear(reportTransactions.get(0).getStatement().getYear());
-        statementId.setMonth(reportTransactions.get(0).getStatement().getMonth());
+        statementId.setAccountId(reportTransactions.get(1).getStatement().getAccountId());
+        statementId.setYear(reportTransactions.get(1).getStatement().getYear());
+        statementId.setMonth(reportTransactions.get(1).getStatement().getMonth());
         Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId,this.accountTransactionManager);
 
         // Attempt to delete the transaction - should fail.
@@ -270,8 +270,8 @@ public class MoneyEventIT extends Support {
         // Check report is updated.
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(1,reportTransactions.size());
-        Assert.assertTrue(reportTransactions.get(0).getStatement().getLocked());
+        Assert.assertEquals(3,reportTransactions.size());
+        Assert.assertTrue(reportTransactions.get(1).getStatement().getLocked());
 
         // The lock request would have created a new statement, delete it to unlock
         for(StatementDTO next : statements) {
@@ -284,14 +284,14 @@ public class MoneyEventIT extends Support {
         this.reconciliationManager.reconcile(saved.get(0).getId(),false);
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(1,reportTransactions.size());
-        Assert.assertNull(reportTransactions.get(0).getStatement());
+        Assert.assertEquals(3,reportTransactions.size());
+        Assert.assertNull(reportTransactions.get(1).getStatement());
 
         // delete the transaction
         this.accountTransactionManager.deleteTransaction(saved.get(0));
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(0,reportTransactions.size());
+        Assert.assertEquals(1,reportTransactions.size());
     }
 
     @Test
@@ -311,20 +311,20 @@ public class MoneyEventIT extends Support {
 
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(1,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
         Assert.assertEquals(1,saved.size());
         Assert.assertNull(reportTransactions.get(0).getStatement());
 
         // Reconcile the transaction.
         this.reconciliationManager.reconcile(saved.get(0).getId(),true);
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(1,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
 
         // Lock the statement.
         StatementIdDTO statementId = new StatementIdDTO();
-        statementId.setAccountId(reportTransactions.get(0).getStatement().getAccountId());
-        statementId.setYear(reportTransactions.get(0).getStatement().getYear());
-        statementId.setMonth(reportTransactions.get(0).getStatement().getMonth());
+        statementId.setAccountId(reportTransactions.get(1).getStatement().getAccountId());
+        statementId.setYear(reportTransactions.get(1).getStatement().getYear());
+        statementId.setMonth(reportTransactions.get(1).getStatement().getMonth());
         Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId,this.accountTransactionManager);
 
         // Add another transaction
@@ -338,7 +338,7 @@ public class MoneyEventIT extends Support {
         List<TransactionDTO> saved2 = this.accountTransactionManager.createTransaction(Collections.singletonList(transaction));
 
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertEquals(4,reportTransactions.size());
         Assert.assertEquals(1,saved2.size());
 
         // Reconcile the new transaction.
@@ -346,9 +346,11 @@ public class MoneyEventIT extends Support {
 
         // All transactions should be reconciled.
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertEquals(4,reportTransactions.size());
         for(TransactionReportDTO next : reportTransactions) {
-            Assert.assertNotNull(next.getStatement());
+            if(next.getType() == TransactionReportTypeDTO.TRANSACTION) {
+                Assert.assertNotNull(next.getStatement());
+            }
         }
 
         // Delete the statement and check the transaction becomes unreconciled.
@@ -359,12 +361,14 @@ public class MoneyEventIT extends Support {
         }
 
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertEquals(4,reportTransactions.size());
         for(TransactionReportDTO next : reportTransactions) {
-            if(next.getDescription().equals("Testing x")) {
-                Assert.assertNotNull(next.getStatement());
-            } else {
-                Assert.assertNull(next.getStatement());
+            if(next.getType() == TransactionReportTypeDTO.TRANSACTION) {
+                if (next.getDescription().equals("Testing x")) {
+                    Assert.assertNotNull(next.getStatement());
+                } else {
+                    Assert.assertNull(next.getStatement());
+                }
             }
         }
 
