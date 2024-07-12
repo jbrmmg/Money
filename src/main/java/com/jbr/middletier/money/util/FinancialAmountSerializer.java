@@ -14,7 +14,7 @@ public class FinancialAmountSerializer extends JsonSerializer<FinancialAmount> {
         jsonGenerator.writeStartObject();
 
         BigDecimal value = financialAmount.getValue();
-        value.setScale(2, RoundingMode.HALF_UP);
+        value = value.setScale(2, RoundingMode.HALF_UP);
 
         jsonGenerator.writeNumberField("value", value);
         jsonGenerator.writeStringField("type", financialAmount.getType().toString());

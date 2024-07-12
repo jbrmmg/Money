@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.control;
 
-import com.jbr.middletier.money.dto.TransactionDataDTO;
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.manager.TransactionReportManager;

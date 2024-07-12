@@ -89,11 +89,11 @@ public class TransactionSorting {
 
     private static int getTypeSort(TransactionReportDTO t, LocalDate today) {
         // Generate a value based on the details:
-        //   Open Balance = 0
-        //   Transaction on or before today = 1
-        //   Today balance = 2
-        //   Transaction after today = 3;
-        //   Future Balance = 4.
+        //   Open Balance is 0
+        //   Transaction on or before today is 1
+        //   Today balance is 2
+        //   Transaction after today is 3;
+        //   Future Balance is 4.
         if(t.getType() == TransactionReportTypeDTO.OPEN_BALANCE) {
             return 0;
         }

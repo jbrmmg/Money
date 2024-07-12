@@ -1,7 +1,6 @@
 package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.util.FinancialAmount;
-import com.jbr.middletier.money.util.TransactionSorting;
 import jakarta.validation.constraints.Pattern;
 
 import java.util.ArrayList;
