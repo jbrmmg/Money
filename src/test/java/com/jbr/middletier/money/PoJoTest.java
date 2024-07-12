@@ -567,8 +567,8 @@ public class PoJoTest {
     }
 
     @Test
-    public void testFinancialAmountToDouble() {
-        Double test = 290.2;
+    public void testFinancialAmountToBigDecimal() {
+        BigDecimal test = BigDecimal.valueOf(290.20);
         FinancialAmount financialAmount = utilityMapper.map(test,FinancialAmount.class);
         Assert.assertEquals(290.2,financialAmount.getValue().doubleValue(),0.001);
 
