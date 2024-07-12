@@ -315,7 +315,7 @@ public class LogoTest {
                     Assert.assertEquals("5000-5000-2500-none-#FFFF00-5000-15707.963268 15707.963268-rotate(-90) translate(-10000)",
                             getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("HSE")) {
-                    Assert.assertEquals("5000-5000-2500-none-#9966FF-5000-11363.690944 15707.963268-rotate(-90) translate(-10000)",
+                    Assert.assertEquals("5000-5000-2500-none-#9966FF-5000-11363.140628 15707.963268-rotate(-90) translate(-10000)",
                             getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("OUTL")) {
                     Assert.assertEquals("5000-5000-5000-none-black-20",
@@ -325,10 +325,10 @@ public class LogoTest {
                 }
             } else if (nextElement.getName().equals("text")) {
                 if (nextElement.getAttribute("id").getValue().equals("FDG-txt")) {
-                    Assert.assertEquals("#000000-600px-start-1334.769132-1900.63189-rotate(40.218306 1334.769132,1900.63189)",
+                    Assert.assertEquals("#000000-600px-start-1334.428028-1901.035315-rotate(40.212 1334.428028,1901.035315)",
                             getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("HSE-txt")) {
-                    Assert.assertEquals("#000000-1200px-end-8665.230868-8099.36811-rotate(40.218306 8665.230868,8099.36811)",
+                    Assert.assertEquals("#000000-1200px-end-8665.571972-8098.964685-rotate(40.212 8665.571972,8098.964685)",
                             getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
                 } else {
                     Assert.fail();
