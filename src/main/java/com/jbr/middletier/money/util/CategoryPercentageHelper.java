@@ -15,6 +15,7 @@ public class CategoryPercentageHelper {
         // Group the amounts by category
         categoryMap = new HashMap<>();
 
+        this.total = BigDecimal.ZERO;
         for(Transaction nextTransaction: transactions) {
             if(Boolean.TRUE.equals(nextTransaction.getCategory().getExpense())) {
                 BigDecimal amount = categoryMap.get(nextTransaction.getCategory());

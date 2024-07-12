@@ -190,22 +190,22 @@ public class TransactionReportManager {
 
     private String calculateFutureDate(List<TransactionReportDTO> transactions) {
         // Get the last transaction.
-        LocalDate futureDate = null;
+        LocalDate futureDate = applicationProperties.getToday();
         if(!transactions.isEmpty()) {
             for(TransactionReportDTO next : transactions) {
                 LocalDate transactionDate = mapper.map(next.getDate(), LocalDate.class);
 
-                if(futureDate == null || transactionDate.isAfter(futureDate)) {
+                if(transactionDate.isAfter(futureDate)) {
                     futureDate = transactionDate;
                 }
             }
         }
 
-        if(futureDate == null) {
-            return "";
+        if(futureDate.isAfter(applicationProperties.getToday())) {
+            return mapper.map(futureDate, String.class);
         }
 
-        return mapper.map(futureDate, String.class);
+        return "";
     }
 
     private void addFlagPredicates(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
