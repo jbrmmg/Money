@@ -3,8 +3,11 @@ package com.jbr.middletier.money.reconciliation;
 import com.jbr.middletier.money.data.primary.ReconcileFormat;
 import com.jbr.middletier.money.data.primary.repository.ReconcileFormatRepository;
 import com.jbr.middletier.money.manager.ReconcileFileLine;
+import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -132,19 +135,19 @@ public class FileFormatDescription {
         return result;
     }
 
-    private double internalGetAmount(ReconcileFileLine line, int index) throws FileFormatException {
+    private BigDecimal internalGetAmount(ReconcileFileLine line, int index) throws FileFormatException {
         String value = getColumnValue(index,line).replace(",","").replace("£","");
         if(value.trim().isEmpty()) {
-            return 0;
+            return BigDecimal.ZERO;
         }
 
-        double numericValue;
+        BigDecimal numericValue;
 
         try {
-            numericValue = Double.parseDouble(value);
+            numericValue =  new BigDecimal(value);
 
             if(getReverse()) {
-                numericValue *= -1;
+                numericValue = FinancialAmount.flipSign(numericValue);
             }
         } catch (NumberFormatException ex) {
             throw new FileFormatException(line.getLineNumber(),"Cannot convert the string to an amount " + ex.getMessage());
@@ -153,22 +156,22 @@ public class FileFormatDescription {
         return numericValue;
     }
 
-    private double internalGetSplitAmount(ReconcileFileLine line) throws FileFormatException {
-        double inAmount = internalGetAmount(line,getAmountInColumn());
-        double outAmount = internalGetAmount(line,getAmountOutColumn()) * -1;
+    private BigDecimal internalGetSplitAmount(ReconcileFileLine line) throws FileFormatException {
+        BigDecimal inAmount = internalGetAmount(line,getAmountInColumn());
+        BigDecimal outAmount = FinancialAmount.flipSign(internalGetAmount(line,getAmountOutColumn()));
 
-        if(inAmount < 0) {
-            inAmount *= -1;
+        if(FinancialAmount.negative(inAmount)) {
+            inAmount = FinancialAmount.flipSign(inAmount);
         }
 
-        if(outAmount > 0) {
-            outAmount *= -1;
+        if(FinancialAmount.positive(outAmount)) {
+            outAmount = FinancialAmount.flipSign(outAmount);
         }
 
-        return inAmount + outAmount;
+        return inAmount.add(outAmount);
     }
 
-    public double getAmount(ReconcileFileLine line) throws FileFormatException {
+    public BigDecimal getAmount(ReconcileFileLine line) throws FileFormatException {
         if(getSingleAmount()) {
             return internalGetAmount(line,getAmountInColumn());
         }

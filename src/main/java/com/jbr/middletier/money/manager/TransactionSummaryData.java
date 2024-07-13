@@ -1,18 +1,19 @@
 package com.jbr.middletier.money.manager;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 class TransactionSummaryData {
     private int transactionCount;
-    private double debitSum;
-    private double creditSum;
+    private BigDecimal debitSum;
+    private BigDecimal creditSum;
     private LocalDate earliest;
     private LocalDate latest;
 
     public TransactionSummaryData() {
         this.transactionCount = 0;
-        this.debitSum = 0.0;
-        this.creditSum = 0.0;
+        this.debitSum = BigDecimal.ZERO;
+        this.creditSum = BigDecimal.ZERO;
         this.earliest = null;
         this.latest = null;
     }
@@ -21,12 +22,12 @@ class TransactionSummaryData {
         this.transactionCount++;
     }
 
-    public void incrementDebit(double debit) {
-        this.debitSum += debit;
+    public void incrementDebit(BigDecimal debit) {
+        this.debitSum = this.debitSum.add(debit);
     }
 
-    public void incrementCredit(double credit) {
-        this.creditSum += credit;
+    public void incrementCredit(BigDecimal credit) {
+        this.creditSum = this.creditSum.add(credit);
     }
 
     public void updateEarliest(LocalDate date) {
@@ -45,11 +46,11 @@ class TransactionSummaryData {
         return transactionCount;
     }
 
-    public double getDebitSum() {
+    public BigDecimal getDebitSum() {
         return debitSum;
     }
 
-    public double getCreditSum() {
+    public BigDecimal getCreditSum() {
         return creditSum;
     }
 

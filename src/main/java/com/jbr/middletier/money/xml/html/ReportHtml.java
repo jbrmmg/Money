@@ -11,6 +11,7 @@ import org.apache.commons.text.WordUtils;
 import org.jdom2.Element;
 import org.jdom2.Text;
 
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -127,7 +128,7 @@ public class ReportHtml extends HyperTextMarkupLanguage {
 
     private static void addAmountToRow(Element row, FinancialAmount amount, String positiveClass, String negativeClass) {
         row.addContent(new Element(HTML_TD)
-                .setAttribute(HTML_CSS_CLASS, amount.getValue() < 0 ? negativeClass : positiveClass)
+                .setAttribute(HTML_CSS_CLASS, FinancialAmount.negative(amount) ? negativeClass : positiveClass)
                 .setText(amount.toString()));
     }
 
@@ -244,7 +245,7 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         addAmountToRow(comparisonRow,categoryComparison.getPreviousMonth(), HTML_TD_AMOUNT, concatenateClass(HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
 
         // Percentage change, if anything.
-        if(categoryComparison.getPreviousMonth().getValue() != 0.0 && categoryComparison.getPercentageChange() != 0.0) {
+        if(!FinancialAmount.zero(categoryComparison.getPreviousMonth()) && categoryComparison.getPercentageChange() != 0.0) {
             comparisonRow.addContent(new Element(HTML_TD)
                     .setAttribute(HTML_CSS_CLASS, categoryComparison.getPercentageChange() < 0 ? concatenateClass(HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT) : HTML_TD_AMOUNT)
                     .setText(new DecimalFormat("#").format(categoryComparison.getPercentageChange()) + "%"));
@@ -298,12 +299,12 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         addAmountToRow(totalRow, totalPrevious, concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT), concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
 
         double totalPercentage = 0.0;
-        if(totalPrevious.getValue() != 0.0) {
-            totalPercentage = ((totalThis.getValue() - totalPrevious.getValue()) / totalPrevious.getValue()) * 100.0;
+        if(!FinancialAmount.zero(totalPrevious)) {
+            totalPercentage = totalThis.getValue().subtract(totalPrevious.getValue()).divide(totalPrevious.getValue(), RoundingMode.HALF_UP).doubleValue() * 100.0;
         }
 
         // Add the percentage total.
-        if(totalPrevious.getValue() != 0.0 && totalPercentage != 0.0) {
+        if(!FinancialAmount.zero(totalPrevious) && totalPercentage != 0.0) {
             totalRow.addContent(new Element(HTML_TD)
                     .setAttribute(HTML_CSS_CLASS, totalPercentage < 0 ? concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT) : concatenateClass(HTML_TD_ROW,HTML_TD_AMOUNT))
                     .setText(new DecimalFormat("#").format(totalPercentage) + "%"));

@@ -2,14 +2,16 @@ package com.jbr.middletier.money.dto;
 
 import jakarta.validation.constraints.Pattern;
 
+import java.math.BigDecimal;
+
 public class MatchDataDTO {
     private int id;
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String date;
-    private double amount;
+    private BigDecimal amount;
     private TransactionDTO transaction;
-    private double beforeAmount;
-    private double afterAmount;
+    private BigDecimal beforeAmount;
+    private BigDecimal afterAmount;
     @Pattern(regexp="^[\\da-zA-Z]{3}$",message="Category can only contain letters or digits of 3 characters.")
     private String categoryId;
     @Pattern(regexp="^[\\da-fA-F]{6}$",message="Colour must be a 6 digit hex value.")
@@ -39,11 +41,11 @@ public class MatchDataDTO {
         this.date = date;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
@@ -55,19 +57,19 @@ public class MatchDataDTO {
         this.transaction = transaction;
     }
 
-    public double getBeforeAmount() {
+    public BigDecimal getBeforeAmount() {
         return beforeAmount;
     }
 
-    public void setBeforeAmount(double beforeAmount) {
+    public void setBeforeAmount(BigDecimal beforeAmount) {
         this.beforeAmount = beforeAmount;
     }
 
-    public double getAfterAmount() {
+    public BigDecimal getAfterAmount() {
         return afterAmount;
     }
 
-    public void setAfterAmount(double afterAmount) {
+    public void setAfterAmount(BigDecimal afterAmount) {
         this.afterAmount = afterAmount;
     }
 

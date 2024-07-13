@@ -1,10 +1,7 @@
 package com.jbr.middletier.money.dto.mapper.converter;
 
 import com.jbr.middletier.money.data.internal.TransactionReport;
-import com.jbr.middletier.money.dto.AccountDTO;
-import com.jbr.middletier.money.dto.CategoryDTO;
-import com.jbr.middletier.money.dto.StatementDTO;
-import com.jbr.middletier.money.dto.TransactionReportDTO;
+import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.manager.AccountManager;
@@ -13,6 +10,7 @@ import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.AbstractConverter;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 public class TransactionReportToDTO extends AbstractConverter<TransactionReport, TransactionReportDTO> {
@@ -26,7 +24,7 @@ public class TransactionReportToDTO extends AbstractConverter<TransactionReport,
         this.statementManager = statementManager;
     }
 
-    private FinancialAmount getAmount(Double value){
+    private FinancialAmount getAmount(BigDecimal value){
         if(value == null){
             return new FinancialAmount();
         }
@@ -68,6 +66,7 @@ public class TransactionReportToDTO extends AbstractConverter<TransactionReport,
     protected TransactionReportDTO convert(TransactionReport transactionReport) {
         TransactionReportDTO result = new TransactionReportDTO();
 
+        result.setType(TransactionReportTypeDTO.TRANSACTION);
         result.setId(transactionReport.getId());
         result.setTransactionId(transactionReport.getTransactionId());
         result.setDate(transactionReport.getDate());

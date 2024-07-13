@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -296,7 +297,7 @@ public class AccountTransactionManager {
         to.setCategoryId(CategoryManager.CATEGORY_TRANSFER);
 
         // Ensure the amount is the reverse
-        to.setAmount(from.getAmount() * -1);
+        to.setAmount(FinancialAmount.flipSign(from.getAmount()));
         to.setDate(from.getDate());
 
         // The transaction is either an individual transaction or it's a transfer
@@ -354,7 +355,7 @@ public class AccountTransactionManager {
 
         // Set the amount and the date.
         transaction.get().setDate(this.transactionMapper.map(source.getDate(),LocalDate.class));
-        transaction.get().setAmount(source.getAmount() * factor);
+        transaction.get().setAmount(source.getAmount().multiply(BigDecimal.valueOf(factor)));
     }
 
     public List<TransactionDTO> updateTransaction(TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {

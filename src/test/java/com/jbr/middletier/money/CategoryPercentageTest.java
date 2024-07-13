@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class CategoryPercentageTest {
     @Autowired
     TransactionRepository transactionRepository;
 
-    private void createTransaction(String categoryId, double amount) {
+    private void createTransaction(String categoryId, BigDecimal amount) {
         Category category = new Category();
         category.setId(categoryId);
 
@@ -42,7 +43,7 @@ public class CategoryPercentageTest {
     public void singleTest() {
         transactionRepository.deleteAll();
 
-        createTransaction("HSE", -100);
+        createTransaction("HSE",  BigDecimal.valueOf(-100));
 
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction next : transactionRepository.findAll()) {
@@ -62,8 +63,8 @@ public class CategoryPercentageTest {
     public void doubleTest() {
         transactionRepository.deleteAll();
 
-        createTransaction("HSE", -100);
-        createTransaction("FDG", -100);
+        createTransaction("HSE", BigDecimal.valueOf(-100));
+        createTransaction("FDG", BigDecimal.valueOf(-100));
 
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction next : transactionRepository.findAll()) {
@@ -83,7 +84,7 @@ public class CategoryPercentageTest {
     public void zeroPercentTest() {
         transactionRepository.deleteAll();
 
-        createTransaction("HSE", 10);
+        createTransaction("HSE", BigDecimal.valueOf(10));
 
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction next : transactionRepository.findAll()) {
@@ -103,7 +104,7 @@ public class CategoryPercentageTest {
     public void zeroPercentTest2() {
         transactionRepository.deleteAll();
 
-        createTransaction("WGS", -100);
+        createTransaction("WGS", BigDecimal.valueOf(-100));
 
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction next : transactionRepository.findAll()) {
@@ -123,14 +124,14 @@ public class CategoryPercentageTest {
     public void multipleTest() {
         transactionRepository.deleteAll();
 
-        createTransaction("HSE", -100);
-        createTransaction("HSE", -50);
-        createTransaction("HSE", -25);
-        createTransaction("HSE", -10);
-        createTransaction("FDG", -100);
-        createTransaction("FDG", -50);
-        createTransaction("FDG", -25);
-        createTransaction("FDG", -10);
+        createTransaction("HSE", BigDecimal.valueOf(-100));
+        createTransaction("HSE", BigDecimal.valueOf(-50));
+        createTransaction("HSE", BigDecimal.valueOf(-25));
+        createTransaction("HSE", BigDecimal.valueOf(-10));
+        createTransaction("FDG", BigDecimal.valueOf(-100));
+        createTransaction("FDG", BigDecimal.valueOf(-50));
+        createTransaction("FDG", BigDecimal.valueOf(-25));
+        createTransaction("FDG", BigDecimal.valueOf(-10));
 
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction next : transactionRepository.findAll()) {
@@ -150,14 +151,14 @@ public class CategoryPercentageTest {
     public void multipleTest2() {
         transactionRepository.deleteAll();
 
-        createTransaction("HSE", -100);
-        createTransaction("HSE", -50);
-        createTransaction("HSE", -25);
-        createTransaction("HSE", -10);
-        createTransaction("FDG", -100);
-        createTransaction("FDG", -50);
-        createTransaction("WGS", -25);
-        createTransaction("FDG", -10);
+        createTransaction("HSE", BigDecimal.valueOf(-100));
+        createTransaction("HSE", BigDecimal.valueOf(-50));
+        createTransaction("HSE", BigDecimal.valueOf(-25));
+        createTransaction("HSE", BigDecimal.valueOf(-10));
+        createTransaction("FDG", BigDecimal.valueOf(-100));
+        createTransaction("FDG", BigDecimal.valueOf(-50));
+        createTransaction("WGS", BigDecimal.valueOf(-25));
+        createTransaction("FDG", BigDecimal.valueOf(-10));
 
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction next : transactionRepository.findAll()) {

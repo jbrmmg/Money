@@ -21,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
 
@@ -61,7 +62,7 @@ public class ScheduleReportTest extends Support {
                     transaction.setCategory(category);
                     transaction.setDescription("Test");
                     transaction.setAccount(nextAccount);
-                    transaction.setAmount(10);
+                    transaction.setAmount(BigDecimal.valueOf(10));
                     transaction.setDate(LocalDate.of(2010,1,1));
 
                     transactionRepository.save(transaction);

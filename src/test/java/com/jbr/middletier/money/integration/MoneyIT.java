@@ -18,6 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.testcontainers.containers.MySQLContainer;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -67,15 +68,15 @@ public class MoneyIT extends Support  {
         List<TransactionDTO> transactions = new ArrayList<>();
 
         TransactionDTO transaction = new TransactionDTO();
-        transaction.setAmount(10);
+        transaction.setAmount(BigDecimal.valueOf(10));
         transactions.add(transaction);
 
         transaction = new TransactionDTO();
-        transaction.setAmount(10);
+        transaction.setAmount(BigDecimal.valueOf(10));
         transactions.add(transaction);
 
         transaction = new TransactionDTO();
-        transaction.setAmount(10);
+        transaction.setAmount(BigDecimal.valueOf(10));
         transactions.add(transaction);
 
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/transaction")

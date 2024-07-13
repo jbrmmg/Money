@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -64,7 +65,7 @@ public class TransactionTest extends Support {
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
         testTransaction.setDate(LocalDate.of(2010,5,1));
-        testTransaction.setAmount(201.23);
+        testTransaction.setAmount(BigDecimal.valueOf(201.23));
 
         testTransaction = transactionRepository.save(testTransaction);
 

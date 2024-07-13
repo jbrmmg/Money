@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -38,7 +39,7 @@ public class Transaction implements Serializable {
     private LocalDate date;
 
     @Column(name="amount")
-    private double amount;
+    private BigDecimal amount;
 
     @ManyToOne()
     @JoinColumnsOrFormulas(value = {
@@ -57,7 +58,7 @@ public class Transaction implements Serializable {
     public Transaction() {
     }
 
-    public Transaction (Account account, Category category, LocalDate date, double amount, String description) {
+    public Transaction (Account account, Category category, LocalDate date, BigDecimal amount, String description) {
         this.account = account;
         this.category = category;
         this.date = date;
@@ -75,7 +76,7 @@ public class Transaction implements Serializable {
 
     public FinancialAmount getAmount() { return new FinancialAmount(this.amount); }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

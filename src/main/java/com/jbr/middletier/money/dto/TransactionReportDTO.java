@@ -4,6 +4,7 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.validation.constraints.Pattern;
 
 public class TransactionReportDTO {
+    private TransactionReportTypeDTO type;
     private Integer id;
     private Integer transactionId;
     private FinancialAmount amount;
@@ -23,6 +24,14 @@ public class TransactionReportDTO {
     private Boolean actionReconcile;
     private Boolean actionUnreconcile;
     private Boolean actionDelete;
+
+    public TransactionReportTypeDTO getType() {
+        return type;
+    }
+
+    public void setType(TransactionReportTypeDTO type) {
+        this.type = type;
+    }
 
     public Integer getId() {
         return id;

@@ -16,6 +16,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -92,7 +93,7 @@ public class Support {
             nextStatementId.setMonth(1);
             Statement nextStatement = new Statement();
             nextStatement.setId(nextStatementId);
-            nextStatement.setOpenBalance(0);
+            nextStatement.setOpenBalance(BigDecimal.ZERO);
             nextStatement.setLocked(false);
 
             statementRepository.save(nextStatement);

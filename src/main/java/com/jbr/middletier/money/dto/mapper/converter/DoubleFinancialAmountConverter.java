@@ -3,9 +3,11 @@ package com.jbr.middletier.money.dto.mapper.converter;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.modelmapper.AbstractConverter;
 
-public class DoubleFinancialAmountConverter extends AbstractConverter<Double, FinancialAmount> {
+import java.math.BigDecimal;
+
+public class DoubleFinancialAmountConverter extends AbstractConverter<BigDecimal, FinancialAmount> {
     @Override
-    protected FinancialAmount convert(Double value) {
+    protected FinancialAmount convert(BigDecimal value) {
         if(value == null) {
             return new FinancialAmount();
         }

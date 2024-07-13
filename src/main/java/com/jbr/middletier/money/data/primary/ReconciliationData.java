@@ -3,6 +3,8 @@ package com.jbr.middletier.money.data.primary;
 import com.jbr.middletier.money.util.TransactionString;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -27,7 +29,7 @@ public class ReconciliationData {
     private LocalDate date;
 
     @Column(name="amount")
-    private double amount;
+    private BigDecimal amount;
 
     @Column(name="account_id")
     private String accountId;
@@ -47,11 +49,11 @@ public class ReconciliationData {
 
     public void setDate(LocalDate date) { this.date = date; }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return this.amount;
     }
 
-    public void setAmount(double amount) { this.amount = amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
     public Category getCategory() { return this.category; }
 

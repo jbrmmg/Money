@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @RunWith(SpringRunner.class)
@@ -50,10 +52,10 @@ public class TransactionReportTest {
         Statement testStatement = new Statement();
         testStatement.setId(testStatementId);
         testStatement.setLocked(false);
-        testStatement.setOpenBalance(100);
+        testStatement.setOpenBalance(BigDecimal.valueOf(100));
 
         Transaction result = new Transaction();
-        result.setAmount(12.93);
+        result.setAmount(BigDecimal.valueOf(12.93));
         result.setDate(LocalDate.of(2023,10,14));
         result.setDescription("Testing");
         result.setOppositeTransactionId(73);
@@ -67,7 +69,7 @@ public class TransactionReportTest {
     private Regular createRegular() throws UpdateDeleteAccountException, UpdateDeleteCategoryException {
         Regular result = new Regular();
         result.setAccount(accountManager.get("BANK"));
-        result.setAmount(-112.92);
+        result.setAmount(BigDecimal.valueOf(-112.92));
         result.setCategory(categoryManager.get("HSE"));
         result.setId(1);
         result.setDescription("Test");
@@ -85,7 +87,7 @@ public class TransactionReportTest {
 
     private MatchData createMatch(boolean withNulls) throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         ReconciliationData reconciliationData = new ReconciliationData();
-        reconciliationData.setAmount(-291.21);
+        reconciliationData.setAmount(BigDecimal.valueOf(-291.21));
         reconciliationData.setDate(LocalDate.of(2023,9, 12));
         if(!withNulls) {
             reconciliationData.setDescription("Test Reconciliation");
@@ -104,7 +106,7 @@ public class TransactionReportTest {
 
         // Main test.
         Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount(), dto.getAmount().getValue(), 0.001);
+        Assert.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
         Assert.assertEquals(0,dto.getId().intValue());
         Assert.assertTrue(dto.getPredicted());
         Assert.assertFalse(dto.getFromReconciliation());
@@ -141,7 +143,7 @@ public class TransactionReportTest {
         testStatementId.setMonth(1);
         testStatement.setId(testStatementId);
         testStatement.setLocked(false);
-        testStatement.setOpenBalance(0);
+        testStatement.setOpenBalance(BigDecimal.ZERO);
         Transaction test = createTestTransaction();
         test.setAccount(testAccount);
         test.setCategory(testCategory);
@@ -151,7 +153,7 @@ public class TransactionReportTest {
 
         // Main test.
         Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount().getValue(), dto.getAmount().getValue(), 0.001);
+        Assert.assertEquals(test.getAmount().getValue().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
         Assert.assertEquals(0, dto.getId().intValue());
         Assert.assertFalse(dto.getPredicted());
         Assert.assertFalse(dto.getFromReconciliation());
@@ -185,7 +187,7 @@ public class TransactionReportTest {
 
         // Main test.
         Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount(), dto.getAmount().getValue(), 0.001);
+        Assert.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
         Assert.assertEquals(0, dto.getId().intValue());
         Assert.assertFalse(dto.getPredicted());
         Assert.assertTrue(dto.getFromReconciliation());
@@ -201,7 +203,7 @@ public class TransactionReportTest {
 
         Assert.assertNull(dto.getStatement());
         Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount(), dto.getAmount().getValue(), 0.001);
+        Assert.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
         Assert.assertEquals(0, dto.getId().intValue());
         Assert.assertFalse(dto.getPredicted());
         Assert.assertTrue(dto.getFromReconciliation());

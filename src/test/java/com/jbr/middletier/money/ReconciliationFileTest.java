@@ -29,8 +29,8 @@ public class ReconciliationFileTest {
 
     private void testReconciliationFile(ReconciliationFileDTO file, int count, double sumIn, double sumOut, LocalDate earliest, LocalDate latest) {
         Assert.assertEquals(count,file.getTransactionCount());
-        Assert.assertEquals(sumIn, file.getCreditSum(), 0.001);
-        Assert.assertEquals(sumOut, file.getDebitSum(), 0.001);
+        Assert.assertEquals(sumIn, file.getCreditSum().doubleValue(), 0.001);
+        Assert.assertEquals(sumOut, file.getDebitSum().doubleValue(), 0.001);
         Assert.assertEquals(earliest, file.getEarliestTransaction());
         Assert.assertEquals(latest, file.getLatestTransaction());
     }

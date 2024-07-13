@@ -3,29 +3,32 @@ package com.jbr.middletier.money.util;
 import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Transaction;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 public class CategoryPercentageHelper {
-    private final Map<Category,Double> categoryMap;
-    private double total;
+    private final Map<Category, BigDecimal> categoryMap;
+    private BigDecimal total;
 
     public CategoryPercentageHelper(List<Transaction> transactions) {
         // Group the amounts by category
         categoryMap = new HashMap<>();
 
+        this.total = BigDecimal.ZERO;
         for(Transaction nextTransaction: transactions) {
             if(Boolean.TRUE.equals(nextTransaction.getCategory().getExpense())) {
-                Double amount = categoryMap.get(nextTransaction.getCategory());
+                BigDecimal amount = categoryMap.get(nextTransaction.getCategory());
 
                 if(amount == null) {
                     amount = nextTransaction.getAmount().getValue();
 
                     categoryMap.put(nextTransaction.getCategory(), amount);
                 } else {
-                    categoryMap.put(nextTransaction.getCategory(), categoryMap.get(nextTransaction.getCategory()) + nextTransaction.getAmount().getValue());
+                    categoryMap.put(nextTransaction.getCategory(), categoryMap.get(nextTransaction.getCategory()).add(nextTransaction.getAmount().getValue()));
                 }
 
-                total += nextTransaction.getAmount().getValue();
+                total = total.add(nextTransaction.getAmount().getValue()).setScale(4, RoundingMode.HALF_UP);
             }
         }
     }
@@ -41,15 +44,15 @@ public class CategoryPercentageHelper {
 
     public double getPercentage(Category category) {
         // If the total is greater than zero then all percentages will be zero.
-        if(this.total >= 0.0) {
+        if(FinancialAmount.positive(this.total)) {
             return 0.0;
         }
 
         if(this.categoryMap.containsKey(category)) {
-            Double amount = this.categoryMap.get(category);
+            BigDecimal amount = this.categoryMap.get(category).setScale(4,RoundingMode.HALF_UP);
 
-            if(amount < 0.0) {
-                return amount / this.total * 100.0;
+            if(FinancialAmount.negative(amount)) {
+                return amount.divide(this.total, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue();
             }
         }
 

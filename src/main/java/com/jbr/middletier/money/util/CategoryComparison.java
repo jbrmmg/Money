@@ -3,6 +3,8 @@ package com.jbr.middletier.money.util;
 import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Transaction;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +16,8 @@ public class CategoryComparison {
 
     public CategoryComparison(Category category) {
         this.category = category;
-        this.thisMonth = new FinancialAmount(0);
-        this.previousMonth = new FinancialAmount(0);
+        this.thisMonth = new FinancialAmount(BigDecimal.ZERO);
+        this.previousMonth = new FinancialAmount(BigDecimal.ZERO);
     }
 
     public Category getCategory() {
@@ -30,16 +32,16 @@ public class CategoryComparison {
         return this.previousMonth;
     }
 
-    public void incrementThisMonth(double increment) {
+    public void incrementThisMonth(BigDecimal increment) {
         this.thisMonth.increment(increment);
     }
 
-    public void incrementPreviousMonth(double increment) {
+    public void incrementPreviousMonth(BigDecimal increment) {
         this.previousMonth.increment(increment);
     }
 
     public double getPercentageChange() {
-        return ( ( this.thisMonth.getValue() - this.previousMonth.getValue() ) / this.previousMonth.getValue() ) * 100.0;
+        return this.thisMonth.getValue().subtract(this.previousMonth.getValue()).divide(this.previousMonth.getValue(), RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue();
     }
 
     public static Map<String, CategoryComparison> categoryCompare(List<Transaction> transactions, List<Transaction> previousTransactions) {

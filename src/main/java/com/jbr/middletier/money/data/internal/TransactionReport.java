@@ -2,6 +2,8 @@ package com.jbr.middletier.money.data.internal;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name="transaction_report")
 public class TransactionReport {
@@ -14,7 +16,7 @@ public class TransactionReport {
     private Integer transactionId;
 
     @Column(name="amount")
-    private Double amount;
+    private BigDecimal amount;
 
     @Column(name="date")
     private String date;
@@ -35,7 +37,7 @@ public class TransactionReport {
     private Integer oppositeId;
 
     @Column(name="statement_open_balance")
-    private Double statementOpenBalance;
+    private BigDecimal statementOpenBalance;
 
     @Column(name="statement_month")
     private Integer statementMonth;
@@ -86,11 +88,11 @@ public class TransactionReport {
         return transactionId;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
@@ -166,11 +168,11 @@ public class TransactionReport {
         return fromReconciliation;
     }
 
-    public Double getStatementOpenBalance() {
+    public BigDecimal getStatementOpenBalance() {
         return statementOpenBalance;
     }
 
-    public void setStatementOpenBalance(Double statementOpenBalance) {
+    public void setStatementOpenBalance(BigDecimal statementOpenBalance) {
         this.statementOpenBalance = statementOpenBalance;
     }
 
