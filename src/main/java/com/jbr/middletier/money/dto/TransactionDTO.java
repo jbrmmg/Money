@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.validation.constraints.Pattern;
 
+import java.math.BigDecimal;
+
 public class TransactionDTO {
     private int id;
     @Pattern(regexp="^[\\da-zA-Z]{4}$",message="Account can only contain letters or digits of 4 characters.")
@@ -12,7 +14,7 @@ public class TransactionDTO {
     private String categoryId;
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String date;
-    private double amount;
+    private BigDecimal amount;
     private Integer statementMonth;
 
     private Integer statementYear;
@@ -56,11 +58,11 @@ public class TransactionDTO {
         this.date = date;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

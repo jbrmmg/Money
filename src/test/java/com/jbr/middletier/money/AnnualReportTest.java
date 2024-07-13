@@ -29,6 +29,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -79,7 +80,7 @@ public class AnnualReportTest extends Support {
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
         transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
-        transaction.setAmount(10.02);
+        transaction.setAmount(BigDecimal.valueOf(10.02));
         transaction.setDescription("Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")

@@ -33,6 +33,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.*;
@@ -71,7 +72,7 @@ public class ReportTest extends Support {
             Statement statement = new Statement();
             statement.setId(new StatementId(next,2010,1));
             statement.setLocked(false);
-            statement.setOpenBalance(0);
+            statement.setOpenBalance(BigDecimal.ZERO);
 
             statementRepository.save(statement);
         }
@@ -90,7 +91,7 @@ public class ReportTest extends Support {
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
         transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
-        transaction.setAmount(-10.02);
+        transaction.setAmount(BigDecimal.valueOf(-10.02));
         transaction.setDescription("Testing");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")
@@ -99,7 +100,7 @@ public class ReportTest extends Support {
                 .andExpect(status().isOk());
 
         transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,2),String.class));
-        transaction.setAmount(-210.02);
+        transaction.setAmount(BigDecimal.valueOf(-210.02));
         transaction.setDescription("Testing 1");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")
@@ -109,7 +110,7 @@ public class ReportTest extends Support {
 
         transaction.setCategoryId("FDG");
         transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,2),String.class));
-        transaction.setAmount(-84.12);
+        transaction.setAmount(BigDecimal.valueOf(-84.12));
         transaction.setDescription("This is a much longer description test!!");
 
         getMockMvc().perform(post("/jbr/ext/money/transaction")

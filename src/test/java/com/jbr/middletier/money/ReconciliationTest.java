@@ -26,6 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -267,7 +268,7 @@ public class ReconciliationTest extends Support {
         });
     }
 
-    private Transaction createTransaction(String accountId, String categoryId, double amount, LocalDate date) {
+    private Transaction createTransaction(String accountId, String categoryId, BigDecimal amount, LocalDate date) {
         Account account = new Account();
         account.setId(accountId);
 
@@ -285,7 +286,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -303,7 +304,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate2() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -321,7 +322,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate3() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", 10, LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -339,9 +340,9 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate4() {
-        Transaction testTransaction = createTransaction("AMEX", "TRF", 10, LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "TRF", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
 
-        Transaction testTransactionOpposite = createTransaction("AMEX", "TRF", -10, LocalDate.of(2010,5,1));
+        Transaction testTransactionOpposite = createTransaction("AMEX", "TRF", BigDecimal.valueOf(-10), LocalDate.of(2010,5,1));
 
         testTransaction.setOppositeTransactionId(testTransactionOpposite.getId());
         this.transactionRepository.save(testTransaction);
@@ -415,7 +416,7 @@ public class ReconciliationTest extends Support {
         Statement duplicate = new Statement();
         Statement unlocked = getUnlockedStatement("AMEX");
 
-        duplicate.setOpenBalance(0);
+        duplicate.setOpenBalance(BigDecimal.ZERO);
         duplicate.setLocked(false);
         duplicate.setId(unlocked.getId());
         duplicate.getId().setMonth(unlocked.getId().getMonth()+1);
@@ -434,7 +435,7 @@ public class ReconciliationTest extends Support {
         Transaction testTransaction = new Transaction();
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
-        testTransaction.setAmount(10);
+        testTransaction.setAmount(BigDecimal.valueOf(10));
         testTransaction.setDate(LocalDate.of(2010,5,1));
         this.transactionRepository.save(testTransaction);
 
@@ -470,7 +471,7 @@ public class ReconciliationTest extends Support {
         Statement unlocked = getUnlockedStatement("AMEX");
 
         // Create a transaction
-        Transaction testTransaction = createTransaction("AMEX", "HSE", -1.9, LocalDate.of(2022,10,10));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(-1.9), LocalDate.of(2022,10,10));
         testTransaction.setStatement(unlocked);
         this.transactionRepository.save(testTransaction);
 
@@ -496,7 +497,7 @@ public class ReconciliationTest extends Support {
         this.reconciliationManager.loadFile(reconciliationFile);
 
         // Create a transaction
-        createTransaction("AMEX", "HSE", -1.9, LocalDate.of(2022,10,10));
+        createTransaction("AMEX", "HSE", BigDecimal.valueOf(-1.9), LocalDate.of(2022,10,10));
 
         List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
         int setCategory = 0;
@@ -522,7 +523,7 @@ public class ReconciliationTest extends Support {
         Statement unlocked = getUnlockedStatement("AMEX");
 
         // Create a transaction
-        Transaction transaction = createTransaction("AMEX", "HSE", -36, LocalDate.of(2022,10,10));
+        Transaction transaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(-36), LocalDate.of(2022,10,10));
         transaction.setStatement(unlocked);
         this.transactionRepository.save(transaction);
 

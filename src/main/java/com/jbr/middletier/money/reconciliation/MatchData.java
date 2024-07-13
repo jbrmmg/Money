@@ -6,6 +6,7 @@ import com.jbr.middletier.money.data.primary.ReconciliationData;
 import com.jbr.middletier.money.data.primary.Transaction;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -40,7 +41,7 @@ public class MatchData implements Comparable<MatchData> {
         }
 
         // Check the amount.
-        return Double.compare(this.reconciliationAmount, object.reconciliationAmount);
+        return this.reconciliationAmount.compareTo(object.reconciliationAmount);
     }
 
     @Override
@@ -70,11 +71,11 @@ public class MatchData implements Comparable<MatchData> {
 
     private final int reconciliationId;
     private final LocalDate reconciliationDate;
-    private final double reconciliationAmount;
+    private final BigDecimal reconciliationAmount;
     private final String description;
     private Transaction transaction;
-    private double beforeAmount;
-    private double afterAmount;
+    private BigDecimal beforeAmount;
+    private BigDecimal afterAmount;
     private Category category;
     private final Account account;
     private ForwardActionType forwardActionType;
@@ -103,8 +104,8 @@ public class MatchData implements Comparable<MatchData> {
         this.reconciliationId = -1;
         this.reconciliationDate = transaction.getDate();
         this.reconciliationAmount = transaction.getAmount().getValue();
-        this.beforeAmount = 0.0;
-        this.afterAmount = 0.0;
+        this.beforeAmount = BigDecimal.ZERO;
+        this.afterAmount = BigDecimal.ZERO;
         this.category = transaction.getCategory();
         this.account = transaction.getAccount();
         this.description = transaction.getDescription();
@@ -130,7 +131,7 @@ public class MatchData implements Comparable<MatchData> {
         return this.reconciliationId;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return this.reconciliationAmount;
     }
 
@@ -138,19 +139,19 @@ public class MatchData implements Comparable<MatchData> {
         return this.transaction;
     }
 
-    public double getBeforeAmount() {
+    public BigDecimal getBeforeAmount() {
         return this.beforeAmount;
     }
 
-    public void setBeforeAmount(double beforeTransactionAmount) {
+    public void setBeforeAmount(BigDecimal beforeTransactionAmount) {
         this.beforeAmount = beforeTransactionAmount;
     }
 
-    public double getAfterAmount() {
+    public BigDecimal getAfterAmount() {
         return this.afterAmount;
     }
 
-    public void setAfterAmount(double afterTransactionAmount) {
+    public void setAfterAmount(BigDecimal afterTransactionAmount) {
         this.afterAmount = afterTransactionAmount;
     }
 
@@ -167,7 +168,7 @@ public class MatchData implements Comparable<MatchData> {
     public boolean transactionMatch(Transaction transaction, int withinDays) {
         // If the amount does not match then there is no match.
         double epsilon = 0.001d;
-        if(Math.abs(this.reconciliationAmount - transaction.getAmount().getValue()) > epsilon) {
+        if(this.reconciliationAmount.subtract(transaction.getAmount().getValue()).abs().compareTo(BigDecimal.valueOf(epsilon)) > 0) {
             return false;
         }
 

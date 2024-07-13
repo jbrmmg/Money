@@ -4,37 +4,40 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 
 @JsonSerialize(using = FinancialAmountSerializer.class)
 @JsonDeserialize(using = FinancialAmountDeserializer.class)
 public class FinancialAmount implements Comparable<FinancialAmount> {
-    private double value;
+    private BigDecimal value;
 
-    public FinancialAmount(double value) {
+    public FinancialAmount(BigDecimal value) {
         this.value = value;
     }
 
     public FinancialAmount() {
-        this.value = 0.0;
+        this.value = BigDecimal.ZERO;
     }
 
-    public double getValue() {
+    public BigDecimal getValue() {
         return this.value;
     }
 
     public void increment(FinancialAmount addition) {
-        this.value += addition.getValue();
+        this.value = this.value.add(addition.getValue());
     }
 
-    public void increment(double addition) { this.value += addition; }
+    public void increment(BigDecimal addition) {
+        this.value = this.value.add(addition);
+    }
 
     public void decrement(FinancialAmount subtraction) {
-        increment(-1 * subtraction.value);
+        increment(FinancialAmount.flipSign(subtraction));
     }
 
     public FinancialAmountType getType() {
-        if(this.value > 0) {
+        if(this.value.compareTo(BigDecimal.ZERO) > 0) {
             return FinancialAmountType.CR;
         }
 
@@ -42,26 +45,67 @@ public class FinancialAmount implements Comparable<FinancialAmount> {
     }
 
     public void setType(FinancialAmountType type) {
-        if( (type == FinancialAmountType.CR && this.value < 0) || (type == FinancialAmountType.DB && this.value > 0)) {
-            this.value = this.value * -1;
+        if( (type == FinancialAmountType.CR && this.value.compareTo(BigDecimal.ZERO) < 0) || (type == FinancialAmountType.DB && this.value.compareTo(BigDecimal.ZERO) > 0)) {
+            this.value = FinancialAmount.flipSign(this.value);
         }
     }
 
     public boolean isGreaterThan(FinancialAmount rhs) {
-        return this.value > rhs.value;
+        return this.value.compareTo(rhs.value) > 0;
     }
 
     public boolean isLessThan(FinancialAmount rhs) {
-        return this.value < rhs.value;
+        return this.value.compareTo(rhs.value) < 0;
     }
 
-    public static String internalToString(double value) {
+    public static String internalToString(BigDecimal value) {
         DecimalFormat decimalFormat = new DecimalFormat("#,##0.00");
         return decimalFormat.format(value);
     }
 
+    public static String internalToStringNoComma(BigDecimal value) {
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        return decimalFormat.format(value);
+    }
+
+    public static String internalToStringNoComma(FinancialAmount value) {
+        return internalToStringNoComma(value.getValue());
+    }
+
+    public static boolean positive(FinancialAmount value) {
+        return positive(value.getValue());
+    }
+
+    public static boolean positive(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public static boolean negative(FinancialAmount value) {
+        return negative(value.getValue());
+    }
+
+    public static boolean negative(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) < 0;
+    }
+
+    public static BigDecimal flipSign(BigDecimal value) {
+        return value.multiply(BigDecimal.valueOf(-1));
+    }
+
+    public static BigDecimal flipSign(FinancialAmount value) {
+        return flipSign(value.getValue());
+    }
+
+    public static boolean zero(FinancialAmount value) {
+        return zero(value.getValue());
+    }
+
+    public static boolean zero(BigDecimal value) {
+        return value.compareTo(BigDecimal.ZERO) == 0;
+    }
+
     public String toAbsString() {
-        return internalToString(Math.abs(this.value));
+        return internalToString(this.value.abs());
     }
 
     public String toFormattedString(int size) {
@@ -77,19 +121,19 @@ public class FinancialAmount implements Comparable<FinancialAmount> {
 
     @Override
     public int compareTo(@NotNull FinancialAmount financialAmount) {
-        Double internalValue = this.value;
+        BigDecimal internalValue = this.value;
         return internalValue.compareTo(financialAmount.value);
     }
 
     @Override
     public boolean equals(Object o) {
         if(o instanceof FinancialAmount financialAmount) {
-            Double internalValue = this.value;
+            BigDecimal internalValue = this.value;
             return internalValue.equals(financialAmount.value);
         }
 
-        if(o instanceof Double doubleAmount) {
-            Double internalValue = this.value;
+        if(o instanceof BigDecimal doubleAmount) {
+            BigDecimal internalValue = this.value;
             return internalValue.equals(doubleAmount);
         }
 
@@ -98,6 +142,6 @@ public class FinancialAmount implements Comparable<FinancialAmount> {
 
     @Override
     public int hashCode() {
-        return Double.hashCode(this.value);
+        return this.value.hashCode();
     }
 }
