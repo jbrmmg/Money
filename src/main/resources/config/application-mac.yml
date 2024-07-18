@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/money?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${db.dev.money.user}
+    password: ${db.dev.money.password}
+
+  application:
+    name: Middle Tier Money (Development)
+
+  h2:
+    console:
+      enabled: false
+
+logging:
+  file:
+    name: /var/log/jbr/MiddleTier-MoneyDB-DEV.log
+  logback:
+    rollingpolicy:
+      max-history: 3
+      max-file-size: 100MB
+
+server:
+  port: 12017
+
+money:
+  service-name: middletier-money-dev
+
+info:
+  app:
+    version: Development
