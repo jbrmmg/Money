@@ -24,6 +24,7 @@ server:
 
 money:
   service-name: middletier-money-dev
+  reconcile-file-location: /Users/jason/Downloads
 
 info:
   app:
