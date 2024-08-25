@@ -140,7 +140,7 @@ public class MoneyReportIT extends Support {
                 "Act. ");
         for(TransactionReportDTO next : transactionData) {
             if(next.getType() == TransactionReportTypeDTO.TRANSACTION) {
-                LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}{}{}{}{}|",
+                LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}{}{}{}|",
                         getNumberString(row, 3),
                         getNumberString(next.getId(), 6),
                         next.getDate(),
@@ -159,8 +159,7 @@ public class MoneyReportIT extends Support {
                         outputFlag(next.getActionDelete(), "d"),
                         outputFlag(next.getActionReconcile(), "r"),
                         outputFlag(next.getActionUnreconcile(), "u"),
-                        outputFlag(next.getActionUpdate(), "U"),
-                        outputFlag(next.getActionUpdateCategory(), "c"));
+                        outputFlag(next.getActionUpdate(), "U"));
                 row++;
             }
         }

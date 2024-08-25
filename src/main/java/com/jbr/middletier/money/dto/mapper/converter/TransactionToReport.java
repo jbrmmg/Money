@@ -44,7 +44,6 @@ public class TransactionToReport extends AbstractConverter<Transaction, Transact
             result.setStatementSort(999999);
             result.setActionReconcile(true);
             result.setActionDelete(true);
-            result.setActionUpdate(true);
             result.setLocked(false);
         }
         result.setAmount(transaction.getAmount().getValue());
@@ -52,7 +51,7 @@ public class TransactionToReport extends AbstractConverter<Transaction, Transact
             result.setCategoryId(transaction.getCategory().getId());
         }
         result.setOppositeId(transaction.getOppositeTransactionId());
-        result.setActionUpdateCategory(true);
+        result.setActionUpdate(true);
 
         return result;
     }

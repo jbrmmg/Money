@@ -59,9 +59,6 @@ databaseChangeLog:
                   name: from_reconciliation
                   type: boolean
               - column:
-                  name: action_update_category
-                  type: boolean
-              - column:
                   name: action_update
                   type: boolean
               - column:

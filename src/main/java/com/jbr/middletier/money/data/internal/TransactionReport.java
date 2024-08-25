@@ -57,9 +57,6 @@ public class TransactionReport {
     @Column(name="locked")
     private Boolean locked;
 
-    @Column(name="action_update_category")
-    private Boolean actionUpdateCategory;
-
     @Column(name="action_update")
     private Boolean actionUpdate;
 
@@ -176,20 +173,12 @@ public class TransactionReport {
         this.statementOpenBalance = statementOpenBalance;
     }
 
-    public Boolean getActionUpdateCategory() {
-        return actionUpdateCategory;
-    }
-
     public void setLocked(Boolean locked) {
         this.locked = locked;
     }
 
     public Boolean getLocked() {
         return locked;
-    }
-
-    public void setActionUpdateCategory(Boolean actionUpdateCategory) {
-        this.actionUpdateCategory = actionUpdateCategory;
     }
 
     public void setActionUpdate(Boolean actionUpdate) {

@@ -19,7 +19,6 @@ public class TransactionReportDTO {
     private StatementDTO statement;
     private Boolean predicted;
     private Boolean fromReconciliation;
-    private Boolean actionUpdateCategory;
     private Boolean actionUpdate;
     private Boolean actionReconcile;
     private Boolean actionUnreconcile;
@@ -119,14 +118,6 @@ public class TransactionReportDTO {
 
     public void setStatement(StatementDTO statement) {
         this.statement = statement;
-    }
-
-    public Boolean getActionUpdateCategory() {
-        return actionUpdateCategory;
-    }
-
-    public void setActionUpdateCategory(Boolean actionUpdateCategory) {
-        this.actionUpdateCategory = actionUpdateCategory;
     }
 
     public Boolean getActionUpdate() {
