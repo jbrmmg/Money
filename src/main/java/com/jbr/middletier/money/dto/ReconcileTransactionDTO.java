@@ -1,20 +1,23 @@
 package com.jbr.middletier.money.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ReconcileTransactionDTO {
-    private int transactionId;
+    private List<Integer> transactions;
     private boolean reconcile;
 
     public ReconcileTransactionDTO() {
-        this.transactionId = -1;
+        this.transactions = new ArrayList<>();
         this.reconcile = false;
     }
 
-    public int getTransactionId() {
-        return this.transactionId;
+    public List<Integer> getTransactions() {
+        return this.transactions;
     }
 
-    public void setId(int id) {
-        this.transactionId = id;
+    public void setTransactions(List<Integer> transactions) {
+        this.transactions = transactions;
     }
 
     public boolean getReconcile() {

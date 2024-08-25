@@ -26,6 +26,8 @@ public class TransactionDTO {
 
     private Boolean statementLocked;
 
+    private String error;
+
     public int getId() {
         return id;
     }
@@ -110,6 +112,14 @@ public class TransactionDTO {
 
     public void setStatementLocked(Boolean statementLocked) {
         this.statementLocked = statementLocked;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     @JsonIgnore

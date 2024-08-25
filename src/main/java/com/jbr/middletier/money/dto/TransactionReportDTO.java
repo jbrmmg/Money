@@ -13,7 +13,7 @@ public class TransactionReportDTO {
     private String date;
     private AccountDTO account;
     private CategoryDTO category;
-    @Pattern(regexp="^[\\da-zA-Z\\s]{1,40}$",message="Description can only contain letters or digits up to 45 characters.")
+    @Pattern(regexp= "^[\\da-zA-Z ./?\\-*#'&():+-,!]{1,40}$",message="Description can contain only digits, letters or ./?-*#'&():+-,!.")
     private String description;
     private Integer oppositeId;
     private StatementDTO statement;

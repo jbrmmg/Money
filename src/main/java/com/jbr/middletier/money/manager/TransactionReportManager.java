@@ -362,62 +362,7 @@ public class TransactionReportManager {
         return result;
     }
 
-    @EventListener
-    public void onCreateTransaction(CreateTransactionEvent create) {
-        // Process the event.
-        LOG.info("Save transaction in report table.");
-        for(Transaction next : create.getTransactions()) {
-            this.transactionReportRepository.save(mapper.map(next, TransactionReport.class));
-        }
-    }
-
-    private void updateTransaction(Transaction next) {
-        // Map this transaction to a report.
-        TransactionReport updatedReport = this.mapper.map(next,TransactionReport.class);
-
-        // Get the report transaction.
-        List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next.getId());
-
-        for(TransactionReport nextReport : report) {
-            // Save the updated details
-            updatedReport.setId(nextReport.getId());
-
-            this.transactionReportRepository.save(updatedReport);
-        }
-    }
-
-    @EventListener
-    public void onUpdateTransaction(UpdateTransactionEvent update) {
-        LOG.info("Update transaction in report table.");
-        for(Transaction next : update.getTransactions()) {
-            updateTransaction(next);
-        }
-    }
-
-    @EventListener
-    public void onDeleteTransaction(DeleteTransactionEvent delete) {
-        LOG.info("Delete transaction in report table.");
-        for(Integer next : delete.getTransactionIds()) {
-            // Get the report transaction.
-            List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next);
-
-            // Delete details across and save.
-            this.transactionReportRepository.deleteAll(report);
-        }
-    }
-
-    @EventListener
-    public void onReconcileTransactions(ReconcileTransactionEvent reconcile) {
-        LOG.info("Update the transaction");
-        for(Transaction next : reconcile.getTransactions()) {
-            updateTransaction(next);
-        }
-    }
-
-    @EventListener
-    public void onReconciliationFileLoad(ReconciliationFileLoadEvent load) {
-        LOG.info("Update the reconciled report.{}", load.getSource());
-
+    private void updateReconData() {
         // Remove all transactions that are from reconciliation
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(true);
@@ -441,5 +386,65 @@ public class TransactionReportManager {
 
         // Re-create the reconciliation transactions.
         getFromReconciled();
+    }
+
+    private void updateTransaction(Transaction next) {
+        // Map this transaction to a report.
+        TransactionReport updatedReport = this.mapper.map(next,TransactionReport.class);
+
+        // Get the report transaction.
+        List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next.getId());
+
+        if(!report.isEmpty()) {
+            for (TransactionReport nextReport : report) {
+                // Save the updated details
+                updatedReport.setId(nextReport.getId());
+
+                this.transactionReportRepository.save(updatedReport);
+            }
+        } else {
+            this.transactionReportRepository.save(updatedReport);
+        }
+    }
+
+    @EventListener
+    public void onUpdateTransaction(UpdateTransactionEvent update) {
+        LOG.info("Update transaction in report table.");
+        for(Transaction next : update.getTransactions()) {
+            updateTransaction(next);
+        }
+
+        updateReconData();
+    }
+
+    @EventListener
+    public void onDeleteTransaction(DeleteTransactionEvent delete) {
+        LOG.info("Delete transaction in report table.");
+        for(Integer next : delete.getTransactionIds()) {
+            // Get the report transaction.
+            List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next);
+
+            // Delete details across and save.
+            this.transactionReportRepository.deleteAll(report);
+        }
+
+        updateReconData();
+    }
+
+    @EventListener
+    public void onReconcileTransactions(ReconcileTransactionEvent reconcile) {
+        LOG.info("Update the transaction");
+        for(Transaction next : reconcile.getTransactions()) {
+            updateTransaction(next);
+        }
+
+        updateReconData();
+    }
+
+    @EventListener
+    public void onReconciliationFileLoad(ReconciliationFileLoadEvent load) {
+        LOG.info("Update the reconciled report.{}", load.getSource());
+
+        updateReconData();
     }
 }

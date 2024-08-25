@@ -10,6 +10,7 @@ import com.jbr.middletier.money.events.ReconciliationFileLoadEvent;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.dto.MatchDataDTO;
 import com.jbr.middletier.money.reconciliation.MatchData;
+import org.apache.commons.collections4.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,6 @@ public class ReconciliationManager {
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
-    private final AccountTransactionManager accountTransactionManager;
     private final TransactionMapper transactionMapper;
     private final ReconciliationMapper reconciliationMapper;
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
@@ -46,7 +46,6 @@ public class ReconciliationManager {
                                  CategoryRepository categoryRepository,
                                  TransactionRepository transactionRepository,
                                  StatementRepository statementRepository,
-                                 AccountTransactionManager accountTransactionManager,
                                  TransactionMapper transactionMapper,
                                  ReconciliationMapper reconciliationMapper,
                                  ReconciliationFileTransactionRepository reconciliationFileTransactionRepository,
@@ -56,7 +55,6 @@ public class ReconciliationManager {
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
-        this.accountTransactionManager = accountTransactionManager;
         this.transactionMapper = transactionMapper;
         this.reconciliationMapper = reconciliationMapper;
         this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
@@ -127,44 +125,6 @@ public class ReconciliationManager {
 
         LOG.warn("{} not found, cannot update account", updateAccount.getFilename());
         throw new FileNotFoundException("Cannot find " + updateAccount.getFilename());
-    }
-
-    public void autoReconcileData() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException, NullOrBlankAccountIdException {
-        // Get the match data an automatically perform the roll forward action (create or reconcile)
-        List<MatchData> matchData = match();
-
-        // Process the data.
-        for (MatchData next : matchData ) {
-            try {
-                // Process the action.
-                if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.CREATE.toString())) {
-                    Transaction newTransaction = new Transaction();
-
-                    newTransaction.setAccount(next.getAccount());
-                    newTransaction.setCategory(next.getCategory());
-
-                    newTransaction.setDate(next.getDate());
-
-                    newTransaction.setAmount(next.getAmount());
-                    newTransaction.setDescription(next.getDescription());
-
-                    // Create the transaction.
-                    accountTransactionManager.saveTransaction(newTransaction);
-                } else if (next.getForwardAction().equalsIgnoreCase(MatchData.ForwardActionType.RECONCILE.toString())) {
-                    // Reconcile the transaction
-                    reconcile(next.getTransaction().getId(),true);
-                }
-            } catch (MultipleUnlockedStatementException ex) {
-                LOG.error("Multiple Unlock Statement Exception.");
-                throw ex;
-            } catch (InvalidTransactionIdException ex) {
-                LOG.error("Invalid Transaction Id Exception.");
-                throw ex;
-            } catch (InvalidTransactionException ex) {
-                LOG.error("Invalid Transaction Exception.");
-                throw ex;
-            }
-        }
     }
 
     private void innerLookForMatches(boolean reconciled, int daysAway, List<MatchData> result, List<Transaction> transactions) {
@@ -330,38 +290,43 @@ public class ReconciliationManager {
         reconciliationCategoryUpdate(reconciliationUpdate);
     }
 
-    public void reconcile(int transactionId, boolean reconcile) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
-        LOG.info("Reconcile transaction.");
+    public void reconcile(ReconcileTransactionDTO reconcileTransactions) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
+        LOG.info("Reconcile transactions.");
 
         // Get the transaction.
-        Optional<Transaction> transaction = transactionRepository.findById(transactionId);
+        Iterable<Transaction> transactions = transactionRepository.findAllById(reconcileTransactions.getTransactions());
+        boolean foundAny = false;
 
-        if(transaction.isPresent()) {
+        for(Transaction transaction : transactions) {
+            foundAny = true;
+
             // Then set the reconciliation or remove the flag.
-            if (reconcile) {
+            if (reconcileTransactions.getReconcile()) {
                 // Find the statement associated with the transaction.
-                List<Statement> statements = statementRepository.findByIdAccountAndLocked(transaction.get().getAccount(), false);
+                List<Statement> statements = statementRepository.findByIdAccountAndLocked(transaction.getAccount(), false);
 
                 if (statements.size() == 1) {
                     // Set the statement.
-                    transaction.get().setStatement(statements.get(0));
+                    transaction.setStatement(statements.get(0));
                 } else {
                     LOG.error("Reconcile transaction - ignored (statement count not 1).");
-                    throw new MultipleUnlockedStatementException(transaction.get().getAccount());
+                    throw new MultipleUnlockedStatementException(transaction.getAccount());
                 }
             } else {
                 // Remove the statement
-                transaction.get().clearStatement();
+                if(!transaction.getStatement().getLocked()) {
+                    transaction.clearStatement();
+                }
             }
-
-            // Save the transaction.
-            transactionRepository.save(transaction.get());
-
-            this.applicationEventPublisher.publishEvent(new ReconcileTransactionEvent(this,Collections.singletonList(transaction.get())));
-            return;
         }
 
-        throw new InvalidTransactionIdException(transactionId);
+        // Save the transaction.
+        if(foundAny) {
+            transactionRepository.saveAll(transactions);
+            this.applicationEventPublisher.publishEvent(new ReconcileTransactionEvent(this, IteratorUtils.toList(transactions.iterator())));
+        } else if(!reconcileTransactions.getTransactions().isEmpty()) {
+            throw new InvalidTransactionIdException(reconcileTransactions.getTransactions().get(0));
+        }
     }
 
     public List<MatchDataDTO> matchImpl() throws NullOrBlankAccountIdException {

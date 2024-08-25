@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import jakarta.validation.Valid;
@@ -40,22 +41,22 @@ public class TransactionController {
     }
 
     @PutMapping(path="/ext/money/transaction")
-    public Iterable<TransactionDTO> updateTransactionExt(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
-        return this.accountTransactionManager.updateTransaction(transaction);
+    public Iterable<TransactionDTO> updateTransactionExt(@Valid @RequestBody List<TransactionReportDTO> transactions) throws InvalidTransactionException {
+        return this.accountTransactionManager.updateTransactions(transactions);
     }
 
     @PutMapping(path="/int/money/transaction")
-    public Iterable<TransactionDTO> updateTransactionInt(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException, UpdateDeleteCategoryException {
-        return this.accountTransactionManager.updateTransaction(transaction);
+    public Iterable<TransactionDTO> updateTransactionInt(@Valid @RequestBody List<TransactionReportDTO> transactions) throws InvalidTransactionException {
+        return this.accountTransactionManager.updateTransactions(transactions);
     }
 
     @DeleteMapping(path="/ext/money/transaction")
-    public Iterable<TransactionDTO> deleteExternal(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
-        return this.accountTransactionManager.deleteTransaction(transaction);
+    public Iterable<TransactionDTO> deleteExternal(@Valid @RequestBody List<TransactionDTO> transactions) throws InvalidTransactionIdException {
+        return this.accountTransactionManager.deleteTransactions(transactions);
     }
 
     @DeleteMapping(path="/int/money/transaction")
-    public Iterable<TransactionDTO> deleteInternal(@Valid @RequestBody TransactionDTO transaction) throws InvalidTransactionIdException {
-        return this.accountTransactionManager.deleteTransaction(transaction);
+    public Iterable<TransactionDTO> deleteInternal(@Valid @RequestBody List<TransactionDTO> transactions) throws InvalidTransactionIdException {
+        return this.accountTransactionManager.deleteTransactions(transactions);
     }
 }
