@@ -1,50 +1,37 @@
 package com.jbr.middletier.money.manager;
 
-import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.primary.*;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
-import com.jbr.middletier.money.dto.DateRangeDTO;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.events.CreateTransactionEvent;
 import com.jbr.middletier.money.events.DeleteTransactionEvent;
 import com.jbr.middletier.money.events.UpdateTransactionEvent;
 import com.jbr.middletier.money.exceptions.*;
-import com.jbr.middletier.money.util.DateRange;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
-
-import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.*;
-import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.categoryIn;
-
 
 @Controller
 public class AccountTransactionManager {
     private static final Logger LOG = LoggerFactory.getLogger(AccountTransactionManager.class);
 
-    private final AccountManager accountManager;
     private final CategoryManager categoryManager;
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
-    public AccountTransactionManager(AccountManager accountManager,
-                                     CategoryManager categoryManager,
+    public AccountTransactionManager(CategoryManager categoryManager,
                                      TransactionRepository transactionRepository,
                                      TransactionMapper transactionMapper, ApplicationEventPublisher applicationEventPublisher) {
-        this.accountManager = accountManager;
         this.categoryManager = categoryManager;
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
@@ -78,163 +65,6 @@ public class AccountTransactionManager {
         }
 
         transactionRepository.saveAll(transactions);
-    }
-
-    private Specification<Transaction> getReconciledTransactions(List<Account> accounts, LocalDate statementDate, List<Category> categories) throws InvalidTransactionSearchException {
-        // Validate data.
-        if((accounts == null)) {
-            throw new InvalidTransactionSearchException("Must specify account");
-        }
-
-        if(statementDate == null){
-            throw new InvalidTransactionSearchException("Must specify statement date");
-        }
-
-        // Reconciled transactions - for a particular month (statement), single account, list of categories.
-        Specification<Transaction> search = Specification.where(statementDate(statementDate)).and(accountIn(accounts));
-
-        if(categories != null) {
-            search = search.and(categoryIn(categories));
-        }
-
-        return search;
-    }
-
-    private Specification<Transaction> getUnreconciledTransactions(List<Account> accounts, List<Category> categories) {
-        // Not locked transactions - no date, multiple accounts, list of categories
-        Specification<Transaction> search = Specification.where(statementIsNull());
-
-        if(accounts != null) {
-            search = search.and(accountIn(accounts));
-        }
-
-        if(categories != null) {
-            search = search.and(categoryIn(categories));
-        }
-
-        return search;
-    }
-
-    private Specification<Transaction> getAllTransactions(DateRange dateRange, List<Account> accounts, List<Category> categories) throws InvalidTransactionSearchException {
-        // Validate data.
-        if(dateRange.getFrom() == null || dateRange.getFrom().isEqual(Constants.MONEY_EARLIEST_DATE)){
-            throw new InvalidTransactionSearchException("must specify a from date");
-        }
-        if(dateRange.getTo() == null || dateRange.getTo().isEqual(Constants.MONEY_LATEST_DATE)){
-            throw new InvalidTransactionSearchException("must specify a to date");
-        }
-
-        // All transactions - between two dates, multiple accounts, list of categories
-        // Not locked transactions - no date, multiple accounts, list of categories
-        Specification<Transaction> search = Specification.where(datesBetween(dateRange));
-
-        if(accounts != null) {
-            search = search.and(accountIn(accounts));
-        }
-
-        if(categories != null) {
-            search = search.and(categoryIn(categories));
-        }
-
-        return search;
-    }
-
-    private Specification<Transaction> getUnlockedTransactions(List<Account> accounts, List<Category> categories) {
-        // Not locked transactions - no date, multiple accounts, list of categories
-        Specification<Transaction> search = Specification.where(notLocked());
-
-        if(accounts != null) {
-            search = search.and(accountIn(accounts));
-        }
-
-        if(categories != null) {
-            search = search.and(categoryIn(categories));
-        }
-
-        return search;
-    }
-
-    private Specification<Transaction> getTransactionSearch(TransactionRequestType type,
-                                                            DateRange    dateRange,
-                                                            List<String> categoryIds,
-                                                            List<String> accountIds) throws InvalidTransactionSearchException {
-        // Get the accounts
-        List<Account> accounts = null;
-        if(accountIds != null) {
-            accounts = new ArrayList<>();
-            for(Account next : accountManager.getAllExternal()) {
-                if(accountIds.contains(next.getId())) {
-                    accounts.add(next);
-                }
-            }
-        }
-
-        // Get the categories
-        List<Category> categories = null;
-        if(categoryIds != null) {
-            categories = new ArrayList<>();
-            for(Category next : categoryManager.getAllExternal()) {
-                if(categoryIds.contains(next.getId())) {
-                    categories.add(next);
-                }
-            }
-        }
-
-        // Process the request.
-        switch (type) {
-            case TRT_UNRECONCILED -> {
-                LOG.info("Get Transaction - un reconciled");
-                return getUnreconciledTransactions(accounts, categories);
-            }
-            case TRT_RECONCILED -> {
-                LOG.info("Get Transaction - reconciled");
-                return getReconciledTransactions(accounts, dateRange.getFrom(), categories);
-            }
-            case TRT_ALL -> {
-                LOG.info("Get Transaction - all");
-                return getAllTransactions(dateRange, accounts, categories);
-            }
-            case TRT_UNLOCKED -> {
-                LOG.info("Get Transaction - unlocked");
-                return getUnlockedTransactions(accounts, categories);
-            }
-            case TRT_UNKNOWN -> {
-                LOG.info("Get Transaction - unknown");
-                throw new IllegalStateException("Should never get here as all Enum values are catered for.");
-            }
-        }
-
-        return null;
-    }
-
-    public List<TransactionDTO> getTransactions(TransactionRequestType type,
-                                                DateRangeDTO externalDateRange,
-                                                List<String> categoryIds,
-                                                List<String> accountIds,
-                                                boolean sortAscending) throws InvalidTransactionSearchException {
-        if(type == TransactionRequestType.TRT_UNKNOWN) {
-            // Just return an empty list.
-            return new ArrayList<>();
-        }
-
-        Sort transactionSort = Sort.by(Sort.Direction.DESC,"date", "account", "amount");
-
-        if(sortAscending) {
-            transactionSort = Sort.by(Sort.Direction.ASC,"date", "account", "amount");
-        }
-
-        DateRange dateRange = transactionMapper.map(externalDateRange,DateRange.class);
-
-        Specification<Transaction> specification = getTransactionSearch(type, dateRange, categoryIds, accountIds);
-
-        List<TransactionDTO> result = new ArrayList<>();
-        LOG.debug("Iterate over transactions");
-        for(Transaction transaction : transactionRepository.findAll(Objects.requireNonNull(specification), transactionSort)) {
-            LOG.debug("Transaction (getTransactions) {}", transaction.getId());
-            result.add(transactionMapper.map(transaction,TransactionDTO.class));
-        }
-
-        return result;
     }
 
     private Transaction internalCreateTransaction(TransactionDTO transaction) throws InvalidTransactionException {
