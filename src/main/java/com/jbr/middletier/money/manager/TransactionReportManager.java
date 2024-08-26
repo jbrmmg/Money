@@ -4,7 +4,9 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.internal.TransactionReport;
 import com.jbr.middletier.money.data.internal.repository.TransactionReportRepository;
+import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Regular;
+import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
@@ -29,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Controller
 public class TransactionReportManager {
@@ -52,6 +55,8 @@ public class TransactionReportManager {
     private final TransactionMapper mapper;
     private final ApplicationProperties applicationProperties;
     private final TransactionReportRepository transactionReportRepository;
+    private final StatementManager statementManager;
+    private final AccountManager accountManager;
 
     @Autowired
     public TransactionReportManager(AccountTransactionManager transactionManager,
@@ -59,13 +64,17 @@ public class TransactionReportManager {
                                     ReconciliationManager reconciliationManager,
                                     TransactionMapper mapper,
                                     TransactionReportRepository transactionReportRepository,
-                                    ApplicationProperties applicationProperties) {
+                                    ApplicationProperties applicationProperties,
+                                    StatementManager statementManager,
+                                    AccountManager accountManager) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
         this.reconciliationManager = reconciliationManager;
         this.mapper = mapper;
         this.applicationProperties = applicationProperties;
         this.transactionReportRepository = transactionReportRepository;
+        this.statementManager = statementManager;
+        this.accountManager = accountManager;
     }
 
     @PostConstruct
@@ -160,14 +169,39 @@ public class TransactionReportManager {
             return null;
         }
 
-        // Opening balance is the sum of the earliest opening balance from each account present in the data.
-        List<String> accountIds = new ArrayList<>();
+        // If the not-locked flag is set then use the opening balance from all the accounts that are in the filter.
         BigDecimal openBalance = BigDecimal.ZERO;
-        for(TransactionReportDTO next : transactionData) {
-            // Has this account been seen?
-            if(!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
-                openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
-                accountIds.add(next.getAccount().getId());
+        if(filter.getLocked() != null && !filter.getLocked()) {
+            for(Account next : this.accountManager.getAllExternal()) {
+                // Is this account filtered out?
+                AtomicBoolean excludeAccount = new AtomicBoolean(true);
+
+                if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
+                    filter.getAccounts().forEach((a) -> {
+                        if(a.getId().equals(next.getId())) {
+                            excludeAccount.set(false);
+                        }
+                    });
+                } else {
+                    excludeAccount.set(false);
+                }
+
+                if(excludeAccount.get()) {
+                    List<Statement> statement = statementManager.getLatestStatementInternal(next);
+                    for(Statement nextStatement : statement) {
+                        openBalance = openBalance.add(nextStatement.getOpenBalance().getValue());
+                    }
+                }
+            }
+        } else {
+            // Opening balance is the sum of the earliest opening balance from each account present in the data.
+            List<String> accountIds = new ArrayList<>();
+            for (TransactionReportDTO next : transactionData) {
+                // Has this account been seen?
+                if (!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
+                    openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
+                    accountIds.add(next.getAccount().getId());
+                }
             }
         }
 
