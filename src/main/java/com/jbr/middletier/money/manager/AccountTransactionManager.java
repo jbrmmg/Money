@@ -109,7 +109,11 @@ public class AccountTransactionManager {
     @Transactional
     public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException {
         if(transaction.size() == 1) {
-            return createIndividualTransaction(transaction.get(0));
+            List<TransactionDTO> result =  createIndividualTransaction(transaction.get(0));
+
+            this.applicationEventPublisher.publishEvent(new UpdateTransactionEvent(this, getTransactionList(result)));
+
+            return result;
         }
 
         // Must be a transfer - two transactions

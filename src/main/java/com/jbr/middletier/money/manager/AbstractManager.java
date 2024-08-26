@@ -86,6 +86,17 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
         return modelMapper.map(internal,this.externalClass);
     }
 
+    public Optional<E> getExternalIfValid(I id) {
+        this.loadCache();
+
+        // Return the instance with id specified.
+        if(this.cache.containsKey(id)) {
+            return Optional.of(modelMapper.map(this.cache.get(id),this.externalClass));
+        }
+
+        return Optional.empty();
+    }
+
     public List<E> create(E instance) throws A {
         this.loadCache();
 

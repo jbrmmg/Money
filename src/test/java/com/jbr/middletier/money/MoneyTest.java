@@ -7,6 +7,8 @@ import com.jbr.middletier.money.data.primary.*;
 import com.jbr.middletier.money.data.primary.repository.*;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
+import com.jbr.middletier.money.manager.TransactionReportManager;
+import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.AdjustmentType;
@@ -24,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -76,6 +79,9 @@ public class MoneyTest extends Support {
     UtilityMapper utilityMapper;
 
     @Autowired
+    TransactionReportManager transactionReportManager;
+
+    @Autowired
     TransactionMapper transactionMapper;
 
     @Autowired
@@ -126,12 +132,16 @@ public class MoneyTest extends Support {
         // Amend the transaction.
         Iterable<Transaction> transactions = transactionRepository.findAll();
         for(Transaction nextTransaction : transactions) {
-            TransactionDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
-            updateTransaction.setAmount(BigDecimal.valueOf(1283.21));
+            TransactionReportDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionReportDTO.class);
+            updateTransaction.setAmount(new FinancialAmount(BigDecimal.valueOf(1283.21)));
 
             assertEquals(1280.32, nextTransaction.getAmount().getValue().doubleValue(),0.001);
+
+            List<TransactionReportDTO> updateTransactions = new ArrayList<>();
+            updateTransactions.add(updateTransaction);
+
             getMockMvc().perform(put("/jbr/ext/money/transaction")
-                    .content(this.json(updateTransaction))
+                    .content(this.json(updateTransactions))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
@@ -141,10 +151,13 @@ public class MoneyTest extends Support {
         for(Transaction nextTransaction : transactions) {
             TransactionDTO deleteTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
 
+            List<TransactionDTO> deleteTransactions = new ArrayList<>();
+            deleteTransactions.add(deleteTransaction);
+
             // Delete this item.
             assertEquals(1283.21,nextTransaction.getAmount().getValue().doubleValue(),0.001);
             getMockMvc().perform(delete("/jbr/int/money/transaction")
-                    .content(this.json(deleteTransaction))
+                    .content(this.json(deleteTransactions))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
@@ -174,12 +187,15 @@ public class MoneyTest extends Support {
 
         Transaction nextTransaction = transactions.iterator().next();
         assertEquals(1280.32, nextTransaction.getAmount().getValue().doubleValue(),0.001);
-        TransactionDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
-        updateTransaction.setAmount(BigDecimal.valueOf(1283.21));
+        TransactionReportDTO updateTransaction = transactionMapper.map(nextTransaction,TransactionReportDTO.class);
+        updateTransaction.setAmount(new FinancialAmount(BigDecimal.valueOf(1283.21)));
+
+        List<TransactionReportDTO> updateTransactions = new ArrayList<>();
+        updateTransactions.add(updateTransaction);
 
         assertEquals(1280.32, nextTransaction.getAmount().getValue().doubleValue(),0.001);
         getMockMvc().perform(put("/jbr/int/money/transaction")
-                .content(this.json(updateTransaction))
+                .content(this.json(updateTransactions))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -188,10 +204,13 @@ public class MoneyTest extends Support {
         for(Transaction nextTransactionToDelete : transactions) {
             TransactionDTO deleteTransaction = transactionMapper.map(nextTransaction,TransactionDTO.class);
 
+            List<TransactionDTO> deleteTransactions = new ArrayList<>();
+            deleteTransactions.add(deleteTransaction);
+
             // Delete this item.
             assertEquals(1283.21, abs(nextTransactionToDelete.getAmount().getValue().doubleValue()),0.001);
             getMockMvc().perform(delete("/jbr/ext/money/transaction")
-                    .content(this.json(deleteTransaction))
+                    .content(this.json(deleteTransactions))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
         }
@@ -223,7 +242,7 @@ public class MoneyTest extends Support {
         for(Transaction nextTransaction : transactions) {
             assertFalse(nextTransaction.reconciled());
             ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
-            reconcileRequest.setId(nextTransaction.getId());
+            reconcileRequest.getTransactions().add(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
             getMockMvc().perform(put("/jbr/int/money/reconcile")
                     .content(this.json(reconcileRequest))
@@ -236,7 +255,7 @@ public class MoneyTest extends Support {
         for(Transaction nextTransaction : transactions) {
             assertTrue(nextTransaction.reconciled());
             ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
-            reconcileRequest.setId(nextTransaction.getId());
+            reconcileRequest.getTransactions().add(nextTransaction.getId());
             reconcileRequest.setReconcile(false);
             getMockMvc().perform(put("/jbr/ext/money/reconcile")
                     .content(this.json(reconcileRequest))
@@ -251,8 +270,12 @@ public class MoneyTest extends Support {
             if(!deletedIds.contains(nextTransaction.getId())) {
                 // Delete this item.
                 TransactionDTO nextTransactionDTO = transactionMapper.map(nextTransaction, TransactionDTO.class);
+
+                List<TransactionDTO> deleteTransactions = new ArrayList<>();
+                deleteTransactions.add(nextTransactionDTO);
+
                 getMockMvc().perform(delete("/jbr/ext/money/transaction")
-                                .content(this.json(nextTransactionDTO))
+                                .content(this.json(deleteTransactions))
                                 .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk());
 
@@ -289,17 +312,35 @@ public class MoneyTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=AMEX")
-                .contentType(getContentType()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(1.23)))
-                .andExpect(jsonPath("$", hasSize(1)));
+        TransactionFilterDTO filter = new TransactionFilterDTO();
 
-        getMockMvc().perform(get("/jbr/int/money/transaction?type=UN&account=JLPC")
+        AccountDTO accountSearch = new AccountDTO();
+        accountSearch.setId("AMEX");
+
+        List<AccountDTO> accounts = new ArrayList<>();
+        accounts.add(accountSearch);
+
+        filter.setAccounts(accounts);
+
+        filter.setPredicted(false);
+        filter.setLocked(false);
+
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(3.45)))
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$[1].amount.value", is(1.23)))
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andDo(MockMvcResultHandlers.print());
+
+        accountSearch.setId("JLPC");
+
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                .content(this.json(filter))
+                .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[1].amount.value", is(3.45)))
+                .andExpect(jsonPath("$", hasSize(3)));
 
         // Create another transaction
         transaction.setAccountId("JLPC");
@@ -310,24 +351,41 @@ public class MoneyTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=JLPC")
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(2.78, 3.45)))
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$[*].amount.value", containsInAnyOrder(2.78, 3.45)))
+                .andExpect(jsonPath("$", hasSize(4)));
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=JLPC&category=FDG")
+        CategoryDTO categorySearch = new CategoryDTO();
+        categorySearch.setId("FDG");
+
+        List<CategoryDTO> categories = new ArrayList<>();
+        categories.add(categorySearch);
+
+        filter.setCategories(categories);
+
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(3.45)))
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$[0].amount.value", is(3.45)))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andDo(MockMvcResultHandlers.print());
 
+        accountSearch = new AccountDTO();
+        accountSearch.setId("AMEX");
+        accounts.add(accountSearch);
 
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UL&account=AMEX,JLPC")
+        filter.setCategories(new ArrayList<>());
+
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(1.23, 3.45, 2.78)))
-                .andExpect(jsonPath("$", hasSize(3)));
+                .andExpect(jsonPath("$[*].amount.value", containsInAnyOrder(1.23, 3.45, 2.78)))
+                .andExpect(jsonPath("$", hasSize(5)));
     }
 
     @Test
@@ -426,14 +484,31 @@ public class MoneyTest extends Support {
         regularCtrl.generateRegularPayments();
         regularCtrl.generateRegularPayments();
 
+        // Get the transactions using the transaction report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+
+        CategoryDTO categorySearch = new CategoryDTO();
+        categorySearch.setId("FDG");
+
+        List<CategoryDTO> categories = new ArrayList<>();
+        categories.add(categorySearch);
+
+        filter.setCategories(categories);
+
+        filter.setPredicted(false);
+        filter.setLocked(false);
+
+        transactionReportManager.reset();
+
         // Check that we have 1 transaction.
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&category=FDG")
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].amount", containsInAnyOrder(10.0, 12.0)))
-                .andExpect(jsonPath("$[*].description", containsInAnyOrder("Regular 1", null)))
-                .andExpect(jsonPath("$", hasSize(2)));
-
+                .andExpect(jsonPath("$[*].amount.value", containsInAnyOrder(10.0, 12.0)))
+                .andExpect(jsonPath("$[*].description", containsInAnyOrder("Regular 1", null, null)))
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andDo(MockMvcResultHandlers.print());
 
         // Check regular payments.
         getMockMvc().perform(get("/jbr/ext/money/transaction/regulars")
@@ -466,7 +541,7 @@ public class MoneyTest extends Support {
         Regular testRegularPayment = new Regular();
         testRegularPayment.setAccount(account.get());
         testRegularPayment.setCategory(category.get());
-        testRegularPayment.setAmount(BigDecimal.valueOf(10.0));
+        testRegularPayment.setAmount(BigDecimal.valueOf(11.0));
         testRegularPayment.setFrequency("1W");
         testRegularPayment.setStart(testDate);
         testRegularPayment.setWeekendAdj(AdjustmentType.AT_FORWARD);
@@ -478,13 +553,36 @@ public class MoneyTest extends Support {
         // Move calendar date to the monday, for checking
         testDate = testDate.plusDays(2);
 
+        // Get the transactions using the transaction report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+
+        AccountDTO accountSearch = new AccountDTO();
+        accountSearch.setId("BANK");
+
+        List<AccountDTO> accounts = new ArrayList<>();
+        accounts.add(accountSearch);
+
+        filter.setAccounts(accounts);
+
+        CategoryDTO categorySearch = new CategoryDTO();
+        categorySearch.setId("FDG");
+
+        List<CategoryDTO> categories = new ArrayList<>();
+        categories.add(categorySearch);
+        filter.setCategories(categories);
+
+        filter.setPredicted(false);
+
+        transactionReportManager.reset();
+
         // Check that we have 1 transaction.
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=BANK&category=FDG")
-                .contentType(getContentType()))
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(10.0)))
-                .andExpect(jsonPath("$[0].date", startsWith(utilityMapper.map(testDate,String.class))))
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$[1].amount.value", is(11.0)))
+                .andExpect(jsonPath("$[1].date", startsWith(utilityMapper.map(testDate,String.class))))
+                .andExpect(jsonPath("$", hasSize(3)));
     }
 
     @Test
@@ -524,13 +622,35 @@ public class MoneyTest extends Support {
         // Move calendar date to the friday, for checking
         testDate = testDate.plusDays(-1);
 
-        // Check that we have 1 transaction.
-        getMockMvc().perform(get("/jbr/ext/money/transaction?type=UN&account=BANK&category=FDG")
-                .contentType(getContentType()))
+        // Get the transactions using the transaction report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+
+        AccountDTO accountSearch = new AccountDTO();
+        accountSearch.setId("BANK");
+
+        List<AccountDTO> accounts = new ArrayList<>();
+        accounts.add(accountSearch);
+        filter.setAccounts(accounts);
+
+        CategoryDTO categorySearch = new CategoryDTO();
+        categorySearch.setId("FDG");
+
+        List<CategoryDTO> categories = new ArrayList<>();
+        categories.add(categorySearch);
+        filter.setCategories(categories);
+
+        filter.setPredicted(false);
+
+        transactionReportManager.reset();
+
+        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount", is(10.0)))
-                .andExpect(jsonPath("$[0].date", startsWith(utilityMapper.map(testDate,String.class))))
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("[1].amount.value", is(10.0)))
+                .andExpect(jsonPath("[1].date", startsWith(utilityMapper.map(testDate,String.class))))
+                .andDo(MockMvcResultHandlers.print());
     }
 
     private void testReconciliationData(String filename, int expectedCount, double expectedSum, boolean overrideAccount) throws Exception {

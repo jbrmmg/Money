@@ -3,6 +3,7 @@ package com.jbr.middletier.money.integration;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.Support;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.*;
 import org.junit.Assert;
@@ -49,6 +50,9 @@ public class MoneyEventIT extends Support {
     @Autowired
     private StatementManager statementManager;
 
+    @Autowired
+    private TransactionMapper transactionMapper;
+
     @SuppressWarnings("rawtypes")
     @ClassRule
     public static MySQLContainer mysqlContainer = new MySQLContainer("mysql:8.0.28")
@@ -70,7 +74,7 @@ public class MoneyEventIT extends Support {
     }
 
     @Test
-    public void testIndividualTransaction() throws UpdateDeleteCategoryException, InvalidTransactionException, InvalidTransactionIdException {
+    public void testIndividualTransaction() throws InvalidTransactionException, InvalidTransactionIdException {
         LOG.info("Test transaction events.");
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
@@ -104,7 +108,10 @@ public class MoneyEventIT extends Support {
         saved.get(0).setDate("2023-02-11");
         saved.get(0).setCategoryId("UTT");
         saved.get(0).setDescription("Testing 2");
-        this.accountTransactionManager.updateTransaction(saved.get(0));
+
+        List<TransactionReportDTO> transactions = new ArrayList<>();
+        transactions.add(transactionMapper.map(saved.get(0),TransactionReportDTO.class));
+        this.accountTransactionManager.updateTransactions(transactions);
 
         reportTransactions = transactionReportManager.getTransactions(filter);
         reportTransaction = reportTransactions.get(1);
@@ -118,13 +125,15 @@ public class MoneyEventIT extends Support {
         Assert.assertNull(reportTransaction.getStatement());
 
         // Check that deleting the transaction is replicated
-        this.accountTransactionManager.deleteTransaction(saved.get(0));
+        List<TransactionDTO> deleteTransactions = new ArrayList<>();
+        deleteTransactions.add(saved.get(0));
+        this.accountTransactionManager.deleteTransactions(deleteTransactions);
         reportTransactions = transactionReportManager.getTransactions(filter);
         Assert.assertEquals(1,reportTransactions.size());
     }
 
     @Test
-    public void testTransfer() throws UpdateDeleteCategoryException, InvalidTransactionException, InvalidTransactionIdException {
+    public void testTransfer() throws InvalidTransactionException, InvalidTransactionIdException {
         LOG.info("Test transaction transfer events.");
         List<TransactionDTO> transactions = new ArrayList<>();
         TransactionDTO transaction = new TransactionDTO();
@@ -186,7 +195,10 @@ public class MoneyEventIT extends Support {
         saved.get(0).setDate("2023-02-11");
         saved.get(0).setCategoryId("UTT");
         saved.get(0).setDescription("Transfer 2");
-        this.accountTransactionManager.updateTransaction(saved.get(0));
+
+        List<TransactionReportDTO> transactionsForUpdate = new ArrayList<>();
+        transactionsForUpdate.add(transactionMapper.map(saved.get(0),TransactionReportDTO.class));
+        this.accountTransactionManager.updateTransactions(transactionsForUpdate);
 
         reportTransactions = transactionReportManager.getTransactions(filter);
 
@@ -218,7 +230,7 @@ public class MoneyEventIT extends Support {
         Assert.assertNull(amex.getStatement());
 
         // Check that deleting the transaction is replicated
-        this.accountTransactionManager.deleteTransaction(saved.get(0));
+        this.accountTransactionManager.deleteTransactions(saved);
         reportTransactions = transactionReportManager.getTransactions(filter);
         Assert.assertEquals(1,reportTransactions.size());
     }
@@ -245,7 +257,10 @@ public class MoneyEventIT extends Support {
         Assert.assertNull(reportTransactions.get(1).getStatement());
 
         // Reconcile the transaction.
-        this.reconciliationManager.reconcile(saved.get(0).getId(),true);
+        ReconcileTransactionDTO reconcile = new ReconcileTransactionDTO();
+        reconcile.setReconcile(true);
+        reconcile.getTransactions().add(saved.get(0).getId());
+        this.reconciliationManager.reconcile(reconcile);
 
         reportTransactions = transactionReportManager.getTransactions(filter);
 
@@ -262,7 +277,7 @@ public class MoneyEventIT extends Support {
 
         // Attempt to delete the transaction - should fail.
         try {
-            this.accountTransactionManager.deleteTransaction(saved.get(0));
+            this.accountTransactionManager.deleteTransactions(saved);
         } catch (InvalidTransactionIdException e) {
             Assert.assertEquals("Cannot find transaction with id ", e.getMessage().substring(0,32));
         }
@@ -281,14 +296,17 @@ public class MoneyEventIT extends Support {
         }
 
         // Unreconcile the transaction.
-        this.reconciliationManager.reconcile(saved.get(0).getId(),false);
+        reconcile = new ReconcileTransactionDTO();
+        reconcile.setReconcile(false);
+        reconcile.getTransactions().add(saved.get(0).getId());
+        this.reconciliationManager.reconcile(reconcile);
         reportTransactions = transactionReportManager.getTransactions(filter);
 
         Assert.assertEquals(3,reportTransactions.size());
         Assert.assertNull(reportTransactions.get(1).getStatement());
 
         // delete the transaction
-        this.accountTransactionManager.deleteTransaction(saved.get(0));
+        this.accountTransactionManager.deleteTransactions(saved);
         reportTransactions = transactionReportManager.getTransactions(filter);
 
         Assert.assertEquals(1,reportTransactions.size());
@@ -316,7 +334,10 @@ public class MoneyEventIT extends Support {
         Assert.assertNull(reportTransactions.get(0).getStatement());
 
         // Reconcile the transaction.
-        this.reconciliationManager.reconcile(saved.get(0).getId(),true);
+        ReconcileTransactionDTO reconcile = new ReconcileTransactionDTO();
+        reconcile.setReconcile(true);
+        reconcile.getTransactions().add(saved.get(0).getId());
+        this.reconciliationManager.reconcile(reconcile);
         reportTransactions = transactionReportManager.getTransactions(filter);
         Assert.assertEquals(3,reportTransactions.size());
 
@@ -342,7 +363,10 @@ public class MoneyEventIT extends Support {
         Assert.assertEquals(1,saved2.size());
 
         // Reconcile the new transaction.
-        this.reconciliationManager.reconcile(saved2.get(0).getId(),true);
+        reconcile = new ReconcileTransactionDTO();
+        reconcile.setReconcile(true);
+        reconcile.getTransactions().add(saved2.get(0).getId());
+        this.reconciliationManager.reconcile(reconcile);
 
         // All transactions should be reconciled.
         reportTransactions = transactionReportManager.getTransactions(filter);
@@ -373,11 +397,14 @@ public class MoneyEventIT extends Support {
         }
 
         // Delete the second transaction.
-        this.accountTransactionManager.deleteTransaction(saved2.get(0));
+        this.accountTransactionManager.deleteTransactions(saved2);
 
         // Unreconcile the original transaction and delete it.
-        this.reconciliationManager.reconcile(saved.get(0).getId(),false);
-        this.accountTransactionManager.deleteTransaction(saved.get(0));
+        reconcile = new ReconcileTransactionDTO();
+        reconcile.setReconcile(false);
+        reconcile.getTransactions().add(saved.get(0).getId());
+        this.reconciliationManager.reconcile(reconcile);
+        this.accountTransactionManager.deleteTransactions(saved);
     }
 
     @Test
@@ -393,7 +420,10 @@ public class MoneyEventIT extends Support {
         List<TransactionDTO> saved = this.accountTransactionManager.createTransaction(Collections.singletonList(transaction));
 
         // Reconcile the transaction.
-        this.reconciliationManager.reconcile(saved.get(0).getId(),true);
+        ReconcileTransactionDTO reconcile = new ReconcileTransactionDTO();
+        reconcile.setReconcile(true);
+        reconcile.getTransactions().add(saved.get(0).getId());
+        this.reconciliationManager.reconcile(reconcile);
 
         // There should be one transaction (which is not from the reconciliation).
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(new TransactionFilterDTO());
@@ -439,8 +469,11 @@ public class MoneyEventIT extends Support {
         Assert.assertTrue(found);
 
         // Delete the transaction
-        this.reconciliationManager.reconcile(saved.get(0).getId(),false);
-        this.accountTransactionManager.deleteTransaction(saved.get(0));
+        reconcile = new ReconcileTransactionDTO();
+        reconcile.setReconcile(false);
+        reconcile.getTransactions().add(saved.get(0).getId());
+        this.reconciliationManager.reconcile(reconcile);
+        this.accountTransactionManager.deleteTransactions(saved);
 
         reportTransactions = transactionReportManager.getTransactions(new TransactionFilterDTO());
         Assert.assertEquals(20, reportTransactions.size());
