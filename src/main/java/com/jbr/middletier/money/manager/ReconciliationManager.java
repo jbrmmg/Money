@@ -62,7 +62,7 @@ public class ReconciliationManager {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
-    public void clearRepositoryData() {
+    private void internalClearRepositoryData() {
         reconciliationRepository.deleteAll();
 
         // Mark all files as not loaded.
@@ -72,8 +72,15 @@ public class ReconciliationManager {
         }
     }
 
+    public void clearRepositoryData() {
+        internalClearRepositoryData();
+
+        // Flag the update.
+        applicationEventPublisher.publishEvent(new ReconciliationFileLoadEvent(this));
+    }
+
     public void loadFile(ReconciliationFileLoadDTO fileLoad) throws IOException {
-        clearRepositoryData();
+        internalClearRepositoryData();
 
         // Get the reconciliation file.
         Optional<ReconciliationFile> file = reconciliationFileRepository.findById(fileLoad.getFilename());
