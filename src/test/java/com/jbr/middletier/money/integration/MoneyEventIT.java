@@ -160,7 +160,7 @@ public class MoneyEventIT extends Support {
 
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(4,reportTransactions.size());
+        Assert.assertEquals(4, reportTransactions.size());
 
         TransactionReportDTO bank;
         TransactionReportDTO amex;
@@ -174,18 +174,12 @@ public class MoneyEventIT extends Support {
 
         Assert.assertEquals("BANK",bank.getAccount().getId());
         Assert.assertEquals("AMEX",amex.getAccount().getId());
-        Assert.assertEquals(transaction.getDate(),bank.getDate());
-        Assert.assertEquals(transaction.getDate(),amex.getDate());
-        Assert.assertEquals(-1 * transaction.getAmount().doubleValue(),bank.getAmount().getValue().doubleValue(),0.001);
-        Assert.assertEquals(transaction.getAmount().doubleValue(),amex.getAmount().getValue().doubleValue(),0.001);
-        Assert.assertEquals(transaction.getDescription(),bank.getDescription());
-        Assert.assertEquals(transaction.getDescription(),amex.getDescription());
-        Assert.assertEquals(CategoryManager.CATEGORY_TRANSFER,bank.getCategory().getId());
-        Assert.assertEquals(CategoryManager.CATEGORY_TRANSFER,amex.getCategory().getId());
-        Assert.assertEquals(false,bank.getPredicted());
-        Assert.assertEquals(false,amex.getPredicted());
-        Assert.assertEquals(false,bank.getFromReconciliation());
-        Assert.assertEquals(false,amex.getFromReconciliation());
+        Assert.assertEquals(amex.getDate(),bank.getDate());
+        Assert.assertEquals(bank.getAmount().getValue().doubleValue() * -1,amex.getAmount().getValue().doubleValue(),0.001);
+        Assert.assertEquals(bank.getDescription(),amex.getDescription());
+        Assert.assertEquals(bank.getCategory().getId(),amex.getCategory().getId());
+        Assert.assertEquals(amex.getPredicted(),bank.getPredicted());
+        Assert.assertEquals(amex.getFromReconciliation(),bank.getFromReconciliation());
         Assert.assertNull(bank.getStatement());
         Assert.assertNull(amex.getStatement());
 
@@ -214,18 +208,12 @@ public class MoneyEventIT extends Support {
 
         Assert.assertEquals("BANK",bank.getAccount().getId());
         Assert.assertEquals("AMEX",amex.getAccount().getId());
-        Assert.assertEquals(saved.get(0).getDate(),bank.getDate());
-        Assert.assertEquals(saved.get(0).getDate(),amex.getDate());
-        Assert.assertEquals(saved.get(0).getAmount().doubleValue(),bank.getAmount().getValue().doubleValue(),0.001);
-        Assert.assertEquals(-1 * saved.get(0).getAmount().doubleValue(),amex.getAmount().getValue().doubleValue(),0.001);
-        Assert.assertEquals(saved.get(0).getDescription(),bank.getDescription());
-        Assert.assertEquals(saved.get(0).getDescription(),amex.getDescription());
-        Assert.assertEquals(CategoryManager.CATEGORY_TRANSFER,bank.getCategory().getId());
-        Assert.assertEquals(CategoryManager.CATEGORY_TRANSFER,amex.getCategory().getId());
-        Assert.assertEquals(false,bank.getPredicted());
-        Assert.assertEquals(false,amex.getPredicted());
-        Assert.assertEquals(false,bank.getFromReconciliation());
-        Assert.assertEquals(false,amex.getFromReconciliation());
+        Assert.assertEquals(bank.getDate(),amex.getDate());
+        Assert.assertEquals(amex.getAmount().getValue().doubleValue() * -1,bank.getAmount().getValue().doubleValue(),0.001);
+        Assert.assertEquals(amex.getDescription(),bank.getDescription());
+        Assert.assertEquals(bank.getCategory().getId(),amex.getCategory().getId());
+        Assert.assertEquals(amex.getPredicted(),bank.getPredicted());
+        Assert.assertEquals(amex.getFromReconciliation(),bank.getFromReconciliation());
         Assert.assertNull(bank.getStatement());
         Assert.assertNull(amex.getStatement());
 

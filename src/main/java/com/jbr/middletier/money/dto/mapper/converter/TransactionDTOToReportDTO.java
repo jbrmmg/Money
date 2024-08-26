@@ -40,7 +40,7 @@ public class TransactionDTOToReportDTO extends AbstractConverter<TransactionDTO,
             result.setAccount(this.accountManager.getExternalIfValid(transaction.getAccountId()).orElse(null));
         }
         Optional<Account> account = this.accountManager.getIfValid(transaction.getAccountId());
-        if(transaction.getHasStatement() && account.isPresent()) {
+        if(Boolean.TRUE.equals(transaction.getHasStatement()) && account.isPresent()) {
             result.setStatement(this.statementManager.getStatementExternal(account.get(),transaction.getStatementMonth(),transaction.getStatementYear()).orElse(null));
         } else {
             result.setStatement(null);

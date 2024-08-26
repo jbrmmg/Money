@@ -300,12 +300,7 @@ public class AccountTransactionManager {
         return result;
     }
 
-    public List<TransactionDTO> deleteTransactions(List<TransactionDTO> transactions) throws InvalidTransactionIdException {
-        LOG.info("Delete transaction.");
-
-        List<Integer> deleteIds = new ArrayList<>();
-        List<Integer> invalidIds = new ArrayList<>();
-
+    private void internalDeleteTransactions(List<TransactionDTO> transactions, List<Integer> deleteIds, List<Integer> invalidIds) {
         for(TransactionDTO next : transactions) {
             // Get the transaction.
             Optional<Transaction> existingTransaction = transactionRepository.findById(next.getId());
@@ -331,6 +326,15 @@ public class AccountTransactionManager {
                 }
             }
         }
+    }
+
+    public List<TransactionDTO> deleteTransactions(List<TransactionDTO> transactions) throws InvalidTransactionIdException {
+        LOG.info("Delete transaction.");
+
+        List<Integer> deleteIds = new ArrayList<>();
+        List<Integer> invalidIds = new ArrayList<>();
+
+        internalDeleteTransactions(transactions, deleteIds, invalidIds);
 
         // Only process if no invalid ids.
         if(invalidIds.isEmpty()) {
