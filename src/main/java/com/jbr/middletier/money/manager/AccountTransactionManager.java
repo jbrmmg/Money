@@ -300,30 +300,36 @@ public class AccountTransactionManager {
         return result;
     }
 
+    private void processDeleteTransaction(Transaction existingTransaction, List<Integer> deleteIds) {
+        Optional<Transaction> oppositeTransaction = Optional.empty();
+        boolean oppositeLocked = false;
+
+        // Is there an opposite?
+        if (existingTransaction.getOppositeTransactionId() != null) {
+            oppositeTransaction = transactionRepository.findById(existingTransaction.getOppositeTransactionId());
+
+            if (oppositeTransaction.isPresent() && oppositeTransaction.get().reconciled()) {
+                oppositeLocked = true;
+            }
+        }
+
+        if (!existingTransaction.reconciled() && !oppositeLocked) {
+            deleteIds.add(existingTransaction.getId());
+
+            oppositeTransaction.ifPresent(value -> deleteIds.add(value.getId()));
+        }
+    }
+
     private void internalDeleteTransactions(List<TransactionDTO> transactions, List<Integer> deleteIds, List<Integer> invalidIds) {
         for(TransactionDTO next : transactions) {
             // Get the transaction.
             Optional<Transaction> existingTransaction = transactionRepository.findById(next.getId());
-            Optional<Transaction> oppositeTransaction = Optional.empty();
-            boolean oppositeLocked = false;
+
 
             if(existingTransaction.isEmpty()) {
                 invalidIds.add(next.getId());
             } else {
-                // Is there an opposite?
-                if (existingTransaction.get().getOppositeTransactionId() != null) {
-                    oppositeTransaction = transactionRepository.findById(existingTransaction.get().getOppositeTransactionId());
-
-                    if (oppositeTransaction.isPresent() && oppositeTransaction.get().reconciled()) {
-                        oppositeLocked = true;
-                    }
-                }
-
-                if (!existingTransaction.get().reconciled() && !oppositeLocked) {
-                    deleteIds.add(existingTransaction.get().getId());
-
-                    oppositeTransaction.ifPresent(value -> deleteIds.add(value.getId()));
-                }
+                processDeleteTransaction(existingTransaction.get(), deleteIds);
             }
         }
     }
