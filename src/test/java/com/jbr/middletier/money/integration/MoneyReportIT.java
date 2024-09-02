@@ -320,7 +320,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(34)))
-                .andExpect(jsonPath("[0].balance.value", is(0.0)))
+                .andExpect(jsonPath("[0].balance.value", is(630.16)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
                 .andExpect(jsonPath("[33].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
