@@ -5,6 +5,7 @@ import com.jbr.middletier.money.Support;
 import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -26,6 +27,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.core.type.TypeReference;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +46,9 @@ public class MoneyReportIT extends Support {
 
     @Autowired
     private StatementRepository statementRepository;
+
+    @Autowired
+    private AccountTransactionManager accountTransactionManager;
 
     @SuppressWarnings("rawtypes")
     @ClassRule
@@ -620,5 +625,109 @@ public class MoneyReportIT extends Support {
         ObjectMapper objectMapper = new ObjectMapper();
         List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
         logTransactionData(transactionData);
+    }
+
+    @Test
+    public void checkAddAmendAndRemoveReported() throws Exception {
+        // Add a new transaction.
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccountId("BANK");
+        transaction.setCategoryId("HSE");
+        transaction.setDate("2023-05-18");
+        transaction.setAmount(BigDecimal.valueOf(-13.92));
+        transaction.setDescription("CheckAddReported-Test");
+        List<TransactionDTO> transactions = new ArrayList<>();
+        transactions.add(transaction);
+        transactions = accountTransactionManager.createTransaction(transactions);
+
+        Assert.assertEquals(1,transactions.size());
+        int transactionId = transactions.get(0).getId();
+
+        // Check the report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setValueRange(new ValueRangeDTO(-20,15));
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(25)))
+                .andExpect(jsonPath("[0].date", is("2023-04-22")))
+                .andExpect(jsonPath("[2].date", is("2023-04-06")))
+                .andExpect(jsonPath("[23].date", is("2023-05-18")))
+                .andExpect(jsonPath("[23].amount.value", is(-13.92)))
+                .andExpect(jsonPath("[24].date", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // Amend and recheck, find the reported transaction.
+        TransactionReportDTO reported = null;
+        for(TransactionReportDTO next : transactionData) {
+            if(next.getTransactionId() != null && next.getTransactionId().equals(transactionId)) {
+                reported = next;
+                break;
+            }
+        }
+
+        if(reported != null) {
+            reported.setAmount(new FinancialAmount(BigDecimal.valueOf(-13.56)));
+            List<TransactionReportDTO> updates = new ArrayList<>();
+            updates.add(reported);
+            accountTransactionManager.updateTransactions(updates);
+        }
+
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("[23].amount.value", is(-13.56)))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // Remove the transaction.
+        accountTransactionManager.deleteTransactions(transactions);
+
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    public void checkReconcileUpdates() {
+
+    }
+
+    @Test
+    public void checkUnreconcileUpdates() {
+
+    }
+
+    @Test
+    public void checkLockStatement() {
+
+    }
+
+    @Test
+    public void checkMultiMatch() {
+
     }
 }
