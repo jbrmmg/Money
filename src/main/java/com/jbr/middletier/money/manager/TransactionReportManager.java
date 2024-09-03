@@ -30,6 +30,7 @@ import org.springframework.stereotype.Controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -269,11 +270,16 @@ public class TransactionReportManager {
 
     private void addStatementPredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
         if(filter.getStatementDate() != null) {
-            if(filter.getStatementDate().getMonth() != null) {
-                predicates.add(cb.equal(root.get(STATEMENT_MONTH_COLUMN),filter.getStatementDate().getMonth()));
-            }
-            if(filter.getStatementDate().getYear() != null) {
-                predicates.add(cb.equal(root.get(STATEMENT_YEAR_COLUMN),filter.getStatementDate().getYear()));
+            if(filter.getStatementDate().isNone()) {
+                predicates.add(cb.isNull(root.get(STATEMENT_MONTH_COLUMN)));
+                predicates.add(cb.isNull(root.get(STATEMENT_YEAR_COLUMN)));
+            } else {
+                if (filter.getStatementDate().getMonth() != null) {
+                    predicates.add(cb.equal(root.get(STATEMENT_MONTH_COLUMN), filter.getStatementDate().getMonth()));
+                }
+                if (filter.getStatementDate().getYear() != null) {
+                    predicates.add(cb.equal(root.get(STATEMENT_YEAR_COLUMN), filter.getStatementDate().getYear()));
+                }
             }
         }
     }
@@ -478,6 +484,80 @@ public class TransactionReportManager {
     @EventListener
     public void onReconciliationFileLoad(ReconciliationFileLoadEvent load) {
         LOG.info("Update the reconciled report.{}", load.getSource());
+
+        updateReconData();
+    }
+
+    private void statementLocked(Statement statement) {
+        // Get the account and the statement date.
+        AccountDTO account = mapper.map(statement.getId().getAccount(), AccountDTO.class);
+        StatementDateDTO statementDate = new StatementDateDTO();
+        statementDate.setMonth(statement.getId().getMonth());
+        statementDate.setYear(statement.getId().getYear());
+
+        // Find transactions on this statement as they can not no longer be unreconcile.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setAccounts(Collections.singletonList(account));
+        filter.setStatementDate(statementDate);
+
+        List<TransactionReport> updates = new ArrayList<>();
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            // If this transaction can be unreconciled, then it can't now.
+            if(next.getActionUnreconcile() != null && next.getActionUnreconcile()) {
+                next.setActionUnreconcile(null);
+                updates.add(next);
+            }
+        }
+
+        this.transactionReportRepository.saveAll(updates);
+    }
+
+    private void statementRemoved(Account account, StatementDTO penultimateStatement) {
+        // Those transactions with no statement can now be reconciled, the transactions
+        // on the penultimate statement can be unreconciled.
+
+        // Get the account and the statement date.
+        AccountDTO accountDTO = mapper.map(account, AccountDTO.class);
+        StatementDateDTO statementDate = new StatementDateDTO();
+        statementDate.setNone(true);
+
+        // Find transactions on this statement as they can not no longer be unreconcile.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setAccounts(Collections.singletonList(accountDTO));
+        filter.setStatementDate(statementDate);
+
+        List<TransactionReport> updates = new ArrayList<>();
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            // If this transaction can be unreconciled, then it can't now.
+            if((next.getActionUnreconcile() != null && next.getActionUnreconcile()) || (next.getActionReconcile() == null || !next.getActionReconcile())) {
+                next.setActionUnreconcile(null);
+                next.setActionReconcile(true);
+                updates.add(next);
+            }
+        }
+
+        statementDate.setMonth(penultimateStatement.getMonth());
+        statementDate.setYear(penultimateStatement.getYear());
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            // If this transaction can be unreconciled, then it can't now.
+            if(next.getActionUnreconcile() == null || !next.getActionUnreconcile()) {
+                next.setActionUnreconcile(true);
+                updates.add(next);
+            }
+        }
+
+        this.transactionReportRepository.saveAll(updates);
+    }
+
+    @EventListener
+    public void onStatementLocked(StatementLockEvent lock) {
+        LOG.info("Update the reconciled report.{}", lock.getSource());
+
+        if(lock.getStatement() != null) {
+            statementLocked(lock.getStatement());
+        } else if(lock.getAccount() != null) {
+            statementRemoved(lock.getAccount(),lock.getPenultimateStatement());
+        }
 
         updateReconData();
     }

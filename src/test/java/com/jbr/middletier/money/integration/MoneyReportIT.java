@@ -7,6 +7,7 @@ import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
+import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -53,6 +54,9 @@ public class MoneyReportIT extends Support {
 
     @Autowired
     private ReconciliationManager reconciliationManager;
+
+    @Autowired
+    private StatementManager statementManager;
 
     @SuppressWarnings("rawtypes")
     @ClassRule
@@ -722,7 +726,6 @@ public class MoneyReportIT extends Support {
         filter.setFromReconciled(false);
         filter.setPredicted(false);
         filter.setValueRange(new ValueRangeDTO(-20,15));
-//4   27     2023-04-08        54.99 DB       8.99 DB FDG AMEX                                                   Ocado                                    dr U|
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
@@ -794,12 +797,71 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void checkLockStatement() {
+    public void checkLockStatement() throws Exception {
+        // Check the report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setPredicted(false);
 
-    }
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
 
-    @Test
-    public void checkMultiMatch() {
+        List<AccountDTO> accounts = new ArrayList<>();
+        accounts.add(account);
 
+        filter.setAccounts(accounts);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(23)))
+                .andExpect(jsonPath("[4].statement.month", is(5)))
+                .andExpect(jsonPath("[5].statement.month", is(5)))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // Lock the statement.
+        StatementIdDTO statementId = new StatementIdDTO();
+        statementId.setAccountId("BANK");
+        statementId.setYear(2023);
+        statementId.setMonth(5);
+        Iterable<StatementDTO> newStatement = statementManager.statementLock(statementId,accountTransactionManager);
+
+        // Check everything is ok.
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(25)))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // Rollback the statement
+        for(StatementDTO next: newStatement){
+            if(!next.getLocked()) {
+                statementManager.deleteStatement(next, accountTransactionManager);
+            }
+        }
+
+        // Check everything is ok.
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(23)))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
     }
 }
