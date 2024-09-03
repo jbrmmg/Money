@@ -6,6 +6,7 @@ import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
+import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -49,6 +50,9 @@ public class MoneyReportIT extends Support {
 
     @Autowired
     private AccountTransactionManager accountTransactionManager;
+
+    @Autowired
+    private ReconciliationManager reconciliationManager;
 
     @SuppressWarnings("rawtypes")
     @ClassRule
@@ -712,13 +716,81 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void checkReconcileUpdates() {
+    public void checkReconcileAndUnreconcileUpdates() throws Exception {
+        // Check the report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setValueRange(new ValueRangeDTO(-20,15));
+//4   27     2023-04-08        54.99 DB       8.99 DB FDG AMEX                                                   Ocado                                    dr U|
 
-    }
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("[0].date", is("2023-04-22")))
+                .andExpect(jsonPath("[3].date", is("2023-04-08")))
+                .andExpect(jsonPath("[3].amount.value", is(-8.99)))
+                .andExpect(jsonPath("[3].category.id", is("FDG")))
+                .andExpect(jsonPath("[3].actionReconcile", is(true)))
+                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
 
-    @Test
-    public void checkUnreconcileUpdates() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
 
+        // Find the transaction to reconcile.
+        List<Integer> ids = new ArrayList<>();
+        ids.add(transactionData.get(3).getTransactionId());
+
+        // Reconcile the transaction.
+        ReconcileTransactionDTO reconcileTransaction = new ReconcileTransactionDTO();
+        reconcileTransaction.setTransactions(ids);
+        reconcileTransaction.setReconcile(true);
+        reconciliationManager.reconcile(reconcileTransaction);
+
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("[0].date", is("2023-04-08")))
+                .andExpect(jsonPath("[0].amount.value", is(-8.99)))
+                .andExpect(jsonPath("[0].category.id", is("FDG")))
+                .andExpect(jsonPath("[0].statement.month", is(4)))
+                .andExpect(jsonPath("[0].statement.year", is(2023)))
+                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // Unreconcile and check the data goes back.
+        reconcileTransaction.setReconcile(false);
+        reconciliationManager.reconcile(reconcileTransaction);
+
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("[0].date", is("2023-04-22")))
+                .andExpect(jsonPath("[3].date", is("2023-04-08")))
+                .andExpect(jsonPath("[3].amount.value", is(-8.99)))
+                .andExpect(jsonPath("[3].category.id", is("FDG")))
+                .andExpect(jsonPath("[3].actionReconcile", is(true)))
+                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
     }
 
     @Test
