@@ -887,4 +887,88 @@ public class MoneyReportIT extends Support {
         transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
         logTransactionData(transactionData);
     }
+
+    @Test
+    public void createTransactionFromRecFile() throws Exception {
+        // Check the report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setPredicted(false);
+
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+
+        List<AccountDTO> accounts = new ArrayList<>();
+        accounts.add(account);
+
+        filter.setAccounts(accounts);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(27)))
+                .andExpect(jsonPath("[26].date", is("2023-05-24")))
+                .andExpect(jsonPath("[16].description", is("NEWDAY LTD")))
+                .andExpect(jsonPath("[16].actionReconcile").doesNotExist())
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // Find the transaction that we are going to create.
+        for(TransactionReportDTO next: transactionData){
+            if(next.getDescription() != null && next.getDescription().equalsIgnoreCase("newday ltd")) {
+                // Update this trandaction category.
+                CategoryDTO category = new CategoryDTO();
+                category.setId("HSE");
+                next.setCategory(category);
+
+                List<TransactionReportDTO> updateTransactions = new ArrayList<>();
+                updateTransactions.add(next);
+                accountTransactionManager.updateTransactions(updateTransactions);
+            }
+        }
+
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(27)))
+                .andExpect(jsonPath("[26].date", is("2023-05-24")))
+                .andExpect(jsonPath("[16].actionReconcile", is(true)))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // Delete the transaction
+        TransactionDTO transaction = new TransactionDTO();
+        for(TransactionReportDTO next: transactionData) {
+            if (next.getDescription() != null && next.getDescription().equalsIgnoreCase("newday ltd")) {
+                transaction.setId(next.getTransactionId());
+            }
+        }
+
+        List<TransactionDTO> deleteTransactions = new ArrayList<>();
+        deleteTransactions.add(transaction);
+        accountTransactionManager.deleteTransactions(deleteTransactions);
+
+        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(27)))
+                .andExpect(jsonPath("[26].date", is("2023-05-24")))
+                .andExpect(jsonPath("[16].actionReconcile").doesNotExist())
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        objectMapper = new ObjectMapper();
+        transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+    }
 }
