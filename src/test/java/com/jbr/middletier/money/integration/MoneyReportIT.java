@@ -95,88 +95,111 @@ public class MoneyReportIT extends Support {
         return financialAmount.toFormattedString(12);
     }
 
-    private String spacing(int size) {
-        return " ".repeat(size);
-    }
-
-    private String outputFlag(Boolean flag, String value) {
-        return Boolean.TRUE.equals(flag) ? value : " ";
-    }
-
     private void logTransactionData(List<TransactionReportDTO> transactionData) {
         // Get the 3 balances if they are present.
-        TransactionReportDTO open = null;
-        TransactionReportDTO today = null;
-        TransactionReportDTO future = null;
+        StringBuilder builder = new StringBuilder();
 
-        for(TransactionReportDTO transaction : transactionData) {
-            if(transaction.getType() == TransactionReportTypeDTO.OPEN_BALANCE) {
-                open = transaction;
-            }
-            if(transaction.getType() == TransactionReportTypeDTO.TODAY_BALANCE) {
-                today = transaction;
-            }
-            if(transaction.getType() == TransactionReportTypeDTO.FUTURE_BALANCE) {
-                future = transaction;
-            }
-        }
-
-        LOG.info("-".repeat(160));
-        LOG.info("TRANSACTION DETAILS{}|",spacing(140));
-        if(open != null) {
-            LOG.info("  Open    {} {} {}|", open.getDate(), getFinancialAmountString(open.getBalance()), spacing(122));
-        }
-        if(today != null) {
-            LOG.info("  Today   {} {} {}|", today.getDate(), getFinancialAmountString(today.getBalance()), spacing(122));
-        }
-        if(future != null) {
-            LOG.info("  Forward {} {} {}|", getPaddedString(future.getDate(), 10), getFinancialAmountString(future.getBalance()), spacing(122));
-        }
-        LOG.info("{}|", spacing(159));
+        builder.append("\n");
+        builder.append("Transaction Details\n");
+        builder.append("-".repeat(153));
+        builder.append("\n|Row|Id |Trn Id|Date      |Balance        |Amount       |Cat|Acc |Opp Id|Open Bal.      |Year|Mn|L|Rec|Prd|Description                             |Act |\n");
         int row = 1;
-        LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}|",
-                "Row",
-                "Id    ",
-                "Date      ",
-                "Balance        ",
-                "Amount       ",
-                "Cat",
-                "Acc ",
-                "Op. Id",
-                "Open Balance   ",
-                "Year",
-                "Mn",
-                "Locked",
-                "Rec",
-                "Predict",
-                "Description                             ",
-                "Act. ");
         for(TransactionReportDTO next : transactionData) {
-            if(next.getType() == TransactionReportTypeDTO.TRANSACTION) {
-                LOG.info("  {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}{}{}{}|",
-                        getNumberString(row, 3),
-                        getNumberString(next.getId(), 6),
-                        next.getDate(),
-                        getFinancialAmountString(next.getBalance()),
-                        next.getAmount().toFormattedString(10),
-                        getPaddedString(next.getCategory() == null ? "" : next.getCategory().getId(), 3),
-                        getPaddedString(next.getAccount() == null ? "" : next.getAccount().getId(), 4),
-                        getNumberString(next.getOppositeId(), 6),
-                        getPaddedString(next.getStatement() == null ? "" : next.getStatement().getOpenBalance().toFormattedString(12), 15),
-                        getPaddedString(next.getStatement() == null ? "" : next.getStatement().getYear().toString(), 4),
-                        getPaddedString(next.getStatement() == null ? "" : next.getStatement().getMonth().toString(), 2),
-                        getPaddedString(next.getStatement() == null ? "" : next.getStatement().getLocked() ? "locked" : "", 6),
-                        getPaddedString(next.getFromReconciliation() ? "Rec" : "", 3),
-                        getPaddedString(next.getPredicted() ? "Predict" : "", 7),
-                        getPaddedString(next.getDescription(), 40),
-                        outputFlag(next.getActionDelete(), "d"),
-                        outputFlag(next.getActionReconcile(), "r"),
-                        outputFlag(next.getActionUnreconcile(), "u"),
-                        outputFlag(next.getActionUpdate(), "U"));
-                row++;
+            builder.append("|");
+            builder.append(getNumberString(row, 3));
+            builder.append("|");
+            builder.append(getNumberString(next.getId(),3));
+            builder.append("|");
+            builder.append(getNumberString(next.getTransactionId(),6));
+            builder.append("|");
+            builder.append(next.getDate());
+            builder.append("|");
+            builder.append(getFinancialAmountString(next.getBalance()));
+            builder.append("|");
+            if(next.getAmount() != null) {
+                builder.append(next.getAmount().toFormattedString(10));
+            } else {
+                builder.append("             ");
             }
+            builder.append("|");
+            if(next.getCategory() != null) {
+                builder.append(next.getCategory().getId());
+            } else {
+                builder.append("   ");
+            }
+            builder.append("|");
+            if(next.getAccount() != null) {
+                builder.append(next.getAccount().getId());
+            } else {
+                builder.append("    ");
+            }
+            builder.append("|");
+            builder.append(getNumberString(next.getOppositeId(),6));
+            builder.append("|");
+            if(next.getStatement() != null) {
+                builder.append(next.getStatement().getOpenBalance().toFormattedString(12));
+                builder.append("|");
+                builder.append(getPaddedString(next.getStatement().getYear().toString(),4));
+                builder.append("|");
+                builder.append(getPaddedString(next.getStatement().getMonth().toString(),2));
+                builder.append("|");
+                builder.append(next.getStatement().getLocked() ? "L" : " ");
+                builder.append("|");
+            } else {
+                builder.append("               |    |  | |");
+            }
+            if(next.getFromReconciliation() != null && next.getFromReconciliation()) {
+                builder.append(" R ");
+            } else {
+                builder.append("   ");
+            }
+            builder.append("|");
+            if(next.getPredicted() != null && next.getPredicted()) {
+                builder.append(" P ");
+            } else {
+                builder.append("   ");
+            }
+            builder.append("|");
+            if(next.getType() == TransactionReportTypeDTO.TRANSACTION) {
+                builder.append(getPaddedString(next.getDescription(), 40));
+            } else {
+                if(next.getType() == TransactionReportTypeDTO.OPEN_BALANCE) {
+                    builder.append("Open Balance                            ");
+                } else if(next.getType() == TransactionReportTypeDTO.TODAY_BALANCE) {
+                    builder.append("Today Balance                           ");
+                } else {
+                    builder.append("Future Balance                          ");
+                }
+            }
+            builder.append("|");
+            if(next.getActionUpdate() != null && next.getActionUpdate()) {
+                builder.append("U");
+            } else {
+                builder.append(" ");
+            }
+            if(next.getActionReconcile() != null && next.getActionReconcile()) {
+                builder.append("R");
+            } else {
+                builder.append(" ");
+            }
+            if(next.getActionUnreconcile() != null && next.getActionUnreconcile()) {
+                builder.append("u");
+            } else {
+                builder.append(" ");
+            }
+            if(next.getActionDelete() != null && next.getActionDelete()) {
+                builder.append("D");
+            } else {
+                builder.append(" ");
+            }
+            builder.append("|");
+            builder.append("\n");
+            row++;
         }
-        LOG.info("-".repeat(160));
+        builder.append("-".repeat(153));
+        builder.append("\n");
+
+        LOG.info(builder.toString());
     }
 
     @Before
@@ -197,11 +220,11 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(62)))
+                .andExpect(jsonPath("$", hasSize(66)))
                 .andExpect(jsonPath("[0].balance.value", is(1029.0)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[55].balance.value", is(-2068.15)))
-                .andExpect(jsonPath("[55].date", is("2023-05-24")))
+                .andExpect(jsonPath("[59].balance.value", is(-2148.15)))
+                .andExpect(jsonPath("[59].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -239,9 +262,9 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(20)))
+                .andExpect(jsonPath("$", hasSize(23)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[19].date", is("2023-05-24")))
+                .andExpect(jsonPath("[22].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -282,10 +305,10 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(37)))
+                .andExpect(jsonPath("$", hasSize(38)))
                 .andExpect(jsonPath("[0].balance.value", is(1029.0)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[36].date", is("2023-05-24")))
+                .andExpect(jsonPath("[37].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -305,10 +328,10 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(34)))
+                .andExpect(jsonPath("$", hasSize(35)))
                 .andExpect(jsonPath("[0].balance.value", is(0.0)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[33].date", is("2023-05-24")))
+                .andExpect(jsonPath("[34].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -406,9 +429,9 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(17)))
+                .andExpect(jsonPath("$", hasSize(18)))
                 .andExpect(jsonPath("[0].date", is("2023-04-22")))
-                .andExpect(jsonPath("[16].date", is("2023-05-24")))
+                .andExpect(jsonPath("[17].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -428,10 +451,10 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("$", hasSize(25)))
                 .andExpect(jsonPath("[0].date", is("2023-04-22")))
                 .andExpect(jsonPath("[2].date", is("2023-04-06")))
-                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -469,12 +492,12 @@ public class MoneyReportIT extends Support {
                         .content("{}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(62)))
+                .andExpect(jsonPath("$", hasSize(66)))
                 .andExpect(jsonPath("[0].balance.value", is(1029.0)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[55].date", is("2023-05-24")))
-                .andExpect(jsonPath("[61].balance.value", is(-1410.05)))
-                .andExpect(jsonPath("[61].date", is("2023-06-22")))
+                .andExpect(jsonPath("[59].date", is("2023-05-24")))
+                .andExpect(jsonPath("[65].balance.value", is(-1490.05)))
+                .andExpect(jsonPath("[65].date", is("2023-06-22")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -489,10 +512,10 @@ public class MoneyReportIT extends Support {
                         .content("{\"accounts\":[],\"categories\":[],\"predicted\":false,\"locked\":false,\"fromReconciled\":false}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(34)))
+                .andExpect(jsonPath("$", hasSize(35)))
                 .andExpect(jsonPath("[0].balance.value", is(0.0)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[33].date", is("2023-05-24")))
+                .andExpect(jsonPath("[34].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -661,12 +684,12 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(25)))
+                .andExpect(jsonPath("$", hasSize(26)))
                 .andExpect(jsonPath("[0].date", is("2023-04-22")))
                 .andExpect(jsonPath("[2].date", is("2023-04-06")))
-                .andExpect(jsonPath("[23].date", is("2023-05-18")))
-                .andExpect(jsonPath("[23].amount.value", is(-13.92)))
-                .andExpect(jsonPath("[24].date", is("2023-05-24")))
+                .andExpect(jsonPath("[24].date", is("2023-05-18")))
+                .andExpect(jsonPath("[24].amount.value", is(-13.92)))
+                .andExpect(jsonPath("[25].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -694,7 +717,7 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("[23].amount.value", is(-13.56)))
+                .andExpect(jsonPath("[24].amount.value", is(-13.56)))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -709,8 +732,8 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(24)))
-                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andExpect(jsonPath("$", hasSize(25)))
+                .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -731,13 +754,13 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("$", hasSize(25)))
                 .andExpect(jsonPath("[0].date", is("2023-04-22")))
                 .andExpect(jsonPath("[3].date", is("2023-04-08")))
                 .andExpect(jsonPath("[3].amount.value", is(-8.99)))
                 .andExpect(jsonPath("[3].category.id", is("FDG")))
                 .andExpect(jsonPath("[3].actionReconcile", is(true)))
-                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -759,13 +782,13 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("$", hasSize(25)))
                 .andExpect(jsonPath("[0].date", is("2023-04-08")))
                 .andExpect(jsonPath("[0].amount.value", is(-8.99)))
                 .andExpect(jsonPath("[0].category.id", is("FDG")))
                 .andExpect(jsonPath("[0].statement.month", is(4)))
                 .andExpect(jsonPath("[0].statement.year", is(2023)))
-                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -781,13 +804,13 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(24)))
+                .andExpect(jsonPath("$", hasSize(25)))
                 .andExpect(jsonPath("[0].date", is("2023-04-22")))
                 .andExpect(jsonPath("[3].date", is("2023-04-08")))
                 .andExpect(jsonPath("[3].amount.value", is(-8.99)))
                 .andExpect(jsonPath("[3].category.id", is("FDG")))
                 .andExpect(jsonPath("[3].actionReconcile", is(true)))
-                .andExpect(jsonPath("[23].date", is("2023-05-24")))
+                .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -814,7 +837,7 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(23)))
+                .andExpect(jsonPath("$", hasSize(27)))
                 .andExpect(jsonPath("[4].statement.month", is(5)))
                 .andExpect(jsonPath("[5].statement.month", is(5)))
                 .andDo(MockMvcResultHandlers.print())
@@ -836,7 +859,7 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(25)))
+                .andExpect(jsonPath("$", hasSize(29)))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -856,7 +879,7 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(23)))
+                .andExpect(jsonPath("$", hasSize(27)))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 

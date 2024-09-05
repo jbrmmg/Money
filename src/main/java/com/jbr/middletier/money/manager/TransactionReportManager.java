@@ -538,6 +538,7 @@ public class TransactionReportManager {
 
         statementDate.setMonth(penultimateStatement.getMonth());
         statementDate.setYear(penultimateStatement.getYear());
+        statementDate.setNone(false);
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
             // If this transaction can be unreconciled, then it can't now.
             if(next.getActionUnreconcile() == null || !next.getActionUnreconcile()) {
