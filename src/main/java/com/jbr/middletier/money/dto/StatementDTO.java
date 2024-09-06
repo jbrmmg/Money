@@ -5,8 +5,13 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
+import java.io.Serial;
+import java.io.Serializable;
 
-public class StatementDTO implements Comparable<StatementDTO> {
+public class StatementDTO implements Comparable<StatementDTO>, Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @Pattern(regexp="^[\\da-zA-Z]{1,4}$",message="Account ID contain letters or digits up to 4 characters.")
     private String accountId;
 

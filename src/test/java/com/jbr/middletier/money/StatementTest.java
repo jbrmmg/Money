@@ -93,7 +93,7 @@ public class StatementTest extends Support {
         for(Transaction nextTransaction : transactions) {
             assertFalse(nextTransaction.reconciled());
             ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
-            reconcileRequest.setId(nextTransaction.getId());
+            reconcileRequest.getTransactions().add(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
             getMockMvc().perform(put("/jbr/ext/money/reconcile")
                             .content(this.json(reconcileRequest))

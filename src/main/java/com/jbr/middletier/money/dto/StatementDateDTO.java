@@ -11,10 +11,12 @@ public class StatementDateDTO {
     @Min(1)
     @Max(12)
     private Integer month;
+    private boolean none;
 
     public StatementDateDTO() {
         this.year = null;
         this.month = null;
+        this.none = false;
     }
 
     public Integer getYear() {
@@ -31,6 +33,14 @@ public class StatementDateDTO {
 
     public void setMonth(Integer month) {
         this.month = month;
+    }
+
+    public boolean isNone() {
+        return none;
+    }
+
+    public void setNone(boolean none) {
+        this.none = none;
     }
 
     @Override

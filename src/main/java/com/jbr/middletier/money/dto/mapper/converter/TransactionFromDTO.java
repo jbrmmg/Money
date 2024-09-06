@@ -27,6 +27,9 @@ public class TransactionFromDTO extends AbstractConverter<TransactionDTO, Transa
     protected Transaction convert(TransactionDTO source) {
         Transaction result = new Transaction();
 
+        if(source.getId() != 0) {
+            result.setId(source.getId());
+        }
         result.setAccount(accountManager.getIfValid(source.getAccountId()).orElse(null));
         result.setAmount(source.getAmount());
         result.setCategory(categoryManager.getIfValid(source.getCategoryId()).orElse(null));

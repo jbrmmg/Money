@@ -32,6 +32,8 @@ public class TransactionMapper extends ModelMapper {
         this.addConverter(new TransactionToDTO(localDateStringConverter));
         this.addConverter(new ReconciliationFileToDTO(accountManager));
         this.addConverter(new TransactionToReport(localDateStringConverter));
+        this.addConverter(new TransactionDTOToReportDTO(accountManager,categoryManager,statementManager));
+        this.addConverter(new TransactionToReportDTO(localDateStringConverter,accountManager,categoryManager,statementManager));
         this.addConverter(new RegularToReport(applicationProperties,localDateStringConverter));
         this.addConverter(new MatchDataToReport(localDateStringConverter));
         this.addConverter(new TransactionReportToDTO(accountManager,categoryManager,statementManager));

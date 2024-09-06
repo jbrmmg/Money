@@ -4,7 +4,9 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.config.Constants;
 import com.jbr.middletier.money.data.internal.TransactionReport;
 import com.jbr.middletier.money.data.internal.repository.TransactionReportRepository;
+import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Regular;
+import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
@@ -28,7 +30,9 @@ import org.springframework.stereotype.Controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Controller
 public class TransactionReportManager {
@@ -52,6 +56,8 @@ public class TransactionReportManager {
     private final TransactionMapper mapper;
     private final ApplicationProperties applicationProperties;
     private final TransactionReportRepository transactionReportRepository;
+    private final StatementManager statementManager;
+    private final AccountManager accountManager;
 
     @Autowired
     public TransactionReportManager(AccountTransactionManager transactionManager,
@@ -59,13 +65,17 @@ public class TransactionReportManager {
                                     ReconciliationManager reconciliationManager,
                                     TransactionMapper mapper,
                                     TransactionReportRepository transactionReportRepository,
-                                    ApplicationProperties applicationProperties) {
+                                    ApplicationProperties applicationProperties,
+                                    StatementManager statementManager,
+                                    AccountManager accountManager) {
         this.transactionManager = transactionManager;
         this.regularPaymentManager = regularPaymentManager;
         this.reconciliationManager = reconciliationManager;
         this.mapper = mapper;
         this.applicationProperties = applicationProperties;
         this.transactionReportRepository = transactionReportRepository;
+        this.statementManager = statementManager;
+        this.accountManager = accountManager;
     }
 
     @PostConstruct
@@ -127,6 +137,50 @@ public class TransactionReportManager {
         }
     }
 
+    private BigDecimal openingBalanceFromAllAccounts(TransactionFilterDTO filter) {
+        BigDecimal openBalance = BigDecimal.ZERO;
+
+        for(Account next : this.accountManager.getAllExternal()) {
+            // Is this account filtered out?
+            AtomicBoolean excludeAccount = new AtomicBoolean(true);
+
+            if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
+                filter.getAccounts().forEach(a -> {
+                    if(a.getId().equals(next.getId())) {
+                        excludeAccount.set(false);
+                    }
+                });
+            } else {
+                excludeAccount.set(false);
+            }
+
+            if(excludeAccount.get()) {
+                List<Statement> statement = statementManager.getLatestStatementInternal(next);
+                for(Statement nextStatement : statement) {
+                    openBalance = openBalance.add(nextStatement.getOpenBalance().getValue());
+                }
+            }
+        }
+
+        return openBalance;
+    }
+
+    private BigDecimal openingBalanceFromAccounts(List<TransactionReportDTO> transactionData) {
+        BigDecimal openBalance = BigDecimal.ZERO;
+
+        // Opening balance is the sum of the earliest opening balance from each account present in the data.
+        List<String> accountIds = new ArrayList<>();
+        for (TransactionReportDTO next : transactionData) {
+            // Has this account been seen?
+            if (!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
+                openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
+                accountIds.add(next.getAccount().getId());
+            }
+        }
+
+        return openBalance;
+    }
+
     private FinancialAmount calculateOpeningBalance(List<TransactionReportDTO> transactionData, TransactionFilterDTO filter) {
         // Determine the opening balance - this is only valid if there is no filter on the following:
         //   Value Range, Date Range, Category, Description, Predicted (true)
@@ -160,15 +214,12 @@ public class TransactionReportManager {
             return null;
         }
 
-        // Opening balance is the sum of the earliest opening balance from each account present in the data.
-        List<String> accountIds = new ArrayList<>();
-        BigDecimal openBalance = BigDecimal.ZERO;
-        for(TransactionReportDTO next : transactionData) {
-            // Has this account been seen?
-            if(!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
-                openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
-                accountIds.add(next.getAccount().getId());
-            }
+        // If the not-locked flag is set then use the opening balance from all the accounts that are in the filter.
+        BigDecimal openBalance;
+        if(filter.getLocked() != null && !filter.getLocked()) {
+            openBalance = openingBalanceFromAllAccounts(filter);
+        } else {
+            openBalance = openingBalanceFromAccounts(transactionData);
         }
 
         return new FinancialAmount(openBalance);
@@ -235,11 +286,16 @@ public class TransactionReportManager {
 
     private void addStatementPredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
         if(filter.getStatementDate() != null) {
-            if(filter.getStatementDate().getMonth() != null) {
-                predicates.add(cb.equal(root.get(STATEMENT_MONTH_COLUMN),filter.getStatementDate().getMonth()));
-            }
-            if(filter.getStatementDate().getYear() != null) {
-                predicates.add(cb.equal(root.get(STATEMENT_YEAR_COLUMN),filter.getStatementDate().getYear()));
+            if(filter.getStatementDate().isNone()) {
+                predicates.add(cb.isNull(root.get(STATEMENT_MONTH_COLUMN)));
+                predicates.add(cb.isNull(root.get(STATEMENT_YEAR_COLUMN)));
+            } else {
+                if (filter.getStatementDate().getMonth() != null) {
+                    predicates.add(cb.equal(root.get(STATEMENT_MONTH_COLUMN), filter.getStatementDate().getMonth()));
+                }
+                if (filter.getStatementDate().getYear() != null) {
+                    predicates.add(cb.equal(root.get(STATEMENT_YEAR_COLUMN), filter.getStatementDate().getYear()));
+                }
             }
         }
     }
@@ -362,62 +418,7 @@ public class TransactionReportManager {
         return result;
     }
 
-    @EventListener
-    public void onCreateTransaction(CreateTransactionEvent create) {
-        // Process the event.
-        LOG.info("Save transaction in report table.");
-        for(Transaction next : create.getTransactions()) {
-            this.transactionReportRepository.save(mapper.map(next, TransactionReport.class));
-        }
-    }
-
-    private void updateTransaction(Transaction next) {
-        // Map this transaction to a report.
-        TransactionReport updatedReport = this.mapper.map(next,TransactionReport.class);
-
-        // Get the report transaction.
-        List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next.getId());
-
-        for(TransactionReport nextReport : report) {
-            // Save the updated details
-            updatedReport.setId(nextReport.getId());
-
-            this.transactionReportRepository.save(updatedReport);
-        }
-    }
-
-    @EventListener
-    public void onUpdateTransaction(UpdateTransactionEvent update) {
-        LOG.info("Update transaction in report table.");
-        for(Transaction next : update.getTransactions()) {
-            updateTransaction(next);
-        }
-    }
-
-    @EventListener
-    public void onDeleteTransaction(DeleteTransactionEvent delete) {
-        LOG.info("Delete transaction in report table.");
-        for(Integer next : delete.getTransactionIds()) {
-            // Get the report transaction.
-            List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next);
-
-            // Delete details across and save.
-            this.transactionReportRepository.deleteAll(report);
-        }
-    }
-
-    @EventListener
-    public void onReconcileTransactions(ReconcileTransactionEvent reconcile) {
-        LOG.info("Update the transaction");
-        for(Transaction next : reconcile.getTransactions()) {
-            updateTransaction(next);
-        }
-    }
-
-    @EventListener
-    public void onReconciliationFileLoad(ReconciliationFileLoadEvent load) {
-        LOG.info("Update the reconciled report.{}", load.getSource());
-
+    private void updateReconData() {
         // Remove all transactions that are from reconciliation
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(true);
@@ -441,5 +442,140 @@ public class TransactionReportManager {
 
         // Re-create the reconciliation transactions.
         getFromReconciled();
+    }
+
+    private void updateTransaction(Transaction next) {
+        // Map this transaction to a report.
+        TransactionReport updatedReport = this.mapper.map(next,TransactionReport.class);
+
+        // Get the report transaction.
+        List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next.getId());
+
+        if(!report.isEmpty()) {
+            for (TransactionReport nextReport : report) {
+                // Save the updated details
+                updatedReport.setId(nextReport.getId());
+
+                this.transactionReportRepository.save(updatedReport);
+            }
+        } else {
+            this.transactionReportRepository.save(updatedReport);
+        }
+    }
+
+    @EventListener
+    public void onUpdateTransaction(UpdateTransactionEvent update) {
+        LOG.info("Update transaction in report table.");
+        for(Transaction next : update.getTransactions()) {
+            updateTransaction(next);
+        }
+
+        updateReconData();
+    }
+
+    @EventListener
+    public void onDeleteTransaction(DeleteTransactionEvent delete) {
+        LOG.info("Delete transaction in report table.");
+        for(Integer next : delete.getTransactionIds()) {
+            // Get the report transaction.
+            List<TransactionReport> report = this.transactionReportRepository.findByTransactionId(next);
+
+            // Delete details across and save.
+            this.transactionReportRepository.deleteAll(report);
+        }
+
+        updateReconData();
+    }
+
+    @EventListener
+    public void onReconcileTransactions(ReconcileTransactionEvent reconcile) {
+        LOG.info("Update the transaction");
+        for(Transaction next : reconcile.getTransactions()) {
+            updateTransaction(next);
+        }
+
+        updateReconData();
+    }
+
+    @EventListener
+    public void onReconciliationFileLoad(ReconciliationFileLoadEvent load) {
+        LOG.info("Update the reconciled report.{}", load.getSource());
+
+        updateReconData();
+    }
+
+    private void statementLocked(Statement statement) {
+        // Get the account and the statement date.
+        AccountDTO account = mapper.map(statement.getId().getAccount(), AccountDTO.class);
+        StatementDateDTO statementDate = new StatementDateDTO();
+        statementDate.setMonth(statement.getId().getMonth());
+        statementDate.setYear(statement.getId().getYear());
+
+        // Find transactions on this statement as they can not no longer be unreconcile.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setAccounts(Collections.singletonList(account));
+        filter.setStatementDate(statementDate);
+
+        List<TransactionReport> updates = new ArrayList<>();
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            // If this transaction can be unreconciled, then it can't now.
+            if(next.getActionUnreconcile() != null && next.getActionUnreconcile()) {
+                next.setActionUnreconcile(null);
+                updates.add(next);
+            }
+        }
+
+        this.transactionReportRepository.saveAll(updates);
+    }
+
+    private void statementRemoved(Account account, StatementDTO penultimateStatement) {
+        // Those transactions with no statement can now be reconciled, the transactions
+        // on the penultimate statement can be unreconciled.
+
+        // Get the account and the statement date.
+        AccountDTO accountDTO = mapper.map(account, AccountDTO.class);
+        StatementDateDTO statementDate = new StatementDateDTO();
+        statementDate.setNone(true);
+
+        // Find transactions on this statement as they can not no longer be unreconcile.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setAccounts(Collections.singletonList(accountDTO));
+        filter.setStatementDate(statementDate);
+
+        List<TransactionReport> updates = new ArrayList<>();
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            // If this transaction can be unreconciled, then it can't now.
+            if((next.getActionUnreconcile() != null && next.getActionUnreconcile()) || (next.getActionReconcile() == null || !next.getActionReconcile())) {
+                next.setActionUnreconcile(null);
+                next.setActionReconcile(true);
+                updates.add(next);
+            }
+        }
+
+        statementDate.setMonth(penultimateStatement.getMonth());
+        statementDate.setYear(penultimateStatement.getYear());
+        statementDate.setNone(false);
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
+            // If this transaction can be unreconciled, then it can't now.
+            if(next.getActionUnreconcile() == null || !next.getActionUnreconcile()) {
+                next.setActionUnreconcile(true);
+                updates.add(next);
+            }
+        }
+
+        this.transactionReportRepository.saveAll(updates);
+    }
+
+    @EventListener
+    public void onStatementLocked(StatementLockEvent lock) {
+        LOG.info("Lock statement.{}", lock.getSource());
+
+        if(lock.getStatement() != null) {
+            statementLocked(lock.getStatement());
+        } else if(lock.getAccount() != null) {
+            statementRemoved(lock.getAccount(),lock.getPenultimateStatement());
+        }
+
+        updateReconData();
     }
 }

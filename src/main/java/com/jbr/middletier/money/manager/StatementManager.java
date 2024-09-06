@@ -7,11 +7,13 @@ import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.dto.StatementIdDTO;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
+import com.jbr.middletier.money.events.StatementLockEvent;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +29,16 @@ public class StatementManager {
     private final StatementRepository statementRepository;
     private final AccountManager accountManager;
     private final StatementMapper statementMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public StatementManager(StatementRepository statementRepository,
                             AccountManager accountManager,
-                            StatementMapper statementMapper) {
+                            StatementMapper statementMapper, ApplicationEventPublisher applicationEventPublisher) {
         this.statementRepository = statementRepository;
         this.accountManager = accountManager;
         this.statementMapper = statementMapper;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     private Account getAccount(StatementDTO statement) throws UpdateDeleteAccountException {
@@ -105,6 +109,7 @@ public class StatementManager {
                 // Update existing statement and create new one.
                 statementRepository.save(statement.get());
                 statementRepository.save(newStatement);
+                applicationEventPublisher.publishEvent(new StatementLockEvent(this, statement.get()));
                 LOG.info("Request statement lock - locked.");
             } else {
                 throw new StatementAlreadyLockedException(statementId);
@@ -174,6 +179,8 @@ public class StatementManager {
         accountTransactionManager.removeTransactionsFromStatement(statementMapper.map(last,Statement.class));
 
         statementRepository.delete(statementMapper.map(last,Statement.class));
+
+        applicationEventPublisher.publishEvent(new StatementLockEvent(this, account, penultimate));
 
         return statements;
     }

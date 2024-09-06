@@ -41,14 +41,14 @@ public class ReconciliationController {
     }
 
     @PutMapping(path = "/ext/money/reconcile")
-    public OkStatus reconcileExt(@Valid @RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
-        reconciliationManager.reconcile(reconcileTransaction.getTransactionId(), reconcileTransaction.getReconcile());
+    public OkStatus reconcileExt(@Valid @RequestBody ReconcileTransactionDTO reconcileTransactions) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
+        reconciliationManager.reconcile(reconcileTransactions);
         return OkStatus.getOkStatus();
     }
 
     @PutMapping(path = "/int/money/reconcile")
-    public OkStatus reconcileInt(@Valid @RequestBody ReconcileTransactionDTO reconcileTransaction) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
-        return reconcileExt(reconcileTransaction);
+    public OkStatus reconcileInt(@Valid @RequestBody ReconcileTransactionDTO reconcileTransactions) throws InvalidTransactionIdException, MultipleUnlockedStatementException {
+        return reconcileExt(reconcileTransactions);
     }
 
     @PostMapping(path = "/int/money/reconciliation/load")
@@ -97,18 +97,6 @@ public class ReconciliationController {
     @GetMapping(path = "/int/money/match")
     public List<MatchDataDTO> matchInt() throws NullOrBlankAccountIdException {
         return matchExt();
-    }
-
-    @PutMapping(path = "/ext/money/reconciliation/auto")
-    public OkStatus reconcileDataExt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException, NullOrBlankAccountIdException {
-        LOG.info("Auto Reconciliation Data (ext) ");
-        reconciliationManager.autoReconcileData();
-        return OkStatus.getOkStatus();
-    }
-
-    @PutMapping(path = "/int/money/reconciliation/auto")
-    public OkStatus reconcileDataInt() throws MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidTransactionException, NullOrBlankAccountIdException {
-        return reconcileDataExt();
     }
 
     @DeleteMapping(path = "/ext/money/reconciliation/clear")
