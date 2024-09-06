@@ -137,6 +137,50 @@ public class TransactionReportManager {
         }
     }
 
+    private BigDecimal openingBalanceFromAllAccounts(TransactionFilterDTO filter) {
+        BigDecimal openBalance = BigDecimal.ZERO;
+
+        for(Account next : this.accountManager.getAllExternal()) {
+            // Is this account filtered out?
+            AtomicBoolean excludeAccount = new AtomicBoolean(true);
+
+            if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
+                filter.getAccounts().forEach(a -> {
+                    if(a.getId().equals(next.getId())) {
+                        excludeAccount.set(false);
+                    }
+                });
+            } else {
+                excludeAccount.set(false);
+            }
+
+            if(excludeAccount.get()) {
+                List<Statement> statement = statementManager.getLatestStatementInternal(next);
+                for(Statement nextStatement : statement) {
+                    openBalance = openBalance.add(nextStatement.getOpenBalance().getValue());
+                }
+            }
+        }
+
+        return openBalance;
+    }
+
+    private BigDecimal openingBalanceFromAccounts(List<TransactionReportDTO> transactionData) {
+        BigDecimal openBalance = BigDecimal.ZERO;
+
+        // Opening balance is the sum of the earliest opening balance from each account present in the data.
+        List<String> accountIds = new ArrayList<>();
+        for (TransactionReportDTO next : transactionData) {
+            // Has this account been seen?
+            if (!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
+                openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
+                accountIds.add(next.getAccount().getId());
+            }
+        }
+
+        return openBalance;
+    }
+
     private FinancialAmount calculateOpeningBalance(List<TransactionReportDTO> transactionData, TransactionFilterDTO filter) {
         // Determine the opening balance - this is only valid if there is no filter on the following:
         //   Value Range, Date Range, Category, Description, Predicted (true)
@@ -171,39 +215,11 @@ public class TransactionReportManager {
         }
 
         // If the not-locked flag is set then use the opening balance from all the accounts that are in the filter.
-        BigDecimal openBalance = BigDecimal.ZERO;
+        BigDecimal openBalance;
         if(filter.getLocked() != null && !filter.getLocked()) {
-            for(Account next : this.accountManager.getAllExternal()) {
-                // Is this account filtered out?
-                AtomicBoolean excludeAccount = new AtomicBoolean(true);
-
-                if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
-                    filter.getAccounts().forEach((a) -> {
-                        if(a.getId().equals(next.getId())) {
-                            excludeAccount.set(false);
-                        }
-                    });
-                } else {
-                    excludeAccount.set(false);
-                }
-
-                if(excludeAccount.get()) {
-                    List<Statement> statement = statementManager.getLatestStatementInternal(next);
-                    for(Statement nextStatement : statement) {
-                        openBalance = openBalance.add(nextStatement.getOpenBalance().getValue());
-                    }
-                }
-            }
+            openBalance = openingBalanceFromAllAccounts(filter);
         } else {
-            // Opening balance is the sum of the earliest opening balance from each account present in the data.
-            List<String> accountIds = new ArrayList<>();
-            for (TransactionReportDTO next : transactionData) {
-                // Has this account been seen?
-                if (!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
-                    openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
-                    accountIds.add(next.getAccount().getId());
-                }
-            }
+            openBalance = openingBalanceFromAccounts(transactionData);
         }
 
         return new FinancialAmount(openBalance);
@@ -552,7 +568,7 @@ public class TransactionReportManager {
 
     @EventListener
     public void onStatementLocked(StatementLockEvent lock) {
-        LOG.info("Update the reconciled report.{}", lock.getSource());
+        LOG.info("Lock statement.{}", lock.getSource());
 
         if(lock.getStatement() != null) {
             statementLocked(lock.getStatement());
