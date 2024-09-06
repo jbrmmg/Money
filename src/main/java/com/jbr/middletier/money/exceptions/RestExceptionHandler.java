@@ -71,11 +71,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(ex);
     }
 
-    @ExceptionHandler(InvalidTransactionSearchException.class)
-    protected ResponseEntity<Object> handleInvalidTransactionSearchException(InvalidTransactionSearchException ex) {
-        return buildResponseEntity(ex);
-    }
-
     @ExceptionHandler(EmailGenerationException.class)
     protected ResponseEntity<Object> handleEmailGenerationException(EmailGenerationException ex) {
         return buildResponseEntity(ex);

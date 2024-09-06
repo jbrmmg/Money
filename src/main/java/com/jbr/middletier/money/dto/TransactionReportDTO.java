@@ -13,13 +13,12 @@ public class TransactionReportDTO {
     private String date;
     private AccountDTO account;
     private CategoryDTO category;
-    @Pattern(regexp="^[\\da-zA-Z\\s]{1,40}$",message="Description can only contain letters or digits up to 45 characters.")
+    @Pattern(regexp= "^[\\da-zA-Z ./?\\-*#'&():+-,!]{1,40}$",message="Description can contain only digits, letters or ./?-*#'&():+-,!.")
     private String description;
     private Integer oppositeId;
     private StatementDTO statement;
     private Boolean predicted;
     private Boolean fromReconciliation;
-    private Boolean actionUpdateCategory;
     private Boolean actionUpdate;
     private Boolean actionReconcile;
     private Boolean actionUnreconcile;
@@ -119,14 +118,6 @@ public class TransactionReportDTO {
 
     public void setStatement(StatementDTO statement) {
         this.statement = statement;
-    }
-
-    public Boolean getActionUpdateCategory() {
-        return actionUpdateCategory;
-    }
-
-    public void setActionUpdateCategory(Boolean actionUpdateCategory) {
-        this.actionUpdateCategory = actionUpdateCategory;
     }
 
     public Boolean getActionUpdate() {

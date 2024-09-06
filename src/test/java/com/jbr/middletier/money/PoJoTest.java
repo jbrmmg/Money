@@ -27,9 +27,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
@@ -578,6 +576,11 @@ public class PoJoTest {
         FinancialAmount financialAmount2 = new FinancialAmount(BigDecimal.valueOf(290.2));
         //noinspection SimplifiableAssertion
         Assert.assertTrue(financialAmount.equals(financialAmount2));
+
+        // Test the other way.
+        FinancialAmount faTest = new FinancialAmount(test);
+        BigDecimal bdTest = utilityMapper.map(faTest, BigDecimal.class);
+        Assert.assertEquals(bdTest.toString(),faTest.getValue().toString());
     }
 
     @Test
@@ -797,19 +800,7 @@ public class PoJoTest {
     }
 
     @Test
-    public void testTransactionAction() {
-        TransactionAction test = TransactionAction.getTransactionAction("delete");
-        Assert.assertEquals("delete", test.getActionName());
-        Assert.assertEquals("fa-trash", test.getIcon());
-        Assert.assertEquals("FF0000", test.getColour());
-        Assert.assertEquals(TransactionAction.DELETE,test);
-    }
-
-    @Test
     public void testTransactionReport() {
-        List<TransactionAction> actions = new ArrayList<>();
-        actions.add(TransactionAction.getTransactionAction("delete"));
-
         AccountDTO account = new AccountDTO();
         account.setId("BBCD");
 

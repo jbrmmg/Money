@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 
 @JsonSerialize(using = FinancialAmountSerializer.class)
 @JsonDeserialize(using = FinancialAmountDeserializer.class)
-public class FinancialAmount implements Comparable<FinancialAmount> {
+public class FinancialAmount implements Comparable<FinancialAmount>, Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     private BigDecimal value;
 
     public FinancialAmount(BigDecimal value) {

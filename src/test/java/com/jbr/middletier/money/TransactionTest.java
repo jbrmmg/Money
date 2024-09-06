@@ -5,10 +5,10 @@ import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
-import com.jbr.middletier.money.dto.TransactionDTO;
+import com.jbr.middletier.money.dto.CategoryDTO;
+import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
-import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
-import com.jbr.middletier.money.exceptions.InvalidTransactionIdException;
+import com.jbr.middletier.money.exceptions.InvalidTransactionException;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import org.junit.Assert;
 import org.junit.Before;
@@ -21,10 +21,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Objects;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.ArrayList;
+import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
@@ -45,16 +43,7 @@ public class TransactionTest extends Support {
     }
 
     @Test
-    public void testInvalidSearch() throws Exception {
-        String error = Objects.requireNonNull(getMockMvc().perform(get("/jbr/int/money/transaction?type=AL")
-                        .contentType(getContentType()))
-                .andExpect(status().isConflict())
-                .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("must specify a from date", error);
-    }
-
-    @Test
-    public void testTransactionUpdate() throws InvalidTransactionIdException {
+    public void testTransactionUpdate() {
         Account account = new Account();
         account.setId("AMEX");
 
@@ -69,15 +58,20 @@ public class TransactionTest extends Support {
 
         testTransaction = transactionRepository.save(testTransaction);
 
-        TransactionDTO updateTransaction = transactionMapper.map(testTransaction,TransactionDTO.class);
+        TransactionReportDTO updateTransaction = transactionMapper.map(testTransaction,TransactionReportDTO.class);
 
-        updateTransaction.setCategoryId("XXX");
+        CategoryDTO badCategory = new CategoryDTO();
+        badCategory.setId("XXX");
+        updateTransaction.setCategory(badCategory);
+
+        List<TransactionReportDTO> transactions = new ArrayList<>();
+        transactions.add(updateTransaction);
 
         try {
-            accountTransactionManager.updateTransaction(updateTransaction);
+            accountTransactionManager.updateTransactions(transactions);
             Assert.fail();
-        } catch (UpdateDeleteCategoryException ex) {
-            Assert.assertEquals("Cannot find category with id XXX", ex.getMessage());
+        } catch (InvalidTransactionException ex) {
+            Assert.assertEquals("None of the updates were process successfully.", ex.getMessage());
         }
     }
 }

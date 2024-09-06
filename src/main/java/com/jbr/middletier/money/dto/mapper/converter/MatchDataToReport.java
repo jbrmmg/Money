@@ -39,7 +39,7 @@ public class MatchDataToReport extends AbstractConverter<MatchData, TransactionR
         }
         result.setStatementSort(999999);
         result.setLocked(false);
-        result.setActionUpdateCategory(true);
+        result.setActionUpdate(true);
 
         return result;
     }

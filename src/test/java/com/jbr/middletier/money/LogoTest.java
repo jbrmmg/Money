@@ -112,6 +112,7 @@ public class LogoTest {
         for(Element nextElement : root.getChildren()) {
             switch (nextElement.getName()) {
                 case "style", "text" -> {
+                    // nothing to do for these elements.
                 }
                 // Already checked.
                 case "rect" -> {
