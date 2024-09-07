@@ -154,7 +154,7 @@ public class TransactionReportManager {
                 excludeAccount.set(false);
             }
 
-            if(excludeAccount.get()) {
+            if(!excludeAccount.get()) {
                 List<Statement> statement = statementManager.getLatestStatementInternal(next);
                 for(Statement nextStatement : statement) {
                     openBalance = openBalance.add(nextStatement.getOpenBalance().getValue());
