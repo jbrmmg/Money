@@ -214,6 +214,11 @@ public class TransactionReportManager {
             return null;
         }
 
+        if(filter.getFromReconciled() != null) {
+            LOG.debug("No opening balance - from reconciled is filtered");
+            return null;
+        }
+
         // If the not-locked flag is set then use the opening balance from all the accounts that are in the filter.
         BigDecimal openBalance;
         if(filter.getLocked() != null && !filter.getLocked()) {
@@ -518,11 +523,9 @@ public class TransactionReportManager {
 
         List<TransactionReport> updates = new ArrayList<>();
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
-            // If this transaction can be unreconciled, then it can't now.
-            if(next.getActionUnreconcile() != null && next.getActionUnreconcile()) {
-                next.setActionUnreconcile(null);
-                updates.add(next);
-            }
+            next.setLocked(true);
+            next.setActionUnreconcile(null);
+            updates.add(next);
         }
 
         this.transactionReportRepository.saveAll(updates);
@@ -545,11 +548,10 @@ public class TransactionReportManager {
         List<TransactionReport> updates = new ArrayList<>();
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
             // If this transaction can be unreconciled, then it can't now.
-            if((next.getActionUnreconcile() != null && next.getActionUnreconcile()) || (next.getActionReconcile() == null || !next.getActionReconcile())) {
-                next.setActionUnreconcile(null);
-                next.setActionReconcile(true);
-                updates.add(next);
-            }
+            next.setLocked(false);
+            next.setActionUnreconcile(null);
+            next.setActionReconcile(true);
+            updates.add(next);
         }
 
         statementDate.setMonth(penultimateStatement.getMonth());
@@ -557,10 +559,9 @@ public class TransactionReportManager {
         statementDate.setNone(false);
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
             // If this transaction can be unreconciled, then it can't now.
-            if(next.getActionUnreconcile() == null || !next.getActionUnreconcile()) {
-                next.setActionUnreconcile(true);
-                updates.add(next);
-            }
+            next.setLocked(false);
+            next.setActionUnreconcile(true);
+            updates.add(next);
         }
 
         this.transactionReportRepository.saveAll(updates);
