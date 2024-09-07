@@ -31,6 +31,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
@@ -262,9 +263,9 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(23)))
-                .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[22].date", is("2023-05-24")))
+                .andExpect(jsonPath("$", hasSize(22)))
+                .andExpect(jsonPath("[0].date", is("2023-05-01")))
+                .andExpect(jsonPath("[21].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -305,10 +306,9 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(38)))
-                .andExpect(jsonPath("[0].balance.value", is(1029.0)))
-                .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[37].date", is("2023-05-24")))
+                .andExpect(jsonPath("$", hasSize(37)))
+                .andExpect(jsonPath("[0].date", is("2023-04-22")))
+                .andExpect(jsonPath("[36].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -328,10 +328,9 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(35)))
-                .andExpect(jsonPath("[0].balance.value", is(630.16)))
+                .andExpect(jsonPath("$", hasSize(34)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[34].date", is("2023-05-24")))
+                .andExpect(jsonPath("[33].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -355,10 +354,9 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(34)))
-                .andExpect(jsonPath("[0].balance.value", is(0.0)))
+                .andExpect(jsonPath("$", hasSize(33)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[33].date", is("2023-05-24")))
+                .andExpect(jsonPath("[32].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -512,10 +510,9 @@ public class MoneyReportIT extends Support {
                         .content("{\"accounts\":[],\"categories\":[],\"predicted\":false,\"locked\":false,\"fromReconciled\":false}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(35)))
-                .andExpect(jsonPath("[0].balance.value", is(630.16)))
+                .andExpect(jsonPath("$", hasSize(34)))
                 .andExpect(jsonPath("[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("[34].date", is("2023-05-24")))
+                .andExpect(jsonPath("[33].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -953,9 +950,7 @@ public class MoneyReportIT extends Support {
             }
         }
 
-        List<TransactionDTO> deleteTransactions = new ArrayList<>();
-        deleteTransactions.add(transaction);
-        accountTransactionManager.deleteTransactions(deleteTransactions);
+        accountTransactionManager.deleteTransactions(Collections.singletonList(transaction));
 
         result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))

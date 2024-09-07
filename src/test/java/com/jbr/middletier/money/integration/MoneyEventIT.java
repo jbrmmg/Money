@@ -90,9 +90,9 @@ public class MoneyEventIT extends Support {
         filter.setFromReconciled(false);
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(3,reportTransactions.size());
+        Assert.assertEquals(2,reportTransactions.size());
 
-        TransactionReportDTO reportTransaction = reportTransactions.get(1);
+        TransactionReportDTO reportTransaction = reportTransactions.get(0);
         Assert.assertEquals(transaction.getAccountId(),reportTransaction.getAccount().getId());
         Assert.assertEquals(transaction.getDate(),reportTransaction.getDate());
         Assert.assertEquals(transaction.getAmount().doubleValue(),reportTransaction.getAmount().getValue().doubleValue(),0.001);
@@ -114,7 +114,7 @@ public class MoneyEventIT extends Support {
         this.accountTransactionManager.updateTransactions(transactions);
 
         reportTransactions = transactionReportManager.getTransactions(filter);
-        reportTransaction = reportTransactions.get(1);
+        reportTransaction = reportTransactions.get(0);
         Assert.assertEquals(saved.get(0).getAccountId(),reportTransaction.getAccount().getId());
         Assert.assertEquals(saved.get(0).getDate(),reportTransaction.getDate());
         Assert.assertEquals(saved.get(0).getAmount().doubleValue(),reportTransaction.getAmount().getValue().doubleValue(),0.001);
@@ -160,16 +160,16 @@ public class MoneyEventIT extends Support {
 
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(4, reportTransactions.size());
+        Assert.assertEquals(3, reportTransactions.size());
 
         TransactionReportDTO bank;
         TransactionReportDTO amex;
-        if(reportTransactions.get(1).getAccount().getId().equals("BANK")) {
-            bank = reportTransactions.get(1);
-            amex = reportTransactions.get(2);
-        } else {
-            bank = reportTransactions.get(2);
+        if(reportTransactions.get(0).getAccount().getId().equals("BANK")) {
+            bank = reportTransactions.get(0);
             amex = reportTransactions.get(1);
+        } else {
+            bank = reportTransactions.get(1);
+            amex = reportTransactions.get(0);
         }
 
         Assert.assertEquals("BANK",bank.getAccount().getId());
@@ -196,14 +196,14 @@ public class MoneyEventIT extends Support {
 
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(4,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
 
-        if(reportTransactions.get(1).getAccount().getId().equals("BANK")) {
-            bank = reportTransactions.get(1);
-            amex = reportTransactions.get(2);
-        } else {
-            bank = reportTransactions.get(2);
+        if(reportTransactions.get(0).getAccount().getId().equals("BANK")) {
+            bank = reportTransactions.get(0);
             amex = reportTransactions.get(1);
+        } else {
+            bank = reportTransactions.get(1);
+            amex = reportTransactions.get(0);
         }
 
         Assert.assertEquals("BANK",bank.getAccount().getId());
@@ -240,9 +240,9 @@ public class MoneyEventIT extends Support {
 
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(3,reportTransactions.size());
+        Assert.assertEquals(2,reportTransactions.size());
         Assert.assertEquals(1,saved.size());
-        Assert.assertNull(reportTransactions.get(1).getStatement());
+        Assert.assertNull(reportTransactions.get(0).getStatement());
 
         // Reconcile the transaction.
         ReconcileTransactionDTO reconcile = new ReconcileTransactionDTO();
@@ -252,15 +252,15 @@ public class MoneyEventIT extends Support {
 
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(3,reportTransactions.size());
-        Assert.assertNotNull(reportTransactions.get(1).getStatement());
-        Assert.assertFalse(reportTransactions.get(1).getStatement().getLocked());
+        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertNotNull(reportTransactions.get(0).getStatement());
+        Assert.assertFalse(reportTransactions.get(0).getStatement().getLocked());
 
         // Lock the statement.
         StatementIdDTO statementId = new StatementIdDTO();
-        statementId.setAccountId(reportTransactions.get(1).getStatement().getAccountId());
-        statementId.setYear(reportTransactions.get(1).getStatement().getYear());
-        statementId.setMonth(reportTransactions.get(1).getStatement().getMonth());
+        statementId.setAccountId(reportTransactions.get(0).getStatement().getAccountId());
+        statementId.setYear(reportTransactions.get(0).getStatement().getYear());
+        statementId.setMonth(reportTransactions.get(0).getStatement().getMonth());
         Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId,this.accountTransactionManager);
 
         // Attempt to delete the transaction - should fail.
@@ -273,8 +273,8 @@ public class MoneyEventIT extends Support {
         // Check report is updated.
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(3,reportTransactions.size());
-        Assert.assertTrue(reportTransactions.get(1).getStatement().getLocked());
+        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertTrue(reportTransactions.get(0).getStatement().getLocked());
 
         // The lock request would have created a new statement, delete it to unlock
         for(StatementDTO next : statements) {
@@ -290,8 +290,8 @@ public class MoneyEventIT extends Support {
         this.reconciliationManager.reconcile(reconcile);
         reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(3,reportTransactions.size());
-        Assert.assertNull(reportTransactions.get(1).getStatement());
+        Assert.assertEquals(2,reportTransactions.size());
+        Assert.assertNull(reportTransactions.get(0).getStatement());
 
         // delete the transaction
         this.accountTransactionManager.deleteTransactions(saved);
@@ -317,7 +317,7 @@ public class MoneyEventIT extends Support {
 
         List<TransactionReportDTO> reportTransactions = transactionReportManager.getTransactions(filter);
 
-        Assert.assertEquals(3,reportTransactions.size());
+        Assert.assertEquals(2,reportTransactions.size());
         Assert.assertEquals(1,saved.size());
         Assert.assertNull(reportTransactions.get(0).getStatement());
 
@@ -327,13 +327,13 @@ public class MoneyEventIT extends Support {
         reconcile.getTransactions().add(saved.get(0).getId());
         this.reconciliationManager.reconcile(reconcile);
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(3,reportTransactions.size());
+        Assert.assertEquals(2,reportTransactions.size());
 
         // Lock the statement.
         StatementIdDTO statementId = new StatementIdDTO();
-        statementId.setAccountId(reportTransactions.get(1).getStatement().getAccountId());
-        statementId.setYear(reportTransactions.get(1).getStatement().getYear());
-        statementId.setMonth(reportTransactions.get(1).getStatement().getMonth());
+        statementId.setAccountId(reportTransactions.get(0).getStatement().getAccountId());
+        statementId.setYear(reportTransactions.get(0).getStatement().getYear());
+        statementId.setMonth(reportTransactions.get(0).getStatement().getMonth());
         Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId,this.accountTransactionManager);
 
         // Add another transaction
@@ -347,7 +347,7 @@ public class MoneyEventIT extends Support {
         List<TransactionDTO> saved2 = this.accountTransactionManager.createTransaction(Collections.singletonList(transaction));
 
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(4,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
         Assert.assertEquals(1,saved2.size());
 
         // Reconcile the new transaction.
@@ -358,7 +358,7 @@ public class MoneyEventIT extends Support {
 
         // All transactions should be reconciled.
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(4,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
         for(TransactionReportDTO next : reportTransactions) {
             if(next.getType() == TransactionReportTypeDTO.TRANSACTION) {
                 Assert.assertNotNull(next.getStatement());
@@ -373,7 +373,7 @@ public class MoneyEventIT extends Support {
         }
 
         reportTransactions = transactionReportManager.getTransactions(filter);
-        Assert.assertEquals(4,reportTransactions.size());
+        Assert.assertEquals(3,reportTransactions.size());
         for(TransactionReportDTO next : reportTransactions) {
             if(next.getType() == TransactionReportTypeDTO.TRANSACTION) {
                 if (next.getDescription().equals("Testing x")) {

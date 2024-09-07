@@ -61,9 +61,9 @@ public class ArchiveManager {
 
         LOG.info("Oldest year - {}", oldestYear);
 
-        // Must keep at least 3 years.
+        // Must keep at least 5 years.
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        if(oldestYear >= currentYear - 3) {
+        if(oldestYear >= currentYear - 5) {
             LOG.info("Arching skipped as not enough data in the database.");
             return;
         }
