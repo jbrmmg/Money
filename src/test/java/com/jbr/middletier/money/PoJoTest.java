@@ -10,7 +10,6 @@ import com.jbr.middletier.money.exceptions.UpdateDeleteAccountException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.CategoryManager;
-import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.util.DateRange;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -49,9 +48,6 @@ public class PoJoTest {
 
     @Autowired
     private UtilityMapper utilityMapper;
-
-    @Autowired
-    private ReconciliationMapper reconciliationMapper;
 
     @Autowired
     private AccountManager accountManager;
@@ -602,102 +598,6 @@ public class PoJoTest {
         Assert.assertEquals(text.hashCode(),next.hashCode());
 
         Assert.assertNotEquals(statementId,next);
-    }
-
-    @Test
-    public void matchDataToDTO() {
-        Account account = new Account();
-        account.setId("WHAT");
-        Category category = new Category();
-        category.setId("WHERE");
-        category.setColour("RED");
-        Transaction transaction = new Transaction();
-        transaction.setDate(LocalDate.of(2019,2,18));
-        transaction.setDescription("Test");
-        transaction.setAmount(BigDecimal.valueOf(32.09));
-        transaction.setStatement(null);
-        transaction.setAccount(account);
-        transaction.setCategory(category);
-        MatchData source = new MatchData(transaction);
-        source.setAfterAmount(BigDecimal.valueOf(0.29));
-        source.setBeforeAmount(BigDecimal.valueOf(102.02));
-
-        MatchDataDTO matchData = reconciliationMapper.map(source,MatchDataDTO.class);
-        Assert.assertEquals(-1,matchData.getId());
-        Assert.assertEquals(0.29,matchData.getAfterAmount().doubleValue(),0.001);
-        Assert.assertEquals(102.02,matchData.getBeforeAmount().doubleValue(), 0.01);
-        Assert.assertNotNull(matchData.getTransaction());
-        Assert.assertFalse(matchData.getTransaction().getHasStatement());
-        Assert.assertFalse(matchData.getTransaction().getStatementLocked());
-        Assert.assertEquals("2019-02-18",matchData.getDate());
-        Assert.assertEquals(32.09,matchData.getTransaction().getAmount().doubleValue(),0.001);
-        Assert.assertEquals("WHAT", matchData.getAccountId());
-        Assert.assertEquals("WHERE", matchData.getCategoryId());
-        Assert.assertEquals("Test",matchData.getDescription());
-        Assert.assertEquals("RED",matchData.getColour());
-    }
-
-    @Test
-    public void matchDataToDTO2() {
-        Account account = new Account();
-        account.setId("WHAT");
-        Category category = new Category();
-        category.setId("WHERE");
-        category.setColour("BLUE");
-        StatementId statementId = new StatementId(account,2019,2);
-        Statement statement = new Statement();
-        statement.setId(statementId);
-        statement.setLocked(false);
-        statement.setOpenBalance(BigDecimal.valueOf(0.21));
-        Transaction transaction = new Transaction();
-        transaction.setDate(LocalDate.of(2019,2,18));
-        transaction.setDescription("Test");
-        transaction.setAmount(BigDecimal.valueOf(32.09));
-        transaction.setStatement(statement);
-        transaction.setAccount(account);
-        transaction.setCategory(category);
-        MatchData source = new MatchData(transaction);
-        source.setAfterAmount(BigDecimal.valueOf(0.29));
-        source.setBeforeAmount(BigDecimal.valueOf(102.02));
-
-        MatchDataDTO matchData = reconciliationMapper.map(source,MatchDataDTO.class);
-        Assert.assertEquals(-1,matchData.getId());
-        Assert.assertEquals(0.29,matchData.getAfterAmount().doubleValue(),0.001);
-        Assert.assertEquals(102.02,matchData.getBeforeAmount().doubleValue(), 0.01);
-        Assert.assertNotNull(matchData.getTransaction());
-        Assert.assertTrue(matchData.getTransaction().getHasStatement());
-        Assert.assertFalse(matchData.getTransaction().getStatementLocked());
-        Assert.assertEquals("2019-02-18",matchData.getDate());
-        Assert.assertEquals(32.09,matchData.getTransaction().getAmount().doubleValue(),0.001);
-        Assert.assertEquals("WHAT", matchData.getAccountId());
-        Assert.assertEquals("WHERE", matchData.getCategoryId());
-        Assert.assertEquals("Test",matchData.getDescription());
-        Assert.assertEquals("BLUE",matchData.getColour());
-    }
-
-    @Test
-    public void matchDataToDTO3() {
-        ReconciliationData reconciliationData = new ReconciliationData();
-        reconciliationData.setAmount(BigDecimal.valueOf(20.21));
-        reconciliationData.setDescription("Testing");
-        reconciliationData.setDate(LocalDate.of(2018,2,15));
-        reconciliationData.setCategory(null);
-        Account account = new Account();
-        account.setId("WHAT");
-        MatchData source = new MatchData(reconciliationData,account);
-        source.setAfterAmount(BigDecimal.valueOf(0.74));
-        source.setBeforeAmount(BigDecimal.valueOf(112.72));
-
-        MatchDataDTO matchData = reconciliationMapper.map(source,MatchDataDTO.class);
-        Assert.assertEquals(0,matchData.getId());
-        Assert.assertEquals(0.74,matchData.getAfterAmount().doubleValue(),0.001);
-        Assert.assertEquals(112.72,matchData.getBeforeAmount().doubleValue(), 0.01);
-        Assert.assertNull(matchData.getTransaction());
-        Assert.assertEquals("2018-02-15",matchData.getDate());
-        Assert.assertEquals(20.21,matchData.getAmount().doubleValue(),0.001);
-        Assert.assertEquals("WHAT", matchData.getAccountId());
-        Assert.assertNull(matchData.getCategoryId());
-        Assert.assertEquals("Testing",matchData.getDescription());
     }
 
     @Test

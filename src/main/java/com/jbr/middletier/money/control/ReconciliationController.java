@@ -16,7 +16,6 @@ import reactor.core.publisher.Flux;
 
 import java.io.*;
 import java.time.Duration;
-import java.util.*;
 
 
 /**
@@ -74,29 +73,6 @@ public class ReconciliationController {
     public Iterable<ReconciliationFileDTO> getListOfFiles() {
         LOG.info("Request to get list of files");
         return reconciliationFileManager.getFiles();
-    }
-
-    @PutMapping(path = "/ext/money/reconciliation/update")
-    public OkStatus reconcileCategoryExt(@Valid @RequestBody ReconcileUpdateDTO reconciliationUpdate) {
-        LOG.info("Reconcile Category Update");
-        reconciliationManager.processReconcileUpdate(reconciliationUpdate);
-        return OkStatus.getOkStatus();
-    }
-
-    @PutMapping(path = "/int/money/reconciliation/update")
-    public OkStatus reconcileCategoryInt(@Valid @RequestBody ReconcileUpdateDTO reconciliationUpdate) {
-        return reconcileCategoryExt(reconciliationUpdate);
-    }
-
-    @GetMapping(path = "/ext/money/match")
-    public List<MatchDataDTO> matchExt() throws NullOrBlankAccountIdException {
-        LOG.info("External match data - reconciliation data with reconciled transactions");
-        return reconciliationManager.matchImpl();
-    }
-
-    @GetMapping(path = "/int/money/match")
-    public List<MatchDataDTO> matchInt() throws NullOrBlankAccountIdException {
-        return matchExt();
     }
 
     @DeleteMapping(path = "/ext/money/reconciliation/clear")

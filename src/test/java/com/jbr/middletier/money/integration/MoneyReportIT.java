@@ -966,4 +966,73 @@ public class MoneyReportIT extends Support {
         transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
         logTransactionData(transactionData);
     }
+
+    @Test
+    public void checkRecIssue() throws Exception {
+        // Add a new transaction.
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccountId("BANK");
+        transaction.setCategoryId("HSE");
+        transaction.setDate("2023-04-21");
+        transaction.setAmount(BigDecimal.valueOf(-4245.70));
+        transaction.setDescription("Check Issue-Test");
+        List<TransactionDTO> transactions = new ArrayList<>();
+        transactions.add(transaction);
+        transactions = accountTransactionManager.createTransaction(transactions);
+
+        List<Integer> ids = new ArrayList<>();
+        ids.add(transactions.get(0).getId());
+
+        // Reconcile the transaction.
+        ReconcileTransactionDTO reconcileTransaction = new ReconcileTransactionDTO();
+        reconcileTransaction.setTransactions(ids);
+        reconcileTransaction.setReconcile(true);
+        reconciliationManager.reconcile(reconcileTransaction);
+
+        // Check the report.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setPredicted(false);
+
+        AccountDTO account = new AccountDTO();
+        account.setId("BANK");
+
+        List<AccountDTO> accounts = new ArrayList<>();
+        accounts.add(account);
+
+        filter.setAccounts(accounts);
+
+        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(28)))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+
+        // There should be 21 record that are 'from reconciliation'
+        int recCount = 0;
+        for(TransactionReportDTO next: transactionData) {
+            if(next.getFromReconciliation() != null && next.getFromReconciliation()) {
+                recCount++;
+            }
+        }
+        Assert.assertEquals(21, recCount);
+
+        reconcileTransaction.setReconcile(false);
+        reconciliationManager.reconcile(reconcileTransaction);
+
+        // Delete the transaction
+        TransactionDTO transactionForDelete = new TransactionDTO();
+        for(TransactionReportDTO next: transactionData) {
+            if (next.getDescription() != null && next.getDescription().equalsIgnoreCase("Check Issue-Test")) {
+                transactionForDelete.setId(next.getTransactionId());
+            }
+        }
+
+        accountTransactionManager.deleteTransactions(Collections.singletonList(transactionForDelete));
+    }
 }

@@ -19,21 +19,6 @@ public class MatchData implements Comparable<MatchData> {
             return 0;
         }
 
-        // Check action.
-        if(this.forwardActionType.ordinal() > object.forwardActionType.ordinal()) {
-            return 1;
-        } else if(this.forwardActionType.ordinal() < object.forwardActionType.ordinal()) {
-            return -1;
-        }
-
-        // If the action is set category, the use the description to sort.
-        if(this.forwardActionType == ForwardActionType.SETCATEGORY) {
-            int descriptionCompare = this.description.compareTo(object.description);
-            if (descriptionCompare != 0) {
-                return descriptionCompare;
-            }
-        }
-
         // Check the date.
         int dateCompare = this.reconciliationDate.compareTo(object.reconciliationDate);
         if (dateCompare != 0) {
@@ -62,24 +47,16 @@ public class MatchData implements Comparable<MatchData> {
 
     @Override
     public String toString() {
-        return getId() + "-" + getDate() + "-" + getAmount() + "-" + getForwardAction();
+        return getId() + "-" + getDate() + "-" + getAmount();
     }
-
-    public enum ForwardActionType { SETCATEGORY, CREATE, RECONCILE, UNRECONCILE, NONE }
-
-    private enum BackwardActionType { UNRECONCILE, DELETE, NONE }
 
     private final int reconciliationId;
     private final LocalDate reconciliationDate;
     private final BigDecimal reconciliationAmount;
     private final String description;
     private Transaction transaction;
-    private BigDecimal beforeAmount;
-    private BigDecimal afterAmount;
     private Category category;
     private final Account account;
-    private ForwardActionType forwardActionType;
-    private BackwardActionType backwardActionType;
 
     public MatchData(ReconciliationData source, Account account)  {
         this.reconciliationId = source.getId();
@@ -89,14 +66,6 @@ public class MatchData implements Comparable<MatchData> {
         this.category = source.getCategory();
         this.description = source.getDescription();
         this.account = account;
-
-        // Set the forward action.
-        if(this.category != null) {
-            this.forwardActionType = ForwardActionType.CREATE;
-        } else {
-            this.forwardActionType = ForwardActionType.SETCATEGORY;
-        }
-        this.backwardActionType = BackwardActionType.NONE;
     }
 
     public MatchData(Transaction transaction) {
@@ -104,27 +73,14 @@ public class MatchData implements Comparable<MatchData> {
         this.reconciliationId = -1;
         this.reconciliationDate = transaction.getDate();
         this.reconciliationAmount = transaction.getAmount().getValue();
-        this.beforeAmount = BigDecimal.ZERO;
-        this.afterAmount = BigDecimal.ZERO;
         this.category = transaction.getCategory();
         this.account = transaction.getAccount();
         this.description = transaction.getDescription();
-
-        this.forwardActionType = ForwardActionType.UNRECONCILE;
-        this.backwardActionType = BackwardActionType.NONE;
     }
 
     public void matchTransaction(Transaction transaction) {
         this.transaction = transaction;
         this.category = transaction.getCategory();
-
-        if(transaction.getStatement() != null) {
-            this.forwardActionType = ForwardActionType.NONE;
-            this.backwardActionType = BackwardActionType.UNRECONCILE;
-        } else {
-            this.forwardActionType = ForwardActionType.RECONCILE;
-            this.backwardActionType = BackwardActionType.DELETE;
-        }
     }
 
     public int getId() {
@@ -137,22 +93,6 @@ public class MatchData implements Comparable<MatchData> {
 
     public Transaction getTransaction() {
         return this.transaction;
-    }
-
-    public BigDecimal getBeforeAmount() {
-        return this.beforeAmount;
-    }
-
-    public void setBeforeAmount(BigDecimal beforeTransactionAmount) {
-        this.beforeAmount = beforeTransactionAmount;
-    }
-
-    public BigDecimal getAfterAmount() {
-        return this.afterAmount;
-    }
-
-    public void setAfterAmount(BigDecimal afterTransactionAmount) {
-        this.afterAmount = afterTransactionAmount;
     }
 
     public Category getCategory() { return this.category; }
@@ -180,13 +120,5 @@ public class MatchData implements Comparable<MatchData> {
         LocalDate startDate = this.reconciliationDate.minusDays(withinDays);
         LocalDate endDate = this.reconciliationDate.plusDays(withinDays);
         return transaction.getDate().isAfter(startDate) && transaction.getDate().isBefore(endDate);
-    }
-
-    public String getForwardAction() {
-        return forwardActionType.toString();
-    }
-
-    public String getBackwardAction() {
-        return backwardActionType.toString();
     }
 }
