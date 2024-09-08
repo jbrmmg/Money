@@ -215,7 +215,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(11), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -233,7 +233,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate2() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(12), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -251,7 +251,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate3() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(13), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -367,7 +367,7 @@ public class ReconciliationTest extends Support {
         Transaction testTransaction = new Transaction();
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
-        testTransaction.setAmount(BigDecimal.valueOf(10));
+        testTransaction.setAmount(BigDecimal.valueOf(15));
         testTransaction.setDate(LocalDate.of(2010,5,1));
         this.transactionRepository.save(testTransaction);
 
