@@ -13,6 +13,8 @@ import com.jbr.middletier.money.manager.ArchiveManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -33,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class ArchiveTest extends Support {
+    private static final Logger LOG = LoggerFactory.getLogger(ArchiveTest.class);
+
     @Autowired
     private TransactionRepository transactionRepository;
 
@@ -147,6 +151,12 @@ public class ArchiveTest extends Support {
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction checkTransaction : transactionRepository.findAll()) {
             transactions.add(checkTransaction);
+        }
+
+        if(!transactions.isEmpty()) {
+            for(Transaction next: transactions) {
+                LOG.info("T {} {}", next.getDescription(), next.getAmount().getValue());
+            }
         }
         Assert.assertEquals(0,transactions.size());
 
