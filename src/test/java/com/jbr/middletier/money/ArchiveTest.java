@@ -155,7 +155,7 @@ public class ArchiveTest extends Support {
 
         if(!transactions.isEmpty()) {
             for(Transaction next: transactions) {
-                LOG.info("test-find-log T {} {}", next.getDescription(), next.getAmount().getValue());
+                LOG.info("test-find-log T {} {} {} {} {}", next.getDescription(), next.getAmount().getValue(), next.getAccount().getId(), next.getCategory().getId(), next.getDate());
             }
         }
         Assert.assertEquals(0,transactions.size());
