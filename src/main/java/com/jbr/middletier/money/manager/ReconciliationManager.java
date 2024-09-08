@@ -3,12 +3,10 @@ package com.jbr.middletier.money.manager;
 import com.jbr.middletier.money.data.primary.*;
 import com.jbr.middletier.money.data.primary.repository.*;
 import com.jbr.middletier.money.dto.*;
-import com.jbr.middletier.money.dto.mapper.ReconciliationMapper;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.events.ReconcileTransactionEvent;
 import com.jbr.middletier.money.events.ReconciliationFileLoadEvent;
 import com.jbr.middletier.money.exceptions.*;
-import com.jbr.middletier.money.dto.MatchDataDTO;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import org.apache.commons.collections4.IteratorUtils;
 import org.slf4j.Logger;
@@ -21,7 +19,6 @@ import org.springframework.stereotype.Controller;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
 
 import static com.jbr.middletier.money.data.primary.repository.TransactionSpecifications.accountIs;
@@ -36,7 +33,6 @@ public class ReconciliationManager {
     private final TransactionRepository transactionRepository;
     private final StatementRepository statementRepository;
     private final TransactionMapper transactionMapper;
-    private final ReconciliationMapper reconciliationMapper;
     private final ReconciliationFileTransactionRepository reconciliationFileTransactionRepository;
     private final ReconciliationFileRepository reconciliationFileRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -47,7 +43,6 @@ public class ReconciliationManager {
                                  TransactionRepository transactionRepository,
                                  StatementRepository statementRepository,
                                  TransactionMapper transactionMapper,
-                                 ReconciliationMapper reconciliationMapper,
                                  ReconciliationFileTransactionRepository reconciliationFileTransactionRepository,
                                  ReconciliationFileRepository reconciliationFileRepository,
                                  ApplicationEventPublisher applicationEventPublisher) {
@@ -56,7 +51,6 @@ public class ReconciliationManager {
         this.transactionRepository = transactionRepository;
         this.statementRepository = statementRepository;
         this.transactionMapper = transactionMapper;
-        this.reconciliationMapper = reconciliationMapper;
         this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
         this.reconciliationFileRepository = reconciliationFileRepository;
         this.applicationEventPublisher = applicationEventPublisher;
@@ -185,25 +179,6 @@ public class ReconciliationManager {
         return null;
     }
 
-    private void updateOpenBalance(Account account, List<MatchData> matchData) {
-        // Update the opening balance information.
-        List<Statement> unlockedStatement = statementRepository.findByIdAccountAndLocked(account,false);
-        if(unlockedStatement.size() != 1) {
-            LOG.info("Number of statements was not 1.");
-        } else {
-            BigDecimal rollingAmount = unlockedStatement.get(0).getOpenBalance().getValue();
-
-            // Set the open balance data.
-            for(MatchData nextMatchData : matchData) {
-                if(!nextMatchData.getForwardAction().equalsIgnoreCase("UNRECONCILE")) {
-                    nextMatchData.setBeforeAmount(rollingAmount);
-                    rollingAmount = rollingAmount.add(nextMatchData.getAmount());
-                    nextMatchData.setAfterAmount(rollingAmount);
-                }
-            }
-        }
-    }
-
     public List<MatchData> match() throws NullOrBlankAccountIdException {
         // Get the account of the data that is in the reconcile data.
         Account account = getSelectedAccount();
@@ -229,16 +204,8 @@ public class ReconciliationManager {
         lookForMatches(true, result, transactions);
         lookForMatches(false, result, transactions);
 
-        // For any transactions that are reconciled remaining, create a match entry.
-        for(Transaction next : transactions) {
-            if(next.reconciled()) {
-                result.add(new MatchData(next));
-            }
-        }
-
         // Sort and update balance information
         Collections.sort(result);
-        updateOpenBalance(account,result);
 
         return result;
     }
@@ -334,14 +301,5 @@ public class ReconciliationManager {
         } else if(!reconcileTransactions.getTransactions().isEmpty()) {
             throw new InvalidTransactionIdException(reconcileTransactions.getTransactions().get(0));
         }
-    }
-
-    public List<MatchDataDTO> matchImpl() throws NullOrBlankAccountIdException {
-        List<MatchDataDTO> result = new ArrayList<>();
-        for(MatchData next : match()) {
-            result.add(reconciliationMapper.map(next,MatchDataDTO.class));
-        }
-
-        return result;
     }
 }

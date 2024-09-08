@@ -13,6 +13,7 @@ import com.jbr.middletier.money.manager.ReconciliationFileManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
+import com.jbr.middletier.money.reconciliation.MatchData;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,13 +96,6 @@ public class ReconciliationTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(8)));
-
-        getMockMvc().perform(get("/jbr/int/money/match?account=AMEX")
-                        .content(this.json(reconciliationFile))
-                        .contentType(getContentType()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[*].description", containsInAnyOrder("3CPAYMENT*PRET A MANGER LONDON X", "3CPAYMENT*PRET A MANGER LONDON", "AUDIBLE UK ADBL.CO/PYMT")));
     }
 
     private ReconciliationFileLoadDTO getReconcileFile() {
@@ -144,41 +138,6 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testUpdate() throws Exception {
-        ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
-
-        fileManager.getFiles().forEach(f -> {
-            if(f.getFilename().contains("test.AMEX.match.csv")) {
-                reconciliationFile.setFilename(f.getFilename());
-            }
-        });
-
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
-                        .content(this.json(reconciliationFile))
-                        .contentType(getContentType()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(8)));
-
-        ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
-        reconcileUpdate.setCategoryId("FSE");
-        reconcileUpdate.setId(1);
-
-        getMockMvc().perform(put("/jbr/ext/money/reconciliation/update")
-                        .content(this.json(reconcileUpdate))
-                        .contentType(getContentType()))
-                .andExpect(status().isOk());
-
-        reconcileUpdate = new ReconcileUpdateDTO();
-        reconcileUpdate.setCategoryId("FDG");
-        reconcileUpdate.setId(2);
-
-        getMockMvc().perform(put("/jbr/int/money/reconciliation/update")
-                        .content(this.json(reconcileUpdate))
-                        .contentType(getContentType()))
-                .andExpect(status().isOk());
-    }
-
-    @Test
     public void testInvalidAccountId() {
         ReconciliationFile updateFile = null;
         Account account = null;
@@ -198,7 +157,7 @@ public class ReconciliationTest extends Support {
             updateFile.setAccount(null);
             reconciliationFileRepository.save(updateFile);
 
-            this.reconciliationManager.matchImpl();
+            this.reconciliationManager.match();
             Assert.fail();
         } catch(NullOrBlankAccountIdException ex) {
             Assert.assertEquals("Account ID not specified, reconciliation transactions required.", ex.getMessage());
@@ -256,7 +215,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(11), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -274,7 +233,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate2() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(12), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -292,7 +251,7 @@ public class ReconciliationTest extends Support {
 
     @Test
     public void testSetTransactionCategoryUpdate3() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(13), LocalDate.of(2010,5,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -408,9 +367,9 @@ public class ReconciliationTest extends Support {
         Transaction testTransaction = new Transaction();
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
-        testTransaction.setAmount(BigDecimal.valueOf(10));
+        testTransaction.setAmount(BigDecimal.valueOf(1554));
         testTransaction.setDate(LocalDate.of(2010,5,1));
-        this.transactionRepository.save(testTransaction);
+        testTransaction = this.transactionRepository.save(testTransaction);
 
         try {
             // There should be no transactions
@@ -424,6 +383,7 @@ public class ReconciliationTest extends Support {
         }
 
         this.statementRepository.delete(duplicate);
+        this.transactionRepository.delete(testTransaction);
     }
 
     private Statement getUnlockedStatement(String accountId) {
@@ -451,13 +411,13 @@ public class ReconciliationTest extends Support {
         testTransaction.setStatement(unlocked);
         this.transactionRepository.save(testTransaction);
 
-        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
+        List<MatchData> matchData = this.reconciliationManager.match();
         int setCategory = 0;
         int none = 0;
-        for(MatchDataDTO next : matchData) {
-            if(next.getForwardAction().equalsIgnoreCase("NONE")) {
+        for(MatchData next : matchData) {
+            if(next.getCategory() != null) {
                 none++;
-            } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
+            } else {
                 setCategory++;
             }
         }
@@ -475,13 +435,13 @@ public class ReconciliationTest extends Support {
         // Create a transaction
         createTransaction("AMEX", "HSE", BigDecimal.valueOf(-1.9), LocalDate.of(2022,10,10));
 
-        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
+        List<MatchData> matchData = this.reconciliationManager.match();
         int setCategory = 0;
         int reconcile = 0;
-        for(MatchDataDTO next : matchData) {
-            if(next.getForwardAction().equalsIgnoreCase("RECONCILE")) {
+        for(MatchData next : matchData) {
+            if(next.getCategory() != null) {
                 reconcile++;
-            } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
+            } else {
                 setCategory++;
             }
         }
@@ -503,19 +463,19 @@ public class ReconciliationTest extends Support {
         transaction.setStatement(unlocked);
         this.transactionRepository.save(transaction);
 
-        List<MatchDataDTO> matchData = this.reconciliationManager.matchImpl();
+        List<MatchData> matchData = this.reconciliationManager.match();
         int setCategory = 0;
         int unreconcile = 0;
-        for(MatchDataDTO next : matchData) {
-            if(next.getForwardAction().equalsIgnoreCase("UNRECONCILE")) {
+        for(MatchData next : matchData) {
+            if(next.getCategory() != null) {
                 unreconcile++;
-            } else if(next.getForwardAction().equalsIgnoreCase("SETCATEGORY")) {
+            } else {
                 setCategory++;
             }
         }
         Assert.assertEquals(3,setCategory);
-        Assert.assertEquals(1,unreconcile);
-        Assert.assertEquals(4,matchData.size());
+        Assert.assertEquals(0,unreconcile);
+        Assert.assertEquals(3,matchData.size());
     }
 
     @Test
