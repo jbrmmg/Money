@@ -158,6 +158,7 @@ public class ArchiveTest extends Support {
                 LOG.info("test-find-log T {} {} {} {} {}", next.getDescription(), next.getAmount().getValue(), next.getAccount().getId(), next.getCategory().getId(), next.getDate());
             }
         }
+        LOG.info("test-find-log T - done");
         Assert.assertEquals(0,transactions.size());
 
         applicationProperties.setArchiveEnabled(false);
