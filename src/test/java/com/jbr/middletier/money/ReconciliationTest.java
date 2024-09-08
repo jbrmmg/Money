@@ -367,7 +367,7 @@ public class ReconciliationTest extends Support {
         Transaction testTransaction = new Transaction();
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
-        testTransaction.setAmount(BigDecimal.valueOf(15));
+        testTransaction.setAmount(BigDecimal.valueOf(1554));
         testTransaction.setDate(LocalDate.of(2010,5,1));
         this.transactionRepository.save(testTransaction);
 
