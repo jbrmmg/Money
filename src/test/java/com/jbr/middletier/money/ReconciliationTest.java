@@ -369,7 +369,7 @@ public class ReconciliationTest extends Support {
         testTransaction.setCategory(category);
         testTransaction.setAmount(BigDecimal.valueOf(1554));
         testTransaction.setDate(LocalDate.of(2010,5,1));
-        this.transactionRepository.save(testTransaction);
+        testTransaction = this.transactionRepository.save(testTransaction);
 
         try {
             // There should be no transactions
@@ -383,6 +383,7 @@ public class ReconciliationTest extends Support {
         }
 
         this.statementRepository.delete(duplicate);
+        this.transactionRepository.delete(testTransaction);
     }
 
     private Statement getUnlockedStatement(String accountId) {
