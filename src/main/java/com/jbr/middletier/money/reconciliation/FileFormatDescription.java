@@ -180,7 +180,7 @@ public class FileFormatDescription {
     }
 
     public String getDescription(ReconcileFileLine line) throws FileFormatException {
-        String description = getColumnValue(getDescriptionColumn(),line).trim();
+        String description = getColumnValue(getDescriptionColumn(),line).trim().replaceAll("[^\\da-zA-Z ./?\\-*#'&():+-,!]","");
         return description.substring(0, Math.min(description.length(), 40));
     }
 
