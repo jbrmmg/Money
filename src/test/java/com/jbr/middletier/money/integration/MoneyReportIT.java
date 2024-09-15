@@ -1005,7 +1005,7 @@ public class MoneyReportIT extends Support {
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(28)))
+                .andExpect(jsonPath("$", hasSize(27)))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 

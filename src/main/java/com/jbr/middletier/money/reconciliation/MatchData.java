@@ -119,6 +119,7 @@ public class MatchData implements Comparable<MatchData> {
         // Transaction Date must be within the number of days of the reconciliation date.
         LocalDate startDate = this.reconciliationDate.minusDays(withinDays);
         LocalDate endDate = this.reconciliationDate.plusDays(withinDays);
-        return transaction.getDate().isAfter(startDate) && transaction.getDate().isBefore(endDate);
+
+        return startDate.equals(transaction.getDate()) || endDate.equals(transaction.getDate());
     }
 }
