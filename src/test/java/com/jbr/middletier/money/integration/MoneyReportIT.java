@@ -264,7 +264,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(22)))
-                .andExpect(jsonPath("[0].date", is("2023-05-01")))
+                .andExpect(jsonPath("[0].date", is("2023-04-06")))
                 .andExpect(jsonPath("[21].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -307,7 +307,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(37)))
-                .andExpect(jsonPath("[0].date", is("2023-04-22")))
+                .andExpect(jsonPath("[0].date", is("2023-04-06")))
                 .andExpect(jsonPath("[36].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -428,7 +428,7 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(18)))
-                .andExpect(jsonPath("[0].date", is("2023-04-22")))
+                .andExpect(jsonPath("[0].date", is("2023-04-20")))
                 .andExpect(jsonPath("[17].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -450,8 +450,8 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(25)))
-                .andExpect(jsonPath("[0].date", is("2023-04-22")))
-                .andExpect(jsonPath("[2].date", is("2023-04-06")))
+                .andExpect(jsonPath("[0].date", is("2023-04-06")))
+                .andExpect(jsonPath("[2].date", is("2023-04-10")))
                 .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -682,8 +682,8 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(26)))
-                .andExpect(jsonPath("[0].date", is("2023-04-22")))
-                .andExpect(jsonPath("[2].date", is("2023-04-06")))
+                .andExpect(jsonPath("[0].date", is("2023-04-06")))
+                .andExpect(jsonPath("[2].date", is("2023-04-10")))
                 .andExpect(jsonPath("[24].date", is("2023-05-18")))
                 .andExpect(jsonPath("[24].amount.value", is(-13.92)))
                 .andExpect(jsonPath("[25].date", is("2023-05-24")))
@@ -752,11 +752,11 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(25)))
-                .andExpect(jsonPath("[0].date", is("2023-04-22")))
-                .andExpect(jsonPath("[3].date", is("2023-04-08")))
-                .andExpect(jsonPath("[3].amount.value", is(-8.99)))
-                .andExpect(jsonPath("[3].category.id", is("FDG")))
-                .andExpect(jsonPath("[3].actionReconcile", is(true)))
+                .andExpect(jsonPath("[0].date", is("2023-04-06")))
+                .andExpect(jsonPath("[1].date", is("2023-04-08")))
+                .andExpect(jsonPath("[1].amount.value", is(-8.99)))
+                .andExpect(jsonPath("[1].category.id", is("FDG")))
+                .andExpect(jsonPath("[1].actionReconcile", is(true)))
                 .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -767,7 +767,7 @@ public class MoneyReportIT extends Support {
 
         // Find the transaction to reconcile.
         List<Integer> ids = new ArrayList<>();
-        ids.add(transactionData.get(3).getTransactionId());
+        ids.add(transactionData.get(1).getTransactionId());
 
         // Reconcile the transaction.
         ReconcileTransactionDTO reconcileTransaction = new ReconcileTransactionDTO();
@@ -780,11 +780,11 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(25)))
-                .andExpect(jsonPath("[0].date", is("2023-04-08")))
-                .andExpect(jsonPath("[0].amount.value", is(-8.99)))
-                .andExpect(jsonPath("[0].category.id", is("FDG")))
-                .andExpect(jsonPath("[0].statement.month", is(4)))
-                .andExpect(jsonPath("[0].statement.year", is(2023)))
+                .andExpect(jsonPath("[1].date", is("2023-04-08")))
+                .andExpect(jsonPath("[1].amount.value", is(-8.99)))
+                .andExpect(jsonPath("[1].category.id", is("FDG")))
+                .andExpect(jsonPath("[1].statement.month", is(4)))
+                .andExpect(jsonPath("[1].statement.year", is(2023)))
                 .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -802,11 +802,11 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(25)))
-                .andExpect(jsonPath("[0].date", is("2023-04-22")))
-                .andExpect(jsonPath("[3].date", is("2023-04-08")))
-                .andExpect(jsonPath("[3].amount.value", is(-8.99)))
-                .andExpect(jsonPath("[3].category.id", is("FDG")))
-                .andExpect(jsonPath("[3].actionReconcile", is(true)))
+                .andExpect(jsonPath("[0].date", is("2023-04-06")))
+                .andExpect(jsonPath("[1].date", is("2023-04-08")))
+                .andExpect(jsonPath("[1].amount.value", is(-8.99)))
+                .andExpect(jsonPath("[1].category.id", is("FDG")))
+                .andExpect(jsonPath("[1].actionReconcile", is(true)))
                 .andExpect(jsonPath("[24].date", is("2023-05-24")))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
@@ -835,8 +835,8 @@ public class MoneyReportIT extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(27)))
-                .andExpect(jsonPath("[4].statement.month", is(5)))
-                .andExpect(jsonPath("[5].statement.month", is(5)))
+                .andExpect(jsonPath("[20].statement.month", is(5)))
+                .andExpect(jsonPath("[21].statement.month", is(5)))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -905,8 +905,8 @@ public class MoneyReportIT extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(27)))
                 .andExpect(jsonPath("[26].date", is("2023-05-24")))
-                .andExpect(jsonPath("[16].description", is("NEWDAY LTD")))
-                .andExpect(jsonPath("[16].actionReconcile").doesNotExist())
+                .andExpect(jsonPath("[13].description", is("NEWDAY LTD")))
+                .andExpect(jsonPath("[13].actionReconcile").doesNotExist())
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
@@ -934,7 +934,7 @@ public class MoneyReportIT extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(27)))
                 .andExpect(jsonPath("[26].date", is("2023-05-24")))
-                .andExpect(jsonPath("[16].actionReconcile", is(true)))
+                .andExpect(jsonPath("[13].actionReconcile", is(true)))
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
 
