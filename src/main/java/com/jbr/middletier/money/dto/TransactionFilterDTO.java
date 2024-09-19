@@ -114,10 +114,10 @@ public class TransactionFilterDTO {
         // If the sort definition is null or empty then return the minimum.
         if(this.transactionSorts == null || this.transactionSorts.isEmpty()) {
             List<TransactionSortDTO> defaultSorting = new ArrayList<>();
-            defaultSorting.add(new TransactionSortDTO(TransactionSortField.STATEMENT,TransactionSortType.ASCENDING));
             defaultSorting.add(new TransactionSortDTO(TransactionSortField.DATE,TransactionSortType.ASCENDING));
-            defaultSorting.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.ASCENDING));
             defaultSorting.add(new TransactionSortDTO(TransactionSortField.ACCOUNT,TransactionSortType.ASCENDING));
+            defaultSorting.add(new TransactionSortDTO(TransactionSortField.STATEMENT,TransactionSortType.ASCENDING));
+            defaultSorting.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.ASCENDING));
             return defaultSorting;
         }
 
