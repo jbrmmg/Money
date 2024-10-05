@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 17
+      author: jason
+      changes:
+        - addColumn:
+            tableName: account
+            columns:
+              - column:
+                  name: transfer_account
+                  type: char(4)
+        - addColumn:
+            tableName: account
+            columns:
+              - column:
+                  name: transfer_day
+                  type: int(11)
+        - addColumn:
+            tableName: account
+            columns:
+              - column:
+                  name: weekend_adj
+                  type: char(2)

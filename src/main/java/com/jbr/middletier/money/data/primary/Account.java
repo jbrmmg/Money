@@ -1,11 +1,13 @@
 package com.jbr.middletier.money.data.primary;
 
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
 
@@ -40,6 +42,17 @@ public class Account implements Serializable {
     @Column(name="closed")
     private Boolean closed;
 
+    @Column(name="transfer_account")
+    @Pattern(regexp="^[0-9A-Z]{4}$",message="Account id must be uppercase and/or numbers of length 4.")
+    private String transferAccountId;
+
+    @Column(name="transfer_day")
+    private Integer transferDay;
+
+    @Column(name="weekend_adj")
+    @Size(max=2)
+    private String weekendAdjust;
+
     public String getId() {
         return id;
     }
@@ -70,5 +83,37 @@ public class Account implements Serializable {
 
     public void setClosed(Boolean closed) {
         this.closed = closed;
+    }
+
+    public @Pattern(regexp = "^[0-9A-Z]{4}$", message = "Account id must be uppercase and/or numbers of length 4.") String getTransferAccountId() {
+        return transferAccountId;
+    }
+
+    public void setTransferAccountId(@Pattern(regexp = "^[0-9A-Z]{4}$", message = "Account id must be uppercase and/or numbers of length 4.") String transferAccountId) {
+        this.transferAccountId = transferAccountId;
+    }
+
+    public Integer getTransferDay() {
+        return transferDay;
+    }
+
+    public void setTransferDay(Integer transferDay) {
+        this.transferDay = transferDay;
+    }
+
+    public AdjustmentType getWeekendAdj() {
+        if(this.weekendAdjust == null) {
+            return null;
+        }
+
+        return AdjustmentType.getAdjustmentType(this.weekendAdjust);
+    }
+
+    public void setWeekendAdj(AdjustmentType weekendAdj) {
+        if(weekendAdj == null) {
+            this.weekendAdjust = null;
+        }
+
+        this.weekendAdjust = weekendAdj.getTypeName();
     }
 }
