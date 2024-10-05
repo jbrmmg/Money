@@ -66,6 +66,9 @@ public class PoJoTest {
         account.setImagePrefix("Cheese");
         account.setName("Testing");
         account.setClosed(true);
+        account.setTransferAccountId("BANK");
+        account.setTransferDay(2);
+        account.setWeekendAdj(AdjustmentType.AT_FORWARD);
         AccountDTO accountDTO = accountMapper.map(account, AccountDTO.class);
         Assert.assertEquals("CHEESE", accountDTO.getId());
         Assert.assertEquals("BLACK",accountDTO.getColour());
@@ -93,6 +96,9 @@ public class PoJoTest {
         Assert.assertEquals("Testing",account.getName());
         Assert.assertEquals("Cheese",account.getImagePrefix());
         Assert.assertFalse(account.getClosed());
+        Assert.assertNull(account.getTransferAccountId());
+        Assert.assertNull(account.getWeekendAdj());
+        Assert.assertNull(account.getTransferDay());
     }
 
     @Test
