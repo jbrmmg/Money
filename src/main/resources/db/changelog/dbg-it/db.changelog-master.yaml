@@ -52,4 +52,7 @@ databaseChangeLog:
       file: /db/changelog/db.changelog-016-reconcile-updates.yaml
 
   - include:
+      file: /db/changelog/db.changelog-017-auto-transfer.yaml
+
+  - include:
       file: /db/changelog/dbg-it/db.changelog-testdata.yaml
