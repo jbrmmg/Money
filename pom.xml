@@ -68,7 +68,7 @@
                         <artifactItem>
                             <groupId>com.jbr.script</groupId>
                             <artifactId>Script</artifactId>
-                            <version>3.0.17</version>
+                            <version>3.0.25</version>
                             <type>zip</type>
                             <overWrite>true</overWrite>
                             <outputDirectory>${project.build.directory}/scripts</outputDirectory>
