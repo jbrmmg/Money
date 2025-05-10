@@ -31,7 +31,7 @@ public class ConfigDbCommon {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(properties.getChangeLog());
-        liquibase.setContexts(properties.getContexts());
+        liquibase.setContexts(properties.getContexts().get(0));
         liquibase.setDefaultSchema(properties.getDefaultSchema());
         liquibase.setDropFirst(properties.isDropFirst());
         liquibase.setShouldRun(properties.isEnabled());

@@ -38,10 +38,10 @@ databaseChangeLog:
                   name: account
                   value: AMEX
               - column:
-                  name: month
+                  name: month_val
                   value: 2
               - column:
-                  name: year
+                  name: year_val
                   value: 2010
               - column:
                   name: open_balance
@@ -56,7 +56,7 @@ databaseChangeLog:
                     name: locked
                     valueBoolean: true
             tableName: statement
-            where: account = 'AMEX' and month = 1
+            where: account = 'AMEX' and month_val = 1
 
         - insert:
             tableName: statement
@@ -65,10 +65,10 @@ databaseChangeLog:
                   name: account
                   value: BANK
               - column:
-                  name: month
+                  name: month_val
                   value: 2
               - column:
-                  name: year
+                  name: year_val
                   value: 2010
               - column:
                   name: open_balance
@@ -83,7 +83,7 @@ databaseChangeLog:
                   name: locked
                   valueBoolean: true
             tableName: statement
-            where: account = 'BANK' and month = 1
+            where: account = 'BANK' and month_val = 1
 
         - insert:
             tableName: regular
