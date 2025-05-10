@@ -11,9 +11,9 @@ databaseChangeLog:
               - column:
                   name: account
               - column:
-                  name: month
+                  name: month_val
               - column:
-                  name: year
+                  name: year_val
               - column:
                   name: open_balance
               - column:

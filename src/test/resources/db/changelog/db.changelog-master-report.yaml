@@ -54,6 +54,9 @@ databaseChangeLog:
   - include:
       file: /db/changelog/db.changelog-017-auto-transfer.yaml
 
+  - include:
+      file: /db/changelog/db.changelog-018-rename-columns.yaml
+
 # Load test data for reporting.
 
   - include:

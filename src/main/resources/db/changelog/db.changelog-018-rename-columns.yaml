@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 18
+      author: jason
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: transaction
+            constraintName: fk_statement_trn
+        - dropForeignKeyConstraint:
+            baseTableName: statement
+            constraintName: fk_account_statement
+        - dropPrimaryKey:
+            tableName: statement
+        - renameColumn:
+            tableName: statement
+            oldColumnName: month
+            newColumnName: month_val
+            columnDataType: int(11)
+        - renameColumn:
+            tableName: statement
+            oldColumnName: year
+            newColumnName: year_val
+            columnDataType: int(11)
+        - addPrimaryKey:
+            tableName: statement
+            columnNames: account, month_val, year_val
+        - addForeignKeyConstraint:
+            constraintName: fk_account_statement
+            baseTableName: statement
+            baseColumnNames: account
+            referencedTableName: account
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_statement_trn
+            baseTableName: transaction
+            baseColumnNames: account, statement_month, statement_year
+            referencedTableName: statement
+            referencedColumnNames: account, month_val, year_val

@@ -44,8 +44,8 @@ public class Transaction implements Serializable {
     @ManyToOne()
     @JoinColumnsOrFormulas(value = {
             @JoinColumnOrFormula(formula = @JoinFormula(value="account", referencedColumnName = "account")),
-            @JoinColumnOrFormula(column = @JoinColumn(name="statement_month", referencedColumnName = "month")),
-            @JoinColumnOrFormula(column = @JoinColumn(name="statement_year", referencedColumnName = "year"))
+            @JoinColumnOrFormula(column = @JoinColumn(name="statement_month", referencedColumnName = "month_val")),
+            @JoinColumnOrFormula(column = @JoinColumn(name="statement_year", referencedColumnName = "year_val"))
     })
     private Statement statement;
 
