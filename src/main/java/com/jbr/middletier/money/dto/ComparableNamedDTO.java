@@ -1,8 +1,12 @@
 package com.jbr.middletier.money.dto;
 
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
+@Setter
+@Getter
 public class ComparableNamedDTO implements Comparable<ComparableNamedDTO> {
     @Pattern(regexp="^[\\da-zA-Z]{1,4}$",message="ID can only contain letters or digits up to 4 characters.")
     private String id;
@@ -10,22 +14,6 @@ public class ComparableNamedDTO implements Comparable<ComparableNamedDTO> {
     private String name;
 
     protected ComparableNamedDTO() {
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     @Override

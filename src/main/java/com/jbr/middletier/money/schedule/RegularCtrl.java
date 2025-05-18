@@ -18,7 +18,7 @@ import java.time.LocalDate;
 public class RegularCtrl {
     private final RegularRepository regularRepository;
 
-    private final TransactionRepository tranasactionRepository;
+    private final TransactionRepository transactionRepository;
 
     private final ApplicationProperties applicationProperties;
 
@@ -26,10 +26,10 @@ public class RegularCtrl {
 
     @Autowired
     public RegularCtrl(RegularRepository regularRepository,
-                       TransactionRepository tranasactionRepository,
+                       TransactionRepository transactionRepository,
                        ApplicationProperties applicationProperties ) {
         this.regularRepository = regularRepository;
-        this.tranasactionRepository = tranasactionRepository;
+        this.transactionRepository = transactionRepository;
         this.applicationProperties = applicationProperties;
     }
 
@@ -61,14 +61,14 @@ public class RegularCtrl {
 
                 LOG.info("Create new transaction");
                 Transaction regularPayment = new Transaction(nextRegular.getAccount(), nextRegular.getCategory(), transactionDate, nextRegular.getAmount(), nextRegular.getDescription());
-                tranasactionRepository.save(regularPayment);
+                transactionRepository.save(regularPayment);
 
                 // Update the regular payment.
                 nextRegular.setLastDate(saveDate);
                 regularRepository.save(nextRegular);
             }
         } catch( CannotDetermineNextDateException ex) {
-            LOG.error("Cannot determine the next payemnt.", ex);
+            LOG.error("Cannot determine the next payment.", ex);
         } catch ( Exception ex) {
             LOG.error("Failed to process regular payment.", ex);
         }

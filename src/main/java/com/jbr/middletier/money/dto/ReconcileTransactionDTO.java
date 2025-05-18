@@ -1,9 +1,14 @@
 package com.jbr.middletier.money.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Setter
 public class ReconcileTransactionDTO {
+    @Getter
     private List<Integer> transactions;
     private boolean reconcile;
 
@@ -12,19 +17,8 @@ public class ReconcileTransactionDTO {
         this.reconcile = false;
     }
 
-    public List<Integer> getTransactions() {
-        return this.transactions;
-    }
-
-    public void setTransactions(List<Integer> transactions) {
-        this.transactions = transactions;
-    }
-
     public boolean getReconcile() {
         return this.reconcile;
     }
 
-    public void setReconcile(boolean reconcile) {
-        this.reconcile = reconcile;
-    }
 }

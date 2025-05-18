@@ -57,6 +57,9 @@ databaseChangeLog:
   - include:
       file: /db/changelog/db.changelog-018-rename-columns.yaml
 
+  - include:
+      file: /db/changelog/db.changelog-019-statement-age.yaml
+
 # Load test data for reporting.
 
   - include:

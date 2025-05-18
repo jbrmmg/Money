@@ -3,10 +3,14 @@ package com.jbr.middletier.money.data.primary;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
+@Setter
+@Getter
 @Embeddable
 public class ReconciliationFileTransactionId implements Serializable {
     @NotNull
@@ -23,22 +27,6 @@ public class ReconciliationFileTransactionId implements Serializable {
     }
 
     public ReconciliationFileTransactionId() {
-    }
-
-    public ReconciliationFile getFile() {
-        return file;
-    }
-
-    public void setFile(ReconciliationFile file) {
-        this.file = file;
-    }
-
-    public Integer getLine() {
-        return line;
-    }
-
-    public void setLine(Integer line) {
-        this.line = line;
     }
 
     @Override

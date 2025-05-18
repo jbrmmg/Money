@@ -183,7 +183,7 @@ public class AccountTransactionManager {
             return;
         }
 
-        // Description can always be updated.
+        // The Description can always be updated.
         transaction.get().setDescription(source.getDescription());
 
         // If there is a new category, update it.
@@ -263,7 +263,7 @@ public class AccountTransactionManager {
                     result.addAll(updateExistingTransaction(next));
                     allFailed = false;
                 } else if (next.getFromReconciliation() != null && next.getFromReconciliation()) {
-                    // If this is from a reconciliation then create the transaction.
+                    // If this is from a reconciliation, then create the transaction.
                     // Category cannot be transfer.
                     if (next.getCategory() != null && next.getCategory().getId().equals(CategoryManager.CATEGORY_TRANSFER)) {
                         throw new UpdateDeleteCategoryException(CategoryManager.CATEGORY_TRANSFER);
@@ -274,7 +274,9 @@ public class AccountTransactionManager {
                     fromReconcile.setAmount(next.getAmount().getValue());
                     fromReconcile.setDate(next.getDate());
                     fromReconcile.setDescription(next.getDescription());
-                    fromReconcile.setCategoryId(next.getCategory().getId());
+                    if(next.getCategory() != null) {
+                        fromReconcile.setCategoryId(next.getCategory().getId());
+                    }
 
                     // Create the transaction from this.
                     result.addAll(this.createIndividualTransaction(fromReconcile));

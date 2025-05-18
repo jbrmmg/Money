@@ -114,7 +114,7 @@ public class FileFormatDescription {
     public LocalDate getDate(ReconcileFileLine line) throws FileFormatException {
         String value = getColumnValue(getDateColumn(),line);
 
-        // If the date is a specific value then ignore it.
+        // If the date is a specific value, then ignore it.
         // JBR-441: make this part of the format description database data
         if(value.equalsIgnoreCase("pending")) {
             return null;

@@ -9,12 +9,17 @@ import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
+import com.jbr.middletier.money.exceptions.StatementAlreadyLockedException;
+import com.jbr.middletier.money.manager.AccountTransactionManager;
+import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -26,6 +31,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -41,6 +48,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 @ActiveProfiles(value="statement")
 public class StatementTest extends Support {
+    private static final Logger LOG = LoggerFactory.getLogger(StatementTest.class);
+
     @Autowired
     private TransactionRepository transactionRepository;
 
@@ -52,6 +61,12 @@ public class StatementTest extends Support {
 
     @Autowired
     private UtilityMapper utilityMapper;
+
+    @Autowired
+    private StatementManager statementManager;
+
+    @Autowired
+    private AccountTransactionManager accountTransactionManager;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -172,6 +187,60 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         // JBR-439: check that the previous statement is now unlocked.
+    }
+
+    private void incrementLock(StatementIdDTO lockRequest) {
+        lockRequest.setMonth(lockRequest.getMonth() + 1);
+        if(lockRequest.getMonth() > 12) {
+            lockRequest.setMonth(1);
+            lockRequest.setYear(lockRequest.getYear() + 1);
+        }
+    }
+
+    @Test
+    public void testStatementAge() throws InvalidStatementIdException, StatementAlreadyLockedException {
+        cleanUp();
+
+        // Create statements to test with.
+        StatementIdDTO lockRequest = new StatementIdDTO("NWDE",1,2010);
+        statementRepository.findAll().forEach(statement -> {
+            LOG.info("Statement {} {} {} {}", statement.getId().getAccount().getId(), statement.getId().getYear(), statement.getId().getMonth(), statement.getLocked());
+
+            if(!statement.getLocked() && statement.getId().getAccount().getId().equalsIgnoreCase(lockRequest.getAccountId())) {
+                lockRequest.setMonth(statement.getId().getMonth());
+                lockRequest.setYear(statement.getId().getYear());
+            }
+        });
+
+        // Store the expected age of each year, month.
+        Map<String,Integer> expectedAges = new HashMap<>();
+
+        statementManager.statementLock(lockRequest, accountTransactionManager);
+        expectedAges.put(lockRequest.getYear().toString() + "-" + lockRequest.getMonth().toString(),5);
+        incrementLock(lockRequest);
+        statementManager.statementLock(lockRequest, accountTransactionManager);
+        expectedAges.put(lockRequest.getYear().toString() + "-" + lockRequest.getMonth().toString(),4);
+        incrementLock(lockRequest);
+        statementManager.statementLock(lockRequest, accountTransactionManager);
+        expectedAges.put(lockRequest.getYear().toString() + "-" + lockRequest.getMonth().toString(),3);
+        incrementLock(lockRequest);
+        statementManager.statementLock(lockRequest, accountTransactionManager);
+        expectedAges.put(lockRequest.getYear().toString() + "-" + lockRequest.getMonth().toString(),2);
+        incrementLock(lockRequest);
+        statementManager.statementLock(lockRequest, accountTransactionManager);
+        expectedAges.put(lockRequest.getYear().toString() + "-" + lockRequest.getMonth().toString(),1);
+
+        // Check that the statements have been aged.
+        statementRepository.findAll().forEach(statement -> {
+            LOG.info("Statement {} {} {} {} {}", statement.getId().getAccount().getId(), statement.getId().getYear(), statement.getId().getMonth(), statement.getLocked(), statement.getAge());
+
+            if(statement.getId().getAccount().getId().equalsIgnoreCase(lockRequest.getAccountId())) {
+                Integer expectedAge = expectedAges.get(statement.getId().getYear().toString() + "-" + statement.getId().getMonth().toString());
+                if(statement.getAge() != null && statement.getAge() > 0) {
+                    Assert.assertEquals(expectedAge, statement.getAge());
+                }
+            }
+        });
     }
 
     @Test

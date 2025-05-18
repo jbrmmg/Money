@@ -1,15 +1,21 @@
 package com.jbr.middletier.money.dto;
 
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class TransactionFileDetailsDTO {
     List<TransactionDTO> transactions;
+    @Setter
     boolean ok;
+    @Setter
     @Pattern(regexp="^[\\da-zA-Z]{1,100}$",message="Error can only contain letters or digits up to 100 characters.")
     String error;
+    @Setter
     @Pattern(regexp="^[\\da-zA-Z]{3}$",message="Account can only contain letters or digits of 4 characters.")
     String accountId;
 
@@ -20,35 +26,7 @@ public class TransactionFileDetailsDTO {
         this.accountId = null;
     }
 
-    public List<TransactionDTO> getTransactions() {
-        return this.transactions;
-    }
-
     public void addTransaction(TransactionDTO transaction) {
         this.transactions.add(transaction);
-    }
-
-    public void setOk(boolean ok) {
-        this.ok = ok;
-    }
-
-    public boolean isOk() {
-        return this.ok;
-    }
-
-    public void setError(String error) {
-        this.error = error;
-    }
-
-    public String getError() {
-        return this.error;
-    }
-
-    public void setAccountId(String account) {
-        this.accountId = account;
-    }
-
-    public String getAccountId() {
-        return this.accountId;
     }
 }

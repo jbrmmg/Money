@@ -1,5 +1,7 @@
 package com.jbr.middletier.money.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,74 +10,51 @@ import java.time.LocalDate;
 @Configuration
 @ConfigurationProperties(prefix="money")
 public class ApplicationProperties {
+    @Getter
+    @Setter
     private String serviceName;
+    @Getter
+    @Setter
     private String reportWorking;
+    @Getter
+    @Setter
     private String reportShare;
+    @Getter
+    @Setter
     private String regularSchedule;
     private boolean regularEnabled;
+    @Getter
+    @Setter
     private String reportSchedule;
     private boolean reportEnabled;
+    @Getter
+    @Setter
     private String archiveSchedule;
     private boolean archiveEnabled;
+    @Setter
+    @Getter
     private String reconcileFileLocation;
+    @Setter
+    @Getter
     private Integer smtpPort;
+    @Setter
     private LocalDate today;
-
-    public void setServiceName(String serviceName) { this.serviceName = serviceName; }
-
-    public void setReportWorking(String reportWorking) { this.reportWorking = reportWorking; }
-
-    public void setReportShare(String reportShare) { this.reportShare = reportShare; }
-
-    public void setRegularSchedule(String regularSchedule) { this.regularSchedule = regularSchedule; }
 
     public void setRegularEnabled(Boolean regularEnabled) { this.regularEnabled = regularEnabled; }
 
-    public void setReportSchedule(String reportSchedule) { this.reportSchedule = reportSchedule; }
-
     public void setReportEnabled(Boolean reportEnabled) { this.reportEnabled = reportEnabled; }
-
-    public void setArchiveSchedule(String archiveSchedule) { this.archiveSchedule = archiveSchedule; }
 
     public void setArchiveEnabled(Boolean archiveEnabled) { this.archiveEnabled = archiveEnabled; }
 
-    public String getServiceName() { return this.serviceName; }
-
-    public String getReportWorking() { return this.reportWorking; }
-
-    public String getReportShare() { return this.reportShare; }
-
-    public String getRegularSchedule() { return this.regularSchedule; }
-
     public boolean getRegularEnabled() { return this.regularEnabled; }
 
-    public String getReportSchedule() { return this.reportSchedule; }
-
     public boolean getReportEnabled() { return this.reportEnabled; }
-
-    public String getArchiveSchedule() { return this.archiveSchedule; }
 
     public boolean getArchiveEnabled() { return this.archiveEnabled; }
 
     public String getPDFFilename() { return getReportWorking() + "/Report.pdf"; }
 
     public String getHtmlFilename() { return getReportWorking() + "/Report.html"; }
-
-    public String getReconcileFileLocation() {
-        return reconcileFileLocation;
-    }
-
-    public void setReconcileFileLocation(String reconcileFileLocation) {
-        this.reconcileFileLocation = reconcileFileLocation;
-    }
-
-    public Integer getSmtpPort() {
-        return smtpPort;
-    }
-
-    public void setSmtpPort(Integer smtpPort) {
-        this.smtpPort = smtpPort;
-    }
 
     public LocalDate getToday() {
         if(this.today == null) {
@@ -85,7 +64,4 @@ public class ApplicationProperties {
         return today;
     }
 
-    public void setToday(LocalDate today) {
-        this.today = today;
-    }
 }

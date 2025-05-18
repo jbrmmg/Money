@@ -2,6 +2,8 @@ package com.jbr.middletier.money.data.primary;
 
 import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransactionString;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.*;
 
 import jakarta.persistence.*;
@@ -22,25 +24,36 @@ public class Transaction implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Getter
+    @Setter
     @Id
     @Column(name="id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Setter
+    @Getter
     @JoinColumn(name="account")
     @ManyToOne(optional = false)
     private Account account;
 
+    @Getter
+    @Setter
     @JoinColumn(name="category")
     @ManyToOne(optional = false)
     private Category category;
 
+    @Setter
+    @Getter
     @Column(name="date")
     private LocalDate date;
 
+    @Setter
     @Column(name="amount")
     private BigDecimal amount;
 
+    @Getter
+    @Setter
     @ManyToOne()
     @JoinColumnsOrFormulas(value = {
             @JoinColumnOrFormula(formula = @JoinFormula(value="account", referencedColumnName = "account")),
@@ -52,6 +65,8 @@ public class Transaction implements Serializable {
     @Column(name="oppositeid")
     private Integer oppositeId;
 
+    @Setter
+    @Getter
     @Column(name="description")
     private String description;
 
@@ -66,33 +81,7 @@ public class Transaction implements Serializable {
         this.description = description;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public Account getAccount() {
-        return this.account;
-    }
-
     public FinancialAmount getAmount() { return new FinancialAmount(this.amount); }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getDescription() { return this.description; }
-
-    public void setDescription(String description) { this.description = description; }
-
-    public void setStatement(Statement statement) {
-        this.statement = statement;
-    }
-
-    public Statement getStatement() { return this.statement; }
 
     public void clearStatement() {
         this.statement = null;
@@ -103,24 +92,10 @@ public class Transaction implements Serializable {
         return (this.statement != null);
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
-    }
-
-    public void setCategory(Category category) { this.category = category; }
-
-    public Category getCategory() { return this.category; }
-
     public void setOppositeTransactionId(Integer oppositeTransactionId) { this.oppositeId = oppositeTransactionId; }
 
     public Integer getOppositeTransactionId() {
         return this.oppositeId;
-    }
-
-    public LocalDate getDate() { return this.date; }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
     }
 
     @Override

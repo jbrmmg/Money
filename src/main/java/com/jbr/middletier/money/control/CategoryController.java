@@ -28,7 +28,7 @@ public class CategoryController {
 
     @GetMapping(path="/ext/money/categories")
     public List<CategoryDTO>  getExtCategories() {
-        LOG.info("Request Categories.");
+        LOG.info("Request Categories (ext).");
 
         return categoryManager.getAllBySortOrder();
     }

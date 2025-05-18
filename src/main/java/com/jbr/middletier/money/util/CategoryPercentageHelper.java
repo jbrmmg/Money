@@ -43,7 +43,7 @@ public class CategoryPercentageHelper {
     }
 
     public double getPercentage(Category category) {
-        // If the total is greater than zero then all percentages will be zero.
+        // If the total is greater than zero, then all percentages will be zero.
         if(FinancialAmount.positive(this.total)) {
             return 0.0;
         }

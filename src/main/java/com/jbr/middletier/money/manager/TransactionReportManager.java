@@ -103,7 +103,7 @@ public class TransactionReportManager {
 
     private void getPredicted() {
         for(Regular next : regularPaymentManager.getAllRegularPayments()) {
-            // Insert the regular payment into transaction report.
+            // Insert the regular payment into a transaction report.
             this.transactionReportRepository.save(this.mapper.map(next, TransactionReport.class));
         }
     }
@@ -219,7 +219,7 @@ public class TransactionReportManager {
             return null;
         }
 
-        // If the not-locked flag is set then use the opening balance from all the accounts that are in the filter.
+        // If the not-locked flag is set, then use the opening balance from all the accounts that are in the filter.
         BigDecimal openBalance;
         if(filter.getLocked() != null && !filter.getLocked()) {
             openBalance = openingBalanceFromAllAccounts(filter);
@@ -231,7 +231,7 @@ public class TransactionReportManager {
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {
-        // Opening date is the earliest date.
+        // The Opening date is the earliest date.
         if(!transactions.isEmpty()) {
             LocalDate earliestDate = LocalDate.parse(transactions.get(0).getDate(),Constants.MONEY_DATE_FORMATTER);
 
@@ -376,7 +376,7 @@ public class TransactionReportManager {
             }
         }
 
-        // If possible add an opening balance row.
+        // If possible, add an opening balance row.
         FinancialAmount openingBalanceAmount = calculateOpeningBalance(result,filter);
         if(openingBalanceAmount != null) {
             TransactionReportDTO openingBalance = new TransactionReportDTO();
@@ -430,7 +430,7 @@ public class TransactionReportManager {
         List<TransactionReport> updates = new ArrayList<>();
         List<TransactionReport> deletes = new ArrayList<>();
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
-            // If this is a real transaction that is also from reconciliation - then just remove the flag.
+            // If this is a real transaction also from reconciliation - then remove the flag.
             if(next.getTransactionId() != null) {
                 next.setFromReconciliation(false);
                 updates.add(next);
@@ -516,7 +516,7 @@ public class TransactionReportManager {
         statementDate.setMonth(statement.getId().getMonth());
         statementDate.setYear(statement.getId().getYear());
 
-        // Find transactions on this statement as they can not no longer be unreconcile.
+        // Find transactions on this statement as they cannot no longer be unreconcile.
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setAccounts(Collections.singletonList(account));
         filter.setStatementDate(statementDate);
@@ -540,7 +540,7 @@ public class TransactionReportManager {
         StatementDateDTO statementDate = new StatementDateDTO();
         statementDate.setNone(true);
 
-        // Find transactions on this statement as they can not no longer be unreconcile.
+        // Find transactions on this statement as they cannot no longer be unreconcile.
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setAccounts(Collections.singletonList(accountDTO));
         filter.setStatementDate(statementDate);

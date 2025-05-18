@@ -3,8 +3,10 @@ package com.jbr.middletier.money.events;
 import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.dto.StatementDTO;
+import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
+@Getter
 public class StatementLockEvent extends ApplicationEvent {
     private final Statement statement;
     private final Account account;
@@ -22,17 +24,5 @@ public class StatementLockEvent extends ApplicationEvent {
         this.statement = null;
         this.account = account;
         this.penultimateStatement = penultimateStatement;
-    }
-
-    public Statement getStatement() {
-        return this.statement;
-    }
-
-    public Account getAccount() {
-        return this.account;
-    }
-
-    public StatementDTO getPenultimateStatement() {
-        return this.penultimateStatement;
     }
 }

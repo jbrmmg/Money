@@ -2,6 +2,7 @@ package com.jbr.middletier.money.util;
 
 import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Transaction;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class CategoryComparison {
     private final Category category;
     private final FinancialAmount thisMonth;
@@ -18,18 +20,6 @@ public class CategoryComparison {
         this.category = category;
         this.thisMonth = new FinancialAmount(BigDecimal.ZERO);
         this.previousMonth = new FinancialAmount(BigDecimal.ZERO);
-    }
-
-    public Category getCategory() {
-        return this.category;
-    }
-
-    public FinancialAmount getThisMonth() {
-        return this.thisMonth;
-    }
-
-    public FinancialAmount getPreviousMonth() {
-        return this.previousMonth;
     }
 
     public void incrementThisMonth(BigDecimal increment) {

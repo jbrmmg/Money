@@ -1,7 +1,10 @@
 package com.jbr.middletier.money.dto;
 
+import lombok.Getter;
+
 import java.text.DecimalFormat;
 
+@Getter
 public class ValueRangeDTO {
     private Double minimum;
     private Double maximum;
@@ -19,10 +22,6 @@ public class ValueRangeDTO {
         this.setMaximum(maximum);
     }
 
-    public Double getMinimum() {
-        return minimum;
-    }
-
     public void setMinimum(Double minimum) {
         // Value must be positive and must be less than the maximum if provided.
         if(minimum != null && this.maximum != null && minimum > this.maximum) {
@@ -30,10 +29,6 @@ public class ValueRangeDTO {
         }
 
         this.minimum = minimum;
-    }
-
-    public Double getMaximum() {
-        return maximum;
     }
 
     public void setMaximum(Double maximum) {

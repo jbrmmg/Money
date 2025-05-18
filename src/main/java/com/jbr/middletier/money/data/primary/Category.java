@@ -4,6 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serial;
@@ -12,6 +15,8 @@ import java.io.Serializable;
 /**
  * Created by jason on 04/03/17.
  */
+@Setter
+@Getter
 @Entity
 @Table(name="category")
 public class Category implements Serializable {
@@ -52,47 +57,4 @@ public class Category implements Serializable {
     @Column(name="system_use")
     private Boolean systemUse;
 
-    public String getId() {
-        return this.id;
-    }
-
-    public void setId(String id) { this.id = id; }
-
-    public Long getSort() {
-        return this.sort;
-    }
-
-    public void setSort(Long sort) { this.sort = sort; }
-
-    public Boolean getRestricted() {
-        return this.restricted;
-    }
-
-    public void setRestricted(Boolean restricted) { this.restricted = restricted; }
-
-    public String getColour() {
-        return this.colour;
-    }
-
-    public void setColour(String colour) { this.colour = colour; }
-
-    public String getGroup() {
-        return this.group;
-    }
-
-    public void setGroup(String group) { this.group = group; }
-
-    public Boolean getSystemUse() {
-        return this.systemUse;
-    }
-
-    public void setSystemUse(Boolean systemUse) { this.systemUse = systemUse; }
-
-    public Boolean getExpense() { return this.expense; }
-
-    public void setExpense(Boolean expense) { this.expense = expense; }
-
-    public String getName() { return this.name; }
-
-    public void setName(String name) { this.name = name; }
 }

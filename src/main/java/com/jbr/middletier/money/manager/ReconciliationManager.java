@@ -131,7 +131,7 @@ public class ReconciliationManager {
     private void innerLookForMatches(boolean reconciled, int daysAway, List<MatchData> result, List<Transaction> transactions) {
         // For each result, look for a transaction that matches based on the reconciled status and days away.
         for(MatchData next : result) {
-            // If this is already reconciled to a transaction skip it.
+            // If this is already reconciled to a transaction, skip it.
             if(next.getTransaction() != null) {
                 continue;
             }
@@ -180,7 +180,7 @@ public class ReconciliationManager {
     }
 
     public List<MatchData> match() throws NullOrBlankAccountIdException {
-        // Get the account of the data that is in the reconcile data.
+        // Get the account of the data that is in the reconciled data.
         Account account = getSelectedAccount();
 
         // If the account is null, then no file is loaded - just return empty.
@@ -200,7 +200,7 @@ public class ReconciliationManager {
             result.add(new MatchData(next, account));
         }
 
-        // Build up those reconciliations that match (first with reconciled then with un-reconciled).
+        // Build up those reconciliations that match (first with reconciled then with unreconciled).
         lookForMatches(true, result, transactions);
         lookForMatches(false, result, transactions);
 

@@ -106,7 +106,7 @@ public class TransactionSorting {
             return 2;
         }
 
-        // If we get here then the value is based on the date compared to today.
+        // If we get here, then the value is based on the date compared to today.
         LocalDate transactionDate = LocalDate.parse(t.getDate(), Constants.MONEY_DATE_FORMATTER);
 
         if(transactionDate.isAfter(today)) {
@@ -125,7 +125,7 @@ public class TransactionSorting {
     }
 
     public static int compare(TransactionReportDTO t1, TransactionReportDTO t2, List<TransactionSortDTO> sorting, LocalDate today) {
-        // There are 4 types of transaction report; Transaction, Opening Balance, Today's Balance and Future Balance.
+        // There are 4 types of a transaction report; Transaction, Opening Balance, Today's Balance and Future Balance.
         // Opening Balance should always be sorted to be first.
         // Today's Balance should be after any transaction on or before today.
         // Future Balance should always be last.

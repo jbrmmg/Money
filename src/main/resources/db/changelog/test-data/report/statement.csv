@@ -1,6 +1,6 @@
-account,month_val,year_val,open_balance,locked,deleted
-BANK,4,2023,1029,1,NULL
-BANK,5,2023,620.16,0,NULL
-AMEX,4,2023,0,0,NULL
-JLPC,4,2023,10,0,NULL
-NWDE,4,2023,0,0,NULL
+account,month_val,year_val,open_balance,locked,deleted,age
+BANK,4,2023,1029,1,NULL,1
+BANK,5,2023,620.16,0,NULL,0
+AMEX,4,2023,0,0,NULL,0
+JLPC,4,2023,10,0,NULL,0
+NWDE,4,2023,0,0,NULL,0

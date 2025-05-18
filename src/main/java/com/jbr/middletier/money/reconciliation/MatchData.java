@@ -4,6 +4,7 @@ import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.ReconciliationData;
 import com.jbr.middletier.money.data.primary.Transaction;
+import lombok.Getter;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -53,9 +54,13 @@ public class MatchData implements Comparable<MatchData> {
     private final int reconciliationId;
     private final LocalDate reconciliationDate;
     private final BigDecimal reconciliationAmount;
+    @Getter
     private final String description;
+    @Getter
     private Transaction transaction;
+    @Getter
     private Category category;
+    @Getter
     private final Account account;
 
     public MatchData(ReconciliationData source, Account account)  {
@@ -91,22 +96,12 @@ public class MatchData implements Comparable<MatchData> {
         return this.reconciliationAmount;
     }
 
-    public Transaction getTransaction() {
-        return this.transaction;
-    }
-
-    public Category getCategory() { return this.category; }
-
-    public String getDescription() { return this.description; }
-
-    public Account getAccount() { return this.account; }
-
     public LocalDate getDate() {
         return this.reconciliationDate;
     }
 
     public boolean transactionMatch(Transaction transaction, int withinDays) {
-        // If the amount does not match then there is no match.
+        // If the amount does not match, then there is no match.
         double epsilon = 0.001d;
         if(this.reconciliationAmount.subtract(transaction.getAmount().getValue()).abs().compareTo(BigDecimal.valueOf(epsilon)) > 0) {
             return false;
@@ -116,7 +111,7 @@ public class MatchData implements Comparable<MatchData> {
             return transaction.getDate().equals(this.reconciliationDate);
         }
 
-        // Transaction Date must be within the number of days of the reconciliation date.
+        // The Transaction Date must be within the number of days of the reconciliation date.
         LocalDate startDate = this.reconciliationDate.minusDays(withinDays);
         LocalDate endDate = this.reconciliationDate.plusDays(withinDays);
 

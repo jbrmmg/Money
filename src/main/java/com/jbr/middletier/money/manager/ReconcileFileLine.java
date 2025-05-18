@@ -1,8 +1,11 @@
 package com.jbr.middletier.money.manager;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.List;
 
+@Getter
 public class ReconcileFileLine {
     private final String line;
     private final List<String> columns;
@@ -14,15 +17,4 @@ public class ReconcileFileLine {
         this.lineNumber = lineNumber;
     }
 
-    public String getLine() {
-        return this.line;
-    }
-
-    public List<String> getColumns() {
-        return this.columns;
-    }
-
-    public int getLineNumber() {
-        return this.lineNumber;
-    }
 }

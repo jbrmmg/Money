@@ -3,9 +3,12 @@ package com.jbr.middletier.money.dto;
 import com.jbr.middletier.money.config.Constants;
 
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
+@Getter
 public class DateRangeDTO {
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String from;
@@ -34,17 +37,13 @@ public class DateRangeDTO {
         }
     }
 
-    public String getFrom() {
-        return this.from;
-    }
-
     public void setFrom(String from) {
         if(from == null) {
             this.from = null;
             return;
         }
 
-        // String must be in the format yyyy-MM-dd and if provided then must be before the 'to' date.
+        // String must be in the format yyyy-MM-dd and if provided, then must be before the 'to' date.
         LocalDate date = convertToLocalDate(from);
         if(date == null) {
             throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);
@@ -60,17 +59,13 @@ public class DateRangeDTO {
         this.from = from;
     }
 
-    public String getTo() {
-        return this.to;
-    }
-
     public void setTo(String to) {
         if(to == null) {
             this.to = null;
             return;
         }
 
-        // String must be in the format yyyy-MM-dd and if provided then must be after the 'from' date.
+        // String must be in the format yyyy-MM-dd and if provided, then must be after the 'from' date.
         LocalDate date = convertToLocalDate(to);
         if(date == null) {
             throw new IllegalArgumentException("Date Range: the dates must be in the format " + Constants.MONEY_DATE_FORMAT);

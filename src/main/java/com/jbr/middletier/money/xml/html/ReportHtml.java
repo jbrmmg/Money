@@ -7,6 +7,8 @@ import com.helger.css.writer.CSSWriterSettings;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.util.CategoryComparison;
 import com.jbr.middletier.money.util.FinancialAmount;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.text.WordUtils;
 import org.jdom2.Element;
 import org.jdom2.Text;
@@ -157,6 +159,8 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         addAmountToRow(row,transaction.getAmount(), HTML_TD_AMOUNT, concatenateClass(HTML_TD_AMOUNT,HTML_TD_AMOUNT_DEBIT));
     }
 
+    @Setter
+    @Getter
     private static class TransactionPair {
         private Transaction left;
         private Transaction right;
@@ -164,22 +168,6 @@ public class ReportHtml extends HyperTextMarkupLanguage {
         public TransactionPair() {
             this.left = null;
             this.right = null;
-        }
-
-        public Transaction getLeft() {
-            return left;
-        }
-
-        public void setLeft(Transaction left) {
-            this.left = left;
-        }
-
-        public Transaction getRight() {
-            return right;
-        }
-
-        public void setRight(Transaction right) {
-            this.right = right;
         }
     }
 

@@ -1,6 +1,8 @@
 package com.jbr.middletier.money.dto;
 
 import com.jbr.middletier.money.util.FinancialAmount;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -8,17 +10,21 @@ import javax.validation.constraints.Pattern;
 import java.io.Serial;
 import java.io.Serializable;
 
+@Setter
 public class StatementDTO implements Comparable<StatementDTO>, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Getter
     @Pattern(regexp="^[\\da-zA-Z]{1,4}$",message="Account ID contain letters or digits up to 4 characters.")
     private String accountId;
 
+    @Getter
     @Min(1)
     @Max(12)
     private Integer month;
 
+    @Getter
     @Min(1900)
     @Max(2399)
     private Integer year;
@@ -26,30 +32,6 @@ public class StatementDTO implements Comparable<StatementDTO>, Serializable {
     private FinancialAmount openBalance;
 
     private boolean locked;
-
-    public String getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(String id) {
-        this.accountId = id;
-    }
-
-    public Integer getMonth() {
-        return this.month;
-    }
-
-    public void setMonth(Integer month) {
-        this.month = month;
-    }
-
-    public Integer getYear() {
-        return this.year;
-    }
-
-    public void setYear(Integer year) {
-        this.year = year;
-    }
 
     public FinancialAmount getOpenBalance() {
         if(this.openBalance == null) {
@@ -59,16 +41,8 @@ public class StatementDTO implements Comparable<StatementDTO>, Serializable {
         return openBalance;
     }
 
-    public void setOpenBalance(FinancialAmount openBalance) {
-        this.openBalance = openBalance;
-    }
-
     public boolean getLocked() {
         return locked;
-    }
-
-    public void setLocked(boolean locked) {
-        this.locked = locked;
     }
 
     private StatementIdDTO statementIdDTO() {

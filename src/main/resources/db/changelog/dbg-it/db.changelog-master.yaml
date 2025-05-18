@@ -58,4 +58,8 @@ databaseChangeLog:
       file: /db/changelog/db.changelog-018-rename-columns.yaml
 
   - include:
+      file: /db/changelog/db.changelog-019-statement-age.yaml
+
+
+  - include:
       file: /db/changelog/dbg-it/db.changelog-testdata.yaml

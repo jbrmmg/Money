@@ -17,10 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 public class StatementManager {
@@ -34,7 +31,8 @@ public class StatementManager {
     @Autowired
     public StatementManager(StatementRepository statementRepository,
                             AccountManager accountManager,
-                            StatementMapper statementMapper, ApplicationEventPublisher applicationEventPublisher) {
+                            StatementMapper statementMapper,
+                            ApplicationEventPublisher applicationEventPublisher) {
         this.statementRepository = statementRepository;
         this.accountManager = accountManager;
         this.statementMapper = statementMapper;
@@ -106,11 +104,14 @@ public class StatementManager {
                 // Create a new statement.
                 Statement newStatement = statement.get().lock(balance);
 
-                // Update existing statement and create new one.
+                // Update an existing statement and create a new one.
                 statementRepository.save(statement.get());
                 statementRepository.save(newStatement);
                 applicationEventPublisher.publishEvent(new StatementLockEvent(this, statement.get()));
                 LOG.info("Request statement lock - locked.");
+
+                // Regenerate the age of statements.
+                checkStatementAges();
             } else {
                 throw new StatementAlreadyLockedException(statementId);
             }
@@ -119,6 +120,68 @@ public class StatementManager {
         }
 
         return getStatements(statementId.getAccount().getId(),null);
+    }
+
+    public void checkStatementAges() {
+        Map<String,List<Statement>> statements = new HashMap<>();
+
+        // Check the statement ages.
+        for(Statement nextStatement : statementRepository.findAll()){
+            List<Statement> accountStatements;
+            if(statements.containsKey(nextStatement.getId().getAccount().getId())) {
+                accountStatements = statements.get(nextStatement.getId().getAccount().getId());
+            } else {
+                accountStatements = new ArrayList<>();
+                statements.put(nextStatement.getId().getAccount().getId(), accountStatements);
+            }
+
+            accountStatements.add(nextStatement);
+        }
+
+        // Process the list of statements for each account.
+        for(String accountId : statements.keySet()){
+            List<Statement> accountStatements = statements.get(accountId);
+
+            // Sort the accounts in order of their data.
+            accountStatements.sort((s1,s2) -> {
+                if(s1.getId().getYear().equals(s2.getId().getYear())) {
+                    return s2.getId().getMonth().compareTo(s1.getId().getMonth());
+                }
+
+                return Integer.compare(s2.getId().getYear(), s1.getId().getYear());
+            });
+
+            // Set the age of each statement.
+            int age = 0;
+            for(Statement statement : accountStatements){
+                boolean update = false;
+
+                // Does the statement need to be updated?
+                if(!statement.getLocked()) {
+                    if(statement.getAge() == null) {
+                        statement.setAge(age);
+                        update = true;
+                    } else if (statement.getAge() != 0) {
+                        statement.setAge(age);
+                        update = true;
+                    }
+                } else {
+                    age++;
+
+                    if(statement.getAge() == null) {
+                        statement.setAge(age);
+                        update = true;
+                    } else if(statement.getAge() != age) {
+                        statement.setAge(age);
+                        update = true;
+                    }
+                }
+
+                if(update) {
+                    statementRepository.save(statement);
+                }
+            }
+        }
     }
 
     public Iterable<StatementDTO> createStatement(StatementDTO statement) throws UpdateDeleteAccountException, StatementAlreadyExistsException {
@@ -190,7 +253,7 @@ public class StatementManager {
     }
 
     public Optional<Statement> getStatement(Account account, Integer month, Integer year) {
-        // If there is no year or month then return null.
+        // If there is no year or month, then return null.
         if(month == null || year == null) {
             return Optional.empty();
         }
