@@ -1,7 +1,11 @@
 package com.jbr.middletier.money.dto;
 
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class StatusDTO {
     @Pattern(regexp="^[\\da-zA-Z\\s]{1,40}$",message="Status can only contain letters or digits up to 45 characters.")
     private String status;
@@ -13,13 +17,5 @@ public class StatusDTO {
     }
 
     public StatusDTO() {
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 }

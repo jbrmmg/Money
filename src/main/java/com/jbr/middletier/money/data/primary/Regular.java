@@ -2,6 +2,8 @@ package com.jbr.middletier.money.data.primary;
 
 import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
 import com.jbr.middletier.money.schedule.AdjustmentType;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,25 +16,35 @@ import java.time.LocalDate;
 @Entity
 @Table(name="regular")
 public class Regular {
+    @Setter
+    @Getter
     @Id
     @Column(name="id")
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer id;
 
+    @Setter
+    @Getter
     @JoinColumn(name="account")
     @NotNull
     @ManyToOne
     private Account account;
 
+    @Setter
+    @Getter
     @Column(name="amount")
     @NotNull
     private BigDecimal amount;
 
+    @Setter
+    @Getter
     @JoinColumn(name="category")
     @NotNull
     @ManyToOne
     private Category category;
 
+    @Setter
+    @Getter
     @Column(name="frequency")
     @NotNull
     @Size(max=2)
@@ -42,6 +54,8 @@ public class Regular {
     @Size(max=2)
     private String weekendAdj;
 
+    @Setter
+    @Getter
     @Column(name="start")
     @NotNull
     private LocalDate start;
@@ -49,6 +63,8 @@ public class Regular {
     @Column(name="last_created")
     private LocalDate lastCreated;
 
+    @Setter
+    @Getter
     @Column(name="description")
     @Size(max=40)
     private String description;
@@ -92,14 +108,6 @@ public class Regular {
         }
     }
 
-    public LocalDate getStart() {
-        return this.start;
-    }
-
-    public void setStart(LocalDate start) {
-        this.start = start;
-    }
-
     public LocalDate getLastDate() {
         if(this.lastCreated == null) {
             return null;
@@ -135,53 +143,14 @@ public class Regular {
     }
 
     public LocalDate getNextDate(LocalDate today) throws CannotDetermineNextDateException {
-        // If the last date is not set then use the start date, otherwise use the next date (add 1 frequency to the last date)
+        // If the last date is not set, then use the start date,
+        // otherwise use the next date (add 1 frequency to the last date)
         if(this.getLastDate() == null) {
             return internalNextDate(today, getStart());
         } else {
             return internalNextDate(today, addFrequency(getLastDate()));
         }
     }
-
-    public String getFrequency() {
-        return this.frequency;
-    }
-
-    public void setFrequency(String frequency) { this.frequency = frequency; }
-
-    public Integer getId() {
-        return this.id;
-    }
-
-    public void setId(Integer id) {this.id = id;}
-
-    public Account getAccount() {
-        return this.account;
-    }
-
-    public void setAccount(Account account) {
-        this.account = account;
-    }
-
-    public Category getCategory() {
-        return this.category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public BigDecimal getAmount() {
-        return this.amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getDescription() { return this.description; }
-
-    public void setDescription(String description) { this.description = description; }
 
     public AdjustmentType getWeekendAdj() {
         return AdjustmentType.getAdjustmentType(this.weekendAdj);

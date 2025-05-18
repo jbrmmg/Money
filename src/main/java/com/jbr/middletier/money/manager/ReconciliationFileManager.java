@@ -112,7 +112,7 @@ public class ReconciliationFileManager implements FileChangeListener {
                 return -1;
             }
 
-            // Otherwise just sort on name.
+            // Otherwise, sort on name.
             return lhs.getFilename().compareTo(rhs.getFilename());
         });
 

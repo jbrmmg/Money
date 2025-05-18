@@ -3,84 +3,54 @@ package com.jbr.middletier.money.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jbr.middletier.money.util.FinancialAmount;
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
 public class TransactionDTO {
+    @Setter
+    @Getter
     private int id;
+    @Setter
+    @Getter
     @Pattern(regexp="^[\\da-zA-Z]{4}$",message="Account can only contain letters or digits of 4 characters.")
     private String accountId;
+    @Setter
+    @Getter
     @Pattern(regexp="^[\\da-zA-Z]{3}$",message="Category can only contain letters or digits of 3 characters.")
     private String categoryId;
+    @Setter
+    @Getter
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",message = "From must be a date in format yyyy-dd-mm")
     private String date;
+    @Setter
+    @Getter
     private BigDecimal amount;
+    @Setter
+    @Getter
     private Integer statementMonth;
 
+    @Setter
+    @Getter
     private Integer statementYear;
     private Integer oppositeId;
+    @Setter
+    @Getter
     @Pattern(regexp= "^[\\da-zA-Z ./?\\-*#'&():+-,!]{1,40}$",message="Description can contain only digits, letters or ./?-*#'&():+-,!.")
     private String description;
 
+    @Setter
+    @Getter
     private Boolean hasStatement;
 
+    @Setter
+    @Getter
     private Boolean statementLocked;
 
+    @Setter
+    @Getter
     private String error;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(String accountId) {
-        this.accountId = accountId;
-    }
-
-    public String getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public Integer getStatementYear() {
-        return statementYear;
-    }
-
-    public void setStatementYear(Integer statementYear) {
-        this.statementYear = statementYear;
-    }
-
-    public Integer getStatementMonth() {
-        return statementMonth;
-    }
-
-    public void setStatementMonth(Integer statementMonth) { this.statementMonth = statementMonth; }
 
     public Integer getOppositeTransactionId() {
         return oppositeId;
@@ -88,38 +58,6 @@ public class TransactionDTO {
 
     public void setOppositeTransactionId(Integer oppositeId) {
         this.oppositeId = oppositeId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Boolean getHasStatement() {
-        return hasStatement;
-    }
-
-    public void setHasStatement(Boolean hasStatement) {
-        this.hasStatement = hasStatement;
-    }
-
-    public Boolean getStatementLocked() {
-        return statementLocked;
-    }
-
-    public void setStatementLocked(Boolean statementLocked) {
-        this.statementLocked = statementLocked;
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
     }
 
     @JsonIgnore

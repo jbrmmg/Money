@@ -1,8 +1,11 @@
 package com.jbr.middletier.money.manager;
 
+import lombok.Getter;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@Getter
 class TransactionSummaryData {
     private int transactionCount;
     private BigDecimal debitSum;
@@ -42,23 +45,4 @@ class TransactionSummaryData {
         }
     }
 
-    public int getTransactionCount() {
-        return transactionCount;
-    }
-
-    public BigDecimal getDebitSum() {
-        return debitSum;
-    }
-
-    public BigDecimal getCreditSum() {
-        return creditSum;
-    }
-
-    public LocalDate getEarliest() {
-        return earliest;
-    }
-
-    public LocalDate getLatest() {
-        return latest;
-    }
 }

@@ -16,7 +16,6 @@ public class LogoManager {
 
     private final LogoDefinitionRepository logoDefinitionRepository;
 
-    @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
     private static final String DEFAULT_LOGO_ID = "DFLTI";
 
     @Autowired

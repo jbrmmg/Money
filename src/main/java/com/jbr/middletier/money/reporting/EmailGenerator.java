@@ -56,7 +56,7 @@ public class EmailGenerator {
         LocalDate oldest = applicationProperties.getToday();
         oldest = oldest.plusWeeks(-1L * weeks);
 
-        // Get the latest statement that is locked for each account.
+        // Get the latest statement locked for each account.
         for (Account nextAccount : accountManager.getAllExternal()) {
             // Get the latest statement.
             List<Statement> latestStatements = statementManager.getLatestStatementInternal(nextAccount);

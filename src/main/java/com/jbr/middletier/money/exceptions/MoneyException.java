@@ -1,7 +1,9 @@
 package com.jbr.middletier.money.exceptions;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
 public class MoneyException extends Exception {
     private final HttpStatus status;
 
@@ -20,7 +22,4 @@ public class MoneyException extends Exception {
         this.status = status;
     }
 
-    public HttpStatus getStatus() {
-        return this.status;
-    }
 }

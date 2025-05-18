@@ -20,6 +20,8 @@ databaseChangeLog:
                   name: locked
               - column:
                   name: deleted
+              - column:
+                  name: age
             commentLineStartsWith: //
             encoding: UTF-8
             file: /db/changelog/test-data/report/statement.csv

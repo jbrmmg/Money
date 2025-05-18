@@ -64,7 +64,7 @@ public class PieChartSvg extends ScalableVectorGraphics {
 
         boolean textAnchorEnd = false;
 
-        // If the rotate angle is in the range -90 to -180, then add 180 and anchor text to the end.
+        // If the rotated angle is in the range -90 to -180, then add 180 and anchor texts to the end.
         if( (rotateAngle >= -270) && (rotateAngle < -90) ){
             textAnchorEnd = true;
             rotateAngle += 180;

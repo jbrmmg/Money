@@ -1,10 +1,14 @@
 package com.jbr.middletier.money.dto;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
+@Setter
+@Getter
 public class StatementIdDTO implements Comparable<StatementIdDTO> {
     String accountId;
     @Min(1)
@@ -22,30 +26,6 @@ public class StatementIdDTO implements Comparable<StatementIdDTO> {
                           Integer year) {
         this.accountId = accountId;
         this.month = month;
-        this.year = year;
-    }
-
-    public String getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(String accountId) {
-        this.accountId = accountId;
-    }
-
-    public Integer getMonth() {
-        return month;
-    }
-
-    public void setMonth(Integer month) {
-        this.month = month;
-    }
-
-    public Integer getYear() {
-        return year;
-    }
-
-    public void setYear(Integer year) {
         this.year = year;
     }
 

@@ -1,9 +1,13 @@
 package com.jbr.middletier.money.data.internal;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
+@Setter
+@Getter
 @Entity
 @Table(name="transaction_report")
 public class TransactionReport {
@@ -48,6 +52,9 @@ public class TransactionReport {
     @Column(name="statement_sort")
     private Integer statementSort;
 
+    @Column(name="statement_age")
+    private Integer statementAge;
+
     @Column(name="predicted")
     private Boolean predicted;
 
@@ -68,164 +75,4 @@ public class TransactionReport {
 
     @Column(name="action_delete")
     private Boolean actionDelete;
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setTransactionId(Integer transactionId) {
-        this.transactionId = transactionId;
-    }
-
-    public Integer getTransactionId() {
-        return transactionId;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setAccountId(String accountId) {
-        this.accountId = accountId;
-    }
-
-    public String getAccountId() {
-        return accountId;
-    }
-
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public String getCategoryId() {
-        return categoryId;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setOppositeId(Integer oppositeId) {
-        this.oppositeId = oppositeId;
-    }
-
-    public Integer getOppositeId() {
-        return oppositeId;
-    }
-
-    public void setStatementMonth(Integer statementMonth) {
-        this.statementMonth = statementMonth;
-    }
-
-    public Integer getStatementMonth() {
-        return statementMonth;
-    }
-
-    public void setStatementYear(Integer statementYear) {
-        this.statementYear = statementYear;
-    }
-
-    public Integer getStatementYear() {
-        return statementYear;
-    }
-
-    public Boolean getPredicted() {
-        return predicted;
-    }
-
-    public void setPredicted(Boolean predicted) {
-        this.predicted = predicted;
-    }
-
-    public void setFromReconciliation(Boolean fromReconciliation) {
-        this.fromReconciliation = fromReconciliation;
-    }
-
-    public Boolean getFromReconciliation() {
-        return fromReconciliation;
-    }
-
-    public BigDecimal getStatementOpenBalance() {
-        return statementOpenBalance;
-    }
-
-    public void setStatementOpenBalance(BigDecimal statementOpenBalance) {
-        this.statementOpenBalance = statementOpenBalance;
-    }
-
-    public void setLocked(Boolean locked) {
-        this.locked = locked;
-    }
-
-    public Boolean getLocked() {
-        return locked;
-    }
-
-    public void setActionUpdate(Boolean actionUpdate) {
-        this.actionUpdate = actionUpdate;
-    }
-
-    public Boolean getActionUpdate() {
-        return actionUpdate;
-    }
-
-    public void setActionReconcile(Boolean actionReconcile) {
-        this.actionReconcile = actionReconcile;
-    }
-
-    public Boolean getActionReconcile() {
-        return actionReconcile;
-    }
-
-    public void setActionUnreconcile(Boolean actionUnreconcile) {
-        this.actionUnreconcile = actionUnreconcile;
-    }
-
-    public Boolean getActionUnreconcile() {
-        return actionUnreconcile;
-    }
-
-    public void setActionDelete(Boolean actionDelete) {
-        this.actionDelete = actionDelete;
-    }
-
-    public Boolean getActionDelete() {
-        return actionDelete;
-    }
-
-    public void setSearchDescription(String searchDescription) {
-        this.searchDescription = searchDescription;
-    }
-
-    public String getSearchDescription() {
-        return searchDescription;
-    }
-
-    public void setStatementSort(Integer statementSort) {
-        this.statementSort = statementSort;
-    }
-
-    public Integer getStatementSort() {
-        return statementSort;
-    }
 }

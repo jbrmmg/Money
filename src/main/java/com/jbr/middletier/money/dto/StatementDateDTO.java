@@ -1,9 +1,14 @@
 package com.jbr.middletier.money.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.text.DecimalFormat;
 
+@Setter
+@Getter
 public class StatementDateDTO {
     @Min(1)
     @Max(9999)
@@ -17,30 +22,6 @@ public class StatementDateDTO {
         this.year = null;
         this.month = null;
         this.none = false;
-    }
-
-    public Integer getYear() {
-        return year;
-    }
-
-    public void setYear(Integer year) {
-        this.year = year;
-    }
-
-    public Integer getMonth() {
-        return month;
-    }
-
-    public void setMonth(Integer month) {
-        this.month = month;
-    }
-
-    public boolean isNone() {
-        return none;
-    }
-
-    public void setNone(boolean none) {
-        this.none = none;
     }
 
     @Override

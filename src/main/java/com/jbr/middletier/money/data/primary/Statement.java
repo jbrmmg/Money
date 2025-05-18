@@ -3,6 +3,9 @@ package com.jbr.middletier.money.data.primary;
 import com.jbr.middletier.money.util.FinancialAmount;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.validation.constraints.NotNull;
 import java.io.Serial;
 import java.io.Serializable;
@@ -18,18 +21,26 @@ public class Statement implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Setter
+    @Getter
     @EmbeddedId
     private StatementId id;
 
+    @Setter
     @Column(name="open_balance")
     private BigDecimal openBalance;
+
+    @Setter
+    @Getter
+    @Column(name="age")
+    private Integer age;
 
     @Column(name="locked")
     @NotNull
     private Boolean locked;
 
     private Statement(StatementId previousId, FinancialAmount balance) {
-        // Create next statement in sequence.
+        // Create the next statement in sequence.
         this.id = StatementId.getNextId(previousId);
         this.openBalance = balance.getValue();
         this.locked = false;
@@ -44,17 +55,9 @@ public class Statement implements Serializable {
         this.locked = locked;
     }
 
-    public StatementId getId() {
-        return this.id;
-    }
-
-    public void setId(StatementId id) { this.id = id; }
-
     public FinancialAmount getOpenBalance() {
         return new FinancialAmount(this.openBalance);
     }
-
-    public void setOpenBalance(BigDecimal openBalance) { this.openBalance = openBalance; }
 
     public boolean getLocked() {
         return this.locked;

@@ -1,6 +1,9 @@
 package com.jbr.middletier.money.data.primary;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
@@ -8,6 +11,8 @@ import java.io.Serializable;
  * Created by jason on 07/03/17.
  */
 
+@Setter
+@Getter
 @SuppressWarnings("WeakerAccess")
 @Embeddable
 public class StatementId implements Serializable {
@@ -63,18 +68,6 @@ public class StatementId implements Serializable {
     }
 
     public StatementId(){}
-
-    public Account getAccount() { return this.account; }
-
-    public void setAccount(Account account) { this.account = account; }
-
-    public Integer getMonth() { return this.month; }
-
-    public void setMonth(Integer month) { this.month = month; }
-
-    public Integer getYear() { return this.year; }
-
-    public void setYear(Integer year) { this.year = year; }
 
     @Override
     public boolean equals(Object o) {

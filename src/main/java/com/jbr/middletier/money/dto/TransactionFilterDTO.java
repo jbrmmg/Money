@@ -3,44 +3,37 @@ package com.jbr.middletier.money.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionFilterDTO {
     private static final int MAXIMUM_PAGE_SIZE = 600;
 
+    @Getter
     private ValueRangeDTO valueRange;
+    @Getter
     private DateRangeDTO dateRange;
     private StatementDateDTO statementDate;
     private List<AccountDTO> accounts;
     private List<CategoryDTO> categories;
+    @Getter
     private Boolean locked;
+    @Getter
     private Boolean predicted;
+    @Getter
     private Boolean fromReconciled;
+    @Getter
     @Pattern(regexp="^[\\da-zA-Z ]*$",message="Description can only contain digits, letters and spaces.")
     private String description;
     private List<TransactionSortDTO> transactionSorts;
     private Integer maxPageSize;
     private Integer pageNumber;
-
-    public ValueRangeDTO getValueRange() {
-        return valueRange;
-    }
-
-    public void setValueRange(ValueRangeDTO valueRange) {
-        this.valueRange = valueRange;
-    }
-
-    public DateRangeDTO getDateRange() {
-        return dateRange;
-    }
-
-    public void setDateRange(DateRangeDTO dateRange) {
-        this.dateRange = dateRange;
-    }
 
     public StatementDateDTO getStatementDate() {
         if(this.statementDate == null) {
@@ -48,10 +41,6 @@ public class TransactionFilterDTO {
         }
 
         return statementDate;
-    }
-
-    public void setStatementDate(StatementDateDTO statementDate) {
-        this.statementDate = statementDate;
     }
 
     public List<AccountDTO> getAccounts() {
@@ -62,10 +51,6 @@ public class TransactionFilterDTO {
         return accounts;
     }
 
-    public void setAccounts(List<AccountDTO> accounts) {
-        this.accounts = accounts;
-    }
-
     public List<CategoryDTO> getCategories() {
         if(this.categories == null) {
             return new ArrayList<>();
@@ -74,44 +59,8 @@ public class TransactionFilterDTO {
         return categories;
     }
 
-    public void setCategories(List<CategoryDTO> categories) {
-        this.categories = categories;
-    }
-
-    public Boolean getLocked() {
-        return locked;
-    }
-
-    public void setLocked(Boolean locked) {
-        this.locked = locked;
-    }
-
-    public Boolean getPredicted() {
-        return predicted;
-    }
-
-    public void setPredicted(Boolean predicted) {
-        this.predicted = predicted;
-    }
-
-    public Boolean getFromReconciled() {
-        return fromReconciled;
-    }
-
-    public void setFromReconciled(Boolean fromReconciled) {
-        this.fromReconciled = fromReconciled;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public List<TransactionSortDTO> getTransactionSorts() {
-        // If the sort definition is null or empty then return the minimum.
+        // If the sort definition is null or empty, then return the minimum.
         if(this.transactionSorts == null || this.transactionSorts.isEmpty()) {
             List<TransactionSortDTO> defaultSorting = new ArrayList<>();
             defaultSorting.add(new TransactionSortDTO(TransactionSortField.DATE,TransactionSortType.ASCENDING));
@@ -122,10 +71,6 @@ public class TransactionFilterDTO {
         }
 
         return transactionSorts;
-    }
-
-    public void setTransactionSorts(List<TransactionSortDTO> transactionSorts) {
-        this.transactionSorts = transactionSorts;
     }
 
     @Override
@@ -193,10 +138,6 @@ public class TransactionFilterDTO {
         return maxPageSize;
     }
 
-    public void setMaxPageSize(Integer maxPageSize) {
-        this.maxPageSize = maxPageSize;
-    }
-
     public Integer getPageNumber() {
         if(this.pageNumber == null) {
             return 0;
@@ -205,7 +146,4 @@ public class TransactionFilterDTO {
         return pageNumber;
     }
 
-    public void setPageNumber(Integer pageNumber) {
-        this.pageNumber = pageNumber;
-    }
 }

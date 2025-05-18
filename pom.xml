@@ -19,8 +19,9 @@
         <org.springframework.version>3.4.5</org.springframework.version>
 
         <!--
-         Exclude these three classes; SpringFoxConfig because it's provided by somebody else, MiddleTier because
-         it's the basic class and difficult to test and TransportWrapper as it's just a single call to Transport.send.
+         Exclude these three classes; SpringFoxConfig because it's provided by somebody
+         else, MiddleTier because it's the basic class and challenging to test and
+         TransportWrapper as it's just a single call to Transport.send.
          -->
         <sonar.coverage.exclusions>**/SpringFoxConfig.java,**/MiddleTier.java,**/TransportWrapperImpl.java</sonar.coverage.exclusions>
     </properties>
@@ -396,6 +397,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <version>${org.springframework.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.38</version>
         </dependency>
 
         <dependency>
