@@ -128,7 +128,7 @@ public class StatementManager {
         // Check the statement ages.
         for(Statement nextStatement : statementRepository.findAll()){
             // If the account is closed, set the age to a high number, skip the age calculation.
-            if(nextStatement.getId().getAccount().getClosed()) {
+            if(accountManager.getIfValid(nextStatement.getId().getAccount().getId()).map(Account::getClosed).orElse(false)) {
                 if(nextStatement.getAge() != null) {
                     nextStatement.setAge(10000);
                     statementRepository.save(nextStatement);
