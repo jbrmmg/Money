@@ -31,6 +31,9 @@ public class StatementDTO implements Comparable<StatementDTO>, Serializable {
 
     private FinancialAmount openBalance;
 
+    @Getter
+    private Integer age;
+
     private boolean locked;
 
     public FinancialAmount getOpenBalance() {

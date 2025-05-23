@@ -40,7 +40,13 @@ public class TransactionToReport extends AbstractConverter<Transaction, Transact
             if(!transaction.getStatement().getLocked()) {
                 result.setActionUnreconcile(true);
             }
+            if(transaction.getStatement().getAge() != null) {
+                result.setStatementAge(transaction.getStatement().getAge());
+            } else {
+                result.setStatementAge(0);
+            }
         } else {
+            result.setStatementAge(0);
             result.setStatementSort(999999);
             result.setActionReconcile(true);
             result.setActionDelete(true);

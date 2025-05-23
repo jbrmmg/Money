@@ -127,6 +127,16 @@ public class StatementManager {
 
         // Check the statement ages.
         for(Statement nextStatement : statementRepository.findAll()){
+            // If the account is closed, set the age to a high number, skip the age calculation.
+            if(nextStatement.getId().getAccount().getClosed()) {
+                if(nextStatement.getAge() != null) {
+                    nextStatement.setAge(10000);
+                    statementRepository.save(nextStatement);
+                }
+                continue;
+            }
+
+            // Add the statement to the map.
             List<Statement> accountStatements;
             if(statements.containsKey(nextStatement.getId().getAccount().getId())) {
                 accountStatements = statements.get(nextStatement.getId().getAccount().getId());
