@@ -29,9 +29,7 @@ import org.springframework.stereotype.Controller;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Controller
@@ -510,22 +508,31 @@ public class TransactionReportManager {
     }
 
     private void statementLocked(Statement statement) {
-        // Get the account and the statement date.
+        // Get the account
         AccountDTO account = mapper.map(statement.getId().getAccount(), AccountDTO.class);
-        StatementDateDTO statementDate = new StatementDateDTO();
-        statementDate.setMonth(statement.getId().getMonth());
-        statementDate.setYear(statement.getId().getYear());
 
-        // Find transactions on this statement as they cannot no longer be unreconcile.
+        // Get all the locked statements that belong to this account.
+        Map<String,StatementDTO> lockedStatements = new HashMap<>();
+        for(StatementDTO lockedStatement :statementManager.getStatements(account.getId(),true)) {
+            lockedStatements.put(lockedStatement.getYear().toString() + "-" + lockedStatement.getMonth().toString(), lockedStatement);
+        }
+
+        // Find transactions on this account as they cannot no longer be unreconcile and age has changed.
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setAccounts(Collections.singletonList(account));
-        filter.setStatementDate(statementDate);
 
         List<TransactionReport> updates = new ArrayList<>();
         for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter))) {
-            next.setLocked(true);
-            next.setActionUnreconcile(null);
-            updates.add(next);
+            // Does this transaction belong to one of the locked statements?
+            String lockedStatementKey = next.getStatementYear() + "-" + next.getStatementMonth();
+            StatementDTO lockedStatement = lockedStatements.getOrDefault(lockedStatementKey, null);
+
+            if(lockedStatement != null) {
+                next.setLocked(true);
+                next.setActionUnreconcile(null);
+                next.setStatementAge(lockedStatement.getAge());
+                updates.add(next);
+            }
         }
 
         this.transactionReportRepository.saveAll(updates);
