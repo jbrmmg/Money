@@ -20,6 +20,8 @@ public class TransactionFilterDTO {
     @Getter
     private DateRangeDTO dateRange;
     private StatementDateDTO statementDate;
+    @Getter
+    private Integer statementAge;
     private List<AccountDTO> accounts;
     private List<CategoryDTO> categories;
     @Getter

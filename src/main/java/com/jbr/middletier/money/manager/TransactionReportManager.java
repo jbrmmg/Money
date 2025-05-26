@@ -44,6 +44,7 @@ public class TransactionReportManager {
     private static final String ACCOUNT_ID_COLUMN = "accountId";
     private static final String CATEGORY_ID_COLUMN = "categoryId";
     private static final String PREDICTED_COLUMN = "predicted";
+    private static final String STATEMENT_AGE_COLUMN = "statementAge";
     private static final String FROM_RECONCILIATION_COLUMN = "fromReconciliation";
     private static final String LOCKED_COLUMN = "locked";
     private static final String SEARCH_DESCRIPTION_COLUMN = "searchDescription";
@@ -343,6 +344,12 @@ public class TransactionReportManager {
         }
     }
 
+    private void addStatementAgePredicate(CriteriaBuilder cb, Root<TransactionReport> root, TransactionFilterDTO filter, List<Predicate> predicates) {
+        if(filter.getStatementAge() != null) {
+            predicates.add(cb.equal(root.get(STATEMENT_AGE_COLUMN), filter.getStatementAge()));
+        }
+    }
+
     private Specification<TransactionReport> findByCriteria(TransactionFilterDTO filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -354,6 +361,7 @@ public class TransactionReportManager {
             addDateRangePredicate(cb,root,filter,predicates);
             addValueRangePredicate(cb,root,filter,predicates);
             addAccountPredicate(root,filter,predicates);
+            addStatementAgePredicate(cb,root,filter,predicates);
 
             return cb.and(predicates.toArray(new Predicate[] {}));
         };
