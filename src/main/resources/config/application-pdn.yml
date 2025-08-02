@@ -1,6 +1,6 @@
 spring:
     datasource:
-        url: ${db.pdn.money.server}?autoReconnect=true&useSSL=false
+        url: ${db.pdn.money.server}?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false
         username: ${db.pdn.money.user}
         password: ${db.pdn.money.password}
 
