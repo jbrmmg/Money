@@ -64,7 +64,7 @@ public class TransactionController {
         return this.accountTransactionManager.deleteTransactions(transactions);
     }
 
-    @GetMapping("/version")
+    @GetMapping("/ext/money/version")
     public VersionDTO getVersion() {
         VersionDTO version = new VersionDTO();
         version.setVersion(applicationProperties.getVersion());
