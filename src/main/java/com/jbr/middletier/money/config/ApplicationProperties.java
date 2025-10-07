@@ -36,6 +36,9 @@ public class ApplicationProperties {
     private String reconcileFileLocation;
     @Setter
     @Getter
+    private String version;
+    @Setter
+    @Getter
     private Integer smtpPort;
     @Setter
     private LocalDate today;
