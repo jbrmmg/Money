@@ -5,7 +5,7 @@
 
     <groupId>com.jbr.middle-money</groupId>
     <artifactId>MiddleTier-Money</artifactId>
-    <version>25.10.2-SNAPSHOT</version>
+    <version>25.10.3</version>
 
     <packaging>jar</packaging>
     <name>MiddleTier-Money</name>
@@ -27,7 +27,7 @@
         <connection>scm:git:git@github.com:jbrmmg/Money.git</connection>
         <developerConnection>scm:git:git@github.com:jbrmmg/Money.git</developerConnection>
         <url>https://github.com/jbrmmg/Backup</url>
-        <tag>HEAD</tag>
+        <tag>v25.10.3</tag>
     </scm>
 
     <build>
