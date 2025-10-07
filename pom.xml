@@ -26,6 +26,12 @@
         <sonar.coverage.exclusions>**/MiddleTier.java,**/TransportWrapperImpl.java</sonar.coverage.exclusions>
     </properties>
 
+    <scm>
+        <connection>scm:git:git@github.com:jbrmmg/Money.git</connection>
+        <developerConnection>scm:git:git@github.com:jbrmmg/Money.git</developerConnection>
+        <url>https://github.com/jbrmmg/Backup</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <build>
         <resources>
