@@ -1,7 +1,9 @@
 package com.jbr.middletier.money.control;
 
+import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
+import com.jbr.middletier.money.dto.VersionDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import jakarta.validation.Valid;
@@ -22,10 +24,12 @@ public class TransactionController {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionController.class);
 
     private final AccountTransactionManager accountTransactionManager;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
-    public TransactionController(AccountTransactionManager accountTransactionManager) {
+    public TransactionController(AccountTransactionManager accountTransactionManager, ApplicationProperties applicationProperties) {
         this.accountTransactionManager = accountTransactionManager;
+        this.applicationProperties = applicationProperties;
     }
 
     @PostMapping(path="/ext/money/transaction")
@@ -58,5 +62,13 @@ public class TransactionController {
     @DeleteMapping(path="/int/money/transaction")
     public Iterable<TransactionDTO> deleteInternal(@Valid @RequestBody List<TransactionDTO> transactions) throws InvalidTransactionIdException {
         return this.accountTransactionManager.deleteTransactions(transactions);
+    }
+
+    @GetMapping("/version")
+    public VersionDTO getVersion() {
+        VersionDTO version = new VersionDTO();
+        version.setVersion(applicationProperties.getVersion());
+
+        return version;
     }
 }

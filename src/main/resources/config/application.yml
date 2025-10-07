@@ -47,6 +47,7 @@ internal:
         contexts: default
 
 money:
+    version: "@project.version@"
     service-name: middletier-money-dbg
     regular-schedule: 0 30 2 * * ?
     regular-enabled: false
