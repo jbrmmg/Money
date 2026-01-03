@@ -41,6 +41,12 @@ public class ApplicationProperties {
     @Getter
     private Integer smtpPort;
     @Setter
+    @Getter
+    private String smtpHost;
+    @Setter
+    @Getter
+    private String smtpFrom;
+    @Setter
     private LocalDate today;
 
     public void setRegularEnabled(Boolean regularEnabled) { this.regularEnabled = regularEnabled; }

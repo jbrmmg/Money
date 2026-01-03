@@ -48,7 +48,9 @@ money:
     report-share: ./target/testfiles/MoneyReports/
     report-working: ./target/testfiles/PdnReport/
     reconcile-file-location: src/test/resources/reconciliation
-    smtp-port: 25
+    smtp-port: 1025
+    smtp-host: ignore.do.not.send
+    smtp-from: a@test.com
     today: 2023-05-24
 
 logging:
