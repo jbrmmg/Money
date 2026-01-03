@@ -68,10 +68,6 @@ public class EmailTest extends Support {
     public void testEmail() throws Exception {
         EmailRequestDTO request = new EmailRequestDTO();
         request.setTo("throw@com");
-        request.setHost("throw");
-        request.setPassword("fake");
-        request.setFrom("test@com");
-        request.setUsername("chk@com");
         String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/email")
                         .content(this.json(request))
                         .contentType(getContentType()))
@@ -84,10 +80,6 @@ public class EmailTest extends Support {
     public void testEmail2() throws Exception {
         EmailRequestDTO request = new EmailRequestDTO();
         request.setTo("standard@com");
-        request.setHost("ignore.do.not.send");
-        request.setPassword("fake");
-        request.setFrom("test@com");
-        request.setUsername("chk@com");
 
         // - /jbr/int/money/email?host=ignore.do.not.send&password=fake
         getMockMvc().perform(post("/jbr/int/money/email")
@@ -243,10 +235,6 @@ public class EmailTest extends Support {
 
         EmailRequestDTO request = new EmailRequestDTO();
         request.setTo("a");
-        request.setFrom("b");
-        request.setUsername("blah");
-        request.setHost("testing");
-        request.setPassword("");
         request.setWeeks(4);
         testGenerator.generateReport(request);
 

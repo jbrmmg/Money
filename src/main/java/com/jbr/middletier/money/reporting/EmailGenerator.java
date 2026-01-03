@@ -127,22 +127,15 @@ public class EmailGenerator {
             LOG.info("Transaction 2 {}", transactionTotal2);
 
             Properties properties = new Properties();
-            properties.put("mail.smtp.auth", "true");
-            properties.put("mail.smtp.starttls.enable", "true");
-            properties.put("mail.smtp.host", request.getHost());
+            properties.put("mail.smtp.auth", "false");
+            properties.put("mail.smtp.host", this.applicationProperties.getSmtpHost());
             properties.put("mail.smtp.port", this.applicationProperties.getSmtpPort());
 
-            Session session = Session.getInstance(properties,
-                    new javax.mail.Authenticator() {
-                        @Override
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(request.getUsername(), request.getPassword());
-                        }
-                    });
+            Session session = Session.getInstance(properties);
 
             Message message = new MimeMessage(session);
 
-            message.setFrom(new InternetAddress(request.getFrom()));
+            message.setFrom(new InternetAddress(this.applicationProperties.getSmtpFrom()));
             message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(request.getTo()));
             message.setSubject("Credit card bills");
 
