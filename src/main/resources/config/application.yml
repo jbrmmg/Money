@@ -56,8 +56,8 @@ money:
     archive-schedule: 0 0 4 1-10 2 ?
     archive-enabled: false
     smtp-port: 1025
-    smtp-host: smtp.jbrmmg.me.uk;
-    smtp-from: system@jbrmmg.me.uk;
+    smtp-host: smtp.jbrmmg.me.uk
+    smtp-from: system@jbrmmg.me.uk
 
 management:
     endpoint:
