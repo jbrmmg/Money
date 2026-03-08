@@ -12,12 +12,10 @@ import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import org.apache.batik.transcoder.TranscoderException;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +23,6 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 public class ScheduleReportTest extends Support {
     @Autowired
@@ -74,7 +71,7 @@ public class ScheduleReportTest extends Support {
         }
 
         reportGenerator.regularReport();
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf").toPath()));
 
         applicationProperties.setReportEnabled(enabled);
         transactionRepository.deleteAll();

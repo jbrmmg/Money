@@ -14,13 +14,11 @@ import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.reconciliation.FileFormatDescription;
 import com.jbr.middletier.money.reconciliation.FileFormatException;
 import com.jbr.middletier.money.reconciliation.MatchData;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.IOException;
@@ -35,7 +33,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class ReconciliationTest extends Support {
@@ -52,7 +49,7 @@ public class ReconciliationTest extends Support {
     @Autowired
     private ReconciliationFileRepository reconciliationFileRepository;
 
-    @Before
+    @BeforeEach
     public void cleanUp() {
         transactionRepository.deleteAll();
         reconciliationRepository.deleteAll();
@@ -68,7 +65,7 @@ public class ReconciliationTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find Blah", error);
+        Assertions.assertEquals("Cannot find Blah", error);
     }
 
     @Test
@@ -149,7 +146,7 @@ public class ReconciliationTest extends Support {
             for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
                 updateFile = next;
             }
-            Assert.assertNotNull(updateFile);
+            Assertions.assertNotNull(updateFile);
             loaded = updateFile.getLoaded();
             updateFile.setLoaded(true);
 
@@ -158,13 +155,13 @@ public class ReconciliationTest extends Support {
             reconciliationFileRepository.save(updateFile);
 
             this.reconciliationManager.match();
-            Assert.fail();
+            Assertions.fail();
         } catch(NullOrBlankAccountIdException ex) {
-            Assert.assertEquals("Account ID not specified, reconciliation transactions required.", ex.getMessage());
+            Assertions.assertEquals("Account ID not specified, reconciliation transactions required.", ex.getMessage());
         }
 
         // Restore the file
-        Assert.assertNotNull(updateFile);
+        Assertions.assertNotNull(updateFile);
         updateFile.setLoaded(loaded);
         updateFile.setAccount(account);
         reconciliationFileRepository.save(updateFile);
@@ -192,7 +189,7 @@ public class ReconciliationTest extends Support {
 
         this.reconciliationRepository.findAll().forEach(r -> {
             if(r.getDescription().equals("3CPAYMENT*PRET A MANGER LONDON X")) {
-                Assert.assertEquals("HSE", r.getCategory().getId());
+                Assertions.assertEquals("HSE", r.getCategory().getId());
             }
         });
     }
@@ -226,7 +223,7 @@ public class ReconciliationTest extends Support {
 
         this.transactionRepository.findAll().forEach(t -> {
             if(t.getId() == testTransaction.getId()) {
-                Assert.assertEquals("FDG", t.getCategory().getId());
+                Assertions.assertEquals("FDG", t.getCategory().getId());
             }
         });
     }
@@ -244,7 +241,7 @@ public class ReconciliationTest extends Support {
 
         this.transactionRepository.findAll().forEach(t -> {
             if(t.getId() == testTransaction.getId()) {
-                Assert.assertEquals("HSE", t.getCategory().getId());
+                Assertions.assertEquals("HSE", t.getCategory().getId());
             }
         });
     }
@@ -262,7 +259,7 @@ public class ReconciliationTest extends Support {
 
         this.transactionRepository.findAll().forEach(t -> {
             if(t.getId() == testTransaction.getId()) {
-                Assert.assertEquals("HSE", t.getCategory().getId());
+                Assertions.assertEquals("HSE", t.getCategory().getId());
             }
         });
     }
@@ -288,7 +285,7 @@ public class ReconciliationTest extends Support {
 
         this.transactionRepository.findAll().forEach(t -> {
             if(t.getId() == testTransaction.getId()) {
-                Assert.assertEquals("TRF", t.getCategory().getId());
+                Assertions.assertEquals("TRF", t.getCategory().getId());
             }
         });
     }
@@ -315,7 +312,7 @@ public class ReconciliationTest extends Support {
 
         this.reconciliationRepository.findAll().forEach(r -> {
             if(r.getDescription().equals("3CPAYMENT*PRET A MANGER LONDON X")) {
-                Assert.assertNull(r.getCategory());
+                Assertions.assertNull(r.getCategory());
             }
         });
     }
@@ -332,9 +329,9 @@ public class ReconciliationTest extends Support {
             reconcileTransaction.setReconcile(true);
             reconcileTransaction.getTransactions().add(20);
             this.reconciliationManager.reconcile(reconcileTransaction);
-            Assert.fail();
+            Assertions.fail();
         } catch (InvalidTransactionIdException ex) {
-            Assert.assertEquals("Cannot find transaction with id 20", ex.getMessage());
+            Assertions.assertEquals("Cannot find transaction with id 20", ex.getMessage());
         }
     }
 
@@ -377,9 +374,9 @@ public class ReconciliationTest extends Support {
             reconcileTransaction.setReconcile(true);
             reconcileTransaction.getTransactions().add(testTransaction.getId());
             this.reconciliationManager.reconcile(reconcileTransaction);
-            Assert.fail();
+            Assertions.fail();
         } catch (MultipleUnlockedStatementException ex) {
-            Assert.assertEquals("There are multiple unlocked statements on AMEX", ex.getMessage());
+            Assertions.assertEquals("There are multiple unlocked statements on AMEX", ex.getMessage());
         }
 
         this.statementRepository.delete(duplicate);
@@ -393,7 +390,7 @@ public class ReconciliationTest extends Support {
                 unlocked.set(s);
             }
         });
-        Assert.assertNotNull(unlocked.get());
+        Assertions.assertNotNull(unlocked.get());
         return unlocked.get();
     }
 
@@ -421,9 +418,9 @@ public class ReconciliationTest extends Support {
                 setCategory++;
             }
         }
-        Assert.assertEquals(2,setCategory);
-        Assert.assertEquals(1,none);
-        Assert.assertEquals(3,matchData.size());
+        Assertions.assertEquals(2,setCategory);
+        Assertions.assertEquals(1,none);
+        Assertions.assertEquals(3,matchData.size());
     }
 
     @Test
@@ -445,9 +442,9 @@ public class ReconciliationTest extends Support {
                 setCategory++;
             }
         }
-        Assert.assertEquals(2,setCategory);
-        Assert.assertEquals(1,reconcile);
-        Assert.assertEquals(3,matchData.size());
+        Assertions.assertEquals(2,setCategory);
+        Assertions.assertEquals(1,reconcile);
+        Assertions.assertEquals(3,matchData.size());
     }
 
     @Test
@@ -473,9 +470,9 @@ public class ReconciliationTest extends Support {
                 setCategory++;
             }
         }
-        Assert.assertEquals(3,setCategory);
-        Assert.assertEquals(0,unreconcile);
-        Assert.assertEquals(3,matchData.size());
+        Assertions.assertEquals(3,setCategory);
+        Assertions.assertEquals(0,unreconcile);
+        Assertions.assertEquals(3,matchData.size());
     }
 
     @Test
@@ -488,9 +485,9 @@ public class ReconciliationTest extends Support {
 
         try {
             description.getDescription(new ReconcileFileLine(1,"x,y,z"));
-            Assert.fail("An exception should have been raised");
+            Assertions.fail("An exception should have been raised");
         } catch(FileFormatException ex) {
-            Assert.assertEquals("Required index out of range on line 1",ex.getMessage());
+            Assertions.assertEquals("Required index out of range on line 1",ex.getMessage());
         }
     }
 }

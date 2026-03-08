@@ -15,16 +15,14 @@ import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.exceptions.InvalidStatementIdException;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
@@ -37,13 +35,12 @@ import java.util.Objects;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 @ActiveProfiles(value="statement")
@@ -165,7 +162,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Statement already locked BANK201001", error);
+        Assertions.assertEquals("Statement already locked BANK201001", error);
 
         // Delete the statement.
         StatementDTO statement = new StatementDTO();
@@ -179,7 +176,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot delete locked statement BANK 1 2010", error);
+        Assertions.assertEquals("Cannot delete locked statement BANK 1 2010", error);
 
         statement.setMonth(2);
         getMockMvc().perform(delete("/jbr/int/money/statement")
@@ -237,7 +234,7 @@ public class StatementTest extends Support {
             if(statement.getId().getAccount().getId().equalsIgnoreCase(lockRequest.getAccountId())) {
                 Integer expectedAge = expectedAges.get(statement.getId().getYear().toString() + "-" + statement.getId().getMonth().toString());
                 if(statement.getAge() != null && statement.getAge() > 0) {
-                    Assert.assertEquals(expectedAge, statement.getAge());
+                    Assertions.assertEquals(expectedAge, statement.getAge());
                 }
             }
         });
@@ -280,7 +277,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find statement with id FLIP202001", error);
+        Assertions.assertEquals("Cannot find statement with id FLIP202001", error);
     }
 
     @Test
@@ -293,7 +290,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find statement with id BANK201201", error);
+        Assertions.assertEquals("Cannot find statement with id BANK201201", error);
     }
 
     @Test
@@ -309,7 +306,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find account with id FLIP", error);
+        Assertions.assertEquals("Cannot find account with id FLIP", error);
 
         statement.setAccountId("BANK");
         error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
@@ -317,7 +314,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot delete last statement BANK 1 2020", error);
+        Assertions.assertEquals("Cannot delete last statement BANK 1 2020", error);
     }
 
     @Test
@@ -333,7 +330,7 @@ public class StatementTest extends Support {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Statement already exists - AMEX 1 2010", error);
+        Assertions.assertEquals("Statement already exists - AMEX 1 2010", error);
     }
 
     @Test
@@ -370,6 +367,6 @@ public class StatementTest extends Support {
         statement.setOpenBalance(new FinancialAmount(BigDecimal.valueOf(100)));
 
         InvalidStatementIdException test = new InvalidStatementIdException(statement);
-        Assert.assertEquals("Cannot find statement with id AMEX 1 2010", test.getMessage());
+        Assertions.assertEquals("Cannot find statement with id AMEX 1 2010", test.getMessage());
     }
 }

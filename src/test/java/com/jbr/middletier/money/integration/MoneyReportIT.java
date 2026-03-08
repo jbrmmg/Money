@@ -9,9 +9,13 @@ import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.FinancialAmount;
-import org.junit.*;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +25,6 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -38,12 +41,12 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 @WebAppConfiguration
 @ContextConfiguration(initializers = {MoneyReportIT.Initializer.class})
 @ActiveProfiles(value="report-it")
+@Testcontainers
 public class MoneyReportIT extends Support {
     private static final Logger LOG = LoggerFactory.getLogger(MoneyReportIT.class);
 
@@ -60,7 +63,7 @@ public class MoneyReportIT extends Support {
     private StatementManager statementManager;
 
     @SuppressWarnings("rawtypes")
-    @ClassRule
+    @Container
     public static MySQLContainer mysqlContainer = new MySQLContainer("mysql:8.0.28")
             .withDatabaseName("integration-tests-db")
             .withUsername("sa")
@@ -203,7 +206,7 @@ public class MoneyReportIT extends Support {
         LOG.info(builder.toString());
     }
 
-    @Before
+    @BeforeEach
     public void cleanUp() {
         // Remove the default statements.
         for(Statement statement : statementRepository.findAll()) {
@@ -531,7 +534,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(true);
         filter.setTransactionSorts(transactionSortList);
 
-        Assert.assertEquals(1,filter.getTransactionSorts().size());
+        Assertions.assertEquals(1,filter.getTransactionSorts().size());
 
         MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
                         .content(this.json(filter))
@@ -668,7 +671,7 @@ public class MoneyReportIT extends Support {
         transactions.add(transaction);
         transactions = accountTransactionManager.createTransaction(transactions);
 
-        Assert.assertEquals(1,transactions.size());
+        Assertions.assertEquals(1,transactions.size());
         int transactionId = transactions.get(0).getId();
 
         // Check the report.
@@ -1020,7 +1023,7 @@ public class MoneyReportIT extends Support {
                 recCount++;
             }
         }
-        Assert.assertEquals(21, recCount);
+        Assertions.assertEquals(21, recCount);
 
         reconcileTransaction.setReconcile(false);
         reconciliationManager.reconcile(reconcileTransaction);

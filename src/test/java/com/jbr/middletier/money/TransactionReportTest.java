@@ -14,18 +14,15 @@ import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.CategoryManager;
 import com.jbr.middletier.money.reconciliation.MatchData;
 import com.jbr.middletier.money.schedule.AdjustmentType;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class TransactionReportTest {
@@ -105,16 +102,16 @@ public class TransactionReportTest {
         TransactionReportDTO dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         // Main test.
-        Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
-        Assert.assertEquals(0,dto.getId().intValue());
-        Assert.assertTrue(dto.getPredicted());
-        Assert.assertFalse(dto.getFromReconciliation());
-        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getNextDate(applicationProperties.getToday())), dto.getDate());
-        Assert.assertEquals(test.getDescription(), dto.getDescription());
-        Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
-        Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
-        Assert.assertNull(dto.getStatement());
+        Assertions.assertNotNull(dto);
+        Assertions.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
+        Assertions.assertEquals(0,dto.getId().intValue());
+        Assertions.assertTrue(dto.getPredicted());
+        Assertions.assertFalse(dto.getFromReconciliation());
+        Assertions.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getNextDate(applicationProperties.getToday())), dto.getDate());
+        Assertions.assertEquals(test.getDescription(), dto.getDescription());
+        Assertions.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
+        Assertions.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
+        Assertions.assertNull(dto.getStatement());
 
         // Check that it still works when contained objects are
         test.setDescription(null);
@@ -123,10 +120,10 @@ public class TransactionReportTest {
         transactionReport = transactionMapper.map(test,TransactionReport.class);
         dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
-        Assert.assertNull(dto.getStatement());
-        Assert.assertNull(dto.getAccount());
-        Assert.assertNull(dto.getCategory());
-        Assert.assertNull(dto.getDescription());
+        Assertions.assertNull(dto.getStatement());
+        Assertions.assertNull(dto.getAccount());
+        Assertions.assertNull(dto.getCategory());
+        Assertions.assertNull(dto.getDescription());
     }
 
     @Test
@@ -152,17 +149,17 @@ public class TransactionReportTest {
         TransactionReportDTO dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         // Main test.
-        Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount().getValue().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
-        Assert.assertEquals(0, dto.getId().intValue());
-        Assert.assertFalse(dto.getPredicted());
-        Assert.assertFalse(dto.getFromReconciliation());
-        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
-        Assert.assertEquals(test.getDescription(), dto.getDescription());
-        Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
-        Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
-        Assert.assertEquals(test.getStatement().getId().getAccount().getId(),dto.getStatement().getAccountId());
-        Assert.assertEquals(test.getStatement().getId().getMonth(),dto.getStatement().getMonth());
+        Assertions.assertNotNull(dto);
+        Assertions.assertEquals(test.getAmount().getValue().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
+        Assertions.assertEquals(0, dto.getId().intValue());
+        Assertions.assertFalse(dto.getPredicted());
+        Assertions.assertFalse(dto.getFromReconciliation());
+        Assertions.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
+        Assertions.assertEquals(test.getDescription(), dto.getDescription());
+        Assertions.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
+        Assertions.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
+        Assertions.assertEquals(test.getStatement().getId().getAccount().getId(),dto.getStatement().getAccountId());
+        Assertions.assertEquals(test.getStatement().getId().getMonth(),dto.getStatement().getMonth());
 
         // Check that it still works when contained objects are
         test.setStatement(null);
@@ -172,10 +169,10 @@ public class TransactionReportTest {
         transactionReport = transactionMapper.map(test,TransactionReport.class);
         dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
-        Assert.assertNull(dto.getStatement());
-        Assert.assertNull(dto.getAccount());
-        Assert.assertNull(dto.getCategory());
-        Assert.assertNull(dto.getDescription());
+        Assertions.assertNull(dto.getStatement());
+        Assertions.assertNull(dto.getAccount());
+        Assertions.assertNull(dto.getCategory());
+        Assertions.assertNull(dto.getDescription());
     }
 
     @Test
@@ -186,38 +183,38 @@ public class TransactionReportTest {
         TransactionReportDTO dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
         // Main test.
-        Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
-        Assert.assertEquals(0, dto.getId().intValue());
-        Assert.assertFalse(dto.getPredicted());
-        Assert.assertTrue(dto.getFromReconciliation());
-        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
-        Assert.assertEquals(test.getDescription(), dto.getDescription());
-        Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
-        Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
+        Assertions.assertNotNull(dto);
+        Assertions.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
+        Assertions.assertEquals(0, dto.getId().intValue());
+        Assertions.assertFalse(dto.getPredicted());
+        Assertions.assertTrue(dto.getFromReconciliation());
+        Assertions.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
+        Assertions.assertEquals(test.getDescription(), dto.getDescription());
+        Assertions.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
+        Assertions.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
 
         // Check its ok when created from reconciliation data.
         test = createMatch(false);
         transactionReport = transactionMapper.map(test,TransactionReport.class);
         dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
 
-        Assert.assertNull(dto.getStatement());
-        Assert.assertNotNull(dto);
-        Assert.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
-        Assert.assertEquals(0, dto.getId().intValue());
-        Assert.assertFalse(dto.getPredicted());
-        Assert.assertTrue(dto.getFromReconciliation());
-        Assert.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
-        Assert.assertEquals(test.getDescription(), dto.getDescription());
-        Assert.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
-        Assert.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
+        Assertions.assertNull(dto.getStatement());
+        Assertions.assertNotNull(dto);
+        Assertions.assertEquals(test.getAmount().doubleValue(), dto.getAmount().getValue().doubleValue(), 0.001);
+        Assertions.assertEquals(0, dto.getId().intValue());
+        Assertions.assertFalse(dto.getPredicted());
+        Assertions.assertTrue(dto.getFromReconciliation());
+        Assertions.assertEquals(Constants.MONEY_DATE_FORMATTER.format(test.getDate()), dto.getDate());
+        Assertions.assertEquals(test.getDescription(), dto.getDescription());
+        Assertions.assertEquals(test.getAccount().getId(), dto.getAccount().getId());
+        Assertions.assertEquals(test.getCategory().getId(), dto.getCategory().getId());
 
         // Check that it still works when contained objects are
         test = createMatch(true);
         transactionReport = transactionMapper.map(test,TransactionReport.class);
         dto = transactionMapper.map(transactionReport,TransactionReportDTO.class);
-        Assert.assertNull(dto.getStatement());
-        Assert.assertNull(dto.getCategory());
-        Assert.assertNull(dto.getDescription());
+        Assertions.assertNull(dto.getStatement());
+        Assertions.assertNull(dto.getCategory());
+        Assertions.assertNull(dto.getDescription());
     }
 }

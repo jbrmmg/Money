@@ -13,12 +13,10 @@ import com.jbr.middletier.money.utils.CssAssertHelper;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.xml.sax.InputSource;
 import org.xmlunit.builder.DiffBuilder;
@@ -38,7 +36,6 @@ import java.util.Iterator;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class AnnualReportTest extends Support {
@@ -120,12 +117,12 @@ public class AnnualReportTest extends Support {
 
         // Check that the report exists.
         File htmlFile = new File(applicationProperties.getReportWorking() + "/Report.html");
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.png").toPath()));
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.svg").toPath()));
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.png").toPath()));
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.svg").toPath()));
-        Assert.assertTrue(Files.exists(htmlFile.toPath()));
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.png").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.svg").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.png").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.svg").toPath()));
+        Assertions.assertTrue(Files.exists(htmlFile.toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf").toPath()));
 
         // Check the HTML file.
         DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -138,7 +135,7 @@ public class AnnualReportTest extends Support {
         Element root = domDocument.getRootElement();
         Element head = root.getChild("head");
         Element style = head.getChild("style");
-        Assert.assertNotNull(style);
+        Assertions.assertNotNull(style);
         CssAssertHelper.checkReportCSS(style.getValue());
 
         // Get the expected html
@@ -156,8 +153,8 @@ public class AnnualReportTest extends Support {
             expectedDifferent = iterator.next();
             differenceCount++;
         }
-        Assert.assertEquals(1,differenceCount);
-        Assert.assertNotNull(expectedDifferent);
-        Assert.assertEquals("/html[1]/head[1]/style[1]/text()[1]",expectedDifferent.getComparison().getControlDetails().getXPath());
+        Assertions.assertEquals(1,differenceCount);
+        Assertions.assertNotNull(expectedDifferent);
+        Assertions.assertEquals("/html[1]/head[1]/style[1]/text()[1]",expectedDifferent.getComparison().getControlDetails().getXPath());
     }
 }

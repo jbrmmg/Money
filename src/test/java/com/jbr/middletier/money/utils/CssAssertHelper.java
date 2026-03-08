@@ -3,7 +3,7 @@ package com.jbr.middletier.money.utils;
 import com.helger.css.ECSSVersion;
 import com.helger.css.decl.*;
 import com.helger.css.reader.CSSReader;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -36,7 +36,7 @@ public class CssAssertHelper {
     }
 
     public static void expectCssBuilder(Map<String,Map<String,CssAssertHelperData>> expected, String selector, String property, String expression, boolean mandatory) {
-        Assert.assertNotNull("expectCssBuilder expected null",expected);
+        Assertions.assertNotNull(expected, "expectCssBuilder expected null");
 
         // Check the selector is present.
         Map<String,CssAssertHelperData> expectedSelector;
@@ -48,21 +48,21 @@ public class CssAssertHelper {
         }
 
         // Add the property in.
-        Assert.assertFalse("Assert False" + selector + " " + property,expectedSelector.containsKey(property));
+        Assertions.assertFalse(expectedSelector.containsKey(property), "Assert False" + selector + " " + property);
         expectedSelector.put(property,new CssAssertHelperData(expression,mandatory));
     }
 
     private static void checkCssDeclarations(CSSStyleRule rule, Map<String,CssAssertHelperData> expected) {
-        Assert.assertEquals("Check expected count is same as declared count.", expected.keySet().size(), rule.getDeclarationCount());
+        Assertions.assertEquals(expected.keySet().size(), rule.getDeclarationCount(), "Check expected count is same as declared count.");
 
         for(int i = 0; i < rule.getDeclarationCount(); i++) {
             CSSDeclaration declaration = rule.getDeclarationAtIndex(i);
-            Assert.assertNotNull("Not null declaration.",declaration);
+            Assertions.assertNotNull(declaration, "Not null declaration.");
 
-            Assert.assertTrue("Contains " + declaration.getProperty(),expected.containsKey(declaration.getProperty()));
+            Assertions.assertTrue(expected.containsKey(declaration.getProperty()), "Contains " + declaration.getProperty());
 
             CssAssertHelperData expectedData = expected.get(declaration.getProperty());
-            Assert.assertEquals("Check expected v declaration",expectedData.getExpectedExpression(),declaration.getExpressionAsCSSString());
+            Assertions.assertEquals(expectedData.getExpectedExpression(), declaration.getExpressionAsCSSString(), "Check expected v declaration");
 
             expectedData.hasBeenFound();
         }
@@ -71,19 +71,19 @@ public class CssAssertHelper {
     private static String getSelectorName(CSSSelector selector) {
         if(selector.getMemberCount() == 1) {
             CSSSelectorSimpleMember member = (CSSSelectorSimpleMember) selector.getMemberAtIndex(0);
-            Assert.assertNotNull("Check member at zero",member);
+            Assertions.assertNotNull(member, "Check member at zero");
             return member.getValue();
         }
 
         if(selector.getMemberCount() == 2) {
             CSSSelectorSimpleMember member1 = (CSSSelectorSimpleMember) selector.getMemberAtIndex(0);
-            Assert.assertNotNull("Check member at zero", member1);
+            Assertions.assertNotNull(member1, "Check member at zero");
             CSSSelectorSimpleMember member2 = (CSSSelectorSimpleMember) selector.getMemberAtIndex(1);
-            Assert.assertNotNull("Check member at one", member2);
+            Assertions.assertNotNull(member2, "Check member at one");
             return member1.getValue() + member2.getValue();
         }
 
-        Assert.fail("Should not get here");
+        Assertions.fail("Should not get here");
         return "";
     }
 
@@ -91,7 +91,7 @@ public class CssAssertHelper {
         String selectorName = getSelectorName(selector);
 
         // Is this selector expected?
-        Assert.assertTrue("Check " + selectorName,expected.containsKey(selectorName));
+        Assertions.assertTrue(expected.containsKey(selectorName), "Check " + selectorName);
         checkCssDeclarations(nextRule,expected.get(selectorName));
     }
 
@@ -99,14 +99,14 @@ public class CssAssertHelper {
         for (CSSStyleRule nextRule : Objects.requireNonNull(css).getAllStyleRules()) {
             CSSSelector selector = nextRule.getSelectorAtIndex(0);
 
-            Assert.assertNotNull("Check selector at zero",selector);
+            Assertions.assertNotNull(selector, "Check selector at zero");
             checkSelector(nextRule,selector,expected);
         }
 
         // Verify all not mandatory found
         for(Map.Entry<String,Map<String,CssAssertHelperData>> next : expected.entrySet()) {
             for(Map.Entry<String,CssAssertHelperData> nextItem : next.getValue().entrySet()) {
-                Assert.assertTrue("Check " + nextItem.getKey(),nextItem.getValue().wasNotMandatoryOrFound());
+                Assertions.assertTrue(nextItem.getValue().wasNotMandatoryOrFound(), "Check " + nextItem.getKey());
             }
         }
     }

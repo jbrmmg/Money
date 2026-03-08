@@ -10,14 +10,12 @@ import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
 import com.jbr.middletier.money.utils.UtilityMapper;
 import com.jbr.middletier.money.manager.ArchiveManager;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.File;
@@ -31,7 +29,6 @@ import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class ArchiveTest extends Support {
@@ -87,8 +84,8 @@ public class ArchiveTest extends Support {
                 testStatement = next;
             }
         }
-        Assert.assertNotEquals(0,count);
-        Assert.assertNotNull(testStatement);
+        Assertions.assertNotEquals(0,count);
+        Assertions.assertNotNull(testStatement);
 
         // Create a transaction that will be deleted.
         Category category = new Category();
@@ -113,31 +110,31 @@ public class ArchiveTest extends Support {
         File directory = new File(applicationProperties.getReportShare() + "/2010/");
         directory.mkdirs();
         File file = new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-February-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-March-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-April-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-May-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-June-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-July-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-August-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-September-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-October-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-November-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
         file = new File(applicationProperties.getReportShare() + "/2010/Report-December-2010.pdf");
-        Assert.assertTrue(file.createNewFile());
+        Assertions.assertTrue(file.createNewFile());
 
         archiveManager.scheduledArchive();
 
@@ -146,7 +143,7 @@ public class ArchiveTest extends Support {
         for(Statement checkStatement : statementRepository.findAll()) {
             statements.add(checkStatement);
         }
-        Assert.assertEquals(0, statements.size());
+        Assertions.assertEquals(0, statements.size());
 
         List<Transaction> transactions = new ArrayList<>();
         for(Transaction checkTransaction : transactionRepository.findAll()) {
@@ -159,7 +156,7 @@ public class ArchiveTest extends Support {
             }
         }
         LOG.info("test-find-log T - done");
-        Assert.assertEquals(0,transactions.size());
+        Assertions.assertEquals(0,transactions.size());
 
         applicationProperties.setArchiveEnabled(false);
     }
@@ -236,6 +233,6 @@ public class ArchiveTest extends Support {
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
-        Assert.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf").toPath()));
     }
 }

@@ -6,18 +6,15 @@ import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.util.CategoryPercentageHelper;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 public class CategoryPercentageTest {
     @Autowired
@@ -51,9 +48,9 @@ public class CategoryPercentageTest {
         }
 
         CategoryPercentageHelper categoryPercentageHelper = new CategoryPercentageHelper(transactions);
-        Assert.assertEquals(1, categoryPercentageHelper.getCategories().size());
+        Assertions.assertEquals(1, categoryPercentageHelper.getCategories().size());
         for(Category next : categoryPercentageHelper.getCategories()) {
-            Assert.assertEquals(100.0, categoryPercentageHelper.getPercentage(next),0.1);
+            Assertions.assertEquals(100.0, categoryPercentageHelper.getPercentage(next),0.1);
         }
 
         transactionRepository.deleteAll();
@@ -72,9 +69,9 @@ public class CategoryPercentageTest {
         }
 
         CategoryPercentageHelper categoryPercentageHelper = new CategoryPercentageHelper(transactions);
-        Assert.assertEquals(2, categoryPercentageHelper.getCategories().size());
+        Assertions.assertEquals(2, categoryPercentageHelper.getCategories().size());
         for(Category next : categoryPercentageHelper.getCategories()) {
-            Assert.assertEquals(50.0, categoryPercentageHelper.getPercentage(next),0.1);
+            Assertions.assertEquals(50.0, categoryPercentageHelper.getPercentage(next),0.1);
         }
 
         transactionRepository.deleteAll();
@@ -92,9 +89,9 @@ public class CategoryPercentageTest {
         }
 
         CategoryPercentageHelper categoryPercentageHelper = new CategoryPercentageHelper(transactions);
-        Assert.assertEquals(1, categoryPercentageHelper.getCategories().size());
+        Assertions.assertEquals(1, categoryPercentageHelper.getCategories().size());
         for(Category next : categoryPercentageHelper.getCategories()) {
-            Assert.assertEquals(0.0, categoryPercentageHelper.getPercentage(next),0.1);
+            Assertions.assertEquals(0.0, categoryPercentageHelper.getPercentage(next),0.1);
         }
 
         transactionRepository.deleteAll();
@@ -112,9 +109,9 @@ public class CategoryPercentageTest {
         }
 
         CategoryPercentageHelper categoryPercentageHelper = new CategoryPercentageHelper(transactions);
-        Assert.assertEquals(0, categoryPercentageHelper.getCategories().size());
+        Assertions.assertEquals(0, categoryPercentageHelper.getCategories().size());
         for(Category next : categoryPercentageHelper.getCategories()) {
-            Assert.assertEquals(0.0, categoryPercentageHelper.getPercentage(next),0.1);
+            Assertions.assertEquals(0.0, categoryPercentageHelper.getPercentage(next),0.1);
         }
 
         transactionRepository.deleteAll();
@@ -139,9 +136,9 @@ public class CategoryPercentageTest {
         }
 
         CategoryPercentageHelper categoryPercentageHelper = new CategoryPercentageHelper(transactions);
-        Assert.assertEquals(2, categoryPercentageHelper.getCategories().size());
+        Assertions.assertEquals(2, categoryPercentageHelper.getCategories().size());
         for(Category next : categoryPercentageHelper.getCategories()) {
-            Assert.assertEquals(50.0, categoryPercentageHelper.getPercentage(next),0.1);
+            Assertions.assertEquals(50.0, categoryPercentageHelper.getPercentage(next),0.1);
         }
 
         transactionRepository.deleteAll();
@@ -166,12 +163,12 @@ public class CategoryPercentageTest {
         }
 
         CategoryPercentageHelper categoryPercentageHelper = new CategoryPercentageHelper(transactions);
-        Assert.assertEquals(2, categoryPercentageHelper.getCategories().size());
+        Assertions.assertEquals(2, categoryPercentageHelper.getCategories().size());
         for(Category next : categoryPercentageHelper.getCategories()) {
             if(next.getId().equals("FDG")) {
-                Assert.assertEquals(46.38, categoryPercentageHelper.getPercentage(next), 0.005);
+                Assertions.assertEquals(46.38, categoryPercentageHelper.getPercentage(next), 0.005);
             } else if (next.getId().equals("HSE")) {
-                Assert.assertEquals(53.62, categoryPercentageHelper.getPercentage(next), 0.005);
+                Assertions.assertEquals(53.62, categoryPercentageHelper.getPercentage(next), 0.005);
             }
         }
 
