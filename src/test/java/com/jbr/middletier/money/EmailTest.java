@@ -16,15 +16,13 @@ import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.util.TransportWrapper;
 import com.jbr.middletier.money.xml.html.EmailHtml;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
@@ -42,7 +40,6 @@ import java.util.Objects;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 @ActiveProfiles(value="emailtest")
@@ -73,7 +70,7 @@ public class EmailTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isFailedDependency())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Failed to send the message", error);
+        Assertions.assertEquals("Failed to send the message", error);
     }
 
     @Test
@@ -118,7 +115,7 @@ public class EmailTest extends Support {
 
         HyperTextMarkupLanguage email = new EmailHtml(start,transactions);
         String emailHtml = email.getHtmlAsString();
-        Assert.assertEquals(1693, emailHtml.length());
+        Assertions.assertEquals(1693, emailHtml.length());
 
         // Get the expected html
         File expectedFile = new File("./src/test/resources/expected/email.xml");
@@ -133,9 +130,9 @@ public class EmailTest extends Support {
             expectedDifferent = iterator.next();
             differenceCount++;
         }
-        Assert.assertEquals(1,differenceCount);
-        Assert.assertNotNull(expectedDifferent);
-        Assert.assertEquals("/html[1]/head[1]/style[1]/text()[1]",expectedDifferent.getComparison().getControlDetails().getXPath());
+        Assertions.assertEquals(1,differenceCount);
+        Assertions.assertNotNull(expectedDifferent);
+        Assertions.assertEquals("/html[1]/head[1]/style[1]/text()[1]",expectedDifferent.getComparison().getControlDetails().getXPath());
     }
 
     @Test
@@ -202,7 +199,7 @@ public class EmailTest extends Support {
 
         TransportWrapper testWrapper = message -> {
             try {
-                Assert.assertNotNull(message);
+                Assertions.assertNotNull(message);
                 String content = (String)message.getContent();
 
                 // Get the expected html
@@ -219,10 +216,10 @@ public class EmailTest extends Support {
                     LOG.info(expectedDifferent.getComparison().getControlDetails().getXPath());
                     differenceCount++;
                 }
-                Assert.assertEquals(3,differenceCount);
-                Assert.assertNotNull(expectedDifferent);
+                Assertions.assertEquals(3,differenceCount);
+                Assertions.assertNotNull(expectedDifferent);
             } catch (IOException e) {
-                Assert.fail();
+                Assertions.fail();
             }
         };
 

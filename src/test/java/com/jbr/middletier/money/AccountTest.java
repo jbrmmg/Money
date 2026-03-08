@@ -3,11 +3,9 @@ package com.jbr.middletier.money;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.AccountDTO;
 import jakarta.servlet.ServletException;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import java.util.Objects;
 import static org.hamcrest.Matchers.is;
@@ -15,7 +13,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class AccountTest extends Support {
@@ -63,7 +60,7 @@ public class AccountTest extends Support {
                             .contentType(getContentType()))
                     .andExpect(status().isBadRequest());
         } catch (ServletException ex) {
-            Assert.assertTrue(ex.getRootCause().getMessage().contains("Id must be a four letter code"));
+            Assertions.assertTrue(ex.getRootCause().getMessage().contains("Id must be a four letter code"));
         }
     }
 
@@ -80,7 +77,7 @@ public class AccountTest extends Support {
                 .contentType(getContentType()))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertTrue(error.contains("Colour must be a 6 digit hex value."));
+        Assertions.assertTrue(error.contains("Colour must be a 6 digit hex value."));
 
         account.setColour("FFFFFF");
         getMockMvc().perform(post("/jbr/int/money/accounts")
@@ -128,7 +125,7 @@ public class AccountTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Account already exists AMEX", error);
+        Assertions.assertEquals("Account already exists AMEX", error);
     }
 
     @Test
@@ -144,7 +141,7 @@ public class AccountTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find account with id XXXX", error);
+        Assertions.assertEquals("Cannot find account with id XXXX", error);
     }
 
     @Test
@@ -160,6 +157,6 @@ public class AccountTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find account with id XXXX", error);
+        Assertions.assertEquals("Cannot find account with id XXXX", error);
     }
 }

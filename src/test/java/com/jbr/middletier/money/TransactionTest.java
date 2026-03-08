@@ -10,13 +10,11 @@ import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.dto.mapper.TransactionMapper;
 import com.jbr.middletier.money.exceptions.InvalidTransactionException;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
@@ -24,7 +22,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class TransactionTest extends Support {
@@ -37,7 +34,7 @@ public class TransactionTest extends Support {
     @Autowired
     private TransactionMapper transactionMapper;
 
-    @Before
+    @BeforeEach
     public void cleanUp() {
         transactionRepository.deleteAll();
     }
@@ -69,9 +66,9 @@ public class TransactionTest extends Support {
 
         try {
             accountTransactionManager.updateTransactions(transactions);
-            Assert.fail();
+            Assertions.fail();
         } catch (InvalidTransactionException ex) {
-            Assert.assertEquals("None of the updates were process successfully.", ex.getMessage());
+            Assertions.assertEquals("None of the updates were process successfully.", ex.getMessage());
         }
     }
 }

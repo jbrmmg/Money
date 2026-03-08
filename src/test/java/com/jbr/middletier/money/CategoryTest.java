@@ -2,11 +2,9 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.dto.CategoryDTO;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.util.Objects;
@@ -17,7 +15,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class CategoryTest extends Support {
@@ -90,7 +87,7 @@ public class CategoryTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Category already exists WGS", error);
+        Assertions.assertEquals("Category already exists WGS", error);
     }
 
     @Test
@@ -109,7 +106,7 @@ public class CategoryTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find category with id XXX", error);
+        Assertions.assertEquals("Cannot find category with id XXX", error);
     }
 
     @Test
@@ -128,7 +125,7 @@ public class CategoryTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find category with id XXX", error);
+        Assertions.assertEquals("Cannot find category with id XXX", error);
     }
 
     @Test
@@ -147,7 +144,7 @@ public class CategoryTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("You cannot delete this category as it is used by system. (TRF)", error);
+        Assertions.assertEquals("You cannot delete this category as it is used by system. (TRF)", error);
     }
 
     @Test
@@ -166,6 +163,6 @@ public class CategoryTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isForbidden())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("You cannot update this category as it is used by system. (TRF)", error);
+        Assertions.assertEquals("You cannot update this category as it is used by system. (TRF)", error);
     }
 }

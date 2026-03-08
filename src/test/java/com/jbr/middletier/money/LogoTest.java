@@ -16,12 +16,10 @@ import com.jbr.middletier.money.xml.svg.PieChartSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.jdom2.*;
 import org.jdom2.input.DOMBuilder;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -35,7 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 public class LogoTest {
     @Autowired
@@ -69,15 +66,15 @@ public class LogoTest {
                 CssAssertHelper.checkCss(css,expected);
             }
         }
-        Assert.assertTrue(found);
+        Assertions.assertTrue(found);
     }
 
     private void checkRect(Element rectangle, int width, int height, int x, int y) {
-        Assert.assertEquals(5, rectangle.getAttributesSize());
-        Assert.assertEquals(Integer.toString(width), rectangle.getAttribute("width").getValue());
-        Assert.assertEquals(Integer.toString(height), rectangle.getAttribute("height").getValue());
-        Assert.assertEquals(Integer.toString(x), rectangle.getAttribute("x").getValue());
-        Assert.assertEquals(Integer.toString(y), rectangle.getAttribute("y").getValue());
+        Assertions.assertEquals(5, rectangle.getAttributesSize());
+        Assertions.assertEquals(Integer.toString(width), rectangle.getAttribute("width").getValue());
+        Assertions.assertEquals(Integer.toString(height), rectangle.getAttribute("height").getValue());
+        Assertions.assertEquals(Integer.toString(x), rectangle.getAttribute("x").getValue());
+        Assertions.assertEquals(Integer.toString(y), rectangle.getAttribute("y").getValue());
     }
 
     private void checkLogoString(String logo, int textSize, String textColour, String fillColour, String borderColour, String borderColour2, String expectedLogoText) throws IOException, SAXException, ParserConfigurationException {
@@ -91,9 +88,9 @@ public class LogoTest {
         Element root = domDocument.getRootElement();
         Namespace namespace = root.getNamespace();
 
-        Assert.assertEquals("100", root.getAttribute("height").getValue());
-        Assert.assertEquals("100", root.getAttribute("width").getValue());
-        Assert.assertEquals("0 0 100 100", root.getAttribute("viewBox").getValue());
+        Assertions.assertEquals("100", root.getAttribute("height").getValue());
+        Assertions.assertEquals("100", root.getAttribute("width").getValue());
+        Assertions.assertEquals("0 0 100 100", root.getAttribute("viewBox").getValue());
 
         // Check the style sheet.
         Element style = root.getChild("style", namespace);
@@ -103,7 +100,7 @@ public class LogoTest {
         Element text = root.getChild("text", namespace);
         Element tspan = text.getChild("tspan", namespace);
         Text logoText = (Text)tspan.getContent(0);
-        Assert.assertEquals(expectedLogoText,logoText.getText());
+        Assertions.assertEquals(expectedLogoText,logoText.getText());
 
         // Check the other elements.
         boolean rectAmBorderFound = false;
@@ -134,16 +131,16 @@ public class LogoTest {
                             }
                             rectAmFound = true;
                         }
-                        default -> Assert.fail();
+                        default -> Assertions.fail();
                     }
                 }
-                default -> Assert.fail();
+                default -> Assertions.fail();
             }
         }
-        Assert.assertTrue(rectAmBorderFound);
-        Assert.assertTrue(rectAmFound);
+        Assertions.assertTrue(rectAmBorderFound);
+        Assertions.assertTrue(rectAmFound);
         if(borderColour2 != null) {
-            Assert.assertTrue(rectAmBorder2Found);
+            Assertions.assertTrue(rectAmBorder2Found);
         }
     }
 
@@ -158,44 +155,44 @@ public class LogoTest {
         logoDefinition.setBorderTwoColour("FFFFFD");
         logoDefinition.setSecondBorder(true);
         logoDefinition.setTextColour("FFFFFC");
-        Assert.assertTrue(logoDefinition.getSecondBorder());
-        Assert.assertEquals("Test", logoDefinition.getLogoText());
-        Assert.assertEquals("FFFFFF", logoDefinition.getFillColour());
-        Assert.assertEquals("FFFFFE", logoDefinition.getBorderColour());
-        Assert.assertEquals("FFFFFD", logoDefinition.getBorderTwoColour());
-        Assert.assertEquals("FFFFFC", logoDefinition.getTextColour());
-        Assert.assertEquals(10, logoDefinition.getFontSize().longValue());
+        Assertions.assertTrue(logoDefinition.getSecondBorder());
+        Assertions.assertEquals("Test", logoDefinition.getLogoText());
+        Assertions.assertEquals("FFFFFF", logoDefinition.getFillColour());
+        Assertions.assertEquals("FFFFFE", logoDefinition.getBorderColour());
+        Assertions.assertEquals("FFFFFD", logoDefinition.getBorderTwoColour());
+        Assertions.assertEquals("FFFFFC", logoDefinition.getTextColour());
+        Assertions.assertEquals(10, logoDefinition.getFontSize().longValue());
 
         ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("XYFS", false);
-        Assert.assertNotNull(logo);
+        Assertions.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),32, "FFFFFF", "656565", "FFFFFF", null, "UNK");
     }
 
     @Test
     public void testLogoGenerationJLPC() throws IOException, ParserConfigurationException, SAXException {
         ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("JLPC", true);
-        Assert.assertNotNull(logo);
+        Assertions.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),75, "5C5C5C", "003B25", "5C5C5C", null, "jl");
     }
 
     @Test
     public void testLogoGenerationNWDE() throws IOException, ParserConfigurationException, SAXException {
         ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("NWDE", false);
-        Assert.assertNotNull(logo);
+        Assertions.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),48, "FFFFFF", "004A8F", "FFFFFF", "ED1C24", "NW");
     }
 
     @Test
     public void testCannotFindDefault() {
         Optional<LogoDefinition> logo = logoDefinitionRepository.findById("DFLTI");
-        Assert.assertTrue(logo.isPresent());
+        Assertions.assertTrue(logo.isPresent());
         logoDefinitionRepository.delete(logo.get());
 
         try {
             logoManager.getSvgLogoForAccount("XXXX", false);
-            Assert.fail();
+            Assertions.fail();
         } catch(IllegalStateException ex) {
-            Assert.assertEquals("Cannot find the default logo definition.", ex.getMessage());
+            Assertions.assertEquals("Cannot find the default logo definition.", ex.getMessage());
         }
 
         logo.ifPresent(logoDefinition -> logoDefinitionRepository.save(logoDefinition));
@@ -204,13 +201,13 @@ public class LogoTest {
     @Test
     public void testLogoDefinition() {
         LogoDefinition logoDefinition = new LogoDefinition();
-        Assert.assertFalse(logoDefinition.getSecondBorder());
+        Assertions.assertFalse(logoDefinition.getSecondBorder());
         logoDefinition.setSecondBorder(true);
-        Assert.assertTrue(logoDefinition.getSecondBorder());
+        Assertions.assertTrue(logoDefinition.getSecondBorder());
         logoDefinition.setY(10);
-        Assert.assertEquals(10, logoDefinition.getY().intValue());
+        Assertions.assertEquals(10, logoDefinition.getY().intValue());
         logoDefinition.setId("Test");
-        Assert.assertEquals("Test", logoDefinition.getId());
+        Assertions.assertEquals("Test", logoDefinition.getId());
     }
 
     @Test
@@ -219,7 +216,7 @@ public class LogoTest {
         category.setColour("564389");
 
         ScalableVectorGraphics categorySvg = new CategorySvg(category);
-        Assert.assertNotNull(categorySvg);
+        Assertions.assertNotNull(categorySvg);
 
         String xml = categorySvg.getSvgAsString();
 
@@ -231,17 +228,17 @@ public class LogoTest {
         Document domDocument = new DOMBuilder().build(document);
         Element root = domDocument.getRootElement();
 
-        Assert.assertEquals("100%", root.getAttribute("height").getValue());
-        Assert.assertEquals("100%", root.getAttribute("width").getValue());
-        Assert.assertEquals("0 0 120 120", root.getAttribute("viewBox").getValue());
+        Assertions.assertEquals("100%", root.getAttribute("height").getValue());
+        Assertions.assertEquals("100%", root.getAttribute("width").getValue());
+        Assertions.assertEquals("0 0 120 120", root.getAttribute("viewBox").getValue());
 
         for(Element nextElement : root.getChildren()) {
-            Assert.assertEquals("circle", nextElement.getName());
+            Assertions.assertEquals("circle", nextElement.getName());
 
-            Assert.assertEquals("60", nextElement.getAttribute("cx").getValue());
-            Assert.assertEquals("52", nextElement.getAttribute("cy").getValue());
-            Assert.assertEquals("44", nextElement.getAttribute("r").getValue());
-            Assert.assertEquals("stroke:#006600; fill:#564389;", nextElement.getAttribute("style").getValue());
+            Assertions.assertEquals("60", nextElement.getAttribute("cx").getValue());
+            Assertions.assertEquals("52", nextElement.getAttribute("cy").getValue());
+            Assertions.assertEquals("44", nextElement.getAttribute("r").getValue());
+            Assertions.assertEquals("stroke:#006600; fill:#564389;", nextElement.getAttribute("style").getValue());
         }
     }
 
@@ -306,36 +303,36 @@ public class LogoTest {
         Document domDocument = new DOMBuilder().build(document);
         Element root = domDocument.getRootElement();
 
-        Assert.assertEquals("0 0 10000 10000", root.getAttribute("viewBox").getValue());
+        Assertions.assertEquals("0 0 10000 10000", root.getAttribute("viewBox").getValue());
 
         for(Element nextElement : root.getChildren()) {
             if(nextElement.getName().equals("circle")) {
                 if(nextElement.getAttribute("id").getValue().equals("BCKG")) {
-                    Assert.assertEquals("5000-5000-5000-white", getAttributesCheckString(nextElement,"cx","cy","r","fill"));
+                    Assertions.assertEquals("5000-5000-5000-white", getAttributesCheckString(nextElement,"cx","cy","r","fill"));
                 } else if (nextElement.getAttribute("id").getValue().equals("FDG")) {
-                    Assert.assertEquals("5000-5000-2500-none-#FFFF00-5000-15707.963268 15707.963268-rotate(-90) translate(-10000)",
+                    Assertions.assertEquals("5000-5000-2500-none-#FFFF00-5000-15707.963268 15707.963268-rotate(-90) translate(-10000)",
                             getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("HSE")) {
-                    Assert.assertEquals("5000-5000-2500-none-#9966FF-5000-11363.140628 15707.963268-rotate(-90) translate(-10000)",
+                    Assertions.assertEquals("5000-5000-2500-none-#9966FF-5000-11363.140628 15707.963268-rotate(-90) translate(-10000)",
                             getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("OUTL")) {
-                    Assert.assertEquals("5000-5000-5000-none-black-20",
+                    Assertions.assertEquals("5000-5000-5000-none-black-20",
                             getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width"));
                 } else {
-                    Assert.fail();
+                    Assertions.fail();
                 }
             } else if (nextElement.getName().equals("text")) {
                 if (nextElement.getAttribute("id").getValue().equals("FDG-txt")) {
-                    Assert.assertEquals("#000000-600px-start-1334.428028-1901.035315-rotate(40.212 1334.428028,1901.035315)",
+                    Assertions.assertEquals("#000000-600px-start-1334.428028-1901.035315-rotate(40.212 1334.428028,1901.035315)",
                             getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
                 } else if (nextElement.getAttribute("id").getValue().equals("HSE-txt")) {
-                    Assert.assertEquals("#000000-1200px-end-8665.571972-8098.964685-rotate(40.212 8665.571972,8098.964685)",
+                    Assertions.assertEquals("#000000-1200px-end-8665.571972-8098.964685-rotate(40.212 8665.571972,8098.964685)",
                             getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
                 } else {
-                    Assert.fail();
+                    Assertions.fail();
                 }
             } else {
-                Assert.fail();
+                Assertions.fail();
             }
         }
     }

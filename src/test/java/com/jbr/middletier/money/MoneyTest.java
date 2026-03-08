@@ -14,9 +14,8 @@ import com.jbr.middletier.money.health.ServiceHealthIndicator;
 import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.schedule.RegularCtrl;
 import com.jbr.middletier.money.util.TransactionString;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -24,7 +23,6 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
@@ -35,7 +33,7 @@ import java.util.*;
 
 import static java.lang.Math.abs;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -45,7 +43,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * Created by jason on 27/03/17.
  */
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class MoneyTest extends Support {
@@ -107,7 +104,7 @@ public class MoneyTest extends Support {
     public void TestDefaultProfile() {
         SpringApplication app = mock(SpringApplication.class);
 
-        Assert.assertNotNull(app);
+        Assertions.assertNotNull(app);
         DefaultProfileUtil.addDefaultProfile(app);
     }
 
@@ -681,8 +678,8 @@ public class MoneyTest extends Support {
             actualSum = actualSum.add(next.getAmount());
         }
 
-        Assert.assertEquals(expectedCount,actualCount);
-        Assert.assertEquals(expectedSum,actualSum.doubleValue(),0.001);
+        Assertions.assertEquals(expectedCount,actualCount);
+        Assertions.assertEquals(expectedSum,actualSum.doubleValue(),0.001);
     }
 
     @Test
@@ -709,13 +706,13 @@ public class MoneyTest extends Support {
     public void testStatus() {
         OkStatus okStatus = OkStatus.getOkStatus();
         okStatus.setStatus("Test");
-        Assert.assertEquals("Test", okStatus.getStatus());
+        Assertions.assertEquals("Test", okStatus.getStatus());
     }
 
     @Test
     public void testHealth() {
         Health health = serviceHealthIndicator.health();
-        Assert.assertEquals(Status.UP, health.getStatus());
+        Assertions.assertEquals(Status.UP, health.getStatus());
     }
 
     @Test
@@ -729,11 +726,11 @@ public class MoneyTest extends Support {
 
         ServiceHealthIndicator healthIndicator = new ServiceHealthIndicator(mockRepository,mockApplicationProperties);
         Health health = healthIndicator.health();
-        Assert.assertEquals(Status.DOWN, health.getStatus());
+        Assertions.assertEquals(Status.DOWN, health.getStatus());
     }
 
     @Test
     public void testTransactionString() {
-        Assert.assertEquals("20100522120.32", TransactionString.formattedTransactionString(LocalDate.of(2010,5,22),BigDecimal.valueOf(120.32)));
+        Assertions.assertEquals("20100522120.32", TransactionString.formattedTransactionString(LocalDate.of(2010,5,22),BigDecimal.valueOf(120.32)));
     }
 }

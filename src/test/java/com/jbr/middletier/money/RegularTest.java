@@ -5,13 +5,11 @@ import com.jbr.middletier.money.data.primary.Regular;
 import com.jbr.middletier.money.data.primary.repository.RegularRepository;
 import com.jbr.middletier.money.dto.RegularDTO;
 import com.jbr.middletier.money.dto.mapper.RegularMapper;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
@@ -23,7 +21,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 public class RegularTest extends Support {
@@ -33,7 +30,7 @@ public class RegularTest extends Support {
     @Autowired
     private RegularMapper regularMapper;
 
-    @Before
+    @BeforeEach
     public void cleanup() {
         // Ensure there are no regular payments.
         regularRepository.deleteAll();
@@ -132,7 +129,7 @@ public class RegularTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Cannot find regular payment with id " + deleteRegular.getId(), error);
+        Assertions.assertEquals("Cannot find regular payment with id " + deleteRegular.getId(), error);
     }
 
     @Test
@@ -148,6 +145,6 @@ public class RegularTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
                 .andReturn().getResolvedException()).getMessage();
-        Assert.assertEquals("Regular Payment already exists " + createRegular.getId(), error);
+        Assertions.assertEquals("Regular Payment already exists " + createRegular.getId(), error);
     }
 }

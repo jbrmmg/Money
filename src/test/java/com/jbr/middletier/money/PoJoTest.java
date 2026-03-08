@@ -14,12 +14,10 @@ import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.util.DateRange;
 import com.jbr.middletier.money.util.FinancialAmount;
 import com.jbr.middletier.money.utils.UtilityMapper;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -28,7 +26,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = MiddleTier.class)
 public class PoJoTest {
     @Autowired
@@ -70,16 +67,16 @@ public class PoJoTest {
         account.setTransferDay(2);
         account.setWeekendAdj(AdjustmentType.AT_FORWARD);
         AccountDTO accountDTO = accountMapper.map(account, AccountDTO.class);
-        Assert.assertEquals("CHEESE", accountDTO.getId());
-        Assert.assertEquals("BLACK",accountDTO.getColour());
-        Assert.assertEquals("Testing",accountDTO.getName());
-        Assert.assertEquals("Cheese",accountDTO.getImagePrefix());
-        Assert.assertTrue(accountDTO.getClosed());
+        Assertions.assertEquals("CHEESE", accountDTO.getId());
+        Assertions.assertEquals("BLACK",accountDTO.getColour());
+        Assertions.assertEquals("Testing",accountDTO.getName());
+        Assertions.assertEquals("Cheese",accountDTO.getImagePrefix());
+        Assertions.assertTrue(accountDTO.getClosed());
 
         // Compare to non-accountDTO should always be false;
         @SuppressWarnings("EqualsBetweenInconvertibleTypes")
         boolean test = accountDTO.equals("Test");
-        Assert.assertFalse(test);
+        Assertions.assertFalse(test);
     }
 
     @Test
@@ -91,14 +88,14 @@ public class PoJoTest {
         accountDTO.setName("Testing");
         accountDTO.setClosed(false);
         Account account = accountMapper.map(accountDTO,Account.class);
-        Assert.assertEquals("HOPE", account.getId());
-        Assert.assertEquals("BLUE",account.getColour());
-        Assert.assertEquals("Testing",account.getName());
-        Assert.assertEquals("Cheese",account.getImagePrefix());
-        Assert.assertFalse(account.getClosed());
-        Assert.assertNull(account.getTransferAccountId());
-        Assert.assertNull(account.getWeekendAdj());
-        Assert.assertNull(account.getTransferDay());
+        Assertions.assertEquals("HOPE", account.getId());
+        Assertions.assertEquals("BLUE",account.getColour());
+        Assertions.assertEquals("Testing",account.getName());
+        Assertions.assertEquals("Cheese",account.getImagePrefix());
+        Assertions.assertFalse(account.getClosed());
+        Assertions.assertNull(account.getTransferAccountId());
+        Assertions.assertNull(account.getWeekendAdj());
+        Assertions.assertNull(account.getTransferDay());
     }
 
     @Test
@@ -113,14 +110,14 @@ public class PoJoTest {
         category.setSort(100L);
         category.setSystemUse(true);
         CategoryDTO categoryDTO = categoryMapper.map(category, CategoryDTO.class);
-        Assert.assertEquals("HOTEL",categoryDTO.getId());
-        Assert.assertEquals("WHITE",categoryDTO.getColour());
-        Assert.assertEquals("Test",categoryDTO.getName());
-        Assert.assertTrue(categoryDTO.getExpense());
-        Assert.assertEquals("GRP",categoryDTO.getGroup());
-        Assert.assertTrue(categoryDTO.getRestricted());
-        Assert.assertEquals(100L,categoryDTO.getSort().longValue());
-        Assert.assertTrue(categoryDTO.getSystemUse());
+        Assertions.assertEquals("HOTEL",categoryDTO.getId());
+        Assertions.assertEquals("WHITE",categoryDTO.getColour());
+        Assertions.assertEquals("Test",categoryDTO.getName());
+        Assertions.assertTrue(categoryDTO.getExpense());
+        Assertions.assertEquals("GRP",categoryDTO.getGroup());
+        Assertions.assertTrue(categoryDTO.getRestricted());
+        Assertions.assertEquals(100L,categoryDTO.getSort().longValue());
+        Assertions.assertTrue(categoryDTO.getSystemUse());
     }
 
     @Test
@@ -135,14 +132,14 @@ public class PoJoTest {
         categoryDTO.setSort(100L);
         categoryDTO.setSystemUse(true);
         Category category = categoryMapper.map(categoryDTO, Category.class);
-        Assert.assertEquals("AROSE",category.getId());
-        Assert.assertEquals("PINK",category.getColour());
-        Assert.assertEquals("Test",category.getName());
-        Assert.assertTrue(category.getExpense());
-        Assert.assertEquals("GRP",category.getGroup());
-        Assert.assertTrue(category.getRestricted());
-        Assert.assertEquals(100L,category.getSort().longValue());
-        Assert.assertTrue(category.getSystemUse());
+        Assertions.assertEquals("AROSE",category.getId());
+        Assertions.assertEquals("PINK",category.getColour());
+        Assertions.assertEquals("Test",category.getName());
+        Assertions.assertTrue(category.getExpense());
+        Assertions.assertEquals("GRP",category.getGroup());
+        Assertions.assertTrue(category.getRestricted());
+        Assertions.assertEquals(100L,category.getSort().longValue());
+        Assertions.assertTrue(category.getSystemUse());
     }
 
     @Test
@@ -156,35 +153,35 @@ public class PoJoTest {
         statementId.setYear(2003);
 
         StatementIdDTO statementIdDTO = statementMapper.map(statementId,StatementIdDTO.class);
-        Assert.assertEquals("FLIP",statementIdDTO.getAccountId());
-        Assert.assertEquals(10,statementIdDTO.getMonth().intValue());
-        Assert.assertEquals(2003,statementIdDTO.getYear().intValue());
+        Assertions.assertEquals("FLIP",statementIdDTO.getAccountId());
+        Assertions.assertEquals(10,statementIdDTO.getMonth().intValue());
+        Assertions.assertEquals(2003,statementIdDTO.getYear().intValue());
     }
 
     public void statementIdFromDTO() {
         StatementIdDTO statementIdDTO = new StatementIdDTO("BANK", 7, 2019);
         StatementId statementId = statementMapper.map(statementIdDTO,StatementId.class);
-        Assert.assertEquals("BANK",statementId.getAccount().getId());
-        Assert.assertEquals(7,statementId.getMonth().intValue());
-        Assert.assertEquals(2019,statementId.getYear().intValue());
+        Assertions.assertEquals("BANK",statementId.getAccount().getId());
+        Assertions.assertEquals(7,statementId.getMonth().intValue());
+        Assertions.assertEquals(2019,statementId.getYear().intValue());
     }
 
     @Test
     public void compareStatementIdDTO() {
         StatementIdDTO lhs = new StatementIdDTO("BANK",5, 2011);
-        Assert.assertEquals(0,lhs.compareTo(new StatementIdDTO("bank",5,2011)));
-        Assert.assertEquals(-31,lhs.compareTo(new StatementIdDTO("a", 5, 2011)));
-        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 4, 2011)));
-        Assert.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 5, 2010)));
-        Assert.assertEquals(-33,lhs.compareTo(new StatementIdDTO("clown", 5, 2011)));
-        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 6, 2011)));
-        Assert.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 5, 2012)));
+        Assertions.assertEquals(0,lhs.compareTo(new StatementIdDTO("bank",5,2011)));
+        Assertions.assertEquals(-31,lhs.compareTo(new StatementIdDTO("a", 5, 2011)));
+        Assertions.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 4, 2011)));
+        Assertions.assertEquals(1,lhs.compareTo(new StatementIdDTO("bank", 5, 2010)));
+        Assertions.assertEquals(-33,lhs.compareTo(new StatementIdDTO("clown", 5, 2011)));
+        Assertions.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 6, 2011)));
+        Assertions.assertEquals(-1,lhs.compareTo(new StatementIdDTO("bank", 5, 2012)));
 
-        Assert.assertEquals(lhs, new StatementIdDTO("bank", 5, 2011));
+        Assertions.assertEquals(lhs, new StatementIdDTO("bank", 5, 2011));
 
-        Assert.assertEquals(lhs.hashCode(),new StatementIdDTO("bank",5,2011).hashCode());
+        Assertions.assertEquals(lhs.hashCode(),new StatementIdDTO("bank",5,2011).hashCode());
 
-        Assert.assertEquals("BANK.201105", lhs.toString());
+        Assertions.assertEquals("BANK.201105", lhs.toString());
     }
 
     @Test
@@ -199,20 +196,20 @@ public class PoJoTest {
         account3.setId("clown");
 
         StatementId lhs = new StatementId(account1,2011, 5);
-        Assert.assertEquals(lhs, new StatementId(account1,2011,5));
-        Assert.assertNotEquals(lhs, new StatementId(account2, 2011, 5));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 2011, 4));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 2010, 5));
-        Assert.assertNotEquals(lhs, new StatementId(account3, 2011, 5));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 2011, 6));
-        Assert.assertNotEquals(lhs, new StatementId(account1, 2012, 5));
+        Assertions.assertEquals(lhs, new StatementId(account1,2011,5));
+        Assertions.assertNotEquals(lhs, new StatementId(account2, 2011, 5));
+        Assertions.assertNotEquals(lhs, new StatementId(account1, 2011, 4));
+        Assertions.assertNotEquals(lhs, new StatementId(account1, 2010, 5));
+        Assertions.assertNotEquals(lhs, new StatementId(account3, 2011, 5));
+        Assertions.assertNotEquals(lhs, new StatementId(account1, 2011, 6));
+        Assertions.assertNotEquals(lhs, new StatementId(account1, 2012, 5));
 
         Account account1a = new Account();
         account1a.setId("bank");
 
-        Assert.assertEquals(lhs.hashCode(),new StatementId(account1a,2011,5).hashCode());
+        Assertions.assertEquals(lhs.hashCode(),new StatementId(account1a,2011,5).hashCode());
 
-        Assert.assertEquals("BANK201105", lhs.toString());
+        Assertions.assertEquals("BANK201105", lhs.toString());
     }
 
     @Test
@@ -221,11 +218,11 @@ public class PoJoTest {
         account.setId("BARCLAY");
         Statement statement = new Statement(account,1,2022, BigDecimal.valueOf(101.23),true);
         StatementDTO statementDTO = statementMapper.map(statement,StatementDTO.class);
-        Assert.assertEquals("BARCLAY",statementDTO.getAccountId());
-        Assert.assertEquals(1,statementDTO.getMonth().intValue());
-        Assert.assertEquals(2022,statementDTO.getYear().intValue());
-        Assert.assertTrue(statementDTO.getLocked());
-        Assert.assertEquals(101.23,statementDTO.getOpenBalance().getValue().doubleValue(),0.001);
+        Assertions.assertEquals("BARCLAY",statementDTO.getAccountId());
+        Assertions.assertEquals(1,statementDTO.getMonth().intValue());
+        Assertions.assertEquals(2022,statementDTO.getYear().intValue());
+        Assertions.assertTrue(statementDTO.getLocked());
+        Assertions.assertEquals(101.23,statementDTO.getOpenBalance().getValue().doubleValue(),0.001);
     }
 
     @Test
@@ -237,11 +234,11 @@ public class PoJoTest {
         statementDTO.setLocked(true);
         statementDTO.setOpenBalance(new FinancialAmount(BigDecimal.valueOf(102.12)));
         Statement statement = statementMapper.map(statementDTO,Statement.class);
-        Assert.assertEquals("BANK",statement.getId().getAccount().getId());
-        Assert.assertEquals(2,statement.getId().getMonth().intValue());
-        Assert.assertEquals(2021,statement.getId().getYear().intValue());
-        Assert.assertTrue(statement.getLocked());
-        Assert.assertEquals(102.12,statement.getOpenBalance().getValue().doubleValue(),0.001);
+        Assertions.assertEquals("BANK",statement.getId().getAccount().getId());
+        Assertions.assertEquals(2,statement.getId().getMonth().intValue());
+        Assertions.assertEquals(2021,statement.getId().getYear().intValue());
+        Assertions.assertTrue(statement.getLocked());
+        Assertions.assertEquals(102.12,statement.getOpenBalance().getValue().doubleValue(),0.001);
     }
 
     @Test
@@ -260,16 +257,16 @@ public class PoJoTest {
         transaction.setDescription("Testing");
         transaction.setDate(LocalDate.of(2018,10,7));
         TransactionDTO transactionDTO = transactionMapper.map(transaction, TransactionDTO.class);
-        Assert.assertEquals("FLIP",transactionDTO.getAccountId());
-        Assert.assertEquals("FLOP",transactionDTO.getCategoryId());
-        Assert.assertEquals(2022,transactionDTO.getStatementYear().intValue());
-        Assert.assertEquals(1,transactionDTO.getStatementMonth().intValue());
-        Assert.assertEquals(92,transactionDTO.getOppositeTransactionId().intValue());
-        Assert.assertEquals(1.29,transactionDTO.getAmount().doubleValue(),0.001);
-        Assert.assertEquals("Testing",transactionDTO.getDescription());
-        Assert.assertEquals("2018-10-07",transactionDTO.getDate());
-        Assert.assertTrue(transactionDTO.getHasStatement());
-        Assert.assertTrue(transactionDTO.getStatementLocked());
+        Assertions.assertEquals("FLIP",transactionDTO.getAccountId());
+        Assertions.assertEquals("FLOP",transactionDTO.getCategoryId());
+        Assertions.assertEquals(2022,transactionDTO.getStatementYear().intValue());
+        Assertions.assertEquals(1,transactionDTO.getStatementMonth().intValue());
+        Assertions.assertEquals(92,transactionDTO.getOppositeTransactionId().intValue());
+        Assertions.assertEquals(1.29,transactionDTO.getAmount().doubleValue(),0.001);
+        Assertions.assertEquals("Testing",transactionDTO.getDescription());
+        Assertions.assertEquals("2018-10-07",transactionDTO.getDate());
+        Assertions.assertTrue(transactionDTO.getHasStatement());
+        Assertions.assertTrue(transactionDTO.getStatementLocked());
     }
 
     @Test
@@ -287,16 +284,16 @@ public class PoJoTest {
         transaction.setDescription("Testing");
         transaction.setDate(LocalDate.of(2018,10,7));
         TransactionDTO transactionDTO = transactionMapper.map(transaction, TransactionDTO.class);
-        Assert.assertEquals("FLIP",transactionDTO.getAccountId());
-        Assert.assertEquals("FLOP",transactionDTO.getCategoryId());
-        Assert.assertNull(transactionDTO.getStatementYear());
-        Assert.assertNull(transactionDTO.getStatementMonth());
-        Assert.assertEquals(92,transactionDTO.getOppositeTransactionId().intValue());
-        Assert.assertEquals(1.29,transactionDTO.getAmount().doubleValue(),0.001);
-        Assert.assertEquals("Testing",transactionDTO.getDescription());
-        Assert.assertEquals("2018-10-07",transactionDTO.getDate());
-        Assert.assertFalse(transactionDTO.getHasStatement());
-        Assert.assertFalse(transactionDTO.getStatementLocked());
+        Assertions.assertEquals("FLIP",transactionDTO.getAccountId());
+        Assertions.assertEquals("FLOP",transactionDTO.getCategoryId());
+        Assertions.assertNull(transactionDTO.getStatementYear());
+        Assertions.assertNull(transactionDTO.getStatementMonth());
+        Assertions.assertEquals(92,transactionDTO.getOppositeTransactionId().intValue());
+        Assertions.assertEquals(1.29,transactionDTO.getAmount().doubleValue(),0.001);
+        Assertions.assertEquals("Testing",transactionDTO.getDescription());
+        Assertions.assertEquals("2018-10-07",transactionDTO.getDate());
+        Assertions.assertFalse(transactionDTO.getHasStatement());
+        Assertions.assertFalse(transactionDTO.getStatementLocked());
     }
 
     @Test
@@ -324,15 +321,15 @@ public class PoJoTest {
         transactionDTO.setDescription("Testing");
         transactionDTO.setDate("2018-07-23");
         Transaction transaction = transactionMapper.map(transactionDTO, Transaction.class);
-        Assert.assertEquals("BANK",transaction.getAccount().getId());
-        Assert.assertEquals("HSE",transaction.getCategory().getId());
-        Assert.assertEquals("BANK",transaction.getStatement().getId().getAccount().getId());
-        Assert.assertEquals(2021,transaction.getStatement().getId().getYear().intValue());
-        Assert.assertEquals(8,transaction.getStatement().getId().getMonth().intValue());
-        Assert.assertEquals(92,transaction.getOppositeTransactionId().intValue());
-        Assert.assertEquals(1.29,transaction.getAmount().getValue().doubleValue(),0.001);
-        Assert.assertEquals("Testing",transaction.getDescription());
-        Assert.assertEquals(LocalDate.of(2018,7,23),transaction.getDate());
+        Assertions.assertEquals("BANK",transaction.getAccount().getId());
+        Assertions.assertEquals("HSE",transaction.getCategory().getId());
+        Assertions.assertEquals("BANK",transaction.getStatement().getId().getAccount().getId());
+        Assertions.assertEquals(2021,transaction.getStatement().getId().getYear().intValue());
+        Assertions.assertEquals(8,transaction.getStatement().getId().getMonth().intValue());
+        Assertions.assertEquals(92,transaction.getOppositeTransactionId().intValue());
+        Assertions.assertEquals(1.29,transaction.getAmount().getValue().doubleValue(),0.001);
+        Assertions.assertEquals("Testing",transaction.getDescription());
+        Assertions.assertEquals(LocalDate.of(2018,7,23),transaction.getDate());
 
         statementRepository.delete(testStatement);
     }
@@ -353,14 +350,14 @@ public class PoJoTest {
         regular.setLastDate(LocalDate.of(2019,3,5));
         regular.setWeekendAdj(AdjustmentType.AT_BACKWARD);
         RegularDTO regularDTO = regularMapper.map(regular,RegularDTO.class);
-        Assert.assertEquals("123",regularDTO.getAccountId());
-        Assert.assertEquals("456",regularDTO.getCategoryId());
-        Assert.assertEquals(10.20,regularDTO.getAmount().doubleValue(),0.001);
-        Assert.assertEquals("1W",regularDTO.getFrequency());
-        Assert.assertEquals("Testing",regularDTO.getDescription());
-        Assert.assertEquals(AdjustmentType.AT_BACKWARD.toString(),regularDTO.getWeekendAdj());
-        Assert.assertEquals("2019-02-05",regularDTO.getStart());
-        Assert.assertEquals("2019-03-05",regularDTO.getLastDate());
+        Assertions.assertEquals("123",regularDTO.getAccountId());
+        Assertions.assertEquals("456",regularDTO.getCategoryId());
+        Assertions.assertEquals(10.20,regularDTO.getAmount().doubleValue(),0.001);
+        Assertions.assertEquals("1W",regularDTO.getFrequency());
+        Assertions.assertEquals("Testing",regularDTO.getDescription());
+        Assertions.assertEquals(AdjustmentType.AT_BACKWARD.toString(),regularDTO.getWeekendAdj());
+        Assertions.assertEquals("2019-02-05",regularDTO.getStart());
+        Assertions.assertEquals("2019-03-05",regularDTO.getLastDate());
     }
 
     @Test
@@ -378,14 +375,14 @@ public class PoJoTest {
         regular.setStart(LocalDate.of(2019,2,5));
         regular.setWeekendAdj(AdjustmentType.AT_BACKWARD);
         RegularDTO regularDTO = regularMapper.map(regular,RegularDTO.class);
-        Assert.assertEquals("123",regularDTO.getAccountId());
-        Assert.assertEquals("456",regularDTO.getCategoryId());
-        Assert.assertEquals(10.20,regularDTO.getAmount().doubleValue(),0.001);
-        Assert.assertEquals("1W",regularDTO.getFrequency());
-        Assert.assertEquals("Testing",regularDTO.getDescription());
-        Assert.assertEquals(AdjustmentType.AT_BACKWARD.toString(),regularDTO.getWeekendAdj());
-        Assert.assertEquals("2019-02-05",regularDTO.getStart());
-        Assert.assertNull(regularDTO.getLastDate());
+        Assertions.assertEquals("123",regularDTO.getAccountId());
+        Assertions.assertEquals("456",regularDTO.getCategoryId());
+        Assertions.assertEquals(10.20,regularDTO.getAmount().doubleValue(),0.001);
+        Assertions.assertEquals("1W",regularDTO.getFrequency());
+        Assertions.assertEquals("Testing",regularDTO.getDescription());
+        Assertions.assertEquals(AdjustmentType.AT_BACKWARD.toString(),regularDTO.getWeekendAdj());
+        Assertions.assertEquals("2019-02-05",regularDTO.getStart());
+        Assertions.assertNull(regularDTO.getLastDate());
     }
 
     @Test
@@ -400,14 +397,14 @@ public class PoJoTest {
         regularDTO.setLastDate("2019-05-10");
         regularDTO.setWeekendAdj("FW");
         Regular regular = regularMapper.map(regularDTO,Regular.class);
-        Assert.assertEquals("BANK",regular.getAccount().getId());
-        Assert.assertEquals("FDG",regular.getCategory().getId());
-        Assert.assertEquals(10.20,regular.getAmount().doubleValue(),0.001);
-        Assert.assertEquals("1W",regular.getFrequency());
-        Assert.assertEquals("Testing",regular.getDescription());
-        Assert.assertEquals(AdjustmentType.AT_FORWARD,regular.getWeekendAdj());
-        Assert.assertEquals(LocalDate.of(2019,4,3),regular.getStart());
-        Assert.assertEquals(LocalDate.of(2019,5,10),regular.getLastDate());
+        Assertions.assertEquals("BANK",regular.getAccount().getId());
+        Assertions.assertEquals("FDG",regular.getCategory().getId());
+        Assertions.assertEquals(10.20,regular.getAmount().doubleValue(),0.001);
+        Assertions.assertEquals("1W",regular.getFrequency());
+        Assertions.assertEquals("Testing",regular.getDescription());
+        Assertions.assertEquals(AdjustmentType.AT_FORWARD,regular.getWeekendAdj());
+        Assertions.assertEquals(LocalDate.of(2019,4,3),regular.getStart());
+        Assertions.assertEquals(LocalDate.of(2019,5,10),regular.getLastDate());
     }
 
     @Test
@@ -421,14 +418,14 @@ public class PoJoTest {
         regularDTO.setStart("2019-04-03");
         regularDTO.setWeekendAdj("FW");
         Regular regular = regularMapper.map(regularDTO,Regular.class);
-        Assert.assertEquals("BANK",regular.getAccount().getId());
-        Assert.assertEquals("FDG",regular.getCategory().getId());
-        Assert.assertEquals(10.20,regular.getAmount().doubleValue(),0.001);
-        Assert.assertEquals("1W",regular.getFrequency());
-        Assert.assertEquals("Testing",regular.getDescription());
-        Assert.assertEquals(AdjustmentType.AT_FORWARD,regular.getWeekendAdj());
-        Assert.assertEquals(LocalDate.of(2019,4,3),regular.getStart());
-        Assert.assertNull(regular.getLastDate());
+        Assertions.assertEquals("BANK",regular.getAccount().getId());
+        Assertions.assertEquals("FDG",regular.getCategory().getId());
+        Assertions.assertEquals(10.20,regular.getAmount().doubleValue(),0.001);
+        Assertions.assertEquals("1W",regular.getFrequency());
+        Assertions.assertEquals("Testing",regular.getDescription());
+        Assertions.assertEquals(AdjustmentType.AT_FORWARD,regular.getWeekendAdj());
+        Assertions.assertEquals(LocalDate.of(2019,4,3),regular.getStart());
+        Assertions.assertNull(regular.getLastDate());
     }
 
     @Test
@@ -439,25 +436,25 @@ public class PoJoTest {
         AccountDTO account2 = new AccountDTO();
         account2.setId("flip");
 
-        Assert.assertEquals(account,account2);
+        Assertions.assertEquals(account,account2);
 
         AccountDTO account3 = new AccountDTO();
         account3.setId("FLOP");
 
-        Assert.assertEquals(-6, account.compareTo(account3));
-        Assert.assertEquals(6, account3.compareTo(account));
+        Assertions.assertEquals(-6, account.compareTo(account3));
+        Assertions.assertEquals(6, account3.compareTo(account));
 
-        Assert.assertEquals(account2, account);
-        Assert.assertNotEquals(account3, account);
-        Assert.assertEquals(account.hashCode(),account2.hashCode());
-        Assert.assertEquals("FLIP [null]", account.toString());
+        Assertions.assertEquals(account2, account);
+        Assertions.assertNotEquals(account3, account);
+        Assertions.assertEquals(account.hashCode(),account2.hashCode());
+        Assertions.assertEquals("FLIP [null]", account.toString());
     }
 
     @Test
     public void StatusTest() {
         StatusDTO status = new StatusDTO();
         status.setStatus("FAILED");
-        Assert.assertEquals("FAILED", status.getStatus());
+        Assertions.assertEquals("FAILED", status.getStatus());
     }
 
     @Test
@@ -472,23 +469,23 @@ public class PoJoTest {
         applicationProperties.setReportShare("Test");
         applicationProperties.setReportWorking("Test");
         applicationProperties.setServiceName("Test");
-        Assert.assertEquals("Test", applicationProperties.getArchiveSchedule());
-        Assert.assertEquals("Test", applicationProperties.getRegularSchedule());
-        Assert.assertEquals("Test", applicationProperties.getReportSchedule());
-        Assert.assertEquals("Test", applicationProperties.getReportShare());
-        Assert.assertEquals("Test", applicationProperties.getReportWorking());
-        Assert.assertEquals("Test", applicationProperties.getServiceName());
-        Assert.assertTrue(applicationProperties.getArchiveEnabled());
-        Assert.assertTrue(applicationProperties.getReportEnabled());
-        Assert.assertTrue(applicationProperties.getRegularEnabled());
+        Assertions.assertEquals("Test", applicationProperties.getArchiveSchedule());
+        Assertions.assertEquals("Test", applicationProperties.getRegularSchedule());
+        Assertions.assertEquals("Test", applicationProperties.getReportSchedule());
+        Assertions.assertEquals("Test", applicationProperties.getReportShare());
+        Assertions.assertEquals("Test", applicationProperties.getReportWorking());
+        Assertions.assertEquals("Test", applicationProperties.getServiceName());
+        Assertions.assertTrue(applicationProperties.getArchiveEnabled());
+        Assertions.assertTrue(applicationProperties.getReportEnabled());
+        Assertions.assertTrue(applicationProperties.getRegularEnabled());
     }
 
     @Test
     public void lockStatementRequest() {
         StatementIdDTO statementId = new StatementIdDTO("AMEX",3,2021);
-        Assert.assertEquals("AMEX", statementId.getAccountId());
-        Assert.assertEquals(2021, statementId.getYear().intValue());
-        Assert.assertEquals(3, statementId.getMonth().intValue());
+        Assertions.assertEquals("AMEX", statementId.getAccountId());
+        Assertions.assertEquals(2021, statementId.getYear().intValue());
+        Assertions.assertEquals(3, statementId.getMonth().intValue());
         statementId.setMonth(32);
     }
 
@@ -502,10 +499,10 @@ public class PoJoTest {
         transaction.setCategoryId("HSE");
 
         ReconciliationData reconciliation = transactionMapper.map(transaction,ReconciliationData.class);
-        Assert.assertEquals("Test", reconciliation.getDescription());
-        Assert.assertEquals(29.2, reconciliation.getAmount().doubleValue(), 0.01);
-        Assert.assertEquals(LocalDate.of(2022,10,13), reconciliation.getDate());
-        Assert.assertEquals("HSE", reconciliation.getCategory().getId());
+        Assertions.assertEquals("Test", reconciliation.getDescription());
+        Assertions.assertEquals(29.2, reconciliation.getAmount().doubleValue(), 0.01);
+        Assertions.assertEquals(LocalDate.of(2022,10,13), reconciliation.getDate());
+        Assertions.assertEquals("HSE", reconciliation.getCategory().getId());
     }
 
     @Test
@@ -513,23 +510,23 @@ public class PoJoTest {
         DateRangeDTO dateRangeDTO = new DateRangeDTO("2010-05-03","2010-06-21");
 
         DateRange dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
-        Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
-        Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
+        Assertions.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
+        Assertions.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
 
         dateRangeDTO = new DateRangeDTO(null,"2010-06-21");
         dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
-        Assert.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
+        Assertions.assertEquals(LocalDate.of(2010,6,21), dateRange.getTo());
 
         dateRangeDTO = new DateRangeDTO("2010-05-03",null);
         dateRange = utilityMapper.map(dateRangeDTO, DateRange.class);
-        Assert.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
+        Assertions.assertEquals(LocalDate.of(2010,5,3), dateRange.getFrom());
     }
 
     @Test
     public void ArchiveOrReportRequestDTO() {
         ArchiveOrReportRequestDTO archiveOrReportRequest = new ArchiveOrReportRequestDTO(2010,5);
-        Assert.assertEquals(2010, archiveOrReportRequest.getYear());
-        Assert.assertEquals(5, archiveOrReportRequest.getMonth());
+        Assertions.assertEquals(2010, archiveOrReportRequest.getYear());
+        Assertions.assertEquals(5, archiveOrReportRequest.getMonth());
     }
 
     @Test
@@ -538,9 +535,9 @@ public class PoJoTest {
         reconcileUpdate.setId(1);
         reconcileUpdate.setType("Blah");
         reconcileUpdate.setCategoryId("FSE");
-        Assert.assertEquals(1, reconcileUpdate.getId());
-        Assert.assertEquals("Blah", reconcileUpdate.getType());
-        Assert.assertEquals("FSE", reconcileUpdate.getCategoryId());
+        Assertions.assertEquals(1, reconcileUpdate.getId());
+        Assertions.assertEquals("Blah", reconcileUpdate.getType());
+        Assertions.assertEquals("FSE", reconcileUpdate.getCategoryId());
     }
 
     @Test
@@ -555,34 +552,34 @@ public class PoJoTest {
         format.setHeaderLine("Testing");
         format.setAmountOutColumn(2);
         format.setDescriptionColumn(4);
-        Assert.assertEquals("dd-mmm-yyyy",format.getDateFormat());
-        Assert.assertEquals(1,format.getAmountInColumn().intValue());
-        Assert.assertEquals(2,format.getDateColumn().intValue());
-        Assert.assertEquals("TEST",format.getId());
-        Assert.assertEquals(2,format.getFirstLine().intValue());
-        Assert.assertTrue(format.getReverse());
-        Assert.assertEquals("Testing",format.getHeaderLine());
-        Assert.assertEquals(2,format.getAmountOutColumn().intValue());
-        Assert.assertEquals(4,format.getDescriptionColumn().intValue());
+        Assertions.assertEquals("dd-mmm-yyyy",format.getDateFormat());
+        Assertions.assertEquals(1,format.getAmountInColumn().intValue());
+        Assertions.assertEquals(2,format.getDateColumn().intValue());
+        Assertions.assertEquals("TEST",format.getId());
+        Assertions.assertEquals(2,format.getFirstLine().intValue());
+        Assertions.assertTrue(format.getReverse());
+        Assertions.assertEquals("Testing",format.getHeaderLine());
+        Assertions.assertEquals(2,format.getAmountOutColumn().intValue());
+        Assertions.assertEquals(4,format.getDescriptionColumn().intValue());
     }
 
     @Test
     public void testFinancialAmountToBigDecimal() {
         BigDecimal test = BigDecimal.valueOf(290.20);
         FinancialAmount financialAmount = utilityMapper.map(test,FinancialAmount.class);
-        Assert.assertEquals(290.2,financialAmount.getValue().doubleValue(),0.001);
+        Assertions.assertEquals(290.2,financialAmount.getValue().doubleValue(),0.001);
 
         //noinspection SimplifiableAssertion,EqualsBetweenInconvertibleTypes
-        Assert.assertTrue(financialAmount.equals(test));
+        Assertions.assertTrue(financialAmount.equals(test));
 
         FinancialAmount financialAmount2 = new FinancialAmount(BigDecimal.valueOf(290.2));
         //noinspection SimplifiableAssertion
-        Assert.assertTrue(financialAmount.equals(financialAmount2));
+        Assertions.assertTrue(financialAmount.equals(financialAmount2));
 
         // Test the other way.
         FinancialAmount faTest = new FinancialAmount(test);
         BigDecimal bdTest = utilityMapper.map(faTest, BigDecimal.class);
-        Assert.assertEquals(bdTest.toString(),faTest.getValue().toString());
+        Assertions.assertEquals(bdTest.toString(),faTest.getValue().toString());
     }
 
     @Test
@@ -592,18 +589,18 @@ public class PoJoTest {
 
         StatementId statementId = new StatementId(account,2010, 1);
         StatementId previous = StatementId.getPreviousId(statementId);
-        Assert.assertEquals(2009, previous.getYear().intValue());
-        Assert.assertEquals(12, previous.getMonth().intValue());
+        Assertions.assertEquals(2009, previous.getYear().intValue());
+        Assertions.assertEquals(12, previous.getMonth().intValue());
 
         statementId = new StatementId(account,2010, 12);
         StatementId next = StatementId.getNextId(statementId);
-        Assert.assertEquals(2011, next.getYear().intValue());
-        Assert.assertEquals(1, next.getMonth().intValue());
+        Assertions.assertEquals(2011, next.getYear().intValue());
+        Assertions.assertEquals(1, next.getMonth().intValue());
 
         String text = next.toString();
-        Assert.assertEquals(text.hashCode(),next.hashCode());
+        Assertions.assertEquals(text.hashCode(),next.hashCode());
 
-        Assert.assertNotEquals(statementId,next);
+        Assertions.assertNotEquals(statementId,next);
     }
 
     @Test
@@ -620,12 +617,12 @@ public class PoJoTest {
         reconciliationFile.setAccount(account);
 
         ReconciliationFileDTO reconciliationFileDTO = transactionMapper.map(reconciliationFile,ReconciliationFileDTO.class);
-        Assert.assertEquals(321L,reconciliationFileDTO.getSize(),0.1);
-        Assert.assertEquals(LocalDateTime.of(2023,1,2,6,32,4),reconciliationFileDTO.getLastModified());
-        Assert.assertEquals("BANK",reconciliationFileDTO.getAccount().getId());
-        Assert.assertEquals("FredFlinstone.txt",reconciliationFileDTO.getFilename());
-        Assert.assertEquals("Error", reconciliationFileDTO.getError());
-        Assert.assertFalse(reconciliationFileDTO.getLoaded());
+        Assertions.assertEquals(321L,reconciliationFileDTO.getSize(),0.1);
+        Assertions.assertEquals(LocalDateTime.of(2023,1,2,6,32,4),reconciliationFileDTO.getLastModified());
+        Assertions.assertEquals("BANK",reconciliationFileDTO.getAccount().getId());
+        Assertions.assertEquals("FredFlinstone.txt",reconciliationFileDTO.getFilename());
+        Assertions.assertEquals("Error", reconciliationFileDTO.getError());
+        Assertions.assertFalse(reconciliationFileDTO.getLoaded());
 
         reconciliationFile.setError("Another");
         reconciliationFile.setSize(921L);
@@ -634,26 +631,26 @@ public class PoJoTest {
         reconciliationFile.setAccount(null);
 
         reconciliationFileDTO = transactionMapper.map(reconciliationFile,ReconciliationFileDTO.class);
-        Assert.assertEquals(921L,reconciliationFileDTO.getSize(),0.1);
-        Assert.assertEquals(LocalDateTime.of(2023,2,3,4,12,6),reconciliationFileDTO.getLastModified());
-        Assert.assertNull(reconciliationFileDTO.getAccount());
-        Assert.assertEquals("BarneyRubble.txt",reconciliationFileDTO.getFilename());
-        Assert.assertEquals("Another", reconciliationFileDTO.getError());
+        Assertions.assertEquals(921L,reconciliationFileDTO.getSize(),0.1);
+        Assertions.assertEquals(LocalDateTime.of(2023,2,3,4,12,6),reconciliationFileDTO.getLastModified());
+        Assertions.assertNull(reconciliationFileDTO.getAccount());
+        Assertions.assertEquals("BarneyRubble.txt",reconciliationFileDTO.getFilename());
+        Assertions.assertEquals("Another", reconciliationFileDTO.getError());
 
         ReconciliationFileLoadDTO fileLoad = new ReconciliationFileLoadDTO();
         fileLoad.setFilename("grep");
-        Assert.assertEquals("grep",fileLoad.getFilename());
+        Assertions.assertEquals("grep",fileLoad.getFilename());
     }
 
     @Test
     public void testReconcileFileUpdateDTO() {
         ReconcileFileDataUpdateDTO test = new ReconcileFileDataUpdateDTO(LocalDateTime.of(2023,12,3,10,15),"/test/path");
-        Assert.assertEquals("/test/path",test.getPath());
-        Assert.assertEquals(LocalDateTime.of(2023,12,3,10,15),test.getUpdateTime());
+        Assertions.assertEquals("/test/path",test.getPath());
+        Assertions.assertEquals(LocalDateTime.of(2023,12,3,10,15),test.getUpdateTime());
 
         test.setPath("/test/path2");
         test.setUpdateTime(LocalDateTime.of(2022,11,2,9,14));
-        Assert.assertEquals(LocalDateTime.of(2022,11,2,9,14),test.getUpdateTime());
+        Assertions.assertEquals(LocalDateTime.of(2022,11,2,9,14),test.getUpdateTime());
     }
 
     @Test
@@ -681,28 +678,28 @@ public class PoJoTest {
         id2.setFile(file);
         id2.setLine(10);
 
-        Assert.assertEquals(file,id.getFile());
-        Assert.assertEquals(10,id.getLine().intValue());
-        Assert.assertEquals("Fred.txt-10",id.toString());
-        Assert.assertEquals(-531378337,id.hashCode());
+        Assertions.assertEquals(file,id.getFile());
+        Assertions.assertEquals(10,id.getLine().intValue());
+        Assertions.assertEquals("Fred.txt-10",id.toString());
+        Assertions.assertEquals(-531378337,id.hashCode());
 
-        Assert.assertEquals(id,id2);
+        Assertions.assertEquals(id,id2);
         id2.setLine(11);
-        Assert.assertNotEquals(id,id2);
+        Assertions.assertNotEquals(id,id2);
     }
 
     @Test
     public void testConverters() {
         Account account = new Account();
         account.setId("XNYD");
-        Assert.assertEquals("XNYD",regularMapper.map(account,String.class));
+        Assertions.assertEquals("XNYD",regularMapper.map(account,String.class));
 
         Category category = new Category();
         category.setId("EFIY");
-        Assert.assertEquals("EFIY",regularMapper.map(category,String.class));
+        Assertions.assertEquals("EFIY",regularMapper.map(category,String.class));
 
         FinancialAmount financialAmount = new FinancialAmount(BigDecimal.valueOf(12.89));
-        Assert.assertEquals(12.89,utilityMapper.map(financialAmount,Double.class),0.01);
+        Assertions.assertEquals(12.89,utilityMapper.map(financialAmount,Double.class),0.01);
     }
 
     @Test
@@ -726,16 +723,16 @@ public class PoJoTest {
         test.setStatement(statement);
         test.setDescription("Testing");
 
-        Assert.assertEquals(12.3,test.getBalance().getValue().doubleValue(),0.1);
-        Assert.assertEquals(10,test.getId().intValue());
-        Assert.assertEquals(90,test.getOppositeId().intValue());
-        Assert.assertEquals(false,test.getPredicted());
-        Assert.assertEquals("BBCD",test.getAccount().getId());
-        Assert.assertEquals(false,test.getFromReconciliation());
-        Assert.assertEquals(84.32,test.getAmount().getValue().doubleValue(),0.1);
-        Assert.assertEquals(2023,test.getStatement().getYear().intValue());
-        Assert.assertEquals(3,test.getStatement().getMonth().intValue());
-        Assert.assertEquals("Testing",test.getDescription());
+        Assertions.assertEquals(12.3,test.getBalance().getValue().doubleValue(),0.1);
+        Assertions.assertEquals(10,test.getId().intValue());
+        Assertions.assertEquals(90,test.getOppositeId().intValue());
+        Assertions.assertEquals(false,test.getPredicted());
+        Assertions.assertEquals("BBCD",test.getAccount().getId());
+        Assertions.assertEquals(false,test.getFromReconciliation());
+        Assertions.assertEquals(84.32,test.getAmount().getValue().doubleValue(),0.1);
+        Assertions.assertEquals(2023,test.getStatement().getYear().intValue());
+        Assertions.assertEquals(3,test.getStatement().getMonth().intValue());
+        Assertions.assertEquals("Testing",test.getDescription());
     }
 
     @Test
@@ -744,14 +741,14 @@ public class PoJoTest {
         test.setField(TransactionSortField.CATEGORY);
         test.setType(TransactionSortType.DESCENDING);
 
-        Assert.assertEquals(TransactionSortField.CATEGORY,test.getField());
-        Assert.assertEquals(TransactionSortType.DESCENDING,test.getType());
+        Assertions.assertEquals(TransactionSortField.CATEGORY,test.getField());
+        Assertions.assertEquals(TransactionSortType.DESCENDING,test.getType());
 
         ObjectMapper objectMapper = new ObjectMapper();
 
         test = objectMapper.readValue("{\"field\":\"AMOUNT\",\"type\":\"ASCENDING\"}", TransactionSortDTO.class);
-        Assert.assertEquals(TransactionSortField.AMOUNT,test.getField());
-        Assert.assertEquals(TransactionSortType.ASCENDING,test.getType());
+        Assertions.assertEquals(TransactionSortField.AMOUNT,test.getField());
+        Assertions.assertEquals(TransactionSortType.ASCENDING,test.getType());
     }
 
     @Test
@@ -761,20 +758,20 @@ public class PoJoTest {
         try {
             dateRange.setTo("1929-01-32");
         } catch (IllegalArgumentException e) {
-            Assert.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
+            Assertions.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
         }
 
         try {
             dateRange.setFrom("2022-05-21");
             dateRange.setTo("2022-05-19");
         } catch (IllegalArgumentException e) {
-            Assert.assertEquals("Date Range: the to date MUST be after the from date.",e.getMessage());
+            Assertions.assertEquals("Date Range: the to date MUST be after the from date.",e.getMessage());
         }
 
         try {
             dateRange.setFrom("1929-01-32");
         } catch (IllegalArgumentException e) {
-            Assert.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
+            Assertions.assertEquals("Date Range: the dates must be in the format yyyy-MM-dd", e.getMessage());
         }
 
         try {
@@ -782,7 +779,7 @@ public class PoJoTest {
             dateRange.setTo("2022-05-19");
             dateRange.setFrom("2022-05-21");
         } catch (IllegalArgumentException e) {
-            Assert.assertEquals("Date Range: the from date MUST be before the to date.",e.getMessage());
+            Assertions.assertEquals("Date Range: the from date MUST be before the to date.",e.getMessage());
         }
     }
 
@@ -791,9 +788,9 @@ public class PoJoTest {
         TransactionFilterDTO test = new TransactionFilterDTO();
 
         // Check the defaults.
-        Assert.assertEquals(600,test.getMaxPageSize().intValue());
-        Assert.assertEquals(0,test.getPageNumber().intValue());
-        Assert.assertEquals(4,test.getTransactionSorts().size());
+        Assertions.assertEquals(600,test.getMaxPageSize().intValue());
+        Assertions.assertEquals(0,test.getPageNumber().intValue());
+        Assertions.assertEquals(4,test.getTransactionSorts().size());
 
         // Check get and sets.
         test.setPageNumber(3);
@@ -809,17 +806,17 @@ public class PoJoTest {
         test.setDateRange(new DateRangeDTO());
         test.setDescription("Hello");
 
-        Assert.assertEquals(3,test.getPageNumber().intValue());
-        Assert.assertEquals(602,test.getMaxPageSize().intValue());
-        Assert.assertTrue(test.getFromReconciled());
-        Assert.assertEquals(1,test.getAccounts().size());
-        Assert.assertEquals(1,test.getCategories().size());
-        Assert.assertTrue(test.getFromReconciled());
-        Assert.assertNull(test.getValueRange().getMaximum());
-        Assert.assertTrue(test.getLocked());
-        Assert.assertTrue(test.getPredicted());
-        Assert.assertEquals("Hello",test.getDescription());
-        Assert.assertNull(test.getStatementDate().getMonth());
-        Assert.assertNull(test.getDateRange().getTo());
+        Assertions.assertEquals(3,test.getPageNumber().intValue());
+        Assertions.assertEquals(602,test.getMaxPageSize().intValue());
+        Assertions.assertTrue(test.getFromReconciled());
+        Assertions.assertEquals(1,test.getAccounts().size());
+        Assertions.assertEquals(1,test.getCategories().size());
+        Assertions.assertTrue(test.getFromReconciled());
+        Assertions.assertNull(test.getValueRange().getMaximum());
+        Assertions.assertTrue(test.getLocked());
+        Assertions.assertTrue(test.getPredicted());
+        Assertions.assertEquals("Hello",test.getDescription());
+        Assertions.assertNull(test.getStatementDate().getMonth());
+        Assertions.assertNull(test.getDateRange().getTo());
     }
 }
