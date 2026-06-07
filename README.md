@@ -111,24 +111,32 @@ sudo mkdir -p /var/log/money /var/data/money/reconcile /var/data/money/reports
 ### Running the container
 
 ```bash
-docker run -d -p 12017:12017 \
+docker run -d --name moneydb -p 12017:12017 \
            -v /var/log/money:/app/logs \
            -v /var/data/money/reconcile:/app/reconcile \
            -v /var/data/money/reports:/app/reports \
            money-app:26.3.1
 ```
 
-The `-d` flag runs the container in detached (background) mode. To view logs:
+The `-d` flag runs the container in detached (background) mode. The `--name moneydb` assigns a fixed name so the container can be managed by name:
 
 ```bash
-docker logs <container-id>       # view logs on demand
-docker logs -f <container-id>    # follow logs (like tail -f)
+docker stop moneydb
+docker start moneydb
+docker rm moneydb
+```
+
+To view logs:
+
+```bash
+docker logs moneydb
+docker logs -f moneydb    # follow logs (like tail -f)
 ```
 
 To use a different profile:
 
 ```bash
-docker run -d -p 12017:12017 money-app:26.3.1 --spring.profiles.active=dev
+docker run -d --name moneydb -p 12017:12017 money-app:26.3.1 --spring.profiles.active=dev
 ```
 
 ### Volume mounts
