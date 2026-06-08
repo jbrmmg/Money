@@ -83,6 +83,87 @@ Production database credentials are supplied via environment variables:
 - `db.pdn.money.user`
 - `db.pdn.money.password`
 
+## Docker
+
+The Dockerfile is at `src/main/resources/docker/Dockerfile`. It packages a pre-built JAR into a lightweight JRE 17 Alpine image and runs it with the `pdn` profile by default.
+
+### Building the image
+
+Download the JAR from Nexus first, then build from the project root:
+
+```bash
+curl -O http://nexus.jbrmmg.me.uk:8081/repository/maven-releases/com/jbr/middle-money/MiddleTier-Money/26.3.1/MiddleTier-Money-26.3.1.jar
+mv MiddleTier-Money-26.3.1.jar target/
+
+docker build -f src/main/resources/docker/Dockerfile -t money-app:26.3.1 .
+```
+
+### Host directories
+
+Create the following directories on the host before running the container:
+
+```bash
+sudo mkdir -p /var/log/money /var/data/money/reconcile /var/data/money/reports
+```
+
+> **TODO:** These paths are temporary. They will be revisited when a proper CI/CD pipeline is set up.
+
+### Running the container
+
+```bash
+docker run -d --name moneydb -p 12017:12017 \
+           -e SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect \
+           -v /var/log/money:/app/logs \
+           -v /var/data/money/reconcile:/app/reconcile \
+           -v /var/data/money/reports:/app/reports \
+           money-app:26.3.1
+```
+
+The `-d` flag runs the container in detached (background) mode. The `--name moneydb` assigns a fixed name so the container can be managed by name:
+
+```bash
+docker stop moneydb
+docker start moneydb
+docker rm moneydb
+```
+
+To view logs:
+
+```bash
+docker logs moneydb
+docker logs -f moneydb    # follow logs (like tail -f)
+```
+
+To use a different profile:
+
+```bash
+docker run -d --name moneydb -p 12017:12017 money-app:26.3.1 --spring.profiles.active=dev
+```
+
+### Volume mounts
+
+The container expects three directories to be bind-mounted for persistent data:
+
+| Mount point | Purpose | Env var override |
+|---|---|---|
+| `/app/logs` | Application log files | `LOGGING_FILE_NAME` |
+| `/app/reconcile` | Watched directory for reconciliation files | `MONEY_RECONCILE_FILE_LOCATION` |
+| `/app/reports` | Report working and output directories | `MONEY_REPORT_WORKING`, `MONEY_REPORT_SHARE` |
+
+### Container user and host directory permissions
+
+> **TODO:** The container currently runs as `root` (the default for the `eclipse-temurin:17-jre-alpine` base image). This means the bind-mounted host directories require no special permissions, but running as root inside a container is not best practice.
+>
+> A future improvement is to add a dedicated non-root user to the Dockerfile:
+> ```dockerfile
+> RUN addgroup -S money && adduser -S money -G money
+> USER money
+> ```
+> Once that is done, the host directories will need to be owned by that user's uid (typically 1000):
+> ```bash
+> chown -R 1000:1000 /host/path/logs /host/path/reconcile /host/path/reports
+> ```
+
 ## REST API
 
 The API is self-documented via Swagger UI at `/swagger-ui.html` when the service is running.
