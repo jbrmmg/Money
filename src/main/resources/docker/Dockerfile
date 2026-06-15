@@ -10,9 +10,8 @@ ENV MONEY_RECONCILE_FILE_LOCATION=/app/reconcile
 ENV MONEY_REPORT_WORKING=/app/reports/working
 ENV MONEY_REPORT_SHARE=/app/reports/share
 
-VOLUME ["/app/logs", "/app/reconcile", "/app/reports"]
+VOLUME ["/app/logs", "/app/reconcile", "/app/reports/working"]
 
 EXPOSE 12017
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-CMD ["--spring.profiles.active=pdn"]

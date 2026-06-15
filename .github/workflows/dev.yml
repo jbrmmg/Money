@@ -1,0 +1,104 @@
+name: Development Build
+
+on:
+  push:
+    branches-ignore:
+      - Release
+
+jobs:
+  build:
+    runs-on: money-dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Maven
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q maven
+
+      - name: Configure Maven settings
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << 'EOF'
+          <settings>
+            <servers>
+              <server>
+                <id>Snapshots</id>
+                <username>deployment</username>
+                <password>${{ secrets.NEXUS_PASSWORD }}</password>
+              </server>
+              <server>
+                <id>Releases</id>
+                <username>deployment</username>
+                <password>${{ secrets.NEXUS_PASSWORD }}</password>
+              </server>
+              <server>
+                <id>main</id>
+                <username>deployment</username>
+                <password>${{ secrets.NEXUS_PASSWORD }}</password>
+              </server>
+            </servers>
+            <mirrors>
+              <mirror>
+                <id>main</id>
+                <mirrorOf>central</mirrorOf>
+                <url>http://nexus.jbrmmg.me.uk:8081/repository/maven-public/</url>
+              </mirror>
+            </mirrors>
+            <profiles>
+              <profile>
+                <id>default</id>
+                <properties>
+                  <repository.url>http://nexus.jbrmmg.me.uk:8081/repository</repository.url>
+                </properties>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>default</activeProfile>
+            </activeProfiles>
+          </settings>
+          EOF
+
+      - name: Build and Test with Maven
+        run: mvn verify
+
+      - name: Run Sonar
+        run: mvn sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f src/main/resources/docker/Dockerfile \
+            -t nexus.jbrmmg.me.uk:8083/money-dev:${{ github.sha }} \
+            -t nexus.jbrmmg.me.uk:8083/money-dev:latest \
+            .
+
+      - name: Push to Nexus Docker registry
+        run: |
+          docker login nexus.jbrmmg.me.uk:8083 \
+            -u deployment \
+            -p ${{ secrets.NEXUS_PASSWORD }}
+          docker push nexus.jbrmmg.me.uk:8083/money-dev:${{ github.sha }}
+          docker push nexus.jbrmmg.me.uk:8083/money-dev:latest
+
+      - name: Deploy
+        env:
+          DB_DEV_MONEY_SERVER: ${{ secrets.DB_DEV_MONEY_SERVER }}
+          DB_DEV_MONEY_USER: ${{ secrets.DB_DEV_MONEY_USER }}
+          DB_DEV_MONEY_PASSWORD: ${{ secrets.DB_DEV_MONEY_PASSWORD }}
+        run: |
+          docker login nexus.jbrmmg.me.uk:8084 \
+            -u deployment \
+            -p ${{ secrets.NEXUS_PASSWORD }}
+          echo "SPRING_DATASOURCE_URL=${DB_DEV_MONEY_SERVER}?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true" > .env
+          echo "SPRING_DATASOURCE_USERNAME=${DB_DEV_MONEY_USER}" >> .env
+          echo "SPRING_DATASOURCE_PASSWORD=${DB_DEV_MONEY_PASSWORD}" >> .env
+          docker compose -f docker-compose-dev.yml pull
+          docker compose -f docker-compose-dev.yml up -d

@@ -1,0 +1,19 @@
+services:
+  github-runner:
+    image: myoung34/github-runner:latest
+    container_name: money-runner
+    restart: unless-stopped
+    env_file:
+      - .env
+      - .env.secrets
+    environment:
+      REPO_URL: https://github.com/jbrmmg/Money
+      RUNNER_NAME: ${RUNNER_NAME}
+      RUNNER_WORKDIR: /tmp/runner/work
+      LABELS: ${LABELS}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner-work:/tmp/runner/work
+
+volumes:
+  runner-work:

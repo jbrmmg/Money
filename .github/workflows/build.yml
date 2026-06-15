@@ -1,0 +1,101 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - Release
+
+jobs:
+  build:
+    runs-on: money-prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Maven
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q maven
+
+      - name: Configure Maven settings
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << 'EOF'
+          <settings>
+            <servers>
+              <server>
+                <id>Snapshots</id>
+                <username>deployment</username>
+                <password>${{ secrets.NEXUS_PASSWORD }}</password>
+              </server>
+              <server>
+                <id>Releases</id>
+                <username>deployment</username>
+                <password>${{ secrets.NEXUS_PASSWORD }}</password>
+              </server>
+              <server>
+                <id>main</id>
+                <username>deployment</username>
+                <password>${{ secrets.NEXUS_PASSWORD }}</password>
+              </server>
+            </servers>
+            <mirrors>
+              <mirror>
+                <id>main</id>
+                <mirrorOf>central</mirrorOf>
+                <url>http://nexus.jbrmmg.me.uk:8081/repository/maven-public/</url>
+              </mirror>
+            </mirrors>
+            <profiles>
+              <profile>
+                <id>default</id>
+                <properties>
+                  <repository.url>http://nexus.jbrmmg.me.uk:8081/repository</repository.url>
+                </properties>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>default</activeProfile>
+            </activeProfiles>
+          </settings>
+          EOF
+
+      - name: Build with Maven
+        run: mvn package -DskipTests
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f src/main/resources/docker/Dockerfile \
+            -t nexus.jbrmmg.me.uk:8083/money:${{ github.sha }} \
+            -t nexus.jbrmmg.me.uk:8083/money:latest \
+            .
+
+      - name: Push to Nexus Docker registry
+        run: |
+          docker login nexus.jbrmmg.me.uk:8083 \
+            -u deployment \
+            -p ${{ secrets.NEXUS_PASSWORD }}
+          docker push nexus.jbrmmg.me.uk:8083/money:${{ github.sha }}
+          docker push nexus.jbrmmg.me.uk:8083/money:latest
+
+      - name: Deploy
+        env:
+          DB_PDN_MONEY_SERVER: ${{ secrets.DB_PDN_MONEY_SERVER }}
+          DB_PDN_MONEY_USER: ${{ secrets.DB_PDN_MONEY_USER }}
+          DB_PDN_MONEY_PASSWORD: ${{ secrets.DB_PDN_MONEY_PASSWORD }}
+        run: |
+          docker login nexus.jbrmmg.me.uk:8084 \
+            -u deployment \
+            -p ${{ secrets.NEXUS_PASSWORD }}
+          echo "SPRING_DATASOURCE_URL=${DB_PDN_MONEY_SERVER}?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false" > .env
+          echo "SPRING_DATASOURCE_USERNAME=${DB_PDN_MONEY_USER}" >> .env
+          echo "SPRING_DATASOURCE_PASSWORD=${DB_PDN_MONEY_PASSWORD}" >> .env
+          docker compose pull
+          docker compose up -d
