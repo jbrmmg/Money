@@ -21,6 +21,8 @@
          TransportWrapper as it's just a single call to Transport.send.
          -->
         <sonar.coverage.exclusions>**/MiddleTier.java,**/TransportWrapperImpl.java</sonar.coverage.exclusions>
+        <sonar.organization>jbrmmg</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <scm>
