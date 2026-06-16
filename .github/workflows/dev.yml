@@ -70,7 +70,6 @@ jobs:
         env:
           DOCKER_HOST: unix:///var/run/docker.sock
           TESTCONTAINERS_RYUK_DISABLED: "true"
-          DOCKER_API_VERSION: "1.44"
         run: mvn verify
 
       - name: Run Sonar
