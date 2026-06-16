@@ -37,27 +37,20 @@ mvn verify
 mvn package -Dskip.surefire.tests=true
 ```
 
-The build produces an executable JAR and a deployment zip assembly.
+The build produces an executable JAR. The Maven `<version>` is `${revision}`, which defaults to `local-SNAPSHOT` for local builds; CI overrides it with `-Drevision=...` (see [CI/CD](#cicd)).
 
 ## Running
 
-The service uses Spring profiles to select the configuration:
+The default Spring profile uses an H2 in-memory database and is the only profile used in Docker — dev and production no longer have dedicated `dev`/`pdn` profiles. Instead, deployment-specific configuration (datasource, feature flags) is supplied entirely through environment variables that override the default profile, set via `docker-compose.yml` (production) / `docker-compose-dev.yml` (development). See [Docker](#docker) and [CI/CD](#cicd).
 
-| Profile | Purpose | Port |
-|---|---|---|
-| *(default)* | Local/debug using H2 in-memory database | 13017 |
-| `dev` | Development environment (MySQL) | 10017 |
-| `pdn` | Production (MySQL) | 12017 |
+A `mac` profile and several `dbg` profile variants still exist under `src/main/resources/config/` for local development convenience.
 
 ```bash
 # Run locally (H2, debug)
 java -jar target/MiddleTier-Money-*.jar
-
-# Run with a specific profile
-java -jar target/MiddleTier-Money-*.jar --spring.profiles.active=pdn
 ```
 
-In production the service runs as a systemd unit (`middletier-money.service`) on port **12017**.
+In production the service runs as a Docker container, deployed automatically by GitHub Actions on port **12017**.
 
 ## Configuration
 
@@ -78,91 +71,64 @@ All custom properties are under the `money.*` namespace. Key properties:
 | `money.smtp-port` | SMTP server port | `1025` |
 | `money.smtp-from` | Sender email address | `system@jbrmmg.me.uk` |
 
-Production database credentials are supplied via environment variables:
-- `db.pdn.money.server`
-- `db.pdn.money.user`
-- `db.pdn.money.password`
+In the Docker deployment, database credentials are supplied as `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` environment variables in `docker-compose.yml` (production) / `docker-compose-dev.yml` (development). The CI workflows write these into a `.env` file from GitHub Actions secrets (`DB_PDN_MONEY_*` for production, `DB_DEV_MONEY_*` for development) before deploying — see [CI/CD](#cicd).
 
 ## Docker
 
-The Dockerfile is at `src/main/resources/docker/Dockerfile`. It packages a pre-built JAR into a lightweight JRE 17 Alpine image and runs it with the `pdn` profile by default.
+The Dockerfile is at `src/main/resources/docker/Dockerfile`. It packages a pre-built JAR into a lightweight JRE 17 Alpine image and runs it with the default Spring profile; all environment-specific config is supplied at container runtime via environment variables.
 
-### Building the image
+Images are built and pushed automatically by CI (see [CI/CD](#cicd)) to the Nexus Docker registry as `money` (production) and `money-dev` (development). You normally don't need to build the image manually.
 
-Download the JAR from Nexus first, then build from the project root:
+### Running
 
-```bash
-curl -O http://nexus.jbrmmg.me.uk:8081/repository/maven-releases/com/jbr/middle-money/MiddleTier-Money/26.3.1/MiddleTier-Money-26.3.1.jar
-mv MiddleTier-Money-26.3.1.jar target/
-
-docker build -f src/main/resources/docker/Dockerfile -t money-app:26.3.1 .
-```
-
-### Host directories
-
-Create the following directories on the host before running the container:
+Deployment is via Docker Compose, using the checked-in compose files:
 
 ```bash
-sudo mkdir -p /var/log/money /var/data/money/reconcile /var/data/money/reports
+# Production
+docker compose -f docker-compose.yml pull
+docker compose -f docker-compose.yml up -d
+
+# Development
+docker compose -f docker-compose-dev.yml pull
+docker compose -f docker-compose-dev.yml up -d
 ```
 
-> **TODO:** These paths are temporary. They will be revisited when a proper CI/CD pipeline is set up.
-
-### Running the container
-
-```bash
-docker run -d --name moneydb -p 12017:12017 \
-           -e SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect \
-           -v /var/log/money:/app/logs \
-           -v /var/data/money/reconcile:/app/reconcile \
-           -v /var/data/money/reports:/app/reports \
-           money-app:26.3.1
-```
-
-The `-d` flag runs the container in detached (background) mode. The `--name moneydb` assigns a fixed name so the container can be managed by name:
-
-```bash
-docker stop moneydb
-docker start moneydb
-docker rm moneydb
-```
-
-To view logs:
-
-```bash
-docker logs moneydb
-docker logs -f moneydb    # follow logs (like tail -f)
-```
-
-To use a different profile:
-
-```bash
-docker run -d --name moneydb -p 12017:12017 money-app:26.3.1 --spring.profiles.active=dev
-```
+Both require a `.env` file alongside the compose file providing `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` — CI writes this automatically as part of deployment; for a manual run, create it yourself.
 
 ### Volume mounts
 
-The container expects three directories to be bind-mounted for persistent data:
+| Mount point | Purpose | Production source | Development source |
+|---|---|---|---|
+| `/app/logs` | Application log files | named volume `money-logs` | named volume `money-dev-logs` |
+| `/app/reports/working` | Report scratch directory (internal only) | named volume `money-working` | named volume `money-dev-working` |
+| `/app/reports/share` | Generated report output (host-visible) | bind mount `/media/Shared/Documents/PDF/MoneyReports` | bind mount `/var/money/report` |
+| `/app/reconcile` | Watched directory for reconciliation files | bind mount `/home/jason/Downloads` | bind mount `/var/money/reconcile` |
 
-| Mount point | Purpose | Env var override |
-|---|---|---|
-| `/app/logs` | Application log files | `LOGGING_FILE_NAME` |
-| `/app/reconcile` | Watched directory for reconciliation files | `MONEY_RECONCILE_FILE_LOCATION` |
-| `/app/reports` | Report working and output directories | `MONEY_REPORT_WORKING`, `MONEY_REPORT_SHARE` |
+`/app/reports/share` and `/app/reconcile` are bind mounts (not named volumes) because they need to be visible to the host — the actual mounted share and the browser's default download directory, respectively. The development bind-mount paths are placeholders pending a real dev host layout.
 
-### Container user and host directory permissions
+### Container user
 
-> **TODO:** The container currently runs as `root` (the default for the `eclipse-temurin:17-jre-alpine` base image). This means the bind-mounted host directories require no special permissions, but running as root inside a container is not best practice.
->
-> A future improvement is to add a dedicated non-root user to the Dockerfile:
-> ```dockerfile
-> RUN addgroup -S money && adduser -S money -G money
-> USER money
-> ```
-> Once that is done, the host directories will need to be owned by that user's uid (typically 1000):
-> ```bash
-> chown -R 1000:1000 /host/path/logs /host/path/reconcile /host/path/reports
-> ```
+> **TODO:** The container currently runs as `root` (the default for the `eclipse-temurin:17-jre-alpine` base image). Running as root inside a container is not best practice; a future improvement is to add a dedicated non-root user to the Dockerfile and adjust bind-mount ownership accordingly.
+
+## CI/CD
+
+Two GitHub Actions workflows, each running on a dedicated self-hosted runner (config template at `src/main/resources/github/docker-compose.yml`, using the `myoung34/github-runner` image):
+
+| Workflow | Trigger | Runner label | Deploys to |
+|---|---|---|---|
+| `.github/workflows/dev.yml` | push to any branch except `Release` | `money-dev` | development (`docker-compose-dev.yml`) |
+| `.github/workflows/build.yml` | push to `Release` | `money-prod` | production (`docker-compose.yml`) |
+
+Both workflows: build and run the full test suite (`mvn verify`, including Testcontainers-based integration tests), run a SonarCloud analysis (`mvn sonar:sonar`, organization `jbrmmg`), build a Docker image, push it to the Nexus Docker registry, then deploy via `docker compose pull && up -d`.
+
+**SonarCloud note:** the free plan only supports viewing analysis of the main branch (`Release`). Feature-branch and pull-request analysis still runs (for any in-build warnings/log output) but isn't viewable on SonarCloud without a paid plan, so Sonar only runs in `build.yml`, not `dev.yml`.
+
+**Versioning:** `pom.xml` declares `<version>${revision}</version>`. CI passes `-Drevision=...` to set it per build:
+- `build.yml` (Release): `yyyy.mm.<github.run_number>`, e.g. `2026.06.42`
+- `dev.yml`: `yyyy.mm.dd-SNAPSHOT`
+- Local builds without `-Drevision` default to `local-SNAPSHOT`.
+
+**Testcontainers on the runner:** the runner containers mount `/var/run/docker.sock` and set `DOCKER_HOST`/`TESTCONTAINERS_RYUK_DISABLED` so integration tests can launch MySQL via Testcontainers. A `src/test/resources/docker-java.properties` file pins `api.version=1.44`, which is required for compatibility with Docker Engine 29+ (which raised its minimum supported API version, breaking Testcontainers 1.x's auto-negotiation).
 
 ## REST API
 

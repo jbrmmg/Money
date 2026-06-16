@@ -69,8 +69,14 @@ jobs:
       - name: Compute version
         run: echo "VERSION=$(date +'%Y.%m').${{ github.run_number }}" >> $GITHUB_ENV
 
-      - name: Build with Maven
-        run: mvn package -DskipTests -Drevision=${{ env.VERSION }}
+      - name: Build and Test with Maven
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+        run: mvn verify -Drevision=${{ env.VERSION }}
+
+      - name: Run Sonar
+        run: mvn sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }} -Drevision=${{ env.VERSION }}
 
       - name: Build Docker image
         run: |
