@@ -5,12 +5,13 @@
 
     <groupId>com.jbr.middle-money</groupId>
     <artifactId>MiddleTier-Money</artifactId>
-    <version>26.3.1-SNAPSHOT</version>
+    <version>${revision}</version>
 
     <packaging>jar</packaging>
     <name>MiddleTier-Money</name>
 
     <properties>
+        <revision>local-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEnconding>UTf-8</project.reporting.outputEnconding>
         <org.springframework.version>3.4.5</org.springframework.version>
