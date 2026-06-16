@@ -112,6 +112,7 @@ sudo mkdir -p /var/log/money /var/data/money/reconcile /var/data/money/reports
 
 ```bash
 docker run -d --name moneydb -p 12017:12017 \
+           -e SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect \
            -v /var/log/money:/app/logs \
            -v /var/data/money/reconcile:/app/reconcile \
            -v /var/data/money/reports:/app/reports \
