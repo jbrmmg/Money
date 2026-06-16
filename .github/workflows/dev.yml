@@ -67,6 +67,9 @@ jobs:
           EOF
 
       - name: Build and Test with Maven
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          TESTCONTAINERS_RYUK_DISABLED: "true"
         run: mvn verify
 
       - name: Run Sonar
