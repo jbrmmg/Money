@@ -1,0 +1,24 @@
+services:
+  money:
+    image: nexus.jbrmmg.me.uk:8084/money:latest
+    container_name: money
+    restart: unless-stopped
+    ports:
+      - "12017:12017"
+    environment:
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_H2_CONSOLE_ENABLED=false
+      - MONEY_REGULAR_ENABLED=true
+      - MONEY_REPORT_ENABLED=true
+      - MONEY_ARCHIVE_ENABLED=true
+    volumes:
+      - money-logs:/app/logs
+      - money-working:/app/reports/working
+      - /media/Shared/Documents/PDF/MoneyReports:/app/reports/share
+      - /home/jason/Downloads:/app/reconcile
+
+volumes:
+  money-logs:
+  money-working:

@@ -1,0 +1,21 @@
+services:
+  money-dev:
+    image: nexus.jbrmmg.me.uk:8084/money-dev:latest
+    container_name: money-dev
+    restart: unless-stopped
+    ports:
+      - "10017:12017"
+    environment:
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_H2_CONSOLE_ENABLED=false
+    volumes:
+      - money-dev-logs:/app/logs
+      - money-dev-working:/app/reports/working
+      - /var/money/report:/app/reports/share
+      - /var/money/reconcile:/app/reconcile
+
+volumes:
+  money-dev-logs:
+  money-dev-working:
