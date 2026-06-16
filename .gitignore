@@ -3,3 +3,7 @@
 /.settings/
 *.iml
 /package-lock.json
+
+### Secrets ###
+.env
+.env.secrets
