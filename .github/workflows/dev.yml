@@ -4,7 +4,6 @@ on:
   push:
     branches-ignore:
       - Release
-  pull_request:
 
 jobs:
   build:
@@ -76,12 +75,7 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: "true"
         run: mvn verify -Drevision=${{ env.VERSION }}
 
-      - name: Run Sonar
-        if: github.event_name == 'pull_request'
-        run: mvn sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }} -Drevision=${{ env.VERSION }}
-
       - name: Build Docker image
-        if: github.event_name == 'push'
         run: |
           docker build \
             -f src/main/resources/docker/Dockerfile \
@@ -90,7 +84,6 @@ jobs:
             .
 
       - name: Push to Nexus Docker registry
-        if: github.event_name == 'push'
         run: |
           docker login nexus.jbrmmg.me.uk:8083 \
             -u deployment \
@@ -99,7 +92,6 @@ jobs:
           docker push nexus.jbrmmg.me.uk:8083/money-dev:latest
 
       - name: Deploy
-        if: github.event_name == 'push'
         env:
           DB_DEV_MONEY_SERVER: ${{ secrets.DB_DEV_MONEY_SERVER }}
           DB_DEV_MONEY_USER: ${{ secrets.DB_DEV_MONEY_USER }}
