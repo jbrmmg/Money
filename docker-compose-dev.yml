@@ -11,7 +11,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_H2_CONSOLE_ENABLED=false
-      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialog.MySQLDialect
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
     volumes:
       - money-dev-logs:/app/logs
       - money-dev-working:/app/reports/working
