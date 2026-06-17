@@ -4,7 +4,7 @@ services:
     container_name: money-dev
     restart: unless-stopped
     ports:
-      - "10017:12017"
+      - "10017:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=default
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
