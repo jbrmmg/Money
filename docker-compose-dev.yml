@@ -18,7 +18,7 @@ services:
       - /var/money/report:/app/reports/share
       - /var/money/reconcile:/app/reconcile
     networks:
-      - jbr_networks
+      - jbr_network
 
 volumes:
   money-dev-logs:
