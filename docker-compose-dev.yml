@@ -27,3 +27,4 @@ volumes:
 networks:
   jbr-network:
     external: true
+    name: jbr-network
