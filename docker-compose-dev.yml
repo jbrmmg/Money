@@ -17,7 +17,13 @@ services:
       - money-dev-working:/app/reports/working
       - /var/money/report:/app/reports/share
       - /var/money/reconcile:/app/reconcile
+    networks:
+      - jbr_networks
 
 volumes:
   money-dev-logs:
   money-dev-working:
+
+networks:
+  jbr-network:
+    external: true

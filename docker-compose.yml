@@ -20,7 +20,13 @@ services:
       - money-working:/app/reports/working
       - /media/Shared/Documents/PDF/MoneyReports:/app/reports/share
       - /home/jason/Downloads:/app/reconcile
+    networks:
+      - jbr_networks
 
 volumes:
   money-logs:
   money-working:
+
+networks:
+  jbr-network:
+    external: true
