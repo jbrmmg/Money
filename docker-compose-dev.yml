@@ -18,7 +18,7 @@ services:
       - /var/money/report:/app/reports/share
       - /var/money/reconcile:/app/reconcile
     networks:
-      - jbr_network
+      - jbr-network
 
 volumes:
   money-dev-logs:
@@ -27,4 +27,3 @@ volumes:
 networks:
   jbr-network:
     external: true
-    name: jbr-network

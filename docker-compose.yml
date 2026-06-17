@@ -21,7 +21,7 @@ services:
       - /media/Shared/Documents/PDF/MoneyReports:/app/reports/share
       - /home/jason/Downloads:/app/reconcile
     networks:
-      - jbr_network
+      - jbr-network
 
 volumes:
   money-logs:
@@ -30,4 +30,3 @@ volumes:
 networks:
   jbr-network:
     external: true
-    name: jbr-network
