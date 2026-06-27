@@ -51,12 +51,12 @@ public class RegularTest extends Support {
 
     @Test
     public void testNoRegulars() throws Exception {
-        getMockMvc().perform(get("/jbr/ext/money/transaction/regulars")
+        getMockMvc().perform(get("/api/v1/transaction/regulars")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
 
-        getMockMvc().perform(get("/jbr/int/money/transaction/regulars")
+        getMockMvc().perform(get("/api/v1/transaction/regulars")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -66,7 +66,7 @@ public class RegularTest extends Support {
     public void testCreate() throws Exception {
         RegularDTO newRegular = createTestRegular("AMEX", "HSE", "FW", BigDecimal.valueOf(102.21), "Testing", "1W", "2023-06-01");
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/regulars")
+        getMockMvc().perform(post("/api/v1/transaction/regulars")
                         .content(this.json(newRegular))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -88,7 +88,7 @@ public class RegularTest extends Support {
         updateRegular.setId(savedRegular.getId());
         updateRegular.setDescription("Testing 3");
 
-        getMockMvc().perform(put("/jbr/int/money/transaction/regulars")
+        getMockMvc().perform(put("/api/v1/transaction/regulars")
                         .content(this.json(updateRegular))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -109,7 +109,7 @@ public class RegularTest extends Support {
 
         deleteRegular.setId(savedRegular.getId());
 
-        getMockMvc().perform(delete("/jbr/int/money/transaction/regulars")
+        getMockMvc().perform(delete("/api/v1/transaction/regulars")
                         .content(this.json(deleteRegular))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -124,7 +124,7 @@ public class RegularTest extends Support {
 
         deleteRegular.setId(savedRegular.getId() + 1);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/transaction/regulars")
+        String error = Objects.requireNonNull(getMockMvc().perform(delete("/api/v1/transaction/regulars")
                         .content(this.json(deleteRegular))
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
@@ -140,7 +140,7 @@ public class RegularTest extends Support {
 
         createRegular.setId(savedRegular.getId());
 
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/transaction/regulars")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/transaction/regulars")
                         .content(this.json(createRegular))
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())

@@ -19,7 +19,7 @@ public class AccountTest extends Support {
     @Test
     public void getAccountTest() throws Exception {
         // Get accounts (external), check that both categories are returned and in the correct order.
-        getMockMvc().perform(get("/jbr/ext/money/accounts"))
+        getMockMvc().perform(get("/api/v1/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))
                 .andExpect(jsonPath("$[1].id", is("BANK")))
@@ -27,7 +27,7 @@ public class AccountTest extends Support {
                 .andExpect(jsonPath("$[3].id", is("NWDE")));
 
         // Get accounts (internal), check that both categories are returned and in the correct order.
-        getMockMvc().perform(get("/jbr/int/money/accounts"))
+        getMockMvc().perform(get("/api/v1/accounts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("AMEX")))
                 .andExpect(jsonPath("$[1].id", is("BANK")))
@@ -37,26 +37,26 @@ public class AccountTest extends Support {
 
     @Test
     public void getLogoTest() throws Exception {
-        getMockMvc().perform(get("/jbr/int/money/account/logo?id=AMEX&disabled=true"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=AMEX&disabled=true"))
                 .andExpect(status().isOk());
-        getMockMvc().perform(get("/jbr/int/money/account/logo?id=AMEX&disabled=false"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=AMEX&disabled=false"))
                 .andExpect(status().isOk());
-        getMockMvc().perform(get("/jbr/int/money/account/logo?id=XYXY&disabled=true"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=XYXY&disabled=true"))
                 .andExpect(status().isOk());
-        getMockMvc().perform(get("/jbr/int/money/account/logo?id=XYXY&disabled=false"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=XYXY&disabled=false"))
                 .andExpect(status().isOk());
-        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=AMEX&disabled=true"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=AMEX&disabled=true"))
                 .andExpect(status().isOk());
-        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=AMEX&disabled=false"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=AMEX&disabled=false"))
                 .andExpect(status().isOk());
-        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYXY&disabled=true"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=XYXY&disabled=true"))
                 .andExpect(status().isOk());
-        getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYXY&disabled=false"))
+        getMockMvc().perform(get("/api/v1/account/logo?id=XYXY&disabled=false"))
                 .andExpect(status().isOk());
 
         // Check the id is validated.
         try {
-            getMockMvc().perform(get("/jbr/ext/money/account/logo?id=XYY&disabled=false")
+            getMockMvc().perform(get("/api/v1/account/logo?id=XYY&disabled=false")
                             .contentType(getContentType()))
                     .andExpect(status().isBadRequest());
         } catch (ServletException ex) {
@@ -72,7 +72,7 @@ public class AccountTest extends Support {
         account.setColour("FFFFF");
         account.setImagePrefix("test");
 
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/accounts")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/accounts")
                 .content(this.json(account))
                 .contentType(getContentType()))
                 .andExpect(status().isBadRequest())
@@ -80,7 +80,7 @@ public class AccountTest extends Support {
         Assertions.assertTrue(error.contains("Colour must be a 6 digit hex value."));
 
         account.setColour("FFFFFF");
-        getMockMvc().perform(post("/jbr/int/money/accounts")
+        getMockMvc().perform(post("/api/v1/accounts")
                         .content(this.json(account))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -92,7 +92,7 @@ public class AccountTest extends Support {
 
         account.setImagePrefix("test2");
 
-        getMockMvc().perform(put("/jbr/int/money/accounts")
+        getMockMvc().perform(put("/api/v1/accounts")
                         .content(this.json(account))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -102,7 +102,7 @@ public class AccountTest extends Support {
                 .andExpect(jsonPath("$[3].id", is("NWDE")))
                 .andExpect(jsonPath("$[4].id", is("XXXX")));
 
-        getMockMvc().perform(delete("/jbr/int/money/accounts")
+        getMockMvc().perform(delete("/api/v1/accounts")
                         .content(this.json(account))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -120,7 +120,7 @@ public class AccountTest extends Support {
         account.setColour("FCFCFC");
         account.setImagePrefix("test");
 
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/accounts")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/accounts")
                         .content(this.json(account))
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
@@ -136,7 +136,7 @@ public class AccountTest extends Support {
         account.setColour("FCFCFC");
         account.setImagePrefix("test");
 
-        String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/accounts")
+        String error = Objects.requireNonNull(getMockMvc().perform(put("/api/v1/accounts")
                         .content(this.json(account))
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
@@ -152,7 +152,7 @@ public class AccountTest extends Support {
         account.setColour("FCFCFC");
         account.setImagePrefix("test");
 
-        String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/accounts")
+        String error = Objects.requireNonNull(getMockMvc().perform(delete("/api/v1/accounts")
                         .content(this.json(account))
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())

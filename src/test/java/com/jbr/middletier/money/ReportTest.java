@@ -91,7 +91,7 @@ public class ReportTest extends Support {
         transaction.setAmount(BigDecimal.valueOf(-10.02));
         transaction.setDescription("Testing");
 
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                         .content(this.json(Collections.singletonList(transaction)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -100,7 +100,7 @@ public class ReportTest extends Support {
         transaction.setAmount(BigDecimal.valueOf(-210.02));
         transaction.setDescription("Testing 1");
 
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                         .content(this.json(Collections.singletonList(transaction)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -110,7 +110,7 @@ public class ReportTest extends Support {
         transaction.setAmount(BigDecimal.valueOf(-84.12));
         transaction.setDescription("This is a much longer description test!!");
 
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                         .content(this.json(Collections.singletonList(transaction)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -127,7 +127,7 @@ public class ReportTest extends Support {
 
         // Lock the statement
         StatementIdDTO statementId = new StatementIdDTO("AMEX",1,2010);
-        getMockMvc().perform(post("/jbr/int/money/statement/lock")
+        getMockMvc().perform(post("/api/v1/statement/lock")
                         .content(this.json(statementId))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -137,7 +137,7 @@ public class ReportTest extends Support {
         request.setMonth(1);
         request.setYear(2010);
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/report")
+        getMockMvc().perform(post("/api/v1/transaction/report")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());

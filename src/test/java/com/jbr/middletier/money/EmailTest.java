@@ -65,7 +65,7 @@ public class EmailTest extends Support {
     public void testEmail() throws Exception {
         EmailRequestDTO request = new EmailRequestDTO();
         request.setTo("throw@com");
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/email")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/email")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isFailedDependency())
@@ -78,8 +78,8 @@ public class EmailTest extends Support {
         EmailRequestDTO request = new EmailRequestDTO();
         request.setTo("standard@com");
 
-        // - /jbr/int/money/email?host=ignore.do.not.send&password=fake
-        getMockMvc().perform(post("/jbr/int/money/email")
+        // - /api/v1/email?host=ignore.do.not.send&password=fake
+        getMockMvc().perform(post("/api/v1/email")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());

@@ -4,6 +4,7 @@ import com.jbr.middletier.money.dto.CategoryDTO;
 import com.jbr.middletier.money.exceptions.CreateCategoryException;
 import com.jbr.middletier.money.exceptions.UpdateDeleteCategoryException;
 import com.jbr.middletier.money.manager.CategoryManager;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,11 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-/**
- * Created by jason on 08/02/17.
- */
 @RestController
-@RequestMapping("/jbr")
+@RequestMapping("/api/v1")
+@Tag(name = "Categories", description = "File type classification rules used during transaction categorisation")
 public class CategoryController {
     private static final Logger LOG = LoggerFactory.getLogger(CategoryController.class);
 
@@ -26,37 +25,27 @@ public class CategoryController {
         this.categoryManager = categoryManager;
     }
 
-    @GetMapping(path="/ext/money/categories")
-    public List<CategoryDTO>  getExtCategories() {
-        LOG.info("Request Categories (ext).");
-
+    @GetMapping(path="/categories")
+    public List<CategoryDTO> getCategories() {
+        LOG.info("Request Categories.");
         return categoryManager.getAllBySortOrder();
     }
 
-    @GetMapping(path="/int/money/categories")
-    public List<CategoryDTO>  getIntCategories() {
-        LOG.info("Request Categories.");
-        return this.getExtCategories();
-    }
-
-    @PostMapping(path="/int/money/categories")
+    @PostMapping(path="/categories")
     public List<CategoryDTO> createCategory(@Valid @RequestBody CategoryDTO category) throws CreateCategoryException {
-        LOG.info("Create a new account - {}", category.getId());
-
+        LOG.info("Create a new category - {}", category.getId());
         return categoryManager.create(category);
     }
 
-    @PutMapping(path="/int/money/categories")
+    @PutMapping(path="/categories")
     public List<CategoryDTO> updateCategory(@Valid @RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
-        LOG.info("Update an account - {}", category.getId());
-
+        LOG.info("Update a category - {}", category.getId());
         return categoryManager.update(category);
     }
 
-    @DeleteMapping(path="/int/money/categories")
+    @DeleteMapping(path="/categories")
     public List<CategoryDTO> deleteCategory(@Valid @RequestBody CategoryDTO category) throws UpdateDeleteCategoryException {
-        LOG.info("Delete account {}", category.getId());
-
+        LOG.info("Delete category {}", category.getId());
         return categoryManager.delete(category);
     }
 }

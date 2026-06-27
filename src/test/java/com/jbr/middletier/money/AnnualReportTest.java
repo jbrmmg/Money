@@ -80,7 +80,7 @@ public class AnnualReportTest extends Support {
         transaction.setAmount(BigDecimal.valueOf(10.02));
         transaction.setDescription("Testing");
 
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                         .content(this.json(Collections.singletonList(transaction)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -100,7 +100,7 @@ public class AnnualReportTest extends Support {
         // Lock the statement
         StatementIdDTO lockStatementRequest = new StatementIdDTO("AMEX",1,2010);
 
-        getMockMvc().perform(post("/jbr/int/money/statement/lock")
+        getMockMvc().perform(post("/api/v1/statement/lock")
                         .content(this.json(lockStatementRequest))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -110,7 +110,7 @@ public class AnnualReportTest extends Support {
         request.setMonth(1);
         request.setYear(2010);
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/annualreport")
+        getMockMvc().perform(post("/api/v1/transaction/annual-report")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());

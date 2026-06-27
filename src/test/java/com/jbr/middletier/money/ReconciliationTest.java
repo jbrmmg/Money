@@ -60,7 +60,7 @@ public class ReconciliationTest extends Support {
         ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
         reconciliationFile.setFilename("Blah");
 
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/reconciliation/load")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
@@ -72,7 +72,7 @@ public class ReconciliationTest extends Support {
     public void testGetFiles() throws Exception {
         int files = fileManager.getFiles().size();
 
-        getMockMvc().perform(get("/jbr/int/money/reconciliation/files")
+        getMockMvc().perform(get("/api/v1/reconciliation/files")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(files)));
@@ -88,7 +88,7 @@ public class ReconciliationTest extends Support {
             }
         });
 
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+        getMockMvc().perform(post("/api/v1/reconciliation/load")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -111,24 +111,24 @@ public class ReconciliationTest extends Support {
     public void testClearReconcile() throws Exception {
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
 
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+        getMockMvc().perform(post("/api/v1/reconciliation/load")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(8)));
 
-        getMockMvc().perform(delete("/jbr/ext/money/reconciliation/clear")
+        getMockMvc().perform(delete("/api/v1/reconciliation/clear")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+        getMockMvc().perform(post("/api/v1/reconciliation/load")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(8)));
 
-        getMockMvc().perform(delete("/jbr/int/money/reconciliation/clear")
+        getMockMvc().perform(delete("/api/v1/reconciliation/clear")
                         .content(this.json(reconciliationFile))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());

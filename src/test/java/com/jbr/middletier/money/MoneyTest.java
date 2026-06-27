@@ -119,7 +119,7 @@ public class MoneyTest extends Support {
         transaction.setAmount(BigDecimal.valueOf(1280.32));
         transaction.setDescription("Test transaction");
 
-        getMockMvc().perform(post("/jbr/int/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -137,7 +137,7 @@ public class MoneyTest extends Support {
             List<TransactionReportDTO> updateTransactions = new ArrayList<>();
             updateTransactions.add(updateTransaction);
 
-            getMockMvc().perform(put("/jbr/ext/money/transaction")
+            getMockMvc().perform(put("/api/v1/transaction")
                     .content(this.json(updateTransactions))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -153,7 +153,7 @@ public class MoneyTest extends Support {
 
             // Delete this item.
             assertEquals(1283.21,nextTransaction.getAmount().getValue().doubleValue(),0.001);
-            getMockMvc().perform(delete("/jbr/int/money/transaction")
+            getMockMvc().perform(delete("/api/v1/transaction")
                     .content(this.json(deleteTransactions))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -172,7 +172,7 @@ public class MoneyTest extends Support {
         transaction.setDescription("Test transaction");
 
         // Add transaction.
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -191,7 +191,7 @@ public class MoneyTest extends Support {
         updateTransactions.add(updateTransaction);
 
         assertEquals(1280.32, nextTransaction.getAmount().getValue().doubleValue(),0.001);
-        getMockMvc().perform(put("/jbr/int/money/transaction")
+        getMockMvc().perform(put("/api/v1/transaction")
                 .content(this.json(updateTransactions))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -206,7 +206,7 @@ public class MoneyTest extends Support {
 
             // Delete this item.
             assertEquals(1283.21, abs(nextTransactionToDelete.getAmount().getValue().doubleValue()),0.001);
-            getMockMvc().perform(delete("/jbr/ext/money/transaction")
+            getMockMvc().perform(delete("/api/v1/transaction")
                     .content(this.json(deleteTransactions))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -228,7 +228,7 @@ public class MoneyTest extends Support {
         transaction2.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
 
         // Set-up a transaction.
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                 .content(this.json(Arrays.asList(transaction1,transaction2)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -241,7 +241,7 @@ public class MoneyTest extends Support {
             ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
             reconcileRequest.getTransactions().add(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
-            getMockMvc().perform(put("/jbr/int/money/reconcile")
+            getMockMvc().perform(put("/api/v1/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -254,7 +254,7 @@ public class MoneyTest extends Support {
             ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
             reconcileRequest.getTransactions().add(nextTransaction.getId());
             reconcileRequest.setReconcile(false);
-            getMockMvc().perform(put("/jbr/ext/money/reconcile")
+            getMockMvc().perform(put("/api/v1/reconcile")
                     .content(this.json(reconcileRequest))
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -271,7 +271,7 @@ public class MoneyTest extends Support {
                 List<TransactionDTO> deleteTransactions = new ArrayList<>();
                 deleteTransactions.add(nextTransactionDTO);
 
-                getMockMvc().perform(delete("/jbr/ext/money/transaction")
+                getMockMvc().perform(delete("/api/v1/transaction")
                                 .content(this.json(deleteTransactions))
                                 .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk());
@@ -297,14 +297,14 @@ public class MoneyTest extends Support {
         transaction.setAmount(BigDecimal.valueOf(1.23));
 
         // Create transactions in each account.
-        getMockMvc().perform(post("/jbr/int/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         transaction.setAccountId("JLPC");
         transaction.setAmount(BigDecimal.valueOf(3.45));
-        getMockMvc().perform(post("/jbr/int/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -322,7 +322,7 @@ public class MoneyTest extends Support {
         filter.setPredicted(false);
         filter.setLocked(false);
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                 .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -332,7 +332,7 @@ public class MoneyTest extends Support {
 
         accountSearch.setId("JLPC");
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                 .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -343,12 +343,12 @@ public class MoneyTest extends Support {
         transaction.setAccountId("JLPC");
         transaction.setCategoryId("UTT");
         transaction.setAmount(BigDecimal.valueOf(2.78));
-        getMockMvc().perform(post("/jbr/int/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                 .content(this.json(Collections.singletonList(transaction)))
                 .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                 .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -363,7 +363,7 @@ public class MoneyTest extends Support {
 
         filter.setCategories(categories);
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                 .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -377,7 +377,7 @@ public class MoneyTest extends Support {
 
         filter.setCategories(new ArrayList<>());
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                 .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -498,7 +498,7 @@ public class MoneyTest extends Support {
         transactionReportManager.reset();
 
         // Check that we have 1 transaction.
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                 .content(this.json(filter))
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -508,7 +508,7 @@ public class MoneyTest extends Support {
                 .andDo(MockMvcResultHandlers.print());
 
         // Check regular payments.
-        getMockMvc().perform(get("/jbr/ext/money/transaction/regulars")
+        getMockMvc().perform(get("/api/v1/transaction/regulars")
                 .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(6)));
@@ -573,7 +573,7 @@ public class MoneyTest extends Support {
         transactionReportManager.reset();
 
         // Check that we have 1 transaction.
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -640,7 +640,7 @@ public class MoneyTest extends Support {
 
         transactionReportManager.reset();
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -657,7 +657,7 @@ public class MoneyTest extends Support {
             updateAccount.setFilename(filename);
             updateAccount.setAccountId("BANK");
 
-            getMockMvc().perform(put("/jbr/int/money/reconciliation/updatefileaccount")
+            getMockMvc().perform(put("/api/v1/reconciliation/account")
                             .contentType(getContentType())
                             .content(this.json(updateAccount)))
                     .andExpect(status().isOk());
@@ -666,7 +666,7 @@ public class MoneyTest extends Support {
         ReconciliationFileDTO loadFileRequest = new ReconciliationFileDTO();
         loadFileRequest.setFilename (filename);
 
-        getMockMvc().perform(post("/jbr/int/money/reconciliation/load")
+        getMockMvc().perform(post("/api/v1/reconciliation/load")
                         .contentType(getContentType())
                         .content(this.json(loadFileRequest)))
                 .andExpect(status().isOk());

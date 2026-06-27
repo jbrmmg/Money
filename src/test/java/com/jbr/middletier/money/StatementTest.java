@@ -93,7 +93,7 @@ public class StatementTest extends Support {
         transaction2.setAccountId("AMEX");
 
         // Add transaction.
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                         .content(this.json(Arrays.asList(transaction1,transaction2)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -107,7 +107,7 @@ public class StatementTest extends Support {
             ReconcileTransactionDTO reconcileRequest = new ReconcileTransactionDTO();
             reconcileRequest.getTransactions().add(nextTransaction.getId());
             reconcileRequest.setReconcile(true);
-            getMockMvc().perform(put("/jbr/ext/money/reconcile")
+            getMockMvc().perform(put("/api/v1/reconcile")
                             .content(this.json(reconcileRequest))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk());
@@ -115,7 +115,7 @@ public class StatementTest extends Support {
 
         // Lock the statement.
         StatementIdDTO statementId = new StatementIdDTO("BANK",1,2010);
-        getMockMvc().perform(post("/jbr/ext/money/statement/lock")
+        getMockMvc().perform(post("/api/v1/statement/lock")
                         .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -157,7 +157,7 @@ public class StatementTest extends Support {
         assertEquals(2, other);
 
         // Check it cannot be locked again.
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/statement/lock")
                         .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
@@ -171,7 +171,7 @@ public class StatementTest extends Support {
         statement.setYear(2010);
         statement.setOpenBalance(new FinancialAmount());
 
-        error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
+        error = Objects.requireNonNull(getMockMvc().perform(delete("/api/v1/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
@@ -179,7 +179,7 @@ public class StatementTest extends Support {
         Assertions.assertEquals("Cannot delete locked statement BANK 1 2010", error);
 
         statement.setMonth(2);
-        getMockMvc().perform(delete("/jbr/int/money/statement")
+        getMockMvc().perform(delete("/api/v1/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -245,7 +245,7 @@ public class StatementTest extends Support {
         cleanUp();
 
         // Check the url.
-        getMockMvc().perform(get("/jbr/ext/money/statement")
+        getMockMvc().perform(get("/api/v1/statement")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].accountId", is("AMEX")))
@@ -255,7 +255,7 @@ public class StatementTest extends Support {
                 .andDo(MockMvcResultHandlers.print());
 
         // Check the url.
-        getMockMvc().perform(get("/jbr/int/money/statement")
+        getMockMvc().perform(get("/api/v1/statement")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].accountId", is("AMEX")))
@@ -272,7 +272,7 @@ public class StatementTest extends Support {
         statementId.setAccountId("FLIP");
         statementId.setYear(2020);
         statementId.setMonth(1);
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/statement/lock")
                         .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -285,7 +285,7 @@ public class StatementTest extends Support {
         cleanUp();
 
         StatementIdDTO statementId = new StatementIdDTO("BANK",1,2012);
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/statement/lock")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/statement/lock")
                         .content(this.json(statementId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -301,7 +301,7 @@ public class StatementTest extends Support {
         statement.setAccountId("FLIP");
         statement.setMonth(1);
         statement.setYear(2020);
-        String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
+        String error = Objects.requireNonNull(getMockMvc().perform(delete("/api/v1/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -309,7 +309,7 @@ public class StatementTest extends Support {
         Assertions.assertEquals("Cannot find account with id FLIP", error);
 
         statement.setAccountId("BANK");
-        error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/statement")
+        error = Objects.requireNonNull(getMockMvc().perform(delete("/api/v1/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
@@ -325,7 +325,7 @@ public class StatementTest extends Support {
         statement.setAccountId("AMEX");
         statement.setMonth(1);
         statement.setYear(2010);
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/statement")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
@@ -345,7 +345,7 @@ public class StatementTest extends Support {
         statement.setYear(2010);
         statement.setLocked(false);
         statement.setOpenBalance(new FinancialAmount(BigDecimal.valueOf(1023.9)));
-        getMockMvc().perform(post("/jbr/int/money/statement")
+        getMockMvc().perform(post("/api/v1/statement")
                         .content(this.json(statement))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

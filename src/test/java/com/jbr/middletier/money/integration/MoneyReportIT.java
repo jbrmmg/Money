@@ -220,7 +220,7 @@ public class MoneyReportIT extends Support {
     public void testFilterAll() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -242,7 +242,7 @@ public class MoneyReportIT extends Support {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setDescription("sainsburys");
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -262,7 +262,7 @@ public class MoneyReportIT extends Support {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(true);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -283,7 +283,7 @@ public class MoneyReportIT extends Support {
         filter.setFromReconciled(false);
         filter.setPredicted(true);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -305,7 +305,7 @@ public class MoneyReportIT extends Support {
         filter.setFromReconciled(false);
         filter.setPredicted(false);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -327,7 +327,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setLocked(false);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -353,7 +353,7 @@ public class MoneyReportIT extends Support {
         filter.setLocked(false);
         filter.setAccounts(List.of(account));
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -379,7 +379,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setCategories(List.of(category));
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -404,7 +404,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setAccounts(List.of(account));
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -426,7 +426,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setDateRange(new DateRangeDTO("2023-04-20",null));
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -448,7 +448,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setValueRange(new ValueRangeDTO(-20,15));
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -472,7 +472,7 @@ public class MoneyReportIT extends Support {
         filter.setValueRange(new ValueRangeDTO(-20,15));
         filter.setMaxPageSize(1);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -489,7 +489,7 @@ public class MoneyReportIT extends Support {
 
     @Test
     public void testNull() throws Exception {
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content("{}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -509,7 +509,7 @@ public class MoneyReportIT extends Support {
 
     @Test
     public void testFromString() throws Exception {
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content("{\"accounts\":[],\"categories\":[],\"predicted\":false,\"locked\":false,\"fromReconciled\":false}")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -536,7 +536,7 @@ public class MoneyReportIT extends Support {
 
         Assertions.assertEquals(1,filter.getTransactionSorts().size());
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -562,7 +562,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(true);
         filter.setTransactionSorts(transactionSortList);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -589,7 +589,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(true);
         filter.setTransactionSorts(transactionSortList);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -616,7 +616,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(true);
         filter.setTransactionSorts(transactionSortList);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -642,7 +642,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(true);
         filter.setTransactionSorts(transactionSortList);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -680,7 +680,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setValueRange(new ValueRangeDTO(-20,15));
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -713,7 +713,7 @@ public class MoneyReportIT extends Support {
             accountTransactionManager.updateTransactions(updates);
         }
 
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -728,7 +728,7 @@ public class MoneyReportIT extends Support {
         // Remove the transaction.
         accountTransactionManager.deleteTransactions(transactions);
 
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -750,7 +750,7 @@ public class MoneyReportIT extends Support {
         filter.setPredicted(false);
         filter.setValueRange(new ValueRangeDTO(-20,15));
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -778,7 +778,7 @@ public class MoneyReportIT extends Support {
         reconcileTransaction.setReconcile(true);
         reconciliationManager.reconcile(reconcileTransaction);
 
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -800,7 +800,7 @@ public class MoneyReportIT extends Support {
         reconcileTransaction.setReconcile(false);
         reconciliationManager.reconcile(reconcileTransaction);
 
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -833,7 +833,7 @@ public class MoneyReportIT extends Support {
 
         filter.setAccounts(accounts);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -855,7 +855,7 @@ public class MoneyReportIT extends Support {
         Iterable<StatementDTO> newStatement = statementManager.statementLock(statementId,accountTransactionManager);
 
         // Check everything is ok.
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -875,7 +875,7 @@ public class MoneyReportIT extends Support {
         }
 
         // Check everything is ok.
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -902,7 +902,7 @@ public class MoneyReportIT extends Support {
 
         filter.setAccounts(accounts);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -931,7 +931,7 @@ public class MoneyReportIT extends Support {
             }
         }
 
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -955,7 +955,7 @@ public class MoneyReportIT extends Support {
 
         accountTransactionManager.deleteTransactions(Collections.singletonList(transaction));
 
-        result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -1004,7 +1004,7 @@ public class MoneyReportIT extends Support {
 
         filter.setAccounts(accounts);
 
-        MvcResult result = getMockMvc().perform(post("/jbr/int/money/transaction/list")
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content(this.json(filter))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())

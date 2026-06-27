@@ -82,7 +82,7 @@ public class MoneyIT extends Support  {
         transaction.setAmount(BigDecimal.valueOf(10));
         transactions.add(transaction);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/ext/money/transaction")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/transaction")
                         .content(this.json(transactions))
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())

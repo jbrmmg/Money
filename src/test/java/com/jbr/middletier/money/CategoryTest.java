@@ -21,7 +21,7 @@ public class CategoryTest extends Support {
     @Test
     public void getCategoryTest() throws Exception {
         // Get accounts (external), check that both categories are returned and in the correct order.
-        getMockMvc().perform(get("/jbr/ext/money/categories"))
+        getMockMvc().perform(get("/api/v1/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("FDG")))
                 .andExpect(jsonPath("$[1].id", is("FDW")))
@@ -29,7 +29,7 @@ public class CategoryTest extends Support {
                 .andExpect(jsonPath("$[3].id", is("HSE")));
 
         // Get accounts (internal), check that both categories are returned and in the correct order.
-        getMockMvc().perform(get("/jbr/int/money/categories"))
+        getMockMvc().perform(get("/api/v1/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is("FDG")))
                 .andExpect(jsonPath("$[1].id", is("FDW")))
@@ -48,7 +48,7 @@ public class CategoryTest extends Support {
         category.setSort(9999L);
         category.setSystemUse(false);
 
-        getMockMvc().perform(post("/jbr/int/money/categories")
+        getMockMvc().perform(post("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -57,14 +57,14 @@ public class CategoryTest extends Support {
 
         category.setGroup("FDS");
 
-        getMockMvc().perform(put("/jbr/int/money/categories")
+        getMockMvc().perform(put("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(25)))
                 .andExpect(jsonPath("$[24].id", is("XXX")));
 
-        getMockMvc().perform(delete("/jbr/int/money/categories")
+        getMockMvc().perform(delete("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -82,7 +82,7 @@ public class CategoryTest extends Support {
         category.setSort(9999L);
         category.setSystemUse(false);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(post("/jbr/int/money/categories")
+        String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isConflict())
@@ -101,7 +101,7 @@ public class CategoryTest extends Support {
         category.setSort(9999L);
         category.setSystemUse(false);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/categories")
+        String error = Objects.requireNonNull(getMockMvc().perform(put("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
@@ -120,7 +120,7 @@ public class CategoryTest extends Support {
         category.setSort(9999L);
         category.setSystemUse(false);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/categories")
+        String error = Objects.requireNonNull(getMockMvc().perform(delete("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isNotFound())
@@ -139,7 +139,7 @@ public class CategoryTest extends Support {
         category.setSort(9999L);
         category.setSystemUse(false);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(delete("/jbr/int/money/categories")
+        String error = Objects.requireNonNull(getMockMvc().perform(delete("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isForbidden())
@@ -158,7 +158,7 @@ public class CategoryTest extends Support {
         category.setSort(9999L);
         category.setSystemUse(false);
 
-        String error = Objects.requireNonNull(getMockMvc().perform(put("/jbr/int/money/categories")
+        String error = Objects.requireNonNull(getMockMvc().perform(put("/api/v1/categories")
                         .content(this.json(category))
                         .contentType(getContentType()))
                 .andExpect(status().isForbidden())

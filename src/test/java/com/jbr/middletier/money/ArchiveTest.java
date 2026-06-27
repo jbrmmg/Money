@@ -177,7 +177,7 @@ public class ArchiveTest extends Support {
         transaction.setAmount(BigDecimal.valueOf(10.02));
         transaction.setDescription("Testing");
 
-        getMockMvc().perform(post("/jbr/ext/money/transaction")
+        getMockMvc().perform(post("/api/v1/transaction")
                         .content(this.json(Collections.singletonList(transaction)))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -196,7 +196,7 @@ public class ArchiveTest extends Support {
         // Lock the statement
         StatementIdDTO lockStatementId = new StatementIdDTO("AMEX",1,2010);
 
-        getMockMvc().perform(post("/jbr/int/money/statement/lock")
+        getMockMvc().perform(post("/api/v1/statement/lock")
                         .content(this.json(lockStatementId))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
@@ -207,29 +207,29 @@ public class ArchiveTest extends Support {
         request.setYear(2010);
 
         // JBR-440: improve the checks in this
-        getMockMvc().perform(post("/jbr/int/money/transaction/archive")
+        getMockMvc().perform(post("/api/v1/transaction/archive")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         applicationProperties.setArchiveEnabled(true);
-        getMockMvc().perform(post("/jbr/int/money/transaction/archive")
+        getMockMvc().perform(post("/api/v1/transaction/archive")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
         // Generate the report.
-        getMockMvc().perform(post("/jbr/int/money/transaction/annualreport")
+        getMockMvc().perform(post("/api/v1/transaction/annual-report")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/archive")
+        getMockMvc().perform(post("/api/v1/transaction/archive")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        getMockMvc().perform(post("/jbr/int/money/transaction/archive")
+        getMockMvc().perform(post("/api/v1/transaction/archive")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
