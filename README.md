@@ -132,18 +132,15 @@ Both workflows: build and run the full test suite (`mvn verify`, including Testc
 
 ## REST API
 
-The API is self-documented via Swagger UI at `/swagger-ui.html` when the service is running.
+The API is self-documented via Swagger UI at `/swagger-ui.html` when the service is running. Endpoints are grouped by tag in the Swagger UI, matching the sections below.
 
-### Base paths
+### Base path
 
-| Base path | Purpose |
-|---|---|
-| `/jbr/ext/money` | Configuration — accounts, categories, statements, regular payments |
-| `/jbr/int/money` | Operations — transactions, reports, archive, email |
+All endpoints are under `/api/v1`. The previous `/jbr/ext/money/` and `/jbr/int/money/` prefixes (and their duplicated ext/int variants) were removed in JBR-661.
 
-### Key endpoints
+### Endpoints
 
-#### Accounts (`/jbr/[ext|int]/money`)
+#### Accounts (`/api/v1`)
 
 | Method | Path | Description |
 |---|---|---|
@@ -153,7 +150,7 @@ The API is self-documented via Swagger UI at `/swagger-ui.html` when the service
 | DELETE | `/accounts` | Delete account |
 | GET | `/account/logo` | Get account SVG logo |
 
-#### Categories (`/jbr/[ext|int]/money`)
+#### Categories (`/api/v1`)
 
 | Method | Path | Description |
 |---|---|---|
@@ -162,7 +159,7 @@ The API is self-documented via Swagger UI at `/swagger-ui.html` when the service
 | PUT | `/categories` | Update category |
 | DELETE | `/categories` | Delete category |
 
-#### Transactions (`/jbr/[ext|int]/money`)
+#### Transactions (`/api/v1`)
 
 | Method | Path | Description |
 |---|---|---|
@@ -170,8 +167,10 @@ The API is self-documented via Swagger UI at `/swagger-ui.html` when the service
 | PUT | `/transaction` | Update transaction(s) |
 | DELETE | `/transaction` | Delete transaction(s) |
 | POST | `/transaction/list` | Query transactions with filter |
+| POST | `/transaction/reset` | Reset transaction report data |
+| GET | `/version` | Get the running service version |
 
-#### Regular Payments (`/jbr/[ext|int]/money`)
+#### Regular Payments (`/api/v1`)
 
 | Method | Path | Description |
 |---|---|---|
@@ -180,7 +179,7 @@ The API is self-documented via Swagger UI at `/swagger-ui.html` when the service
 | PUT | `/transaction/regulars` | Update regular payment |
 | DELETE | `/transaction/regulars` | Delete regular payment |
 
-#### Statements (`/jbr/[ext|int]/money`)
+#### Statements (`/api/v1`)
 
 | Method | Path | Description |
 |---|---|---|
@@ -189,23 +188,23 @@ The API is self-documented via Swagger UI at `/swagger-ui.html` when the service
 | POST | `/statement/lock` | Lock a statement |
 | DELETE | `/statement` | Delete statement |
 
-#### Reconciliation (`/jbr/[ext|int]/money`)
+#### Reconciliation (`/api/v1`)
 
 | Method | Path | Description |
 |---|---|---|
 | PUT | `/reconcile` | Mark transactions as reconciled |
 | POST | `/reconciliation/load` | Load a reconciliation file |
-| PUT | `/reconciliation/updatefileaccount` | Update account mapping on a file |
+| PUT | `/reconciliation/account` | Update account mapping on a reconciliation file |
 | GET | `/reconciliation/files` | List loaded reconciliation files |
 | GET | `/reconciliation/file-updates` | Server-Sent Events stream of file updates |
 | DELETE | `/reconciliation/clear` | Clear reconciliation data |
 
-#### Reports & Archive (`/jbr/int/money`)
+#### Reports & Archive (`/api/v1`)
 
 | Method | Path | Description |
 |---|---|---|
 | POST | `/transaction/report` | Generate a monthly PDF report |
-| POST | `/transaction/annualreport` | Generate an annual PDF report |
+| POST | `/transaction/annual-report` | Generate an annual PDF report |
 | POST | `/transaction/archive` | Archive transactions for a period |
 | POST | `/email` | Send a transaction report email |
 
