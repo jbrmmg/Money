@@ -8,15 +8,17 @@ services:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_H2_CONSOLE_ENABLED=false
       - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
+      - SPRING_H2_CONSOLE_ENABLED=false
     volumes:
       - money-dev-logs:/app/logs
       - money-dev-working:/app/reports/working
       - /var/money/report:/app/reports/share
       - /var/money/reconcile:/app/reconcile
     networks:
-      - jbr-network
+      jbr-network:
+        aliases:
+          - money
 
 volumes:
   money-dev-logs:
