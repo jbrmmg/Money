@@ -21,9 +21,6 @@ spring:
         format_sql: true
     show-sql: true
 
-server:
-  port: 13017
-
 money:
   service-name: middletier-money-dbg
   report-working: /home/jason/Working/DbgReport/

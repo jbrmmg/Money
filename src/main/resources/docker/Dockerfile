@@ -12,6 +12,6 @@ ENV MONEY_REPORT_SHARE=/app/reports/share
 
 VOLUME ["/app/logs", "/app/reconcile", "/app/reports/working"]
 
-EXPOSE 12017
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
