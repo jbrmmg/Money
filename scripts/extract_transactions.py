@@ -145,7 +145,23 @@ def write_html(
     account_names: dict[str, str],
     path: str,
 ) -> None:
+    import json
+
+    # Clearly distinct colours chosen for maximum visual separation
+    PALETTE = [
+        "#e6194b",  # red
+        "#4363d8",  # blue
+        "#f58231",  # orange
+        "#3cb44b",  # green
+        "#911eb4",  # purple
+        "#42d4f4",  # cyan
+        "#f032e6",  # magenta
+        "#469990",  # teal
+        "#9a6324",  # brown
+        "#aaffc3",  # mint
+    ]
     col_names = [account_names[aid] for aid in account_ids]
+    account_colour = {aid: PALETTE[i % len(PALETTE)] for i, aid in enumerate(account_ids)}
 
     def cell(value: Decimal | None, is_total: bool = False) -> str:
         if value is None or value == Decimal("0"):
@@ -155,6 +171,7 @@ def write_html(
             cls += " total-cell"
         return f'<td class="{cls}">{value:,.2f}</td>'
 
+    # Table rows
     header_cells = "".join(f"<th>{c}</th>" for c in col_names)
     html_rows = []
     for row in rows:
@@ -170,13 +187,67 @@ def write_html(
 
     table_rows = "\n".join(html_rows)
 
+    # Chart — one point per date (last row of each day wins)
+    date_chart: dict[str, dict] = {}
+    date_total: dict[str, Decimal] = {}
+    for row in rows:
+        d = row["date"]
+        if d:
+            date_chart[d] = row["chart_balances"]
+            date_total[d] = row["total"]
+
+    labels = sorted(date_chart.keys())
+
+    datasets = []
+    for aid in account_ids:
+        datasets.append({
+            "label": account_names[aid],
+            "data": [float(date_chart[d].get(aid, Decimal("0"))) for d in labels],
+            "borderColor": account_colour[aid],
+            "backgroundColor": "transparent",
+            "borderWidth": 1.5,
+            "pointRadius": 0,
+            "tension": 0.1,
+        })
+    datasets.append({
+        "label": "Total",
+        "data": [float(date_total[d]) for d in labels],
+        "borderColor": "#000000",
+        "backgroundColor": "transparent",
+        "borderWidth": 4,
+        "borderDash": [10, 4],
+        "pointRadius": 0,
+        "tension": 0.1,
+        "order": 0,
+    })
+
+    chart_cfg = json.dumps({
+        "type": "line",
+        "data": {"labels": labels, "datasets": datasets},
+        "options": {
+            "responsive": True,
+            "maintainAspectRatio": False,
+            "animation": False,
+            "interaction": {"mode": "index", "intersect": False},
+            "plugins": {"legend": {"position": "top"}},
+            "scales": {
+                "x": {"ticks": {"maxTicksLimit": 24, "maxRotation": 45}},
+                "y": {"ticks": {"callback": "FMT"}},
+            },
+        },
+    }).replace('"FMT"', 'function(v){return v.toLocaleString("en-GB",{minimumFractionDigits:2})}')
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>Transactions</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-  body {{ font-family: sans-serif; font-size: 0.85em; margin: 0; padding: 1em; }}
+  body {{ font-family: sans-serif; font-size: 0.85em; margin: 0; padding: 0; }}
+  #chart-wrap {{ width: 100%; height: 400px; margin-bottom: 0; }}
+  .content {{ padding: 1em; }}
+  h2 {{ margin: 0.5em 0; }}
   table {{ border-collapse: collapse; width: 100%; }}
   th, td {{ border: 1px solid #ddd; padding: 4px 8px; white-space: nowrap; }}
   th {{ background: #333; color: #fff; position: sticky; top: 0; }}
@@ -191,6 +262,9 @@ def write_html(
 </style>
 </head>
 <body>
+<div id="chart-wrap"><canvas id="chart"></canvas></div>
+<div class="content">
+<h2>Transactions</h2>
 <table>
 <thead>
   <tr><th>Date</th><th>Description</th>{header_cells}<th>Total</th></tr>
@@ -199,6 +273,8 @@ def write_html(
 {table_rows}
 </tbody>
 </table>
+</div>
+<script>new Chart(document.getElementById("chart"), {chart_cfg});</script>
 </body>
 </html>"""
 
@@ -258,6 +334,11 @@ def main() -> None:
     # Build the opening balance row
     ob_amounts, ob_date, running_total = build_opening_row(account_ids, account_names, earliest)
 
+    # Per-account balances for the chart, seeded from opening balances.
+    # Updated using the API's balance field (which includes transfers) so account
+    # lines in the chart are accurate even though transfers don't affect running_total.
+    chart_balances: dict[str, Decimal] = dict(ob_amounts)
+
     rows = []
 
     if not args.from_date:
@@ -266,6 +347,7 @@ def main() -> None:
             "description": "Opening Balance",
             "amounts": ob_amounts,
             "total": running_total,
+            "chart_balances": dict(chart_balances),
         })
 
     for tx in transactions:
@@ -274,6 +356,9 @@ def main() -> None:
         is_transfer = tx.get("oppositeId") is not None
         if not is_transfer:
             running_total += amount
+        # Update per-account balance for ALL transactions including transfers,
+        # so account lines in the chart correctly reflect money moving between accounts
+        chart_balances[acc_id] = chart_balances.get(acc_id, Decimal("0")) + amount
         if args.from_date and tx["date"] < args.from_date:
             continue
         rows.append(
@@ -283,6 +368,7 @@ def main() -> None:
                 "amounts": {acc_id: amount},
                 "total": running_total,
                 "transfer": is_transfer,
+                "chart_balances": dict(chart_balances),
             }
         )
 
