@@ -7,3 +7,4 @@
 ### Secrets ###
 .env
 .env.secrets
+transactions.csv
