@@ -8,3 +8,5 @@
 .env
 .env.secrets
 transactions.csv
+transactions.html
+.~lock.*
