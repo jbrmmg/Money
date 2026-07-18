@@ -74,8 +74,6 @@ def get_transactions(
     for row in page_data:
         if row.get("type") != "TRANSACTION":
             continue
-        if row.get("oppositeId") is not None:
-            continue
         if row.get("predicted"):
             continue
         transactions.append(row)
@@ -141,6 +139,73 @@ def format_amount(value: Decimal | None) -> str:
     return f"{value:.2f}"
 
 
+def write_html(
+    rows: list[dict],
+    account_ids: list[str],
+    account_names: dict[str, str],
+    path: str,
+) -> None:
+    col_names = [account_names[aid] for aid in account_ids]
+
+    def cell(value: Decimal | None, is_total: bool = False) -> str:
+        if value is None or value == Decimal("0"):
+            return "<td></td>"
+        cls = "pos" if value > 0 else "neg"
+        if is_total:
+            cls += " total-cell"
+        return f'<td class="{cls}">{value:,.2f}</td>'
+
+    header_cells = "".join(f"<th>{c}</th>" for c in col_names)
+    html_rows = []
+    for row in rows:
+        is_ob = row["description"] == "Opening Balance"
+        tr_class = ' class="ob"' if is_ob else ""
+        desc_class = ' class="transfer"' if row.get("transfer") else ""
+        cells = f"<td>{row['date']}</td><td{desc_class}>{row['description']}</td>"
+        for aid in account_ids:
+            amount = row["amounts"].get(aid)
+            cells += cell(amount if amount != Decimal("0") else None)
+        cells += cell(row["total"], is_total=True)
+        html_rows.append(f"  <tr{tr_class}>{cells}</tr>")
+
+    table_rows = "\n".join(html_rows)
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Transactions</title>
+<style>
+  body {{ font-family: sans-serif; font-size: 0.85em; margin: 0; padding: 1em; }}
+  table {{ border-collapse: collapse; width: 100%; }}
+  th, td {{ border: 1px solid #ddd; padding: 4px 8px; white-space: nowrap; }}
+  th {{ background: #333; color: #fff; position: sticky; top: 0; }}
+  td {{ text-align: left; }}
+  td.pos, td.neg, td.total-cell {{ text-align: right; }}
+  td.neg {{ color: #c00; }}
+  td.transfer {{ color: #080; }}
+  td.total-cell {{ font-weight: bold; }}
+  tr.ob td {{ background: #f0f4ff; font-style: italic; }}
+  tr:nth-child(even):not(.ob) {{ background: #fafafa; }}
+  tr:hover {{ background: #fffbcc; }}
+</style>
+</head>
+<body>
+<table>
+<thead>
+  <tr><th>Date</th><th>Description</th>{header_cells}<th>Total</th></tr>
+</thead>
+<tbody>
+{table_rows}
+</tbody>
+</table>
+</body>
+</html>"""
+
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(html)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Export Money application transactions to CSV"
@@ -151,6 +216,9 @@ def main() -> None:
     parser.add_argument(
         "--from", dest="from_date", metavar="YYYY-MM-DD",
         help="Only output transactions from this date onwards (opening balance row is omitted)"
+    )
+    parser.add_argument(
+        "--html", dest="html_output", metavar="FILE", help="Also write an HTML version to this file"
     )
     parser.add_argument(
         "--output", default="transactions.csv", help="Output CSV filename"
@@ -203,7 +271,9 @@ def main() -> None:
     for tx in transactions:
         acc_id = tx["account"]["id"]
         amount = signed(tx["amount"])
-        running_total += amount
+        is_transfer = tx.get("oppositeId") is not None
+        if not is_transfer:
+            running_total += amount
         if args.from_date and tx["date"] < args.from_date:
             continue
         rows.append(
@@ -212,6 +282,7 @@ def main() -> None:
                 "description": tx["description"],
                 "amounts": {acc_id: amount},
                 "total": running_total,
+                "transfer": is_transfer,
             }
         )
 
@@ -235,6 +306,10 @@ def main() -> None:
             writer.writerow(csv_row)
 
     print(f"Written {len(rows)} rows (including opening balance) to {args.output}")
+
+    if args.html_output:
+        write_html(rows, account_ids, account_names, args.html_output)
+        print(f"Written {len(rows)} rows to {args.html_output}")
 
 
 if __name__ == "__main__":
