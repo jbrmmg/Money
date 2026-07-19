@@ -196,7 +196,7 @@ async function loadData() {
   setStatus('Loading…', 'loading');
 
   try {
-    const url  = '/api/transactions' + (from ? `?from=${encodeURIComponent(from)}` : '');
+    const url  = 'api/transactions' + (from ? `?from=${encodeURIComponent(from)}` : '');
     const resp = await fetch(url);
     if (!resp.ok) {
       const text = await resp.text();
