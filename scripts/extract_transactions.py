@@ -163,10 +163,13 @@ def write_html(
     col_names = [account_names[aid] for aid in account_ids]
     account_colour = {aid: PALETTE[i % len(PALETTE)] for i, aid in enumerate(account_ids)}
 
-    def cell(value: Decimal | None, is_total: bool = False) -> str:
+    def cell(value: Decimal | None, is_total: bool = False, is_transfer: bool = False) -> str:
         if value is None or value == Decimal("0"):
             return "<td></td>"
-        cls = "pos" if value > 0 else "neg"
+        if is_transfer:
+            cls = "transfer"
+        else:
+            cls = "pos" if value > 0 else "neg"
         if is_total:
             cls += " total-cell"
         return f'<td class="{cls}">{value:,.2f}</td>'
@@ -176,12 +179,13 @@ def write_html(
     html_rows = []
     for row in rows:
         is_ob = row["description"] == "Opening Balance"
+        is_transfer = row.get("transfer", False)
         tr_class = ' class="ob"' if is_ob else ""
-        desc_class = ' class="transfer"' if row.get("transfer") else ""
+        desc_class = ' class="transfer"' if is_transfer else ""
         cells = f"<td>{row['date']}</td><td{desc_class}>{row['description']}</td>"
         for aid in account_ids:
             amount = row["amounts"].get(aid)
-            cells += cell(amount if amount != Decimal("0") else None)
+            cells += cell(amount if amount != Decimal("0") else None, is_transfer=is_transfer)
         cells += cell(row["total"], is_total=True)
         html_rows.append(f"  <tr{tr_class}>{cells}</tr>")
 
@@ -245,7 +249,7 @@ def write_html(
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
   body {{ font-family: sans-serif; font-size: 0.85em; margin: 0; padding: 0; }}
-  #chart-wrap {{ width: 100%; height: 400px; margin-bottom: 0; }}
+  #chart-wrap {{ width: 100%; height: 800px; margin-bottom: 0; }}
   .content {{ padding: 1em; }}
   h2 {{ margin: 0.5em 0; }}
   table {{ border-collapse: collapse; width: 100%; }}
