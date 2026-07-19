@@ -59,6 +59,9 @@ money:
     smtp-host: smtp.jbrmmg.me.uk
     smtp-from: system@jbrmmg.me.uk
 
+server:
+    forward-headers-strategy: framework
+
 management:
     endpoint:
         health:
