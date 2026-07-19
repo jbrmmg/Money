@@ -1,12 +1,11 @@
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Install Python 3 and create a venv for the transactions web app
-RUN apk add --no-cache python3 py3-pip && \
-    python3 -m venv /app/venv
+# Install Python 3 and dependencies for the transactions web app
+RUN apk add --no-cache python3 py3-pip
 
 COPY scripts/requirements.txt /app/scripts/requirements.txt
-RUN /app/venv/bin/pip install --no-cache-dir -r /app/scripts/requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /app/scripts/requirements.txt
 
 RUN mkdir -p /app/logs /app/reconcile /app/reports/working /app/reports/share
 

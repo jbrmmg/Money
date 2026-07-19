@@ -2,7 +2,7 @@
 set -e
 
 # Start the Python transactions web app in the background
-/app/venv/bin/gunicorn \
+gunicorn \
   --bind 0.0.0.0:8081 \
   --workers 2 \
   --chdir /app/scripts \
