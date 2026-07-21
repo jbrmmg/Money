@@ -73,9 +73,8 @@ input[type="date"]:focus {
   border-color: #a0d4f5;
 }
 
-#refresh-btn {
+#refresh-btn, #export-btn {
   padding: 7px 20px;
-  background: #4caf50;
   border: none;
   border-radius: 6px;
   color: white;
@@ -85,8 +84,13 @@ input[type="date"]:focus {
   transition: background 0.15s;
 }
 
-#refresh-btn:hover    { background: #45a049; }
-#refresh-btn:disabled { background: #2a5a2a; cursor: not-allowed; }
+#refresh-btn              { background: #4caf50; }
+#refresh-btn:hover        { background: #45a049; }
+#refresh-btn:disabled     { background: #2a5a2a; cursor: not-allowed; }
+
+#export-btn               { background: #1976d2; }
+#export-btn:hover         { background: #1565c0; }
+#export-btn:disabled      { background: #1a3a5a; cursor: not-allowed; }
 
 #status { font-size: 12px; font-style: italic; }
 #status.loading { color: #a0d4f5; }
@@ -150,6 +154,7 @@ td.xferd  { color: #4caf50; }
   <div id="controls">
     <label>From: <input type="date" id="from-date"></label>
     <button id="refresh-btn" onclick="loadData()">Refresh</button>
+    <button id="export-btn" onclick="exportCsv()" disabled>Export CSV</button>
     <span id="status" class="loading">Loading…</span>
   </div>
 </div>
@@ -177,7 +182,9 @@ const PALETTE = [
   '#42d4f4', '#f032e6', '#469990', '#9a6324', '#aaffc3',
 ];
 
-let chartInstance = null;
+let chartInstance  = null;
+let lastAccounts   = [];
+let lastRows       = [];
 
 function fmt(v) {
   return v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -205,6 +212,9 @@ async function loadData() {
     const data = await resp.json();
     if (data.error) throw new Error(data.error);
     const accounts = activeAccounts(data.accounts, data.rows);
+    lastAccounts = accounts;
+    lastRows     = data.rows;
+    document.getElementById('export-btn').disabled = false;
     renderChart(accounts, data.rows);
     renderTable(accounts, data.rows);
     const count = data.rows.length.toLocaleString();
@@ -326,6 +336,41 @@ function renderTable(accounts, rows) {
     parts.push('</tr>');
   }
   tbody.innerHTML = parts.join('');
+}
+
+function exportCsv() {
+  const esc = v => {
+    const s = String(v ?? '');
+    return (s.includes(',') || s.includes('"') || s.includes('\n'))
+      ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const headers = ['Date', 'Description',
+    ...lastAccounts.map(a => a.name), 'Total'];
+  const lines = [headers.map(esc).join(',')];
+
+  for (const row of lastRows) {
+    const cols = [
+      esc(row.date),
+      esc(row.description),
+      ...lastAccounts.map(a => {
+        const v = row.amounts[a.id];
+        return (v === undefined || v === null || v === 0) ? '' : esc(v.toFixed(2));
+      }),
+      esc(row.total.toFixed(2)),
+    ];
+    lines.push(cols.join(','));
+  }
+
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `transactions_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 window.addEventListener('DOMContentLoaded', loadData);
