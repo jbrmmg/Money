@@ -54,6 +54,17 @@ public class AccountTransactionManager {
         return balance;
     }
 
+    public Optional<LocalDate> getLatestTransactionDateForStatement(Statement statement) {
+        List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
+                statement.getId().getAccount(),
+                statement.getId().getYear(),
+                statement.getId().getMonth());
+
+        return transactions.stream()
+                .map(Transaction::getDate)
+                .max(Comparator.naturalOrder());
+    }
+
     public void removeTransactionsFromStatement(Statement statement) {
         List<Transaction> transactions = transactionRepository.findByAccountAndStatementIdYearAndStatementIdMonth(
                 statement.getId().getAccount(),

@@ -48,5 +48,8 @@ public class AccountManager extends AbstractManager<
         instance.setColour(from.getColour());
         instance.setImagePrefix(from.getImagePrefix());
         instance.setName(from.getName());
+        instance.setTransferAccountId(from.getTransferAccountId());
+        instance.setTransferDay(from.getTransferDay());
+        instance.setWeekendAdj(from.getWeekendAdj());
     }
 }

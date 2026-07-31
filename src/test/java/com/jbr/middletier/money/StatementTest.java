@@ -6,10 +6,12 @@ import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.StatementId;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.AccountRepository;
+import com.jbr.middletier.money.data.primary.repository.ReconciliationRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.exceptions.StatementAlreadyLockedException;
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
 import com.jbr.middletier.money.manager.StatementManager;
 import com.jbr.middletier.money.util.FinancialAmount;
@@ -28,8 +30,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -64,6 +68,9 @@ public class StatementTest extends Support {
 
     @Autowired
     private AccountTransactionManager accountTransactionManager;
+
+    @Autowired
+    private ReconciliationRepository reconciliationRepository;
 
     private void cleanUp() {
         transactionRepository.deleteAll();
@@ -368,5 +375,187 @@ public class StatementTest extends Support {
 
         InvalidStatementIdException test = new InvalidStatementIdException(statement);
         Assertions.assertEquals("Cannot find statement with id AMEX 1 2010", test.getMessage());
+    }
+
+    @Test
+    public void testAutoTransfer() throws Exception {
+        cleanUp();
+
+        // Set the transfer details on AMEX — transferAccountId=BANK, transferDay=15.
+        AccountDTO amexAccount = new AccountDTO();
+        amexAccount.setId("AMEX");
+        amexAccount.setName("American Express");
+        amexAccount.setImagePrefix("amex");
+        amexAccount.setColour("4BBAEA");
+        amexAccount.setTransferAccountId("BANK");
+        amexAccount.setTransferDay(15);
+
+        getMockMvc().perform(put("/api/v1/accounts")
+                        .content(this.json(amexAccount))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // Create a transaction on AMEX (Jan 24, 2010) — payment date should be Feb 15, 2010.
+        TransactionDTO amexTransaction = new TransactionDTO();
+        amexTransaction.setAccountId("AMEX");
+        amexTransaction.setDate(utilityMapper.map(LocalDate.of(2010, 1, 24), String.class));
+        amexTransaction.setAmount(BigDecimal.valueOf(-500.00));
+        amexTransaction.setDescription("Test charge");
+        amexTransaction.setCategoryId("FDG");
+
+        getMockMvc().perform(post("/api/v1/transaction")
+                        .content(this.json(List.of(amexTransaction)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // Reconcile the transaction to the AMEX Jan 2010 statement.
+        for (Transaction next : transactionRepository.findAll()) {
+            ReconcileTransactionDTO req = new ReconcileTransactionDTO();
+            req.getTransactions().add(next.getId());
+            req.setReconcile(true);
+            getMockMvc().perform(put("/api/v1/reconcile")
+                            .content(this.json(req))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+        }
+
+        // Lock the AMEX statement.
+        StatementIdDTO statementId = new StatementIdDTO("AMEX", 1, 2010);
+        getMockMvc().perform(post("/api/v1/statement/lock")
+                        .content(this.json(statementId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // Verify two transfer transactions were created (BANK and AMEX).
+        List<Transaction> allTransactions = new ArrayList<>();
+        transactionRepository.findAll().forEach(allTransactions::add);
+
+        // Original charge + two auto-transfer legs = 3 transactions.
+        assertEquals(3, allTransactions.size());
+
+        // The transfer pair: one BANK leg (amount = -500) and one AMEX leg (amount = +500).
+        boolean foundBankTransfer = false;
+        boolean foundAmexTransfer = false;
+        for (Transaction t : allTransactions) {
+            if (t.getAccount().getId().equals("BANK")
+                    && t.getAmount().getValue().compareTo(BigDecimal.valueOf(-500.00)) == 0
+                    && t.getDate().equals(LocalDate.of(2010, 2, 15))
+                    && t.getDescription().startsWith("Automatic transfer ")) {
+                foundBankTransfer = true;
+            }
+            if (t.getAccount().getId().equals("AMEX")
+                    && t.getAmount().getValue().compareTo(BigDecimal.valueOf(500.00)) == 0
+                    && t.getDate().equals(LocalDate.of(2010, 2, 15))
+                    && t.getDescription().startsWith("Automatic transfer ")) {
+                foundAmexTransfer = true;
+            }
+        }
+        Assertions.assertTrue(foundBankTransfer, "Expected BANK auto-transfer transaction not found");
+        Assertions.assertTrue(foundAmexTransfer, "Expected AMEX auto-transfer transaction not found");
+
+        // Verify reconciliation data was cleared.
+        Assertions.assertFalse(reconciliationRepository.findAll().iterator().hasNext(),
+                "Reconciliation data should have been cleared on lock");
+    }
+
+    @Test
+    public void testAutoTransferSkippedWhenNoTransferAccount() throws Exception {
+        cleanUp();
+
+        // NWDE has no transfer account set — lock should complete but no transfer created.
+        TransactionDTO nwdeTransaction = new TransactionDTO();
+        nwdeTransaction.setAccountId("NWDE");
+        nwdeTransaction.setDate(utilityMapper.map(LocalDate.of(2010, 1, 10), String.class));
+        nwdeTransaction.setAmount(BigDecimal.valueOf(200.00));
+        nwdeTransaction.setDescription("Test credit");
+        nwdeTransaction.setCategoryId("FDG");
+
+        getMockMvc().perform(post("/api/v1/transaction")
+                        .content(this.json(List.of(nwdeTransaction)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        for (Transaction next : transactionRepository.findAll()) {
+            if (next.getAccount().getId().equals("NWDE")) {
+                ReconcileTransactionDTO req = new ReconcileTransactionDTO();
+                req.getTransactions().add(next.getId());
+                req.setReconcile(true);
+                getMockMvc().perform(put("/api/v1/reconcile")
+                                .content(this.json(req))
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk());
+            }
+        }
+
+        StatementIdDTO statementId = new StatementIdDTO("NWDE", 1, 2010);
+        getMockMvc().perform(post("/api/v1/statement/lock")
+                        .content(this.json(statementId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // Only the original transaction — no auto-transfer created.
+        List<Transaction> allTransactions = new ArrayList<>();
+        transactionRepository.findAll().forEach(allTransactions::add);
+        assertEquals(1, allTransactions.size());
+    }
+
+    @Test
+    public void testAutoTransferWithWeekendAdjustment() throws Exception {
+        cleanUp();
+
+        // transferDay=6, Jan 2010 statement → payment date = Feb 6, 2010 = Saturday.
+        // With AT_FORWARD adjustment this should move to Monday Feb 8, 2010.
+        AccountDTO amexAccount = new AccountDTO();
+        amexAccount.setId("AMEX");
+        amexAccount.setName("American Express");
+        amexAccount.setImagePrefix("amex");
+        amexAccount.setColour("4BBAEA");
+        amexAccount.setTransferAccountId("BANK");
+        amexAccount.setTransferDay(6);
+        amexAccount.setWeekendAdj(AdjustmentType.AT_FORWARD);
+
+        getMockMvc().perform(put("/api/v1/accounts")
+                        .content(this.json(amexAccount))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        TransactionDTO amexTransaction = new TransactionDTO();
+        amexTransaction.setAccountId("AMEX");
+        amexTransaction.setDate(utilityMapper.map(LocalDate.of(2010, 1, 20), String.class));
+        amexTransaction.setAmount(BigDecimal.valueOf(-300.00));
+        amexTransaction.setDescription("Test charge");
+        amexTransaction.setCategoryId("FDG");
+
+        getMockMvc().perform(post("/api/v1/transaction")
+                        .content(this.json(List.of(amexTransaction)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        for (Transaction next : transactionRepository.findAll()) {
+            ReconcileTransactionDTO req = new ReconcileTransactionDTO();
+            req.getTransactions().add(next.getId());
+            req.setReconcile(true);
+            getMockMvc().perform(put("/api/v1/reconcile")
+                            .content(this.json(req))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+        }
+
+        StatementIdDTO statementId = new StatementIdDTO("AMEX", 1, 2010);
+        getMockMvc().perform(post("/api/v1/statement/lock")
+                        .content(this.json(statementId))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // Feb 6, 2010 = Saturday → adjusted forward to Feb 8, 2010 (Monday).
+        List<Transaction> allTransactions = new ArrayList<>();
+        transactionRepository.findAll().forEach(allTransactions::add);
+        assertEquals(3, allTransactions.size());
+
+        boolean foundTransfer = allTransactions.stream().anyMatch(t ->
+                t.getAccount().getId().equals("BANK")
+                        && t.getDate().equals(LocalDate.of(2010, 2, 8))
+                        && t.getDescription().startsWith("Automatic transfer "));
+        Assertions.assertTrue(foundTransfer, "Transfer on Feb 8 2010 (adjusted from Sat Feb 6) not found");
     }
 }

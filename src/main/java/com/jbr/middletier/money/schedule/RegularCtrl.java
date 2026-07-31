@@ -6,12 +6,12 @@ import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.RegularRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.exceptions.CannotDetermineNextDateException;
+import com.jbr.middletier.money.util.DateAdjustmentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 @Component
@@ -34,21 +34,11 @@ public class RegularCtrl {
     }
 
     private LocalDate adjustDate(LocalDate transactionDate, AdjustmentType adjustment) {
-        int adjustmentAmt = switch (adjustment) {
-            case AT_FORWARD -> 1;
-            case AT_BACKWARD -> -1;
-            default -> 0;
-        };
-
-        if(adjustmentAmt != 0) {
-            while( (transactionDate.getDayOfWeek() == DayOfWeek.SUNDAY) || (transactionDate.getDayOfWeek() == DayOfWeek.SATURDAY) ) {
-                transactionDate = transactionDate.plusDays(adjustmentAmt);
-            }
-
-            LOG.info("Date has been adjusted {} {}", adjustment, transactionDate);
+        LocalDate adjusted = DateAdjustmentUtil.adjustForWeekend(transactionDate, adjustment);
+        if (!adjusted.equals(transactionDate)) {
+            LOG.info("Date has been adjusted {} {}", adjustment, adjusted);
         }
-
-        return transactionDate;
+        return adjusted;
     }
 
     private void processRegular(LocalDate today, Regular nextRegular) {

@@ -6,9 +6,11 @@ import com.jbr.middletier.money.data.primary.StatementId;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.dto.StatementIdDTO;
+import com.jbr.middletier.money.dto.TransactionDTO;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
 import com.jbr.middletier.money.events.StatementLockEvent;
 import com.jbr.middletier.money.exceptions.*;
+import com.jbr.middletier.money.util.DateAdjustmentUtil;
 import com.jbr.middletier.money.util.FinancialAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Controller
@@ -37,6 +43,61 @@ public class StatementManager {
         this.accountManager = accountManager;
         this.statementMapper = statementMapper;
         this.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    private LocalDate derivePaymentDate(LocalDate latestTransactionDate, Account account) {
+        YearMonth nextMonth = YearMonth.from(latestTransactionDate).plusMonths(1);
+        int day = Math.min(account.getTransferDay(), nextMonth.lengthOfMonth());
+        LocalDate paymentDate = nextMonth.atDay(day);
+        return DateAdjustmentUtil.adjustForWeekend(paymentDate, account.getWeekendAdj());
+    }
+
+    private void createAutoTransfer(Statement lockedStatement, FinancialAmount balance, AccountTransactionManager accountTransactionManager) {
+        String accountId = lockedStatement.getId().getAccount().getId();
+        Optional<Account> accountOpt = accountManager.getIfValid(accountId);
+        if (accountOpt.isEmpty()) {
+            LOG.info("Auto transfer skipped - account {} not found.", accountId);
+            return;
+        }
+        Account account = accountOpt.get();
+
+        if (account.getTransferAccountId() == null) {
+            LOG.info("Auto transfer skipped - no transfer account set.");
+            return;
+        }
+        if (account.getTransferDay() == null) {
+            LOG.info("Auto transfer skipped - no transfer day set.");
+            return;
+        }
+
+        Optional<LocalDate> latestDate = accountTransactionManager.getLatestTransactionDateForStatement(lockedStatement);
+        if (latestDate.isEmpty()) {
+            LOG.info("Auto transfer skipped - no transactions on statement.");
+            return;
+        }
+
+        try {
+            LocalDate paymentDate = derivePaymentDate(latestDate.get(), account);
+            String dateStr = paymentDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            String description = "Automatic transfer " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+            TransactionDTO fromDto = new TransactionDTO();
+            fromDto.setAccountId(account.getTransferAccountId());
+            fromDto.setAmount(balance.getValue());
+            fromDto.setDate(dateStr);
+            fromDto.setDescription(description);
+
+            TransactionDTO toDto = new TransactionDTO();
+            toDto.setAccountId(account.getId());
+            toDto.setAmount(balance.getValue());
+            toDto.setDate(dateStr);
+            toDto.setDescription(description);
+
+            accountTransactionManager.createTransaction(List.of(fromDto, toDto));
+            LOG.info("Auto transfer created for {} on {}", account.getId(), paymentDate);
+        } catch (Exception ex) {
+            LOG.error("Failed to create auto transfer for {}.", account.getId(), ex);
+        }
     }
 
     private Account getAccount(StatementDTO statement) throws UpdateDeleteAccountException {
@@ -112,6 +173,9 @@ public class StatementManager {
 
                 // Regenerate the age of statements.
                 checkStatementAges();
+
+                // Create auto transfer.
+                createAutoTransfer(statement.get(), balance, accountTransactionManager);
             } else {
                 throw new StatementAlreadyLockedException(statementId);
             }

@@ -852,7 +852,7 @@ public class MoneyReportIT extends Support {
         statementId.setAccountId("BANK");
         statementId.setYear(2023);
         statementId.setMonth(5);
-        Iterable<StatementDTO> newStatement = statementManager.statementLock(statementId,accountTransactionManager);
+        Iterable<StatementDTO> newStatement = statementManager.statementLock(statementId, accountTransactionManager);
 
         // Check everything is ok.
         result = getMockMvc().perform(post("/api/v1/transaction/list")

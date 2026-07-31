@@ -120,24 +120,24 @@ public abstract class AbstractManager<O,E extends ComparableNamedDTO,I,R extends
         this.loadCache();
 
         // Translate the external instance to the internal.
-        O internalInstance = this.modelMapper.map(instance,internalClass);
-        I instanceId = getInstanceId(internalInstance);
+        O fromInstance = this.modelMapper.map(instance,internalClass);
+        I instanceId = getInstanceId(fromInstance);
 
         // Instance must exist.
         if(!this.cache.containsKey(instanceId)) {
             throw getUpdateDeleteException(instanceId);
         }
 
-        // Get the actual internal instance
-        internalInstance = this.cache.get(instanceId);
+        // Get the actual internal instance from cache.
+        O internalInstance = this.cache.get(instanceId);
 
         // Validate that this is OK
         validateUpdateOrDelete(internalInstance,update);
 
         // Perform the action
         if(update) {
-            // Update
-            updateInstance(internalInstance,internalInstance);
+            // Update the cached instance from the DTO-mapped values.
+            updateInstance(internalInstance,fromInstance);
             repository.save(internalInstance);
         } else {
             // Delete

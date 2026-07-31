@@ -1,5 +1,6 @@
 package com.jbr.middletier.money.dto;
 
+import com.jbr.middletier.money.schedule.AdjustmentType;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,13 @@ public class AccountDTO extends ComparableNamedDTO {
     private String colour;
 
     private Boolean closed;
+
+    @Pattern(regexp="^[0-9A-Z]{4}$",message="Transfer account id must be uppercase and/or numbers of length 4.")
+    private String transferAccountId;
+
+    private Integer transferDay;
+
+    private AdjustmentType weekendAdj;
 
     @Override
     public boolean equals(Object obj) {

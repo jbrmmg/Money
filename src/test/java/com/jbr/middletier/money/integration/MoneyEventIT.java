@@ -260,7 +260,7 @@ public class MoneyEventIT extends Support {
         statementId.setAccountId(reportTransactions.get(0).getStatement().getAccountId());
         statementId.setYear(reportTransactions.get(0).getStatement().getYear());
         statementId.setMonth(reportTransactions.get(0).getStatement().getMonth());
-        Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId,this.accountTransactionManager);
+        Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId, this.accountTransactionManager);
 
         // Attempt to delete the transaction - should fail.
         try {
@@ -333,7 +333,7 @@ public class MoneyEventIT extends Support {
         statementId.setAccountId(reportTransactions.get(0).getStatement().getAccountId());
         statementId.setYear(reportTransactions.get(0).getStatement().getYear());
         statementId.setMonth(reportTransactions.get(0).getStatement().getMonth());
-        Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId,this.accountTransactionManager);
+        Iterable<StatementDTO> statements = this.statementManager.statementLock(statementId, this.accountTransactionManager);
 
         // Add another transaction
         transaction = new TransactionDTO();

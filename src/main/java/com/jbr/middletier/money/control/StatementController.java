@@ -4,6 +4,7 @@ import com.jbr.middletier.money.dto.StatementDTO;
 import com.jbr.middletier.money.dto.StatementIdDTO;
 import com.jbr.middletier.money.exceptions.*;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
+import com.jbr.middletier.money.manager.ReconciliationManager;
 import com.jbr.middletier.money.manager.StatementManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,12 +25,15 @@ public class StatementController {
 
     private final StatementManager statementManager;
     private final AccountTransactionManager accountTransactionManager;
+    private final ReconciliationManager reconciliationManager;
 
     @Autowired
     public StatementController(StatementManager statementManager,
-                               AccountTransactionManager accountTransactionManager) {
+                               AccountTransactionManager accountTransactionManager,
+                               ReconciliationManager reconciliationManager) {
         this.statementManager = statementManager;
         this.accountTransactionManager = accountTransactionManager;
+        this.reconciliationManager = reconciliationManager;
     }
 
     @GetMapping(path="/statement")
@@ -41,7 +45,9 @@ public class StatementController {
     @Operation(summary = "Lock a statement to prevent further modifications")
     @PostMapping(path="/statement/lock")
     public Iterable<StatementDTO> statementLock(@Valid @RequestBody StatementIdDTO statementId) throws InvalidStatementIdException, StatementAlreadyLockedException {
-        return this.statementManager.statementLock(statementId,accountTransactionManager);
+        Iterable<StatementDTO> result = this.statementManager.statementLock(statementId, accountTransactionManager);
+        this.reconciliationManager.clearRepositoryData();
+        return result;
     }
 
     @PostMapping(path="/statement")
