@@ -367,6 +367,48 @@ public class TransactionReportManager {
         };
     }
 
+    private List<TransactionReportDTO> buildResult(List<TransactionReportDTO> result, TransactionFilterDTO filter) {
+        // If possible, add an opening balance row.
+        FinancialAmount openingBalanceAmount = calculateOpeningBalance(result, filter);
+        if(openingBalanceAmount != null) {
+            TransactionReportDTO openingBalance = new TransactionReportDTO();
+            openingBalance.setType(TransactionReportTypeDTO.OPEN_BALANCE);
+            openingBalance.setBalance(openingBalanceAmount);
+            openingBalance.setDate(calculateOpenDate(result));
+            result.add(openingBalance);
+        }
+
+        // Add today's balance.
+        TransactionReportDTO todayBalance = new TransactionReportDTO();
+        todayBalance.setType(TransactionReportTypeDTO.TODAY_BALANCE);
+        todayBalance.setDate(getDateString(applicationProperties.getToday()));
+        result.add(todayBalance);
+
+        // If there are transactions in the future, then add a future balance.
+        String futureDate = calculateFutureDate(result);
+        if(futureDate != null && !futureDate.isEmpty()) {
+            TransactionReportDTO futureBalance = new TransactionReportDTO();
+            futureBalance.setType(TransactionReportTypeDTO.FUTURE_BALANCE);
+            futureBalance.setDate(futureDate);
+            result.add(futureBalance);
+        }
+
+        // Sort the transactions as per the filter definition.
+        result.sort((t1, t2) -> TransactionSorting.compare(t1, t2, filter.getTransactionSorts(), applicationProperties.getToday()));
+
+        // Calculate the running balance on each row.
+        BigDecimal balance = (openingBalanceAmount != null) ? openingBalanceAmount.getValue() : BigDecimal.ZERO;
+        for(TransactionReportDTO next : result) {
+            if(next.getType() != TransactionReportTypeDTO.OPEN_BALANCE) {
+                BigDecimal nextAmount = (next.getAmount() != null) ? next.getAmount().getValue() : BigDecimal.ZERO;
+                next.setBalance(new FinancialAmount(balance.add(nextAmount)));
+                balance = balance.add(nextAmount);
+            }
+        }
+
+        return result;
+    }
+
     public List<TransactionReportDTO> getTransactions(TransactionFilterDTO filter) {
         LOG.info("Get Transactions based on {}",filter);
 
@@ -382,51 +424,75 @@ public class TransactionReportManager {
             }
         }
 
-        // If possible, add an opening balance row.
-        FinancialAmount openingBalanceAmount = calculateOpeningBalance(result,filter);
-        if(openingBalanceAmount != null) {
-            TransactionReportDTO openingBalance = new TransactionReportDTO();
-            openingBalance.setType(TransactionReportTypeDTO.OPEN_BALANCE);
-            openingBalance.setBalance(openingBalanceAmount);
-            openingBalance.setDate(calculateOpenDate(result));
+        return buildResult(result, filter);
+    }
 
-            result.add(openingBalance);
+    public TransactionPageDTO getTransactionsPage(TransactionFilterDTO filter) {
+        LOG.info("Get Transactions Page based on {}", filter);
+
+        // Collect all matching transactions (no break).
+        List<TransactionReportDTO> allRaw = new ArrayList<>();
+        for(TransactionReport next : this.transactionReportRepository.findAll(findByCriteria(filter),Sort.by(Sort.Direction.ASC,STATEMENT_SORT_COLUMN,DATE_COLUMN,AMOUNT_COLUMN,ACCOUNT_ID_COLUMN))) {
+            allRaw.add(this.mapper.map(next, TransactionReportDTO.class));
         }
 
-        // Add today's balance.
-        TransactionReportDTO todayBalance = new TransactionReportDTO();
-        todayBalance.setType(TransactionReportTypeDTO.TODAY_BALANCE);
-        todayBalance.setDate(getDateString(applicationProperties.getToday()));
-        result.add(todayBalance);
+        // Build the full result with all balance markers and running balances.
+        List<TransactionReportDTO> fullResult = buildResult(allRaw, filter);
 
-        // If there are transactions in the future, then add a future balance.
-        String futureDate = calculateFutureDate(result);
+        // Separate TRANSACTION rows from balance markers.
+        List<TransactionReportDTO> allTransactions = fullResult.stream()
+                .filter(t -> t.getType() == TransactionReportTypeDTO.TRANSACTION)
+                .toList();
+        int totalCount = allTransactions.size();
 
-        if(futureDate != null && !futureDate.isEmpty()) {
-            TransactionReportDTO futureBalance = new TransactionReportDTO();
-            futureBalance.setType(TransactionReportTypeDTO.FUTURE_BALANCE);
-            futureBalance.setDate(futureDate);
+        // Calculate maxPages and clamp pageNumber (1-based per spec).
+        int maxPageSize = filter.getMaxPageSize();
+        int maxPages = Math.max(1, (int) Math.ceil((double) totalCount / maxPageSize));
+        int pageNumber = filter.getPageNumber();
+        if(pageNumber < 1) pageNumber = 1;
+        if(pageNumber > maxPages) pageNumber = maxPages;
 
-            result.add(futureBalance);
+        // Extract the page slice of TRANSACTION rows.
+        int startIndex = (pageNumber - 1) * maxPageSize;
+        int endIndex = Math.min(startIndex + maxPageSize, totalCount);
+        List<TransactionReportDTO> pageTransactions = new ArrayList<>(allTransactions.subList(startIndex, endIndex));
+
+        // Determine the page opening balance.
+        FinancialAmount pageOpenBalance;
+        if(startIndex == 0) {
+            pageOpenBalance = fullResult.stream()
+                    .filter(t -> t.getType() == TransactionReportTypeDTO.OPEN_BALANCE)
+                    .findFirst()
+                    .map(TransactionReportDTO::getBalance)
+                    .orElse(null);
+        } else {
+            pageOpenBalance = allTransactions.get(startIndex - 1).getBalance();
         }
 
-        // Sort the transactions as per the filter definition.
-        result.sort((t1,t2) -> TransactionSorting.compare(t1,t2,filter.getTransactionSorts(),applicationProperties.getToday()));
-
-        // Now we can calculate the balance information on each row.
-        BigDecimal balance = ( openingBalanceAmount != null) ? openingBalanceAmount.getValue() : BigDecimal.ZERO;
-        for(TransactionReportDTO next : result) {
-            // If opening balance, then the balance is already known.
-            if(next.getType() != TransactionReportTypeDTO.OPEN_BALANCE) {
-                BigDecimal nextAmount = ( next.getAmount() != null ) ? next.getAmount().getValue() : BigDecimal.ZERO;
-                next.setBalance(new FinancialAmount(balance.add(nextAmount)));
-
-                balance = balance.add(nextAmount);
-            }
+        // Build the page result: opening balance, page transactions, and global position markers.
+        List<TransactionReportDTO> pageResult = new ArrayList<>();
+        if(pageOpenBalance != null) {
+            TransactionReportDTO openBalance = new TransactionReportDTO();
+            openBalance.setType(TransactionReportTypeDTO.OPEN_BALANCE);
+            openBalance.setBalance(pageOpenBalance);
+            openBalance.setDate(calculateOpenDate(pageTransactions));
+            pageResult.add(openBalance);
         }
+        pageResult.addAll(pageTransactions);
 
-        // Return the data.
-        return result;
+        fullResult.stream()
+                .filter(t -> t.getType() == TransactionReportTypeDTO.TODAY_BALANCE)
+                .findFirst()
+                .ifPresent(pageResult::add);
+        fullResult.stream()
+                .filter(t -> t.getType() == TransactionReportTypeDTO.FUTURE_BALANCE)
+                .findFirst()
+                .ifPresent(pageResult::add);
+
+        // Sort the page result.
+        pageResult.sort((t1, t2) -> TransactionSorting.compare(t1, t2, filter.getTransactionSorts(), applicationProperties.getToday()));
+
+        return new TransactionPageDTO(totalCount, pageNumber, maxPageSize, pageResult);
     }
 
     private void updateReconData() {

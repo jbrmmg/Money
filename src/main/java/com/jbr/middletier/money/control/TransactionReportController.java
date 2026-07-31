@@ -1,6 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.dto.TransactionFilterDTO;
+import com.jbr.middletier.money.dto.TransactionPageDTO;
 import com.jbr.middletier.money.dto.TransactionReportDTO;
 import com.jbr.middletier.money.manager.TransactionReportManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,13 @@ public class TransactionReportController {
     public List<TransactionReportDTO> getTransactions(@Valid @RequestBody TransactionFilterDTO filter) {
         LOG.trace("Transaction report");
         return this.accountTransactionManager.getTransactions(filter);
+    }
+
+    @Operation(summary = "List paged transactions matching the supplied filter criteria")
+    @PostMapping(path="/transaction/list/page")
+    public TransactionPageDTO getTransactionsPage(@Valid @RequestBody TransactionFilterDTO filter) {
+        LOG.trace("Transaction page report");
+        return this.accountTransactionManager.getTransactionsPage(filter);
     }
 
     @Operation(summary = "Reset cached transaction report data")

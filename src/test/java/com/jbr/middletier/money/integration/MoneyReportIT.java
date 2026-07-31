@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -656,6 +657,106 @@ class MoneyReportIT extends Support {
         ObjectMapper objectMapper = new ObjectMapper();
         List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(),new TypeReference<List<TransactionReportDTO>>(){});
         logTransactionData(transactionData);
+    }
+
+    @Test
+    void testPageBelowOne() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setMaxPageSize(10);
+        filter.setPageNumber(0);
+
+        getMockMvc().perform(post("/api/v1/transaction/list/page")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCount", is(63)))
+                .andExpect(jsonPath("$.pageNumber", is(1)))
+                .andExpect(jsonPath("$.maxPageSize", is(10)))
+                .andExpect(jsonPath("$.transactions", hasSize(13)))
+                .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
+                .andExpect(jsonPath("$.transactions[0].balance.value", is(1029.0)))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    void testPageBeyondMax() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setMaxPageSize(10);
+        filter.setPageNumber(100);
+
+        getMockMvc().perform(post("/api/v1/transaction/list/page")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCount", is(63)))
+                .andExpect(jsonPath("$.pageNumber", is(7)))
+                .andExpect(jsonPath("$.maxPageSize", is(10)))
+                .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
+                .andExpect(jsonPath("$.transactions[5].type", is("FUTURE_BALANCE")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    void testPageOne() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setMaxPageSize(10);
+        filter.setPageNumber(1);
+
+        getMockMvc().perform(post("/api/v1/transaction/list/page")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCount", is(63)))
+                .andExpect(jsonPath("$.pageNumber", is(1)))
+                .andExpect(jsonPath("$.maxPageSize", is(10)))
+                .andExpect(jsonPath("$.transactions", hasSize(13)))
+                .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
+                .andExpect(jsonPath("$.transactions[0].balance.value", is(1029.0)))
+                .andExpect(jsonPath("$.transactions[0].date", is("2023-04-06")))
+                .andExpect(jsonPath("$.transactions[11].type", is("TODAY_BALANCE")))
+                .andExpect(jsonPath("$.transactions[12].type", is("FUTURE_BALANCE")))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    void testPageTwoBalances() throws Exception {
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setMaxPageSize(10);
+        filter.setPageNumber(1);
+
+        // Fetch page 1 to read the closing balance of its last TRANSACTION row (transactions[10]).
+        MvcResult page1Result = getMockMvc().perform(post("/api/v1/transaction/list/page")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> page1 = objectMapper.readValue(
+                page1Result.getResponse().getContentAsString(),
+                new TypeReference<Map<String, Object>>(){});
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> page1Transactions = (List<Map<String, Object>>) page1.get("transactions");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> page1LastTx = page1Transactions.get(10); // index 0=OPEN_BALANCE, 1-10=TRANSACTION rows
+        @SuppressWarnings("unchecked")
+        Map<String, Object> page1LastBalance = (Map<String, Object>) page1LastTx.get("balance");
+        double closingBalance = ((Number) page1LastBalance.get("value")).doubleValue();
+
+        // Fetch page 2 and assert its opening balance equals page 1's closing balance.
+        filter.setPageNumber(2);
+        getMockMvc().perform(post("/api/v1/transaction/list/page")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pageNumber", is(2)))
+                .andExpect(jsonPath("$.totalCount", is(63)))
+                .andExpect(jsonPath("$.transactions", hasSize(13)))
+                .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
+                .andExpect(jsonPath("$.transactions[0].balance.value", is(closingBalance)))
+                .andDo(MockMvcResultHandlers.print());
     }
 
     @Test
