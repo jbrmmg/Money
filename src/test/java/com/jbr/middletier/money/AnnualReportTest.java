@@ -30,6 +30,7 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -38,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class AnnualReportTest extends Support {
+class AnnualReportTest extends Support {
     @Autowired
     private TransactionRepository transactionRepository;
 
@@ -65,7 +66,7 @@ public class AnnualReportTest extends Support {
     }
 
     @Test
-    public void testReport() throws Exception {
+    void testReport() throws Exception {
         cleanUp();
 
         // Clear the directories.
@@ -76,7 +77,7 @@ public class AnnualReportTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY,1),String.class));
         transaction.setAmount(BigDecimal.valueOf(10.02));
         transaction.setDescription("Testing");
 

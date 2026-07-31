@@ -17,9 +17,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class CategoryTest extends Support {
+class CategoryTest extends Support {
     @Test
-    public void getCategoryTest() throws Exception {
+    void getCategoryTest() throws Exception {
         // Get accounts (external), check that both categories are returned and in the correct order.
         getMockMvc().perform(get("/api/v1/categories"))
                 .andExpect(status().isOk())
@@ -38,7 +38,7 @@ public class CategoryTest extends Support {
     }
 
     @Test
-    public void crudCategoryTest() throws Exception {
+    void crudCategoryTest() throws Exception {
         CategoryDTO category = new CategoryDTO();
         category.setId("XXX");
         category.setColour("FCFCFC");
@@ -72,7 +72,7 @@ public class CategoryTest extends Support {
     }
 
     @Test
-    public void addExistingTest() throws Exception {
+    void addExistingTest() throws Exception {
         CategoryDTO category = new CategoryDTO();
         category.setId("WGS");
         category.setColour("FCFCFC");
@@ -91,7 +91,7 @@ public class CategoryTest extends Support {
     }
 
     @Test
-    public void updateNonExistent() throws Exception {
+    void updateNonExistent() throws Exception {
         CategoryDTO category = new CategoryDTO();
         category.setId("XXX");
         category.setColour("FCFCFC");
@@ -110,7 +110,7 @@ public class CategoryTest extends Support {
     }
 
     @Test
-    public void deleteNonExistent() throws Exception {
+    void deleteNonExistent() throws Exception {
         CategoryDTO category = new CategoryDTO();
         category.setId("XXX");
         category.setColour("FCFCFC");
@@ -129,7 +129,7 @@ public class CategoryTest extends Support {
     }
 
     @Test
-    public void deleteSystemTest() throws Exception {
+    void deleteSystemTest() throws Exception {
         CategoryDTO category = new CategoryDTO();
         category.setId("TRF");
         category.setColour("FCFCFC");
@@ -148,7 +148,7 @@ public class CategoryTest extends Support {
     }
 
     @Test
-    public void updateSystemTest() throws Exception {
+    void updateSystemTest() throws Exception {
         CategoryDTO category = new CategoryDTO();
         category.setId("TRF");
         category.setColour("FCFCFC");

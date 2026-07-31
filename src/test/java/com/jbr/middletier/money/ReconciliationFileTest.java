@@ -10,16 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.web.WebAppConfiguration;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class ReconciliationFileTest {
+class ReconciliationFileTest {
     @Autowired
     ReconciliationFileManager reconciliationFileManager;
 
     @Test
-    public void testFilesAvailable() {
+    void testFilesAvailable() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         Assertions.assertEquals(8, files.size());
     }
@@ -33,7 +34,7 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testAmexFile() {
+    void testAmexFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO amexFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -42,11 +43,11 @@ public class ReconciliationFileTest {
             }
         }
         Assertions.assertNotNull(amexFile);
-        testReconciliationFile(amexFile,15,102.39,-235.03, LocalDate.of(2022,10,5), LocalDate.of(2022,10,11));
+        testReconciliationFile(amexFile,15,102.39,-235.03, LocalDate.of(2022, Month.OCTOBER,5), LocalDate.of(2022, Month.OCTOBER,11));
     }
 
     @Test
-    public void testFirstDirectFile() {
+    void testFirstDirectFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO fdFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -55,11 +56,11 @@ public class ReconciliationFileTest {
             }
         }
         Assertions.assertNotNull(fdFile);
-        testReconciliationFile(fdFile,18,7079, -8083.52, LocalDate.of(2022,9,12), LocalDate.of(2022,10,11));
+        testReconciliationFile(fdFile,18,7079, -8083.52, LocalDate.of(2022, Month.SEPTEMBER,12), LocalDate.of(2022, Month.OCTOBER,11));
     }
 
     @Test
-    public void testJlpFile() {
+    void testJlpFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO jlpFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -68,11 +69,11 @@ public class ReconciliationFileTest {
             }
         }
         Assertions.assertNotNull(jlpFile);
-        testReconciliationFile(jlpFile,19,10.02,-7120.36, LocalDate.of(2019,9,20), LocalDate.of(2019,10,14));
+        testReconciliationFile(jlpFile,19,10.02,-7120.36, LocalDate.of(2019, Month.SEPTEMBER,20), LocalDate.of(2019, Month.OCTOBER,14));
     }
 
     @Test
-    public void testJlp2File() {
+    void testJlp2File() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO jlpFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -81,11 +82,11 @@ public class ReconciliationFileTest {
             }
         }
         Assertions.assertNotNull(jlpFile);
-        testReconciliationFile(jlpFile,14,42.48,-699.28, LocalDate.of(2022,10,7), LocalDate.of(2022,10,10));
+        testReconciliationFile(jlpFile,14,42.48,-699.28, LocalDate.of(2022, Month.OCTOBER,7), LocalDate.of(2022, Month.OCTOBER,10));
     }
 
     @Test
-    public void testNationwideFile() {
+    void testNationwideFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO nationwideFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -94,11 +95,11 @@ public class ReconciliationFileTest {
             }
         }
         Assertions.assertNotNull(nationwideFile);
-        testReconciliationFile(nationwideFile,48,102.39,-1235.90, LocalDate.of(2022,7,29), LocalDate.of(2022,8,25));
+        testReconciliationFile(nationwideFile,48,102.39,-1235.90, LocalDate.of(2022, Month.JULY,29), LocalDate.of(2022, Month.AUGUST,25));
     }
 
     @Test
-    public void testBarclaysFile() {
+    void testBarclaysFile() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO barclaycardFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -107,11 +108,11 @@ public class ReconciliationFileTest {
             }
         }
         Assertions.assertNotNull(barclaycardFile);
-        testReconciliationFile(barclaycardFile,57,466.17,-1608.64, LocalDate.of(2023,1,5), LocalDate.of(2023,12,3));
+        testReconciliationFile(barclaycardFile,57,466.17,-1608.64, LocalDate.of(2023, Month.JANUARY,5), LocalDate.of(2023, Month.DECEMBER,3));
     }
 
     @Test
-    public void testBarclaysFile2() {
+    void testBarclaysFile2() {
         List<ReconciliationFileDTO> files = reconciliationFileManager.getFiles();
         ReconciliationFileDTO barclaycardFile = null;
         for(ReconciliationFileDTO next : files) {
@@ -120,7 +121,7 @@ public class ReconciliationFileTest {
             }
         }
         Assertions.assertNotNull(barclaycardFile);
-        testReconciliationFile(barclaycardFile,12,2,-297.34, LocalDate.of(2023,9,3), LocalDate.of(2023,9,13));
+        testReconciliationFile(barclaycardFile,12,2,-297.34, LocalDate.of(2023, Month.SEPTEMBER,3), LocalDate.of(2023, Month.SEPTEMBER,13));
     }
 
     private String getElementsForAssert(List<String> columns) {
@@ -128,21 +129,21 @@ public class ReconciliationFileTest {
     }
 
     @Test
-    public void testRegexInLine() {
+    void testRegexInLine() {
         ReconcileFileLine line = new ReconcileFileLine(1,"x,y,z");
 
         Assertions.assertEquals("x-y-z",getElementsForAssert(line.getColumns()));
     }
 
     @Test
-    public void testRegexInLine2() {
+    void testRegexInLine2() {
         ReconcileFileLine line = new ReconcileFileLine(1,"\"x,x\",y,z");
 
         Assertions.assertEquals("\"x,x\"-y-z",getElementsForAssert(line.getColumns()));
     }
 
     @Test
-    public void testRegexInLine3() {
+    void testRegexInLine3() {
         ReconcileFileLine line = new ReconcileFileLine(1,"x,x,y,z,d");
 
         Assertions.assertEquals("x-x-y-z-d",getElementsForAssert(line.getColumns()));

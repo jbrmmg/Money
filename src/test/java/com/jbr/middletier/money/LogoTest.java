@@ -18,6 +18,7 @@ import org.jdom2.*;
 import org.jdom2.input.DOMBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.xml.sax.InputSource;
@@ -34,7 +35,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @SpringBootTest(classes = MiddleTier.class)
-public class LogoTest {
+class LogoTest {
     @Autowired
     private LogoManager logoManager;
 
@@ -145,7 +146,7 @@ public class LogoTest {
     }
 
     @Test
-    public void testLogoGenerationDefault() throws IOException, SAXException, ParserConfigurationException {
+    void testLogoGenerationDefault() throws IOException, SAXException, ParserConfigurationException {
         // Check the properties of logo definition
         LogoDefinition logoDefinition = new LogoDefinition();
         logoDefinition.setLogoText("Test");
@@ -169,37 +170,33 @@ public class LogoTest {
     }
 
     @Test
-    public void testLogoGenerationJLPC() throws IOException, ParserConfigurationException, SAXException {
+    void testLogoGenerationJLPC() throws IOException, ParserConfigurationException, SAXException {
         ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("JLPC", true);
         Assertions.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),75, "5C5C5C", "003B25", "5C5C5C", null, "jl");
     }
 
     @Test
-    public void testLogoGenerationNWDE() throws IOException, ParserConfigurationException, SAXException {
+    void testLogoGenerationNWDE() throws IOException, ParserConfigurationException, SAXException {
         ScalableVectorGraphics logo = this.logoManager.getSvgLogoForAccount("NWDE", false);
         Assertions.assertNotNull(logo);
         checkLogoString(logo.getSvgAsString(),48, "FFFFFF", "004A8F", "FFFFFF", "ED1C24", "NW");
     }
 
     @Test
-    public void testCannotFindDefault() {
+    void testCannotFindDefault() {
         Optional<LogoDefinition> logo = logoDefinitionRepository.findById("DFLTI");
         Assertions.assertTrue(logo.isPresent());
         logoDefinitionRepository.delete(logo.get());
 
-        try {
-            logoManager.getSvgLogoForAccount("XXXX", false);
-            Assertions.fail();
-        } catch(IllegalStateException ex) {
-            Assertions.assertEquals("Cannot find the default logo definition.", ex.getMessage());
-        }
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> logoManager.getSvgLogoForAccount("XXXX", false));
+        Assertions.assertEquals("Cannot find the default logo definition.", ex.getMessage());
 
         logo.ifPresent(logoDefinition -> logoDefinitionRepository.save(logoDefinition));
     }
 
     @Test
-    public void testLogoDefinition() {
+    void testLogoDefinition() {
         LogoDefinition logoDefinition = new LogoDefinition();
         Assertions.assertFalse(logoDefinition.getSecondBorder());
         logoDefinition.setSecondBorder(true);
@@ -211,7 +208,7 @@ public class LogoTest {
     }
 
     @Test
-    public void testCategory() throws ParserConfigurationException, IOException, SAXException {
+    void testCategory() throws ParserConfigurationException, IOException, SAXException {
         Category category = new Category();
         category.setColour("564389");
 
@@ -253,7 +250,7 @@ public class LogoTest {
     }
 
     @Test
-    public void testPieChart() throws ParserConfigurationException, IOException, SAXException {
+    void testPieChart() throws ParserConfigurationException, IOException, SAXException {
         Category categoryFDG = new Category();
         categoryFDG.setId("FDG");
         categoryFDG.setSystemUse(false);

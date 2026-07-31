@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Configuration
 @ConfigurationProperties(prefix="money")
@@ -67,7 +68,7 @@ public class ApplicationProperties {
 
     public LocalDate getToday() {
         if(this.today == null) {
-            return LocalDate.now();
+            return LocalDate.now(ZoneId.systemDefault());
         }
 
         return today;

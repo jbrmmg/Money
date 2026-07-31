@@ -16,7 +16,6 @@ import com.jbr.middletier.money.schedule.RegularCtrl;
 import com.jbr.middletier.money.util.TransactionString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.health.Health;
@@ -29,6 +28,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.*;
 
 import static java.lang.Math.abs;
@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class MoneyTest extends Support {
+class MoneyTest extends Support {
     @Autowired
     private
     TransactionRepository transactionRepository;
@@ -101,7 +101,7 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void TestDefaultProfile() {
+    void TestDefaultProfile() {
         SpringApplication app = mock(SpringApplication.class);
 
         Assertions.assertNotNull(app);
@@ -109,13 +109,13 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void internalTransactionTest() throws Exception {
+    void internalTransactionTest() throws Exception {
         cleanUp();
 
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("FDW");
-        transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(1968, Month.MAY,24),String.class));
         transaction.setAmount(BigDecimal.valueOf(1280.32));
         transaction.setDescription("Test transaction");
 
@@ -161,13 +161,13 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void externalTransactionTest() throws Exception {
+    void externalTransactionTest() throws Exception {
         cleanUp();
 
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
         transaction.setCategoryId("FDG");
-        transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(1968, Month.MAY,24),String.class));
         transaction.setAmount(BigDecimal.valueOf(1280.32));
         transaction.setDescription("Test transaction");
 
@@ -215,17 +215,17 @@ public class MoneyTest extends Support {
 
     // Test Reconcile / Un-reconcile transaction
     @Test
-    public void reconcileTransaction() throws Exception {
+    void reconcileTransaction() throws Exception {
         cleanUp();
 
         TransactionDTO transaction1 = new TransactionDTO();
         transaction1.setAccountId("BANK");
-        transaction1.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
+        transaction1.setDate(utilityMapper.map(LocalDate.of(1968, Month.MAY,24),String.class));
         transaction1.setAmount(BigDecimal.valueOf(1280.32));
 
         TransactionDTO transaction2 = new TransactionDTO();
         transaction2.setAccountId("AMEX");
-        transaction2.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
+        transaction2.setDate(utilityMapper.map(LocalDate.of(1968, Month.MAY,24),String.class));
 
         // Set-up a transaction.
         getMockMvc().perform(post("/api/v1/transaction")
@@ -287,13 +287,13 @@ public class MoneyTest extends Support {
 
     // Test Get Transactions
     @Test
-    public void testGetTransaction() throws Exception {
+    void testGetTransaction() throws Exception {
         cleanUp();
 
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("FDG");
-        transaction.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(1968, Month.MAY,24),String.class));
         transaction.setAmount(BigDecimal.valueOf(1.23));
 
         // Create transactions in each account.
@@ -386,7 +386,7 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void testRegular() throws Exception {
+    void testRegular() throws Exception {
         cleanUp();
 
         LocalDate testDate = applicationProperties.getToday();
@@ -515,12 +515,12 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void testRegularWeekendFwd() throws Exception {
+    void testRegularWeekendFwd() throws Exception {
         cleanUp();
 
         // Move date to a saturday.
         LocalDate testDate = applicationProperties.getToday();
-        while(testDate.getDayOfWeek() != DayOfWeek.SATURDAY ) {
+        while(!DayOfWeek.SATURDAY.equals(testDate.getDayOfWeek())) {
             testDate = testDate.plusDays(1);
         }
 
@@ -583,13 +583,13 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void testRegularWeekendBwd() throws Exception {
+    void testRegularWeekendBwd() throws Exception {
         cleanUp();
 
         LocalDate testDate = applicationProperties.getToday();
 
         // Move date to a saturday.
-        while(testDate.getDayOfWeek() != DayOfWeek.SATURDAY) {
+        while(!DayOfWeek.SATURDAY.equals(testDate.getDayOfWeek())) {
             testDate = testDate.plusDays(1);
         }
 
@@ -683,43 +683,43 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void testLoadReconciliationDataJLP() throws Exception {
+    void testLoadReconciliationDataJLP() throws Exception {
         testReconciliationData("test.JLP.csv", 19, -7110.34, true);
     }
 
     @Test
-    public void testLoadReconciliationDataAMEX() throws Exception {
+    void testLoadReconciliationDataAMEX() throws Exception {
         testReconciliationData("test.AMEX.csv", 15, -132.64, false);
     }
 
     @Test
-    public void testLoadReconciliationDataBARC() throws Exception {
+    void testLoadReconciliationDataBARC() throws Exception {
         testReconciliationData("test.BARC.csv", 57, -1142.47, true);
     }
 
     @Test
-    public void testLoadReconciliationDataBank() throws Exception {
+    void testLoadReconciliationDataBank() throws Exception {
         testReconciliationData("test.FirstDirect.csv", 18, -1004.52, false);
     }
 
     @Test
-    public void testStatus() {
+    void testStatus() {
         OkStatus okStatus = OkStatus.getOkStatus();
         okStatus.setStatus("Test");
         Assertions.assertEquals("Test", okStatus.getStatus());
     }
 
     @Test
-    public void testHealth() {
+    void testHealth() {
         Health health = serviceHealthIndicator.health();
         Assertions.assertEquals(Status.UP, health.getStatus());
     }
 
     @Test
-    public void testHealthFail() {
-        CategoryRepository mockRepository = Mockito.mock(CategoryRepository.class);
+    void testHealthFail() {
+        CategoryRepository mockRepository = mock(CategoryRepository.class);
         when(mockRepository.findAll()).thenReturn(new ArrayList<>());
-        ApplicationProperties mockApplicationProperties = Mockito.mock(ApplicationProperties.class);
+        ApplicationProperties mockApplicationProperties = mock(ApplicationProperties.class);
         when(mockApplicationProperties.getServiceName())
                 .thenThrow(IllegalStateException.class)
                 .thenReturn("Fred");
@@ -730,7 +730,7 @@ public class MoneyTest extends Support {
     }
 
     @Test
-    public void testTransactionString() {
-        Assertions.assertEquals("20100522120.32", TransactionString.formattedTransactionString(LocalDate.of(2010,5,22),BigDecimal.valueOf(120.32)));
+    void testTransactionString() {
+        Assertions.assertEquals("20100522120.32", TransactionString.formattedTransactionString(LocalDate.of(2010, Month.MAY,22),BigDecimal.valueOf(120.32)));
     }
 }

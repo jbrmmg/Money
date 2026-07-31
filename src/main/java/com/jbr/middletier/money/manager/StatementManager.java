@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -79,7 +80,7 @@ public class StatementManager {
         try {
             LocalDate paymentDate = derivePaymentDate(latestDate.get(), account);
             String dateStr = paymentDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-            String description = "Automatic transfer " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String description = "Automatic transfer " + LocalDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
             TransactionDTO fromDto = new TransactionDTO();
             fromDto.setAccountId(account.getTransferAccountId());
@@ -186,12 +187,39 @@ public class StatementManager {
         return getStatements(statementId.getAccount().getId(),null);
     }
 
+    private void updateAgesForAccount(List<Statement> accountStatements) {
+        accountStatements.sort((s1, s2) -> {
+            if(s1.getId().getYear().equals(s2.getId().getYear())) {
+                return s2.getId().getMonth().compareTo(s1.getId().getMonth());
+            }
+            return Integer.compare(s2.getId().getYear(), s1.getId().getYear());
+        });
+
+        int age = 0;
+        for(Statement statement : accountStatements){
+            boolean update = false;
+            if(!statement.getLocked()) {
+                if(statement.getAge() == null || !statement.getAge().equals(0)) {
+                    statement.setAge(age);
+                    update = true;
+                }
+            } else {
+                age++;
+                if(statement.getAge() == null || !statement.getAge().equals(age)) {
+                    statement.setAge(age);
+                    update = true;
+                }
+            }
+            if(update) {
+                statementRepository.save(statement);
+            }
+        }
+    }
+
     public void checkStatementAges() {
         Map<String,List<Statement>> statements = new HashMap<>();
 
-        // Check the statement ages.
         for(Statement nextStatement : statementRepository.findAll()){
-            // If the account is closed, set the age to a high number, skip the age calculation.
             if(accountManager.getIfValid(nextStatement.getId().getAccount().getId()).map(Account::getClosed).orElse(false)) {
                 if(nextStatement.getAge() != null) {
                     nextStatement.setAge(10000);
@@ -200,61 +228,12 @@ public class StatementManager {
                 continue;
             }
 
-            // Add the statement to the map.
-            List<Statement> accountStatements;
-            if(statements.containsKey(nextStatement.getId().getAccount().getId())) {
-                accountStatements = statements.get(nextStatement.getId().getAccount().getId());
-            } else {
-                accountStatements = new ArrayList<>();
-                statements.put(nextStatement.getId().getAccount().getId(), accountStatements);
-            }
-
-            accountStatements.add(nextStatement);
+            statements.computeIfAbsent(nextStatement.getId().getAccount().getId(), k -> new ArrayList<>())
+                      .add(nextStatement);
         }
 
-        // Process the list of statements for each account.
-        for(String accountId : statements.keySet()){
-            List<Statement> accountStatements = statements.get(accountId);
-
-            // Sort the accounts in order of their data.
-            accountStatements.sort((s1,s2) -> {
-                if(s1.getId().getYear().equals(s2.getId().getYear())) {
-                    return s2.getId().getMonth().compareTo(s1.getId().getMonth());
-                }
-
-                return Integer.compare(s2.getId().getYear(), s1.getId().getYear());
-            });
-
-            // Set the age of each statement.
-            int age = 0;
-            for(Statement statement : accountStatements){
-                boolean update = false;
-
-                // Does the statement need to be updated?
-                if(!statement.getLocked()) {
-                    if(statement.getAge() == null) {
-                        statement.setAge(age);
-                        update = true;
-                    } else if (statement.getAge() != 0) {
-                        statement.setAge(age);
-                        update = true;
-                    }
-                } else {
-                    age++;
-
-                    if(statement.getAge() == null) {
-                        statement.setAge(age);
-                        update = true;
-                    } else if(statement.getAge() != age) {
-                        statement.setAge(age);
-                        update = true;
-                    }
-                }
-
-                if(update) {
-                    statementRepository.save(statement);
-                }
-            }
+        for(List<Statement> accountStatements : statements.values()){
+            updateAgesForAccount(accountStatements);
         }
     }
 
@@ -276,7 +255,7 @@ public class StatementManager {
         return getStatements(account.getId(),null);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Iterable<StatementDTO> deleteStatement(StatementDTO statement, AccountTransactionManager accountTransactionManager) throws UpdateDeleteAccountException, InvalidStatementIdException, CannotDeleteLockedStatementException, CannotDeleteLastStatementException {
         Account account = getAccount(statement);
 

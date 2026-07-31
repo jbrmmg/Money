@@ -20,7 +20,7 @@ public class DateAdjustmentUtil {
         };
 
         if (adjustmentAmt != 0) {
-            while ((date.getDayOfWeek() == DayOfWeek.SUNDAY) || (date.getDayOfWeek() == DayOfWeek.SATURDAY)) {
+            while (DayOfWeek.SUNDAY.equals(date.getDayOfWeek()) || DayOfWeek.SATURDAY.equals(date.getDayOfWeek())) {
                 date = date.plusDays(adjustmentAmt);
             }
         }

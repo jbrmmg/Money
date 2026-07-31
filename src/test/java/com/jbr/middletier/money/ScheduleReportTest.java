@@ -22,9 +22,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.Month;
 
 @SpringBootTest(classes = MiddleTier.class)
-public class ScheduleReportTest extends Support {
+class ScheduleReportTest extends Support {
     @Autowired
     public ReportGenerator reportGenerator;
     @Autowired
@@ -38,7 +39,7 @@ public class ScheduleReportTest extends Support {
     private ApplicationProperties applicationProperties;
 
     @Test
-    public void scheduleTest() throws TranscoderException, DocumentException, IOException {
+    void scheduleTest() throws TranscoderException, DocumentException, IOException {
         deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 
@@ -60,7 +61,7 @@ public class ScheduleReportTest extends Support {
                     transaction.setDescription("Test");
                     transaction.setAccount(nextAccount);
                     transaction.setAmount(BigDecimal.valueOf(10));
-                    transaction.setDate(LocalDate.of(2010,1,1));
+                    transaction.setDate(LocalDate.of(2010, Month.JANUARY,1));
 
                     transactionRepository.save(transaction);
 

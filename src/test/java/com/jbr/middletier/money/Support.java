@@ -39,7 +39,7 @@ public class Support {
     public void setConverters(HttpMessageConverter<?>[] converters) {
 
         this.mappingJackson2HttpMessageConverter = Arrays.stream(converters)
-                .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
+                .filter(MappingJackson2HttpMessageConverter.class::isInstance)
                 .findAny()
                 .orElse(null);
 

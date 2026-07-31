@@ -117,7 +117,7 @@ public class AccountTransactionManager {
         return result;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public List<TransactionDTO> createTransaction(List<TransactionDTO> transaction) throws InvalidTransactionException {
         if(transaction.size() == 1) {
             List<TransactionDTO> result =  createIndividualTransaction(transaction.get(0));
@@ -263,51 +263,47 @@ public class AccountTransactionManager {
         return result;
     }
 
+    private List<TransactionDTO> createTransactionFromReconciliation(TransactionReportDTO next) throws UpdateDeleteCategoryException, InvalidTransactionException {
+        if (next.getCategory() != null && next.getCategory().getId().equals(CategoryManager.CATEGORY_TRANSFER)) {
+            throw new UpdateDeleteCategoryException(CategoryManager.CATEGORY_TRANSFER);
+        }
+
+        TransactionDTO fromReconcile = new TransactionDTO();
+        fromReconcile.setAccountId(next.getAccount().getId());
+        fromReconcile.setAmount(next.getAmount().getValue());
+        fromReconcile.setDate(next.getDate());
+        fromReconcile.setDescription(next.getDescription());
+        if(next.getCategory() != null) {
+            fromReconcile.setCategoryId(next.getCategory().getId());
+        }
+
+        return this.createIndividualTransaction(fromReconcile);
+    }
+
     public List<TransactionDTO> updateTransactions(List<TransactionReportDTO> transactions) throws InvalidTransactionException {
         List<TransactionDTO> result = new ArrayList<>();
         boolean allFailed = true;
 
         for(TransactionReportDTO next : transactions) {
             try {
-                // Is the transaction already existing?
                 if (next.getTransactionId() != null) {
                     result.addAll(updateExistingTransaction(next));
                     allFailed = false;
                 } else if (next.getFromReconciliation() != null && next.getFromReconciliation()) {
-                    // If this is from a reconciliation, then create the transaction.
-                    // Category cannot be transfer.
-                    if (next.getCategory() != null && next.getCategory().getId().equals(CategoryManager.CATEGORY_TRANSFER)) {
-                        throw new UpdateDeleteCategoryException(CategoryManager.CATEGORY_TRANSFER);
-                    }
-
-                    TransactionDTO fromReconcile = new TransactionDTO();
-                    fromReconcile.setAccountId(next.getAccount().getId());
-                    fromReconcile.setAmount(next.getAmount().getValue());
-                    fromReconcile.setDate(next.getDate());
-                    fromReconcile.setDescription(next.getDescription());
-                    if(next.getCategory() != null) {
-                        fromReconcile.setCategoryId(next.getCategory().getId());
-                    }
-
-                    // Create the transaction from this.
-                    result.addAll(this.createIndividualTransaction(fromReconcile));
+                    result.addAll(createTransactionFromReconciliation(next));
                     allFailed = false;
                 } else {
-                    // This is an issue.
                     result.add(createErrorTransaction(next, "Invalid update - not from reconciliation and no id."));
                 }
             } catch (Exception ex) {
-                // Add to the result.
                 result.add(createErrorTransaction(next,ex.getMessage()));
             }
         }
 
-        // If they all failed then throw an exception.
         if(allFailed) {
             throw new InvalidTransactionException("None of the updates were process successfully.");
         }
 
-        // Sent the update.
         this.applicationEventPublisher.publishEvent(new UpdateTransactionEvent(this, getTransactionList(result)));
 
         return result;

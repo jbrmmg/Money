@@ -18,6 +18,7 @@ import com.jbr.middletier.money.xml.html.EmailHtml;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 @ActiveProfiles(value="emailtest")
-public class EmailTest extends Support {
+class EmailTest extends Support {
     private static final Logger LOG = LoggerFactory.getLogger(EmailTest.class);
 
     @Autowired
@@ -62,7 +64,7 @@ public class EmailTest extends Support {
     public AccountManager accountManager;
 
     @Test
-    public void testEmail() throws Exception {
+    void testEmail() throws Exception {
         EmailRequestDTO request = new EmailRequestDTO();
         request.setTo("throw@com");
         String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/email")
@@ -74,7 +76,7 @@ public class EmailTest extends Support {
     }
 
     @Test
-    public void testEmail2() throws Exception {
+    void testEmail2() throws Exception {
         EmailRequestDTO request = new EmailRequestDTO();
         request.setTo("standard@com");
 
@@ -86,7 +88,7 @@ public class EmailTest extends Support {
     }
 
     @Test
-    public void testEmailFormat() throws IOException {
+    void testEmailFormat() throws IOException {
         FinancialAmount start = new FinancialAmount(BigDecimal.valueOf(-10.02));
         List<Transaction> transactions = new ArrayList<>();
 
@@ -101,7 +103,7 @@ public class EmailTest extends Support {
         transaction.setDescription("Test");
         transaction.setCategory(category);
         transaction.setAmount(BigDecimal.valueOf(192.92));
-        transaction.setDate(LocalDate.of(2021,1,3));
+        transaction.setDate(LocalDate.of(2021, Month.JANUARY,3));
         transaction.setAccount(account);
         transactions.add(transaction);
 
@@ -109,7 +111,7 @@ public class EmailTest extends Support {
         transaction.setDescription("Test");
         transaction.setCategory(category);
         transaction.setAmount(BigDecimal.valueOf(-312.92));
-        transaction.setDate(LocalDate.of(2021,1,12));
+        transaction.setDate(LocalDate.of(2021, Month.JANUARY,12));
         transaction.setAccount(account);
         transactions.add(transaction);
 
@@ -136,7 +138,7 @@ public class EmailTest extends Support {
     }
 
     @Test
-    public void testEmail3() throws EmailGenerationException, IOException {
+    void testEmail3() throws EmailGenerationException, IOException {
         transactionRepository.deleteAll();
         statementRepository.deleteAll();
 
@@ -197,31 +199,27 @@ public class EmailTest extends Support {
         transaction.setStatement(next);
         transactionRepository.save(transaction);
 
-        TransportWrapper testWrapper = message -> {
-            try {
-                Assertions.assertNotNull(message);
-                String content = (String)message.getContent();
+        TransportWrapper testWrapper = message -> assertDoesNotThrow(() -> {
+            Assertions.assertNotNull(message);
+            String content = (String)message.getContent();
 
-                // Get the expected html
-                File expectedFile = new File("./src/test/resources/expected/email2.xml");
-                String expected = new String(Files.readAllBytes(expectedFile.toPath()));// Get the difference.
-                Diff htmlDiff = DiffBuilder.compare(expected).withTest(content).ignoreWhitespace().build();
+            // Get the expected html
+            File expectedFile = new File("./src/test/resources/expected/email2.xml");
+            String expected = new String(Files.readAllBytes(expectedFile.toPath()));// Get the difference.
+            Diff htmlDiff = DiffBuilder.compare(expected).withTest(content).ignoreWhitespace().build();
 
-                // Only the CSS should be different (this is checked separately).
-                Iterator<Difference> iterator = htmlDiff.getDifferences().iterator();
-                Difference expectedDifferent = null;
-                int differenceCount = 0;
-                while (iterator.hasNext()) {
-                    expectedDifferent = iterator.next();
-                    LOG.info(expectedDifferent.getComparison().getControlDetails().getXPath());
-                    differenceCount++;
-                }
-                Assertions.assertEquals(3,differenceCount);
-                Assertions.assertNotNull(expectedDifferent);
-            } catch (IOException e) {
-                Assertions.fail();
+            // Only the CSS should be different (this is checked separately).
+            Iterator<Difference> iterator = htmlDiff.getDifferences().iterator();
+            Difference expectedDifferent = null;
+            int differenceCount = 0;
+            while (iterator.hasNext()) {
+                expectedDifferent = iterator.next();
+                LOG.info(expectedDifferent.getComparison().getControlDetails().getXPath());
+                differenceCount++;
             }
-        };
+            Assertions.assertEquals(3,differenceCount);
+            Assertions.assertNotNull(expectedDifferent);
+        });
 
         EmailGenerator testGenerator = new EmailGenerator(
                 accountTransactionManager,

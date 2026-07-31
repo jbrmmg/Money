@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(initializers = {MoneyIT.Initializer.class})
 @ActiveProfiles(value="it")
 @Testcontainers
-public class MoneyIT extends Support  {
+class MoneyIT extends Support  {
     @Autowired
     private TransactionRepository transactionRepository;
 
@@ -61,13 +61,13 @@ public class MoneyIT extends Support  {
     }
 
     @BeforeEach
-    public void cleanUp() {
+    void cleanUp() {
         transactionRepository.deleteAll();
     }
 
 
     @Test
-    public void testBadTransaction() throws Exception {
+    void testBadTransaction() throws Exception {
         List<TransactionDTO> transactions = new ArrayList<>();
 
         TransactionDTO transaction = new TransactionDTO();

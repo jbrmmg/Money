@@ -34,6 +34,7 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -42,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 @ActiveProfiles(value="report")
-public class ReportTest extends Support {
+class ReportTest extends Support {
     @Autowired
     private TransactionRepository transactionRepository;
 
@@ -76,7 +77,7 @@ public class ReportTest extends Support {
     }
 
     @Test
-    public void testReport() throws Exception {
+    void testReport() throws Exception {
         cleanUp();
 
         // Clear the directories.
@@ -87,7 +88,7 @@ public class ReportTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY,1),String.class));
         transaction.setAmount(BigDecimal.valueOf(-10.02));
         transaction.setDescription("Testing");
 
@@ -96,7 +97,7 @@ public class ReportTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,2),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY,2),String.class));
         transaction.setAmount(BigDecimal.valueOf(-210.02));
         transaction.setDescription("Testing 1");
 
@@ -106,7 +107,7 @@ public class ReportTest extends Support {
                 .andExpect(status().isOk());
 
         transaction.setCategoryId("FDG");
-        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,2),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY,2),String.class));
         transaction.setAmount(BigDecimal.valueOf(-84.12));
         transaction.setDescription("This is a much longer description test!!");
 

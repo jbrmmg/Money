@@ -33,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -225,7 +226,7 @@ public class ReportGenerator {
         try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
             HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
                     previoustransactions,
-                    LocalDate.of(year,1,1),
+                    LocalDate.of(year, Month.JANUARY, 1),
                     applicationProperties.getReportWorking(),
                     ReportHtml.ReportType.ANNUAL);
 

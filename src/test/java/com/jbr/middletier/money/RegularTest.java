@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class RegularTest extends Support {
+class RegularTest extends Support {
     @Autowired
     private RegularRepository regularRepository;
 
@@ -31,7 +31,7 @@ public class RegularTest extends Support {
     private RegularMapper regularMapper;
 
     @BeforeEach
-    public void cleanup() {
+    void cleanup() {
         // Ensure there are no regular payments.
         regularRepository.deleteAll();
     }
@@ -50,7 +50,7 @@ public class RegularTest extends Support {
     }
 
     @Test
-    public void testNoRegulars() throws Exception {
+    void testNoRegulars() throws Exception {
         getMockMvc().perform(get("/api/v1/transaction/regulars")
                         .contentType(getContentType()))
                 .andExpect(status().isOk())
@@ -63,7 +63,7 @@ public class RegularTest extends Support {
     }
 
     @Test
-    public void testCreate() throws Exception {
+    void testCreate() throws Exception {
         RegularDTO newRegular = createTestRegular("AMEX", "HSE", "FW", BigDecimal.valueOf(102.21), "Testing", "1W", "2023-06-01");
 
         getMockMvc().perform(post("/api/v1/transaction/regulars")
@@ -80,7 +80,7 @@ public class RegularTest extends Support {
     }
 
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
         RegularDTO updateRegular = createTestRegular("BANK", "FDG", "BW", BigDecimal.valueOf(122.39), "Testing 2", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(updateRegular,Regular.class));
@@ -102,7 +102,7 @@ public class RegularTest extends Support {
     }
 
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
         RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", BigDecimal.valueOf(21.21), "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
@@ -117,7 +117,7 @@ public class RegularTest extends Support {
     }
 
     @Test
-    public void testInvalidException() throws Exception {
+    void testInvalidException() throws Exception {
         RegularDTO deleteRegular = createTestRegular("BANK", "HSE", "BW", BigDecimal.valueOf(21.21), "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(deleteRegular,Regular.class));
@@ -133,7 +133,7 @@ public class RegularTest extends Support {
     }
 
     @Test
-    public void testAlreadyExist() throws Exception {
+    void testAlreadyExist() throws Exception {
         RegularDTO createRegular = createTestRegular("BANK", "HSE", "BW", BigDecimal.valueOf(21.21), "Testing", "1M", "2023-06-01");
 
         Regular savedRegular = regularRepository.save(regularMapper.map(createRegular,Regular.class));

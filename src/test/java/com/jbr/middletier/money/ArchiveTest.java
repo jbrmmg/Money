@@ -22,6 +22,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class ArchiveTest extends Support {
+class ArchiveTest extends Support {
     private static final Logger LOG = LoggerFactory.getLogger(ArchiveTest.class);
 
     @Autowired
@@ -70,7 +71,7 @@ public class ArchiveTest extends Support {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    public void testSchedule() throws Exception {
+    void testSchedule() throws Exception {
         applicationProperties.setArchiveEnabled(true);
 
         Statement testStatement = null;
@@ -96,7 +97,7 @@ public class ArchiveTest extends Support {
 
         Transaction transaction = new Transaction();
         transaction.setAmount(BigDecimal.TEN);
-        transaction.setDate(LocalDate.of(2010,1,1));
+        transaction.setDate(LocalDate.of(2010, Month.JANUARY,1));
         transaction.setDescription("Testing");
         transaction.setAccount(account);
         transaction.setCategory(category);
@@ -162,7 +163,7 @@ public class ArchiveTest extends Support {
     }
 
     @Test
-    public void testReport() throws Exception {
+    void testReport() throws Exception {
         cleanUp();
 
         // Clear the directories.
@@ -173,7 +174,7 @@ public class ArchiveTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setDate(utilityMapper.map(LocalDate.of(2010,1,1),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY,1),String.class));
         transaction.setAmount(BigDecimal.valueOf(10.02));
         transaction.setDescription("Testing");
 

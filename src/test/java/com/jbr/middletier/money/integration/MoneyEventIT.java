@@ -34,7 +34,7 @@ import java.util.*;
 @ContextConfiguration(initializers = {MoneyEventIT.Initializer.class})
 @ActiveProfiles(value="it")
 @Testcontainers
-public class MoneyEventIT extends Support {
+class MoneyEventIT extends Support {
     private static final Logger LOG = LoggerFactory.getLogger(MoneyEventIT.class);
 
     @Autowired
@@ -73,7 +73,7 @@ public class MoneyEventIT extends Support {
     }
 
     @Test
-    public void testIndividualTransaction() throws InvalidTransactionException, InvalidTransactionIdException {
+    void testIndividualTransaction() throws InvalidTransactionException, InvalidTransactionIdException {
         LOG.info("Test transaction events.");
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
@@ -132,7 +132,7 @@ public class MoneyEventIT extends Support {
     }
 
     @Test
-    public void testTransfer() throws InvalidTransactionException, InvalidTransactionIdException {
+    void testTransfer() throws InvalidTransactionException, InvalidTransactionIdException {
         LOG.info("Test transaction transfer events.");
         List<TransactionDTO> transactions = new ArrayList<>();
         TransactionDTO transaction = new TransactionDTO();
@@ -223,7 +223,7 @@ public class MoneyEventIT extends Support {
     }
 
     @Test
-    public void testLockTransaction() throws InvalidTransactionException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidStatementIdException, StatementAlreadyLockedException, CannotDeleteLockedStatementException, UpdateDeleteAccountException, CannotDeleteLastStatementException {
+    void testLockTransaction() throws InvalidTransactionException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidStatementIdException, StatementAlreadyLockedException, CannotDeleteLockedStatementException, UpdateDeleteAccountException, CannotDeleteLastStatementException {
         LOG.info("Test lock transaction events.");
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
@@ -300,7 +300,7 @@ public class MoneyEventIT extends Support {
     }
 
     @Test
-    public void testDeleteStatement() throws InvalidTransactionException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidStatementIdException, StatementAlreadyLockedException, CannotDeleteLockedStatementException, UpdateDeleteAccountException, CannotDeleteLastStatementException {
+    void testDeleteStatement() throws InvalidTransactionException, MultipleUnlockedStatementException, InvalidTransactionIdException, InvalidStatementIdException, StatementAlreadyLockedException, CannotDeleteLockedStatementException, UpdateDeleteAccountException, CannotDeleteLastStatementException {
         LOG.info("Test delete statement transaction events.");
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
@@ -395,7 +395,7 @@ public class MoneyEventIT extends Support {
     }
 
     @Test
-    public void testReconciliationReporting() throws IOException, InvalidTransactionException, MultipleUnlockedStatementException, InvalidTransactionIdException {
+    void testReconciliationReporting() throws IOException, InvalidTransactionException, MultipleUnlockedStatementException, InvalidTransactionIdException {
         // Create a transaction that will be matched.
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");

@@ -22,10 +22,11 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class TransactionReportTest {
+class TransactionReportTest {
     @Autowired
     public TransactionMapper transactionMapper;
 
@@ -53,7 +54,7 @@ public class TransactionReportTest {
 
         Transaction result = new Transaction();
         result.setAmount(BigDecimal.valueOf(12.93));
-        result.setDate(LocalDate.of(2023,10,14));
+        result.setDate(LocalDate.of(2023, Month.OCTOBER,14));
         result.setDescription("Testing");
         result.setOppositeTransactionId(73);
         result.setAccount(testAccount);
@@ -71,8 +72,8 @@ public class TransactionReportTest {
         result.setId(1);
         result.setDescription("Test");
         result.setFrequency("1M");
-        result.setLastDate(LocalDate.of(2023,11,1));
-        result.setStart(LocalDate.of(2023,11,1));
+        result.setLastDate(LocalDate.of(2023, Month.NOVEMBER,1));
+        result.setStart(LocalDate.of(2023, Month.NOVEMBER,1));
         result.setWeekendAdj(AdjustmentType.AT_FORWARD);
 
         return result;
@@ -85,7 +86,7 @@ public class TransactionReportTest {
     private MatchData createMatch(boolean withNulls) throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         ReconciliationData reconciliationData = new ReconciliationData();
         reconciliationData.setAmount(BigDecimal.valueOf(-291.21));
-        reconciliationData.setDate(LocalDate.of(2023,9, 12));
+        reconciliationData.setDate(LocalDate.of(2023, Month.SEPTEMBER, 12));
         if(!withNulls) {
             reconciliationData.setDescription("Test Reconciliation");
             reconciliationData.setCategory(categoryManager.get("HSE"));
@@ -95,7 +96,7 @@ public class TransactionReportTest {
     }
 
     @Test
-    public void testMapperFromRegular() throws CannotDetermineNextDateException, UpdateDeleteCategoryException, UpdateDeleteAccountException {
+    void testMapperFromRegular() throws CannotDetermineNextDateException, UpdateDeleteCategoryException, UpdateDeleteAccountException {
         // Test mapping a transaction to a report transaction.
         Regular test = createRegular();
         TransactionReport transactionReport = transactionMapper.map(test,TransactionReport.class);
@@ -127,7 +128,7 @@ public class TransactionReportTest {
     }
 
     @Test
-    public void testMapperFromTransaction() throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
+    void testMapperFromTransaction() throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         // Test mapping a transaction to a report transaction.
         Account testAccount = new Account();
         testAccount.setId("BANK");
@@ -176,7 +177,7 @@ public class TransactionReportTest {
     }
 
     @Test
-    public void testMapperFromMatch() throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
+    void testMapperFromMatch() throws UpdateDeleteCategoryException, UpdateDeleteAccountException {
         // Test mapping a transaction to a report transaction.
         MatchData test = createMatchWithTransaction();
         TransactionReport transactionReport = transactionMapper.map(test,TransactionReport.class);

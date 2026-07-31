@@ -19,12 +19,15 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class TransactionTest extends Support {
+class TransactionTest extends Support {
     @Autowired
     private TransactionRepository transactionRepository;
 
@@ -35,12 +38,12 @@ public class TransactionTest extends Support {
     private TransactionMapper transactionMapper;
 
     @BeforeEach
-    public void cleanUp() {
+    void cleanUp() {
         transactionRepository.deleteAll();
     }
 
     @Test
-    public void testTransactionUpdate() {
+    void testTransactionUpdate() {
         Account account = new Account();
         account.setId("AMEX");
 
@@ -50,7 +53,7 @@ public class TransactionTest extends Support {
         Transaction testTransaction = new Transaction();
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
-        testTransaction.setDate(LocalDate.of(2010,5,1));
+        testTransaction.setDate(LocalDate.of(2010, Month.MAY,1));
         testTransaction.setAmount(BigDecimal.valueOf(201.23));
 
         testTransaction = transactionRepository.save(testTransaction);
@@ -64,11 +67,7 @@ public class TransactionTest extends Support {
         List<TransactionReportDTO> transactions = new ArrayList<>();
         transactions.add(updateTransaction);
 
-        try {
-            accountTransactionManager.updateTransactions(transactions);
-            Assertions.fail();
-        } catch (InvalidTransactionException ex) {
-            Assertions.assertEquals("None of the updates were process successfully.", ex.getMessage());
-        }
+        InvalidTransactionException ex = assertThrows(InvalidTransactionException.class, () -> accountTransactionManager.updateTransactions(transactions));
+        Assertions.assertEquals("None of the updates were process successfully.", ex.getMessage());
     }
 }

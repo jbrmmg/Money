@@ -15,9 +15,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class AccountTest extends Support {
+class AccountTest extends Support {
     @Test
-    public void getAccountTest() throws Exception {
+    void getAccountTest() throws Exception {
         // Get accounts (external), check that both categories are returned and in the correct order.
         getMockMvc().perform(get("/api/v1/accounts"))
                 .andExpect(status().isOk())
@@ -36,7 +36,7 @@ public class AccountTest extends Support {
     }
 
     @Test
-    public void getLogoTest() throws Exception {
+    void getLogoTest() throws Exception {
         getMockMvc().perform(get("/api/v1/account/logo?id=AMEX&disabled=true"))
                 .andExpect(status().isOk());
         getMockMvc().perform(get("/api/v1/account/logo?id=AMEX&disabled=false"))
@@ -65,7 +65,7 @@ public class AccountTest extends Support {
     }
 
     @Test
-    public void crudAccountTest() throws Exception {
+    void crudAccountTest() throws Exception {
         AccountDTO account = new AccountDTO();
         account.setId("XXXX");
         account.setName("Testing");
@@ -113,7 +113,7 @@ public class AccountTest extends Support {
     }
 
     @Test
-    public void addExistingTest() throws Exception {
+    void addExistingTest() throws Exception {
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
         account.setName("Testing");
@@ -129,7 +129,7 @@ public class AccountTest extends Support {
     }
 
     @Test
-    public void updateNonExistent() throws Exception {
+    void updateNonExistent() throws Exception {
         AccountDTO account = new AccountDTO();
         account.setId("XXXX");
         account.setName("Testing");
@@ -145,7 +145,7 @@ public class AccountTest extends Support {
     }
 
     @Test
-    public void deleteNonExistent() throws Exception {
+    void deleteNonExistent() throws Exception {
         AccountDTO account = new AccountDTO();
         account.setId("XXXX");
         account.setName("Testing");

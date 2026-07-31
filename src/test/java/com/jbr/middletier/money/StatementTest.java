@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
 @ActiveProfiles(value="statement")
-public class StatementTest extends Support {
+class StatementTest extends Support {
     private static final Logger LOG = LoggerFactory.getLogger(StatementTest.class);
 
     @Autowired
@@ -88,12 +89,12 @@ public class StatementTest extends Support {
 
     // Test Lock Statement
     @Test
-    public void testLockStatement() throws Exception {
+    void testLockStatement() throws Exception {
         cleanUp();
 
         TransactionDTO transaction1 = new TransactionDTO();
         transaction1.setAccountId("BANK");
-        transaction1.setDate(utilityMapper.map(LocalDate.of(1968,5,24),String.class));
+        transaction1.setDate(utilityMapper.map(LocalDate.of(1968, Month.MAY,24),String.class));
         transaction1.setAmount(BigDecimal.valueOf(1280.32));
 
         TransactionDTO transaction2 = new TransactionDTO();
@@ -202,7 +203,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testStatementAge() throws InvalidStatementIdException, StatementAlreadyLockedException {
+    void testStatementAge() throws InvalidStatementIdException, StatementAlreadyLockedException {
         cleanUp();
 
         // Create statements to test with.
@@ -248,7 +249,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testGetStatement() throws Exception {
+    void testGetStatement() throws Exception {
         cleanUp();
 
         // Check the url.
@@ -272,7 +273,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testLockInvalidAccount() throws Exception {
+    void testLockInvalidAccount() throws Exception {
         cleanUp();
 
         StatementIdDTO statementId = new StatementIdDTO("FLIP",1,2020);
@@ -288,7 +289,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testLockInvalidStatementId() throws Exception {
+    void testLockInvalidStatementId() throws Exception {
         cleanUp();
 
         StatementIdDTO statementId = new StatementIdDTO("BANK",1,2012);
@@ -301,7 +302,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testDeleteInvalidId() throws Exception {
+    void testDeleteInvalidId() throws Exception {
         cleanUp();
 
         StatementDTO statement = new StatementDTO();
@@ -325,7 +326,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testStatementAlreadyExists() throws Exception {
+    void testStatementAlreadyExists() throws Exception {
         cleanUp();
 
         StatementDTO statement = new StatementDTO();
@@ -341,7 +342,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testCreateStatement() throws Exception {
+    void testCreateStatement() throws Exception {
         cleanUp();
 
         statementRepository.deleteAll();
@@ -365,7 +366,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testException() {
+    void testException() {
         StatementDTO statement = new StatementDTO();
         statement.setAccountId("AMEX");
         statement.setMonth(1);
@@ -378,7 +379,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testAutoTransfer() throws Exception {
+    void testAutoTransfer() throws Exception {
         cleanUp();
 
         // Set the transfer details on AMEX — transferAccountId=BANK, transferDay=15.
@@ -398,7 +399,7 @@ public class StatementTest extends Support {
         // Create a transaction on AMEX (Jan 24, 2010) — payment date should be Feb 15, 2010.
         TransactionDTO amexTransaction = new TransactionDTO();
         amexTransaction.setAccountId("AMEX");
-        amexTransaction.setDate(utilityMapper.map(LocalDate.of(2010, 1, 24), String.class));
+        amexTransaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY, 24), String.class));
         amexTransaction.setAmount(BigDecimal.valueOf(-500.00));
         amexTransaction.setDescription("Test charge");
         amexTransaction.setCategoryId("FDG");
@@ -439,13 +440,13 @@ public class StatementTest extends Support {
         for (Transaction t : allTransactions) {
             if (t.getAccount().getId().equals("BANK")
                     && t.getAmount().getValue().compareTo(BigDecimal.valueOf(-500.00)) == 0
-                    && t.getDate().equals(LocalDate.of(2010, 2, 15))
+                    && t.getDate().equals(LocalDate.of(2010, Month.FEBRUARY, 15))
                     && t.getDescription().startsWith("Automatic transfer ")) {
                 foundBankTransfer = true;
             }
             if (t.getAccount().getId().equals("AMEX")
                     && t.getAmount().getValue().compareTo(BigDecimal.valueOf(500.00)) == 0
-                    && t.getDate().equals(LocalDate.of(2010, 2, 15))
+                    && t.getDate().equals(LocalDate.of(2010, Month.FEBRUARY, 15))
                     && t.getDescription().startsWith("Automatic transfer ")) {
                 foundAmexTransfer = true;
             }
@@ -459,13 +460,13 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testAutoTransferSkippedWhenNoTransferAccount() throws Exception {
+    void testAutoTransferSkippedWhenNoTransferAccount() throws Exception {
         cleanUp();
 
         // NWDE has no transfer account set — lock should complete but no transfer created.
         TransactionDTO nwdeTransaction = new TransactionDTO();
         nwdeTransaction.setAccountId("NWDE");
-        nwdeTransaction.setDate(utilityMapper.map(LocalDate.of(2010, 1, 10), String.class));
+        nwdeTransaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY, 10), String.class));
         nwdeTransaction.setAmount(BigDecimal.valueOf(200.00));
         nwdeTransaction.setDescription("Test credit");
         nwdeTransaction.setCategoryId("FDG");
@@ -500,7 +501,7 @@ public class StatementTest extends Support {
     }
 
     @Test
-    public void testAutoTransferWithWeekendAdjustment() throws Exception {
+    void testAutoTransferWithWeekendAdjustment() throws Exception {
         cleanUp();
 
         // transferDay=6, Jan 2010 statement → payment date = Feb 6, 2010 = Saturday.
@@ -521,7 +522,7 @@ public class StatementTest extends Support {
 
         TransactionDTO amexTransaction = new TransactionDTO();
         amexTransaction.setAccountId("AMEX");
-        amexTransaction.setDate(utilityMapper.map(LocalDate.of(2010, 1, 20), String.class));
+        amexTransaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY, 20), String.class));
         amexTransaction.setAmount(BigDecimal.valueOf(-300.00));
         amexTransaction.setDescription("Test charge");
         amexTransaction.setCategoryId("FDG");
@@ -554,7 +555,7 @@ public class StatementTest extends Support {
 
         boolean foundTransfer = allTransactions.stream().anyMatch(t ->
                 t.getAccount().getId().equals("BANK")
-                        && t.getDate().equals(LocalDate.of(2010, 2, 8))
+                        && t.getDate().equals(LocalDate.of(2010, Month.FEBRUARY, 8))
                         && t.getDescription().startsWith("Automatic transfer "));
         Assertions.assertTrue(foundTransfer, "Transfer on Feb 8 2010 (adjusted from Sat Feb 6) not found");
     }

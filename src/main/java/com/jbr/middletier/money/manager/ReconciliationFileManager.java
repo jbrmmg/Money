@@ -57,7 +57,7 @@ public class ReconciliationFileManager implements FileChangeListener {
         this.transactionMapper = transactionMapper;
         this.reconciliationFileRepository = reconciliationFileRepository;
         this.reconciliationFileTransactionRepository = reconciliationFileTransactionRepository;
-        this.lastUpdateTime = LocalDateTime.now();
+        this.lastUpdateTime = LocalDateTime.now(ZoneId.systemDefault());
     }
 
     private void processFile(ReconciliationFile next, TransactionSummaryData fileData) {
@@ -329,7 +329,7 @@ public class ReconciliationFileManager implements FileChangeListener {
         // Save the data.
         dbFile.ifPresent(this.reconciliationFileRepository::save);
         this.reconciliationFileTransactionRepository.saveAll(transactions);
-        this.lastUpdateTime = LocalDateTime.now();
+        this.lastUpdateTime = LocalDateTime.now(ZoneId.systemDefault());
     }
 
     public void clearFileData() {
@@ -360,7 +360,7 @@ public class ReconciliationFileManager implements FileChangeListener {
                     if(dbFile.isPresent()) {
                         this.reconciliationFileTransactionRepository.deleteById_File(dbFile.get());
                         this.reconciliationFileRepository.delete(dbFile.get());
-                        this.lastUpdateTime = LocalDateTime.now();
+                        this.lastUpdateTime = LocalDateTime.now(ZoneId.systemDefault());
                     }
 
                     LOG.info("Deleted file: {}", nextFile.getFile());

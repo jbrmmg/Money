@@ -47,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(initializers = {MoneyReportIT.Initializer.class})
 @ActiveProfiles(value="report-it")
 @Testcontainers
-public class MoneyReportIT extends Support {
+class MoneyReportIT extends Support {
     private static final Logger LOG = LoggerFactory.getLogger(MoneyReportIT.class);
 
     @Autowired
@@ -207,7 +207,7 @@ public class MoneyReportIT extends Support {
     }
 
     @BeforeEach
-    public void cleanUp() {
+    void cleanUp() {
         // Remove the default statements.
         for(Statement statement : statementRepository.findAll()) {
             if(statement.getId().getYear().equals(2010) && statement.getId().getMonth().equals(1)) {
@@ -217,7 +217,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterAll() throws Exception {
+    void testFilterAll() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
 
         MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
@@ -238,7 +238,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterDescription() throws Exception {
+    void testFilterDescription() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setDescription("sainsburys");
 
@@ -258,7 +258,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterFromRec() throws Exception {
+    void testFilterFromRec() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(true);
 
@@ -278,7 +278,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterPredicted() throws Exception {
+    void testFilterPredicted() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
         filter.setPredicted(true);
@@ -300,7 +300,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterStandard() throws Exception {
+    void testFilterStandard() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
         filter.setPredicted(false);
@@ -321,7 +321,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterNotLocked() throws Exception {
+    void testFilterNotLocked() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
         filter.setPredicted(false);
@@ -343,7 +343,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterNotLockedBank() throws Exception {
+    void testFilterNotLockedBank() throws Exception {
         AccountDTO account = new AccountDTO();
         account.setId("AMEX");
 
@@ -369,7 +369,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterCategory() throws Exception {
+    void testFilterCategory() throws Exception {
         CategoryDTO category = new CategoryDTO();
         category.setId("HSE");
         category.setName("House");
@@ -395,7 +395,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterAccount() throws Exception {
+    void testFilterAccount() throws Exception {
         AccountDTO account = new AccountDTO();
         account.setId("BANK");
 
@@ -420,7 +420,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterDate() throws Exception {
+    void testFilterDate() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
         filter.setPredicted(false);
@@ -442,7 +442,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterValue() throws Exception {
+    void testFilterValue() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
         filter.setPredicted(false);
@@ -465,7 +465,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFilterValueLimit() throws Exception {
+    void testFilterValueLimit() throws Exception {
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
         filter.setPredicted(false);
@@ -488,7 +488,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testNull() throws Exception {
+    void testNull() throws Exception {
         MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content("{}")
                         .contentType(getContentType()))
@@ -508,7 +508,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testFromString() throws Exception {
+    void testFromString() throws Exception {
         MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
                         .content("{\"accounts\":[],\"categories\":[],\"predicted\":false,\"locked\":false,\"fromReconciled\":false}")
                         .contentType(getContentType()))
@@ -525,7 +525,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testSorting() throws Exception {
+    void testSorting() throws Exception {
         List<TransactionSortDTO> transactionSortList = new ArrayList<>();
         transactionSortList.add(new TransactionSortDTO(TransactionSortField.DATE,TransactionSortType.ASCENDING));
 
@@ -553,7 +553,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testSortingAmount() throws Exception {
+    void testSortingAmount() throws Exception {
         List<TransactionSortDTO> transactionSortList = new ArrayList<>();
         transactionSortList.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.DESCENDING));
 
@@ -579,7 +579,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testSortingAccount() throws Exception {
+    void testSortingAccount() throws Exception {
         List<TransactionSortDTO> transactionSortList = new ArrayList<>();
         transactionSortList.add(new TransactionSortDTO(TransactionSortField.ACCOUNT,TransactionSortType.ASCENDING));
         transactionSortList.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.DESCENDING));
@@ -606,7 +606,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testSortingCategory() throws Exception {
+    void testSortingCategory() throws Exception {
         List<TransactionSortDTO> transactionSortList = new ArrayList<>();
         transactionSortList.add(new TransactionSortDTO(TransactionSortField.CATEGORY,TransactionSortType.ASCENDING));
         transactionSortList.add(new TransactionSortDTO(TransactionSortField.AMOUNT,TransactionSortType.DESCENDING));
@@ -633,7 +633,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void testSortingDescription() throws Exception {
+    void testSortingDescription() throws Exception {
         List<TransactionSortDTO> transactionSortList = new ArrayList<>();
         transactionSortList.add(new TransactionSortDTO(TransactionSortField.DESCRIPTION,TransactionSortType.DESCENDING));
 
@@ -659,7 +659,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void checkAddAmendAndRemoveReported() throws Exception {
+    void checkAddAmendAndRemoveReported() throws Exception {
         // Add a new transaction.
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");
@@ -743,7 +743,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void checkReconcileAndUnreconcileUpdates() throws Exception {
+    void checkReconcileAndUnreconcileUpdates() throws Exception {
         // Check the report.
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setFromReconciled(false);
@@ -820,7 +820,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void checkLockStatement() throws Exception {
+    void checkLockStatement() throws Exception {
         // Check the report.
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setPredicted(false);
@@ -889,7 +889,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void createTransactionFromRecFile() throws Exception {
+    void createTransactionFromRecFile() throws Exception {
         // Check the report.
         TransactionFilterDTO filter = new TransactionFilterDTO();
         filter.setPredicted(false);
@@ -971,7 +971,7 @@ public class MoneyReportIT extends Support {
     }
 
     @Test
-    public void checkRecIssue() throws Exception {
+    void checkRecIssue() throws Exception {
         // Add a new transaction.
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("BANK");

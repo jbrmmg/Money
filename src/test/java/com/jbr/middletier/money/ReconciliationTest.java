@@ -17,6 +17,7 @@ import com.jbr.middletier.money.reconciliation.MatchData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -24,6 +25,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = MiddleTier.class)
 @WebAppConfiguration
-public class ReconciliationTest extends Support {
+class ReconciliationTest extends Support {
     @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
@@ -50,13 +52,13 @@ public class ReconciliationTest extends Support {
     private ReconciliationFileRepository reconciliationFileRepository;
 
     @BeforeEach
-    public void cleanUp() {
+    void cleanUp() {
         transactionRepository.deleteAll();
         reconciliationRepository.deleteAll();
     }
 
     @Test
-    public void testCannotFindFile() throws Exception {
+    void testCannotFindFile() throws Exception {
         ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
         reconciliationFile.setFilename("Blah");
 
@@ -69,7 +71,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testGetFiles() throws Exception {
+    void testGetFiles() throws Exception {
         int files = fileManager.getFiles().size();
 
         getMockMvc().perform(get("/api/v1/reconciliation/files")
@@ -79,7 +81,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testLoadFile() throws Exception {
+    void testLoadFile() throws Exception {
         ReconciliationFileDTO reconciliationFile = new ReconciliationFileDTO();
 
         fileManager.getFiles().forEach(f -> {
@@ -108,7 +110,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testClearReconcile() throws Exception {
+    void testClearReconcile() throws Exception {
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
 
         getMockMvc().perform(post("/api/v1/reconciliation/load")
@@ -135,40 +137,34 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testInvalidAccountId() {
+    void testInvalidAccountId() {
+        this.reconciliationManager.clearRepositoryData();
+
+        // Temporarily break the reconciliation file data.
         ReconciliationFile updateFile = null;
-        Account account = null;
-        boolean loaded = false;
-        try {
-            this.reconciliationManager.clearRepositoryData();
-
-            // Temporarily break the reconciliation file data.
-            for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
-                updateFile = next;
-            }
-            Assertions.assertNotNull(updateFile);
-            loaded = updateFile.getLoaded();
-            updateFile.setLoaded(true);
-
-            account = updateFile.getAccount();
-            updateFile.setAccount(null);
-            reconciliationFileRepository.save(updateFile);
-
-            this.reconciliationManager.match();
-            Assertions.fail();
-        } catch(NullOrBlankAccountIdException ex) {
-            Assertions.assertEquals("Account ID not specified, reconciliation transactions required.", ex.getMessage());
+        for(ReconciliationFile next : reconciliationFileRepository.findAll()) {
+            updateFile = next;
         }
+        Assertions.assertNotNull(updateFile);
+        boolean loaded = updateFile.getLoaded();
+        updateFile.setLoaded(true);
+
+        Account account = updateFile.getAccount();
+        updateFile.setAccount(null);
+        reconciliationFileRepository.save(updateFile);
+
+        final ReconciliationFile finalUpdateFile = updateFile;
+        NullOrBlankAccountIdException ex = assertThrows(NullOrBlankAccountIdException.class, () -> this.reconciliationManager.match());
+        Assertions.assertEquals("Account ID not specified, reconciliation transactions required.", ex.getMessage());
 
         // Restore the file
-        Assertions.assertNotNull(updateFile);
-        updateFile.setLoaded(loaded);
-        updateFile.setAccount(account);
-        reconciliationFileRepository.save(updateFile);
+        finalUpdateFile.setLoaded(loaded);
+        finalUpdateFile.setAccount(account);
+        reconciliationFileRepository.save(finalUpdateFile);
     }
 
     @Test
-    public void testSetCategoryUpdate() throws IOException {
+    void testSetCategoryUpdate() throws IOException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -211,8 +207,8 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testSetTransactionCategoryUpdate() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(11), LocalDate.of(2010,5,1));
+    void testSetTransactionCategoryUpdate() {
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(11), LocalDate.of(2010, Month.MAY,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -229,8 +225,8 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testSetTransactionCategoryUpdate2() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(12), LocalDate.of(2010,5,1));
+    void testSetTransactionCategoryUpdate2() {
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(12), LocalDate.of(2010, Month.MAY,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -247,8 +243,8 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testSetTransactionCategoryUpdate3() {
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(13), LocalDate.of(2010,5,1));
+    void testSetTransactionCategoryUpdate3() {
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(13), LocalDate.of(2010, Month.MAY,1));
 
         // Set the category
         ReconcileUpdateDTO reconcileUpdate = new ReconcileUpdateDTO();
@@ -265,10 +261,10 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testSetTransactionCategoryUpdate4() {
-        Transaction testTransaction = createTransaction("AMEX", "TRF", BigDecimal.valueOf(10), LocalDate.of(2010,5,1));
+    void testSetTransactionCategoryUpdate4() {
+        Transaction testTransaction = createTransaction("AMEX", "TRF", BigDecimal.valueOf(10), LocalDate.of(2010, Month.MAY,1));
 
-        Transaction testTransactionOpposite = createTransaction("AMEX", "TRF", BigDecimal.valueOf(-10), LocalDate.of(2010,5,1));
+        Transaction testTransactionOpposite = createTransaction("AMEX", "TRF", BigDecimal.valueOf(-10), LocalDate.of(2010, Month.MAY,1));
 
         testTransaction.setOppositeTransactionId(testTransactionOpposite.getId());
         this.transactionRepository.save(testTransaction);
@@ -291,7 +287,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testSetCategoryUpdateInvalidCategory() throws IOException {
+    void testSetCategoryUpdateInvalidCategory() throws IOException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -318,25 +314,21 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void reconcileInvalidId() throws IOException, MultipleUnlockedStatementException {
+    void reconcileInvalidId() throws IOException, MultipleUnlockedStatementException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
 
-        try {
-            // There should be no transactions
-            ReconcileTransactionDTO reconcileTransaction = new ReconcileTransactionDTO();
-            reconcileTransaction.setReconcile(true);
-            reconcileTransaction.getTransactions().add(20);
-            this.reconciliationManager.reconcile(reconcileTransaction);
-            Assertions.fail();
-        } catch (InvalidTransactionIdException ex) {
-            Assertions.assertEquals("Cannot find transaction with id 20", ex.getMessage());
-        }
+        // There should be no transactions
+        ReconcileTransactionDTO reconcileTransaction = new ReconcileTransactionDTO();
+        reconcileTransaction.setReconcile(true);
+        reconcileTransaction.getTransactions().add(20);
+        InvalidTransactionIdException ex = assertThrows(InvalidTransactionIdException.class, () -> this.reconciliationManager.reconcile(reconcileTransaction));
+        Assertions.assertEquals("Cannot find transaction with id 20", ex.getMessage());
     }
 
     @Test
-    public void testMultipleUnlockedException() throws IOException, InvalidTransactionIdException {
+    void testMultipleUnlockedException() throws IOException, InvalidTransactionIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -365,19 +357,15 @@ public class ReconciliationTest extends Support {
         testTransaction.setAccount(account);
         testTransaction.setCategory(category);
         testTransaction.setAmount(BigDecimal.valueOf(1554));
-        testTransaction.setDate(LocalDate.of(2010,5,1));
+        testTransaction.setDate(LocalDate.of(2010, Month.MAY,1));
         testTransaction = this.transactionRepository.save(testTransaction);
 
-        try {
-            // There should be no transactions
-            ReconcileTransactionDTO reconcileTransaction = new ReconcileTransactionDTO();
-            reconcileTransaction.setReconcile(true);
-            reconcileTransaction.getTransactions().add(testTransaction.getId());
-            this.reconciliationManager.reconcile(reconcileTransaction);
-            Assertions.fail();
-        } catch (MultipleUnlockedStatementException ex) {
-            Assertions.assertEquals("There are multiple unlocked statements on AMEX", ex.getMessage());
-        }
+        // There should be no transactions
+        ReconcileTransactionDTO reconcileTransaction = new ReconcileTransactionDTO();
+        reconcileTransaction.setReconcile(true);
+        reconcileTransaction.getTransactions().add(testTransaction.getId());
+        MultipleUnlockedStatementException multiEx = assertThrows(MultipleUnlockedStatementException.class, () -> this.reconciliationManager.reconcile(reconcileTransaction));
+        Assertions.assertEquals("There are multiple unlocked statements on AMEX", multiEx.getMessage());
 
         this.statementRepository.delete(duplicate);
         this.transactionRepository.delete(testTransaction);
@@ -395,7 +383,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchExactly() throws IOException, NullOrBlankAccountIdException {
+    void testMatchExactly() throws IOException, NullOrBlankAccountIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -404,7 +392,7 @@ public class ReconciliationTest extends Support {
         Statement unlocked = getUnlockedStatement("AMEX");
 
         // Create a transaction
-        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(-1.9), LocalDate.of(2022,10,10));
+        Transaction testTransaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(-1.9), LocalDate.of(2022, Month.OCTOBER,10));
         testTransaction.setStatement(unlocked);
         this.transactionRepository.save(testTransaction);
 
@@ -424,13 +412,13 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchExactlyPlusRecon() throws IOException, NullOrBlankAccountIdException {
+    void testMatchExactlyPlusRecon() throws IOException, NullOrBlankAccountIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
 
         // Create a transaction
-        createTransaction("AMEX", "HSE", BigDecimal.valueOf(-1.9), LocalDate.of(2022,10,10));
+        createTransaction("AMEX", "HSE", BigDecimal.valueOf(-1.9), LocalDate.of(2022, Month.OCTOBER,10));
 
         List<MatchData> matchData = this.reconciliationManager.match();
         int setCategory = 0;
@@ -448,7 +436,7 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testMatchMoreTransactions() throws IOException, NullOrBlankAccountIdException {
+    void testMatchMoreTransactions() throws IOException, NullOrBlankAccountIdException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -456,7 +444,7 @@ public class ReconciliationTest extends Support {
         Statement unlocked = getUnlockedStatement("AMEX");
 
         // Create a transaction
-        Transaction transaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(-36), LocalDate.of(2022,10,10));
+        Transaction transaction = createTransaction("AMEX", "HSE", BigDecimal.valueOf(-36), LocalDate.of(2022, Month.OCTOBER,10));
         transaction.setStatement(unlocked);
         this.transactionRepository.save(transaction);
 
@@ -476,18 +464,14 @@ public class ReconciliationTest extends Support {
     }
 
     @Test
-    public void testFileFormatException() {
+    void testFileFormatException() {
         ReconcileFormat format = new ReconcileFormat();
         format.setId("TEST");
         format.setDescriptionColumn(6);
 
         FileFormatDescription description = new FileFormatDescription(format);
 
-        try {
-            description.getDescription(new ReconcileFileLine(1,"x,y,z"));
-            Assertions.fail("An exception should have been raised");
-        } catch(FileFormatException ex) {
-            Assertions.assertEquals("Required index out of range on line 1",ex.getMessage());
-        }
+        FileFormatException ex = assertThrows(FileFormatException.class, () -> description.getDescription(new ReconcileFileLine(1,"x,y,z")));
+        Assertions.assertEquals("Required index out of range on line 1",ex.getMessage());
     }
 }

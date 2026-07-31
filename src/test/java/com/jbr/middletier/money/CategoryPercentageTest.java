@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest(classes = MiddleTier.class)
-public class CategoryPercentageTest {
+class CategoryPercentageTest {
     @Autowired
     TransactionRepository transactionRepository;
 
@@ -37,7 +37,7 @@ public class CategoryPercentageTest {
     }
 
     @Test
-    public void singleTest() {
+    void singleTest() {
         transactionRepository.deleteAll();
 
         createTransaction("HSE",  BigDecimal.valueOf(-100));
@@ -57,7 +57,7 @@ public class CategoryPercentageTest {
     }
 
     @Test
-    public void doubleTest() {
+    void doubleTest() {
         transactionRepository.deleteAll();
 
         createTransaction("HSE", BigDecimal.valueOf(-100));
@@ -78,7 +78,7 @@ public class CategoryPercentageTest {
     }
 
     @Test
-    public void zeroPercentTest() {
+    void zeroPercentTest() {
         transactionRepository.deleteAll();
 
         createTransaction("HSE", BigDecimal.valueOf(10));
@@ -98,7 +98,7 @@ public class CategoryPercentageTest {
     }
 
     @Test
-    public void zeroPercentTest2() {
+    void zeroPercentTest2() {
         transactionRepository.deleteAll();
 
         createTransaction("WGS", BigDecimal.valueOf(-100));
@@ -118,7 +118,7 @@ public class CategoryPercentageTest {
     }
 
     @Test
-    public void multipleTest() {
+    void multipleTest() {
         transactionRepository.deleteAll();
 
         createTransaction("HSE", BigDecimal.valueOf(-100));
@@ -145,7 +145,7 @@ public class CategoryPercentageTest {
     }
 
     @Test
-    public void multipleTest2() {
+    void multipleTest2() {
         transactionRepository.deleteAll();
 
         createTransaction("HSE", BigDecimal.valueOf(-100));

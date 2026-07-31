@@ -13,7 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
-import java.util.Calendar;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Controller
 public class ArchiveManager {
@@ -62,7 +63,7 @@ public class ArchiveManager {
         LOG.info("Oldest year - {}", oldestYear);
 
         // Must keep at least 5 years.
-        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        int currentYear = LocalDate.now(ZoneId.systemDefault()).getYear();
         if(oldestYear >= currentYear - 5) {
             LOG.info("Arching skipped as not enough data in the database.");
             return;
