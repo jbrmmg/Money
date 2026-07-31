@@ -314,7 +314,7 @@ class ReconciliationTest extends Support {
     }
 
     @Test
-    void reconcileInvalidId() throws IOException, MultipleUnlockedStatementException {
+    void reconcileInvalidId() throws IOException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);
@@ -328,7 +328,7 @@ class ReconciliationTest extends Support {
     }
 
     @Test
-    void testMultipleUnlockedException() throws IOException, InvalidTransactionIdException {
+    void testMultipleUnlockedException() throws IOException {
         // load the file.
         ReconciliationFileLoadDTO reconciliationFile = getReconcileFile();
         this.reconciliationManager.loadFile(reconciliationFile);

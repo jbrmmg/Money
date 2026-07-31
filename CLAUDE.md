@@ -57,7 +57,7 @@ Managers publish Spring `ApplicationEvent`s for significant state changes (`Upda
 
 ### Reconciliation File Monitoring
 
-`ReconciliationFileMonitor` extends Spring DevTools `FileSystemWatcher` and watches the directory configured at `money.reconcile-file-location`. On startup it replays all existing files, then monitors for changes. Results are pushed to clients via Server-Sent Events at `/jbr/int/money/reconciliation/file-updates`.
+`ReconciliationFileMonitor` extends Spring DevTools `FileSystemWatcher` and watches the directory configured at `money.reconcile-file-location`. On startup it replays all existing files, then monitors for changes. Results are pushed to clients via Server-Sent Events at `/api/v1/reconciliation/file-updates`.
 
 ### Scheduled Tasks
 
@@ -68,7 +68,7 @@ Three independently controlled cron jobs, each guarded by a `money.*-enabled` fl
 
 ### API URL Structure
 
-Both `/jbr/ext/money/` and `/jbr/int/money/` prefixes expose the same underlying operations (the distinction was a historical separation of "external config" vs "internal operations" that is now largely collapsed). Most endpoints are duplicated under both prefixes.
+All endpoints are served under the `/api/v1` base path. Key routes include `/api/v1/transaction/list`, `/api/v1/accounts`, `/api/v1/categories`, `/api/v1/reconciliation/*`, etc.
 
 ## Spring Profiles
 

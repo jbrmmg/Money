@@ -5,6 +5,7 @@ import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.StatementId;
 import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
+import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 public class Support {
+    @Getter
     private MockMvc mockMvc;
 
     @SuppressWarnings("rawtypes")
@@ -78,10 +80,6 @@ public class Support {
         this.mappingJackson2HttpMessageConverter.write(
                 o, MediaType.APPLICATION_JSON, mockHttpOutputMessage);
         return mockHttpOutputMessage.getBodyAsString();
-    }
-
-    public MockMvc getMockMvc() {
-        return this.mockMvc;
     }
 
     public void reinstateStatements(StatementRepository statementRepository, AccountRepository accountRepository) {
