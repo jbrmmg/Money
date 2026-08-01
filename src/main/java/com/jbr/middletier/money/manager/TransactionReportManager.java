@@ -30,7 +30,6 @@ import org.springframework.stereotype.Controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Controller
 public class TransactionReportManager {
@@ -136,60 +135,68 @@ public class TransactionReportManager {
         }
     }
 
-    private BigDecimal openingBalanceFromAllAccounts(TransactionFilterDTO filter) {
-        BigDecimal openBalance = BigDecimal.ZERO;
+    private BigDecimal openingBalanceForAccount(TransactionReportDTO aet) {
+        String accountId = aet.getAccount().getId();
+        String aetDate = aet.getDate();
 
-        for(Account next : this.accountManager.getAllExternal()) {
-            // Is this account filtered out?
-            AtomicBoolean excludeAccount = new AtomicBoolean(true);
+        if(aet.getStatement() != null) {
+            // Scenario 1 or 2: AET is in a statement (locked or unlocked).
+            Integer year = aet.getStatement().getYear();
+            Integer month = aet.getStatement().getMonth();
 
-            if(filter.getAccounts() != null && !filter.getAccounts().isEmpty()) {
-                filter.getAccounts().forEach(a -> {
-                    if(a.getId().equals(next.getId())) {
-                        excludeAccount.set(false);
-                    }
-                });
-            } else {
-                excludeAccount.set(false);
-            }
+            Optional<Account> account = accountManager.getIfValid(accountId);
+            if(account.isEmpty()) return BigDecimal.ZERO;
 
-            if(!excludeAccount.get()) {
-                List<Statement> statement = statementManager.getLatestStatementInternal(next);
-                for(Statement nextStatement : statement) {
-                    openBalance = openBalance.add(nextStatement.getOpenBalance().getValue());
-                }
-            }
+            Optional<Statement> statement = statementManager.getStatement(account.get(), month, year);
+            if(statement.isEmpty()) return BigDecimal.ZERO;
+
+            BigDecimal priorInStatement = transactionReportRepository
+                    .sumAmountsByAccountAndStatementBeforeDate(accountId, year, month, aetDate);
+            return statement.get().getOpenBalance().getValue().add(priorInStatement);
+        } else {
+            // Scenario 3: AET has no statement — use the latest unlocked statement as the reference.
+            Optional<Account> account = accountManager.getIfValid(accountId);
+            if(account.isEmpty()) return BigDecimal.ZERO;
+
+            List<Statement> latestStatements = statementManager.getLatestStatementInternal(account.get());
+            if(latestStatements.isEmpty()) return BigDecimal.ZERO;
+
+            // Pick the most recent unlocked statement.
+            Statement latestStatement = latestStatements.stream()
+                    .max(Comparator.comparingInt(s -> s.getId().getYear() * 100 + s.getId().getMonth()))
+                    .orElse(latestStatements.get(0));
+
+            Integer year = latestStatement.getId().getYear();
+            Integer month = latestStatement.getId().getMonth();
+
+            BigDecimal priorInStatement = transactionReportRepository
+                    .sumAmountsByAccountAndStatementBeforeDate(accountId, year, month, aetDate);
+            BigDecimal priorNoStatement = transactionReportRepository
+                    .sumAmountsByAccountNoStatementBeforeDate(accountId, aetDate);
+
+            return latestStatement.getOpenBalance().getValue().add(priorInStatement).add(priorNoStatement);
         }
-
-        return openBalance;
     }
 
-    private BigDecimal openingBalanceFromAccounts(List<TransactionReportDTO> transactionData) {
-        BigDecimal openBalance = BigDecimal.ZERO;
+    private BigDecimal openingBalanceFromResult(List<TransactionReportDTO> transactionData) {
+        BigDecimal total = BigDecimal.ZERO;
+        List<String> seenAccounts = new ArrayList<>();
 
-        // Opening balance is the sum of the earliest opening balance from each account present in the data.
-        List<String> accountIds = new ArrayList<>();
-        for (TransactionReportDTO next : transactionData) {
-            // Has this account been seen?
-            if (!accountIds.contains(next.getAccount().getId()) && next.getStatement() != null && next.getStatement().getOpenBalance() != null) {
-                openBalance = openBalance.add(next.getStatement().getOpenBalance().getValue());
-                accountIds.add(next.getAccount().getId());
-            }
+        for(TransactionReportDTO next : transactionData) {
+            if(next.getAccount() == null) continue;
+            String accountId = next.getAccount().getId();
+            if(seenAccounts.contains(accountId)) continue;
+            seenAccounts.add(accountId);
+            total = total.add(openingBalanceForAccount(next));
         }
 
-        return openBalance;
+        return total;
     }
 
     private FinancialAmount calculateOpeningBalance(List<TransactionReportDTO> transactionData, TransactionFilterDTO filter) {
-        // Determine the opening balance - this is only valid if there is no filter on the following:
-        //   Value Range, Date Range, Category, Description, Predicted (true)
+        // Determine the opening balance — not valid when the result is a non-contiguous subset by date.
         if(filter.getValueRange() != null) {
             LOG.debug("No opening balance - value filter");
-            return null;
-        }
-
-        if(filter.getDateRange() != null) {
-            LOG.debug("No opening balance - date filter");
             return null;
         }
 
@@ -218,15 +225,7 @@ public class TransactionReportManager {
             return null;
         }
 
-        // If the not-locked flag is set, then use the opening balance from all the accounts that are in the filter.
-        BigDecimal openBalance;
-        if(filter.getLocked() != null && !filter.getLocked()) {
-            openBalance = openingBalanceFromAllAccounts(filter);
-        } else {
-            openBalance = openingBalanceFromAccounts(transactionData);
-        }
-
-        return new FinancialAmount(openBalance);
+        return new FinancialAmount(openingBalanceFromResult(transactionData));
     }
 
     private String calculateOpenDate(List<TransactionReportDTO> transactions) {

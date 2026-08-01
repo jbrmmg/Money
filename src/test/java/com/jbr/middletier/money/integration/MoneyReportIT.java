@@ -1072,6 +1072,105 @@ class MoneyReportIT extends Support {
     }
 
     @Test
+    void testFilterDateFromOpeningBalance() throws Exception {
+        // JBR-678: opening balance should be calculated even when a date filter is active.
+        // Filter: AMEX account only, from 2023-04-20. AMEX has no reconciliation entries
+        // and no statement-assigned transactions, so every AET hits Scenario 3 (no statement).
+        // Expected opening balance = AMEX/4/2023.openBalance(0) + sum(no-stmt AMEX before Apr-20)
+        //   = 0 + (-619.77) = -619.77
+        AccountDTO amex = new AccountDTO();
+        amex.setId("AMEX");
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setAccounts(List.of(amex));
+        filter.setPredicted(false);
+        filter.setDateRange(new DateRangeDTO("2023-04-20", null));
+
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(15)))
+                .andExpect(jsonPath("[0].type", is("OPEN_BALANCE")))
+                .andExpect(jsonPath("[0].balance.value", is(-619.77)))
+                .andExpect(jsonPath("[0].date", is("2023-04-20")))
+                .andExpect(jsonPath("[14].type", is("TODAY_BALANCE")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    void testFilterDateFromUnlockedStatementOpeningBalance() throws Exception {
+        // JBR-678 Scenario 2: AET is in the current (unlocked) statement.
+        // Filter: BANK account only, from 2023-05-01.  All April locked transactions are
+        // excluded by the date filter, so the AET for BANK lands in BANK/5/2023 (unlocked).
+        // Expected opening balance = BANK/5/2023.openBalance(620.16) + prior-in-stmt(before May-1) = 620.16
+        AccountDTO bank = new AccountDTO();
+        bank.setId("BANK");
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setAccounts(List.of(bank));
+        filter.setPredicted(false);
+        filter.setDateRange(new DateRangeDTO("2023-05-01", null));
+
+        MvcResult result = getMockMvc().perform(post("/api/v1/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("[0].type", is("OPEN_BALANCE")))
+                .andExpect(jsonPath("[0].balance.value", is(620.16)))
+                .andExpect(jsonPath("[0].date", is("2023-05-01")))
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TransactionReportDTO> transactionData = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<TransactionReportDTO>>(){});
+        logTransactionData(transactionData);
+    }
+
+    @Test
+    void testFilterDateWithCategoryNoOpeningBalance() throws Exception {
+        // JBR-678: a date filter combined with a category filter must NOT produce an opening
+        // balance (the subset is not contiguous by date so a balance would be misleading).
+        CategoryDTO hse = new CategoryDTO();
+        hse.setId("HSE");
+
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setCategories(List.of(hse));
+        filter.setDateRange(new DateRangeDTO("2023-04-20", null));
+
+        getMockMvc().perform(post("/api/v1/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.type == 'OPEN_BALANCE')]", hasSize(0)))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
+    void testFilterDateWithValueRangeNoOpeningBalance() throws Exception {
+        // JBR-678: a date filter combined with a value range filter must NOT produce an opening balance.
+        TransactionFilterDTO filter = new TransactionFilterDTO();
+        filter.setFromReconciled(false);
+        filter.setPredicted(false);
+        filter.setValueRange(new ValueRangeDTO(-20, 15));
+        filter.setDateRange(new DateRangeDTO("2023-04-20", null));
+
+        getMockMvc().perform(post("/api/v1/transaction/list")
+                        .content(this.json(filter))
+                        .contentType(getContentType()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.type == 'OPEN_BALANCE')]", hasSize(0)))
+                .andDo(MockMvcResultHandlers.print());
+    }
+
+    @Test
     void checkRecIssue() throws Exception {
         // Add a new transaction.
         TransactionDTO transaction = new TransactionDTO();
