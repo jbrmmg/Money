@@ -6,6 +6,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.primary.Account;
+import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.AccountRepository;
@@ -15,6 +16,8 @@ import com.jbr.middletier.money.manager.LogoManager;
 import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
 import com.jbr.middletier.money.xml.html.ReportHtml;
 import com.jbr.middletier.money.xml.svg.CategorySvg;
+import com.jbr.middletier.money.xml.svg.ComparisonBarChartSvg;
+import com.jbr.middletier.money.xml.svg.DonutChartSvg;
 import com.jbr.middletier.money.xml.svg.PieChartSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.apache.batik.transcoder.SVGAbstractTranscoder;
@@ -32,6 +35,7 @@ import org.thymeleaf.context.Context;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.util.Map;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -67,6 +71,20 @@ public class ReportGenerator {
         this.templateEngine = templateEngine;
     }
 
+    private Map<Category, BigDecimal> buildCategorySpendingMap(List<Transaction> transactions) {
+        Map<Category, BigDecimal> map = new HashMap<>();
+        for (Transaction t : transactions) {
+            if (t.getCategory() == null || !Boolean.TRUE.equals(t.getCategory().getExpense())) {
+                continue;
+            }
+            BigDecimal amount = t.getAmount().getValue();
+            if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                map.merge(t.getCategory(), amount.abs(), BigDecimal::add);
+            }
+        }
+        return map;
+    }
+
     private ReportPeriodData buildReportData(String title, String subtitle,
                                               List<Transaction> transactions,
                                               List<Transaction> previousTransactions) {
@@ -99,8 +117,14 @@ public class ReportGenerator {
 
         rows.sort(Comparator.comparing(TransactionRow::getDate));
 
+        Map<Category, BigDecimal> currentCategorySpending = buildCategorySpendingMap(transactions);
+        Map<Category, BigDecimal> previousCategorySpending = buildCategorySpendingMap(previousTransactions);
+
+        String donutSvg = new DonutChartSvg(transactions, totalSpending).getInlineSvgString();
+        String comparisonBarSvg = new ComparisonBarChartSvg(currentCategorySpending, previousCategorySpending).getInlineSvgString();
+
         return new ReportPeriodData(title, subtitle, totalIncome, totalSpending,
-                previousSpending, null, null, rows);
+                previousSpending, donutSvg, comparisonBarSvg, rows);
     }
 
     private void writeHtmlReport(ReportPeriodData data) throws IOException {

@@ -20,4 +20,9 @@ public class ScalableVectorGraphics {
         XMLOutputter output = new XMLOutputter(Format.getCompactFormat());
         return output.outputString(this.svg);
     }
+
+    public String getInlineSvgString() {
+        XMLOutputter output = new XMLOutputter(Format.getCompactFormat());
+        return output.outputString(this.svg.getRootElement());
+    }
 }
