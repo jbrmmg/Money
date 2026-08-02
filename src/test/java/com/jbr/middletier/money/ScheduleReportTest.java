@@ -5,6 +5,7 @@ import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Statement;
+import com.jbr.middletier.money.data.primary.StatementId;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
@@ -65,6 +66,20 @@ class ScheduleReportTest extends Support {
 
                     nextStatement.setLocked(true);
                     statementRepository.save(nextStatement);
+                }
+            }
+        }
+
+        // Add locked statements for Feb-Apr 2010 (no transactions) so that end=Apr gives eval=Jan,
+        // placing January within the [start, eval] range that regularReport will generate.
+        for (Account nextAccount : accountRepository.findAll()) {
+            if (!nextAccount.getClosed()) {
+                for (int m = 2; m <= 4; m++) {
+                    Statement s = new Statement();
+                    s.setId(new StatementId(nextAccount, 2010, m));
+                    s.setOpenBalance(java.math.BigDecimal.ZERO);
+                    s.setLocked(true);
+                    statementRepository.save(s);
                 }
             }
         }

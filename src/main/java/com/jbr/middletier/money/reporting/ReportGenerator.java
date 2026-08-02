@@ -1,7 +1,6 @@
 package com.jbr.middletier.money.reporting;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
-import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
@@ -257,49 +256,18 @@ public class ReportGenerator {
         return applicationProperties.getReportShare() + "/" + year + "/" + MONTH_NAMES.get(month - 1) + ".html";
     }
 
-    public Map<Integer, MonthStatus> getMonthStatusMap(int activeAccounts) {
-        Map<Integer, MonthStatus> monthStatusMap = new HashMap<>();
-
-        Iterable<Statement> allStatements = statementRepository.findAll();
-        for (Statement nextStatement : allStatements) {
-            if (nextStatement.getLocked()) {
-                Integer statementId = (nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth());
-                MonthStatus nextMonthStatus;
-
-                if (monthStatusMap.containsKey(statementId)) {
-                    nextMonthStatus = monthStatusMap.get(statementId);
-                } else {
-                    nextMonthStatus = new MonthStatus();
-                    nextMonthStatus.month = nextStatement.getId().getMonth();
-                    nextMonthStatus.year = nextStatement.getId().getYear();
-                    nextMonthStatus.lockedStatementCount = 0;
-                    nextMonthStatus.statementsFound = 0;
-                    nextMonthStatus.activeAccounts = activeAccounts;
-                    monthStatusMap.put(statementId, nextMonthStatus);
-                }
-
-                nextMonthStatus.lockedStatementCount++;
-                nextMonthStatus.statementsFound++;
-            }
-        }
-
-        return monthStatusMap;
-    }
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void generateReport(int year, int month) throws IOException {
         LOG.info("Generate report");
 
         createWorkingDirectories();
-        List<Transaction> transactions = transactionRepository.findByStatementIdYearAndStatementIdMonth(year, month);
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+        List<Transaction> transactions = transactionRepository.findByDateBetween(start, end);
 
-        int previousMonth = month - 1;
-        int previousYear = year;
-        if (month == 1) {
-            previousMonth = 12;
-            previousYear--;
-        }
-        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear, previousMonth);
+        LocalDate prevStart = start.minusMonths(1);
+        LocalDate prevEnd = prevStart.withDayOfMonth(prevStart.lengthOfMonth());
+        List<Transaction> previousTransactionList = transactionRepository.findByDateBetween(prevStart, prevEnd);
 
         LocalDate reportDate = LocalDate.of(year, month, 1);
         String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(reportDate);
@@ -332,8 +300,10 @@ public class ReportGenerator {
 
         createWorkingDirectories();
 
-        List<Transaction> transactions = transactionRepository.findByStatementIdYear(year);
-        List<Transaction> previousTransactions = transactionRepository.findByStatementIdYear(year - 1);
+        List<Transaction> transactions = transactionRepository.findByDateBetween(
+                LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
+        List<Transaction> previousTransactions = transactionRepository.findByDateBetween(
+                LocalDate.of(year - 1, 1, 1), LocalDate.of(year - 1, 12, 31));
 
         // Group by month for efficient per-section lookup.
         Map<Integer, List<Transaction>> byMonth = transactions.stream()
@@ -415,23 +385,42 @@ public class ReportGenerator {
             return;
         }
 
-        List<Account> accounts = new ArrayList<>();
+        Set<String> activeAccountIds = new HashSet<>();
         accountRepository.findAll().forEach(a -> {
-            if (Boolean.FALSE.equals(a.getClosed())) {
-                accounts.add(a);
+            if (!Boolean.TRUE.equals(a.getClosed())) {
+                activeAccountIds.add(a.getId());
             }
         });
 
-        for (MonthStatus nextMonthStatus : getMonthStatusMap(accounts.size()).values()) {
-            if ((nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) &&
-                    (nextMonthStatus.lockedStatementCount == nextMonthStatus.activeAccounts)) {
-                if (!Files.exists(Paths.get(getMonthFilename(nextMonthStatus.year, nextMonthStatus.month)))) {
-                    generateReport(nextMonthStatus.year, nextMonthStatus.month);
-                }
-                if (nextMonthStatus.month == 12 && !Files.exists(Paths.get(getYearFilename(nextMonthStatus.year)))) {
-                    generateAnnualReport(nextMonthStatus.year);
-                }
+        List<LocalDate> lockedDates = new ArrayList<>();
+        for (Statement s : statementRepository.findAll()) {
+            if (Boolean.TRUE.equals(s.getLocked()) &&
+                    activeAccountIds.contains(s.getId().getAccount().getId())) {
+                lockedDates.add(LocalDate.of(s.getId().getYear(), s.getId().getMonth(), 1));
             }
+        }
+
+        if (lockedDates.isEmpty()) {
+            return;
+        }
+
+        LocalDate startDate = Collections.min(lockedDates);
+        LocalDate endDate = Collections.max(lockedDates);
+        LocalDate evaluationDate = endDate.minusMonths(3);
+
+        LocalDate current = startDate;
+        while (!current.isAfter(evaluationDate)) {
+            int year = current.getYear();
+            int month = current.getMonthValue();
+
+            if (!Files.exists(Paths.get(getMonthFilename(year, month)))) {
+                generateReport(year, month);
+            }
+            if (month == 12 && !Files.exists(Paths.get(getYearFilename(year)))) {
+                generateAnnualReport(year);
+            }
+
+            current = current.plusMonths(1);
         }
     }
 

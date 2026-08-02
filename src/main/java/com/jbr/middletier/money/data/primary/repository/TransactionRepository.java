@@ -20,4 +20,6 @@ public interface TransactionRepository extends CrudRepository<Transaction, Integ
     List<Transaction> findByStatementIdYear(Integer statementYear);
 
     List<Transaction> findByAccountAndDateBeforeOrderByDateDesc(Account account, LocalDate before, Pageable pageable);
+
+    List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
 }
