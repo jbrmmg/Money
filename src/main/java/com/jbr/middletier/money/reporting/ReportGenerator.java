@@ -8,24 +8,14 @@ import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
-import com.jbr.middletier.money.manager.LogoManager;
-import com.jbr.middletier.money.xml.html.HyperTextMarkupLanguage;
-import com.jbr.middletier.money.xml.html.ReportHtml;
-import com.jbr.middletier.money.xml.svg.CategorySvg;
 import com.jbr.middletier.money.xml.svg.ComparisonBarChartSvg;
 import com.jbr.middletier.money.xml.svg.DonutChartSvg;
-import com.jbr.middletier.money.xml.svg.PieChartSvg;
-import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
-import org.apache.batik.transcoder.SVGAbstractTranscoder;
-import org.apache.batik.transcoder.TranscoderException;
+import com.jbr.middletier.money.xml.svg.MonthlyBarChartSvg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
-import org.apache.batik.transcoder.image.PNGTranscoder;
-import org.apache.batik.transcoder.TranscoderInput;
-import org.apache.batik.transcoder.TranscoderOutput;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -35,9 +25,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 public class ReportGenerator {
@@ -58,7 +48,6 @@ public class ReportGenerator {
 
     private final TransactionRepository transactionRepository;
     private final ApplicationProperties applicationProperties;
-    private final LogoManager logoManager;
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
     private final TemplateEngine templateEngine;
@@ -66,13 +55,11 @@ public class ReportGenerator {
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
                            ApplicationProperties applicationProperties,
-                           LogoManager logoManager,
                            StatementRepository statementRepository,
                            AccountRepository accountRepository,
                            TemplateEngine templateEngine) {
         this.transactionRepository = transactionRepository;
         this.applicationProperties = applicationProperties;
-        this.logoManager = logoManager;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
         this.templateEngine = templateEngine;
@@ -134,10 +121,42 @@ public class ReportGenerator {
                 previousSpending, donutSvg, comparisonBarSvg, rows);
     }
 
+    private ReportPeriodData buildSectionData(String title, List<Transaction> transactions,
+                                               List<Transaction> previousTransactions) {
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalSpending = BigDecimal.ZERO;
+        BigDecimal previousSpending = BigDecimal.ZERO;
+
+        for (Transaction t : transactions) {
+            BigDecimal amount = t.getAmount().getValue();
+            if (amount.compareTo(BigDecimal.ZERO) > 0) totalIncome = totalIncome.add(amount);
+            else totalSpending = totalSpending.add(amount.abs());
+        }
+        for (Transaction t : previousTransactions) {
+            BigDecimal amount = t.getAmount().getValue();
+            if (amount.compareTo(BigDecimal.ZERO) < 0) previousSpending = previousSpending.add(amount.abs());
+        }
+
+        Map<Category, BigDecimal> currentCat = buildCategorySpendingMap(transactions);
+        Map<Category, BigDecimal> previousCat = buildCategorySpendingMap(previousTransactions);
+
+        String donutSvg = new DonutChartSvg(transactions, totalSpending).getInlineSvgString();
+        String comparisonBarSvg = new ComparisonBarChartSvg(currentCat, previousCat).getInlineSvgString();
+
+        return new ReportPeriodData(title, "Monthly Summary", totalIncome, totalSpending,
+                previousSpending, donutSvg, comparisonBarSvg, (List<TransactionRow>) null);
+    }
+
     private String buildHtml(ReportPeriodData data) {
         Context ctx = new Context();
         ctx.setVariable("data", data);
         return templateEngine.process("report/monthly", ctx);
+    }
+
+    private String buildAnnualHtml(ReportPeriodData data) {
+        Context ctx = new Context();
+        ctx.setVariable("data", data);
+        return templateEngine.process("report/annual", ctx);
     }
 
     private void writeHtmlDebug(String html) throws IOException {
@@ -149,84 +168,15 @@ public class ReportGenerator {
         LOG.info("Debug HTML written to {}", applicationProperties.getHtmlFilename());
     }
 
-    private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
-        String pieChartFile = applicationProperties.getReportWorking() + "/pie.svg";
-        try(PrintWriter pie = new PrintWriter(pieChartFile)) {
-            ScalableVectorGraphics pieChart = new PieChartSvg(transactions);
-            pie.write(pieChart.getSvgAsString());
-        }
-
-        createPngFromSvg(pieChartFile,applicationProperties.getReportWorking() + "/pie-" + type +".png", 1000, 1000);
-    }
-
-    private void createPngFromSvg(String svgFilename, String pngFilename, float height, float width) throws IOException, TranscoderException {
-        String svgUriInput = Paths.get(svgFilename).toUri().toURL().toString();
-        TranscoderInput inputSvgImage = new TranscoderInput(svgUriInput);
-        OutputStream pngOstream = Files.newOutputStream(Paths.get(pngFilename));
-        TranscoderOutput outputPngImage = new TranscoderOutput(pngOstream);
-        PNGTranscoder myConverter = new PNGTranscoder();
-        myConverter.addTranscodingHint(SVGAbstractTranscoder.KEY_WIDTH,width);
-        myConverter.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT,height);
-        myConverter.transcode(inputSvgImage, outputPngImage);
-        pngOstream.flush();
-        pngOstream.close();
-    }
-
-    private void createAccountImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
-        for(Transaction nextTransactions: transactions) {
-            File pngFile = new File(workingDirectory,nextTransactions.getAccount().getId() + ".png");
-
-            if(!pngFile.exists()) {
-                File svgFile = new File(workingDirectory, nextTransactions.getAccount().getId() + ".svg");
-                try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
-                    svgWriter.write(logoManager.getSvgLogoForAccount(nextTransactions.getAccount().getId(),false).getSvgAsString());
-                }
-
-                createPngFromSvg(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg",
-                        workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png",
-                        100,
-                        100);
-            }
-        }
-    }
-
-    private void createCategoryImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
-        for(Transaction nextTransactions: transactions) {
-            File pngFile = new File(workingDirectory,nextTransactions.getCategory().getId() + ".png");
-
-            if(!pngFile.exists()) {
-                File svgFile = new File(workingDirectory, nextTransactions.getCategory().getId() + ".svg");
-                try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
-                    ScalableVectorGraphics categorySvg = new CategorySvg(nextTransactions.getCategory());
-                    svgWriter.write(categorySvg.getSvgAsString());
-                }
-
-                createPngFromSvg(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg",
-                        workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png",
-                        100,
-                        100);
-            }
-        }
-    }
-
     private void createWorkingDirectories() {
-        if(!Files.exists(Paths.get(applicationProperties.getReportWorking()))) {
+        if (!Files.exists(Paths.get(applicationProperties.getReportWorking()))) {
             //noinspection ResultOfMethodCallIgnored
             new File(applicationProperties.getReportWorking()).mkdirs();
         }
-
-        if(!Files.exists(Paths.get(applicationProperties.getReportShare()))) {
+        if (!Files.exists(Paths.get(applicationProperties.getReportShare()))) {
             //noinspection ResultOfMethodCallIgnored
             new File(applicationProperties.getReportShare()).mkdirs();
         }
-    }
-
-    private void createImages(List<Transaction> transactions) throws IOException, TranscoderException {
-        LOG.info("Create the images for accounts.");
-        createAccountImages(applicationProperties.getReportWorking(),transactions);
-
-        LOG.info("Create the images for categories.");
-        createCategoryImages(applicationProperties.getReportWorking(),transactions);
     }
 
     private void generateYearIndex(int year) throws IOException {
@@ -243,7 +193,6 @@ public class ReportGenerator {
         if (Files.exists(Paths.get(yearDir + "/annual.html"))) {
             sb.append("  <li><a href=\"annual.html\">Annual Report &#8211; ").append(year).append("</a></li>\n");
         }
-
         for (int m = 1; m <= 12; m++) {
             String monthFile = MONTH_NAMES.get(m - 1) + ".html";
             if (Files.exists(Paths.get(yearDir + "/" + monthFile))) {
@@ -288,11 +237,9 @@ public class ReportGenerator {
         sb.append("  <style>").append(INDEX_CSS).append("</style>\n");
         sb.append("</head>\n<body>\n");
         sb.append("<h1>Financial Reports</h1>\n<ul>\n");
-
         for (int year : years) {
             sb.append("  <li><a href=\"").append(year).append("/index.html\">").append(year).append("</a></li>\n");
         }
-
         sb.append("</ul>\n</body>\n</html>\n");
 
         try (OutputStreamWriter writer = new OutputStreamWriter(
@@ -310,16 +257,16 @@ public class ReportGenerator {
         return applicationProperties.getReportShare() + "/" + year + "/" + MONTH_NAMES.get(month - 1) + ".html";
     }
 
-    public Map<Integer,MonthStatus> getMonthStatusMap(int activeAccounts) {
-        Map<Integer,MonthStatus> monthStatusMap = new HashMap<>();
+    public Map<Integer, MonthStatus> getMonthStatusMap(int activeAccounts) {
+        Map<Integer, MonthStatus> monthStatusMap = new HashMap<>();
 
         Iterable<Statement> allStatements = statementRepository.findAll();
-        for(Statement nextStatement: allStatements) {
-            if(nextStatement.getLocked()) {
+        for (Statement nextStatement : allStatements) {
+            if (nextStatement.getLocked()) {
                 Integer statementId = (nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth());
                 MonthStatus nextMonthStatus;
 
-                if(monthStatusMap.containsKey(statementId)) {
+                if (monthStatusMap.containsKey(statementId)) {
                     nextMonthStatus = monthStatusMap.get(statementId);
                 } else {
                     nextMonthStatus = new MonthStatus();
@@ -328,8 +275,7 @@ public class ReportGenerator {
                     nextMonthStatus.lockedStatementCount = 0;
                     nextMonthStatus.statementsFound = 0;
                     nextMonthStatus.activeAccounts = activeAccounts;
-
-                    monthStatusMap.put(statementId,nextMonthStatus);
+                    monthStatusMap.put(statementId, nextMonthStatus);
                 }
 
                 nextMonthStatus.lockedStatementCount++;
@@ -357,16 +303,14 @@ public class ReportGenerator {
 
         LocalDate reportDate = LocalDate.of(year, month, 1);
         String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(reportDate);
-        String subtitle = "Monthly Financial Report";
 
-        ReportPeriodData data = buildReportData(title, subtitle, transactions, previousTransactionList);
+        ReportPeriodData data = buildReportData(title, "Monthly Financial Report", transactions, previousTransactionList);
         String html = buildHtml(data);
 
         if (applicationProperties.isReportDebugHtml()) {
             writeHtmlDebug(html);
         }
 
-        // Write HTML into the archive directory structure.
         String yearDir = applicationProperties.getReportShare() + "/" + year;
         if (!Files.exists(Paths.get(yearDir))) {
             new File(yearDir).mkdirs();
@@ -382,75 +326,109 @@ public class ReportGenerator {
         generateRootIndex();
     }
 
-    public void generateAnnualReport(int year) throws IOException, TranscoderException {
-        LOG.info("Generate annual report");
-
-        List<Transaction> transactions = transactionRepository.findByStatementIdYear(year);
-        List<Transaction> previoustransactions = transactionRepository.findByStatementIdYear(year - 1);
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void generateAnnualReport(int year) throws IOException {
+        LOG.info("Generate annual report for {}", year);
 
         createWorkingDirectories();
 
-        File htmlFile = new File(applicationProperties.getHtmlFilename());
-        try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
-            HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
-                    previoustransactions,
-                    LocalDate.of(year, Month.JANUARY, 1),
-                    applicationProperties.getReportWorking(),
-                    ReportHtml.ReportType.ANNUAL);
+        List<Transaction> transactions = transactionRepository.findByStatementIdYear(year);
+        List<Transaction> previousTransactions = transactionRepository.findByStatementIdYear(year - 1);
 
-            writer2.println(reportHtml.getHtmlAsString());
+        // Group by month for efficient per-section lookup.
+        Map<Integer, List<Transaction>> byMonth = transactions.stream()
+                .collect(Collectors.groupingBy(t -> t.getDate().getMonthValue()));
+        Map<Integer, List<Transaction>> prevByMonth = previousTransactions.stream()
+                .collect(Collectors.groupingBy(t -> t.getDate().getMonthValue()));
+
+        List<MonthlyBarChartSvg.MonthData> barData = new ArrayList<>();
+        List<ReportPeriodData> monthSections = new ArrayList<>();
+        BigDecimal annualIncome = BigDecimal.ZERO;
+        BigDecimal annualSpending = BigDecimal.ZERO;
+
+        for (int month = 1; month <= 12; month++) {
+            List<Transaction> monthTrans = byMonth.getOrDefault(month, Collections.emptyList());
+            List<Transaction> prevMonthTrans = (month == 1)
+                    ? prevByMonth.getOrDefault(12, Collections.emptyList())
+                    : byMonth.getOrDefault(month - 1, Collections.emptyList());
+
+            BigDecimal monthIncome = BigDecimal.ZERO;
+            BigDecimal monthSpending = BigDecimal.ZERO;
+            for (Transaction t : monthTrans) {
+                BigDecimal amount = t.getAmount().getValue();
+                if (amount.compareTo(BigDecimal.ZERO) > 0) {
+                    monthIncome = monthIncome.add(amount);
+                    annualIncome = annualIncome.add(amount);
+                } else {
+                    monthSpending = monthSpending.add(amount.abs());
+                    annualSpending = annualSpending.add(amount.abs());
+                }
+            }
+            barData.add(new MonthlyBarChartSvg.MonthData(monthIncome, monthSpending));
+
+            String sectionTitle = DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of(year, month, 1));
+            monthSections.add(buildSectionData(sectionTitle, monthTrans, prevMonthTrans));
         }
 
-        createImages(transactions);
-        createImages(previoustransactions);
-        createPieChart(transactions,"yr");
-
-        for(int i = 0; i < 12; i++) {
-            createPieChart(transactions, String.valueOf(i));
+        BigDecimal prevAnnualSpending = BigDecimal.ZERO;
+        for (Transaction t : previousTransactions) {
+            BigDecimal amount = t.getAmount().getValue();
+            if (amount.compareTo(BigDecimal.ZERO) < 0) prevAnnualSpending = prevAnnualSpending.add(amount.abs());
         }
 
-        // Write placeholder to archive so the existence check passes (full HTML in Stage 4).
+        String monthlyBarSvg = new MonthlyBarChartSvg(barData).getInlineSvgString();
+        Map<Category, BigDecimal> currentCat = buildCategorySpendingMap(transactions);
+        Map<Category, BigDecimal> previousCat = buildCategorySpendingMap(previousTransactions);
+        String donutSvg = new DonutChartSvg(transactions, annualSpending).getInlineSvgString();
+        String comparisonBarSvg = new ComparisonBarChartSvg(currentCat, previousCat).getInlineSvgString();
+
+        ReportPeriodData annualData = new ReportPeriodData(
+                year + " Annual Report", "Annual Financial Report",
+                annualIncome, annualSpending, prevAnnualSpending,
+                donutSvg, comparisonBarSvg,
+                monthlyBarSvg, monthSections);
+
+        String html = buildAnnualHtml(annualData);
+
+        if (applicationProperties.isReportDebugHtml()) {
+            writeHtmlDebug(html);
+        }
+
         String yearDir = applicationProperties.getReportShare() + "/" + year;
         if (!Files.exists(Paths.get(yearDir))) {
-            //noinspection ResultOfMethodCallIgnored
             new File(yearDir).mkdirs();
         }
         String annualPath = getYearFilename(year);
         try (OutputStreamWriter writer = new OutputStreamWriter(
                 Files.newOutputStream(Paths.get(annualPath)), StandardCharsets.UTF_8)) {
-            writer.write("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"/><title>"
-                    + year + " Annual Report</title></head><body>"
-                    + "<h1>" + year + " Annual Report</h1>"
-                    + "<p>Full annual report will be available in Stage 4.</p>"
-                    + "</body></html>\n");
+            writer.write(html);
         }
-        LOG.info("Annual report placeholder written to {}", annualPath);
+        LOG.info("Annual report written to {}", annualPath);
 
         generateYearIndex(year);
         generateRootIndex();
     }
 
     @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
-    public void regularReport() throws IOException, TranscoderException {
-        if(!applicationProperties.getReportEnabled()) {
+    public void regularReport() throws IOException {
+        if (!applicationProperties.getReportEnabled()) {
             return;
         }
 
         List<Account> accounts = new ArrayList<>();
         accountRepository.findAll().forEach(a -> {
-            if(Boolean.FALSE.equals(a.getClosed())) {
+            if (Boolean.FALSE.equals(a.getClosed())) {
                 accounts.add(a);
             }
         });
 
-        for(MonthStatus nextMonthStatus: getMonthStatusMap(accounts.size()).values()) {
-            if((nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) &&
-                    (nextMonthStatus.lockedStatementCount == nextMonthStatus.activeAccounts) ){
-                if(!Files.exists(Paths.get(getMonthFilename(nextMonthStatus.year, nextMonthStatus.month)))) {
-                    generateReport(nextMonthStatus.year,nextMonthStatus.month);
+        for (MonthStatus nextMonthStatus : getMonthStatusMap(accounts.size()).values()) {
+            if ((nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) &&
+                    (nextMonthStatus.lockedStatementCount == nextMonthStatus.activeAccounts)) {
+                if (!Files.exists(Paths.get(getMonthFilename(nextMonthStatus.year, nextMonthStatus.month)))) {
+                    generateReport(nextMonthStatus.year, nextMonthStatus.month);
                 }
-
-                if(nextMonthStatus.month == 12 && !Files.exists(Paths.get(getYearFilename(nextMonthStatus.year)))) {
+                if (nextMonthStatus.month == 12 && !Files.exists(Paths.get(getYearFilename(nextMonthStatus.year)))) {
                     generateAnnualReport(nextMonthStatus.year);
                 }
             }
@@ -460,20 +438,20 @@ public class ReportGenerator {
     public boolean reportsGeneratedForYear(int year) {
         LOG.info("Checking - {}/{}", applicationProperties.getReportShare(), year);
 
-        if(!Files.exists(Paths.get(applicationProperties.getReportShare() + "/" + year))) {
+        if (!Files.exists(Paths.get(applicationProperties.getReportShare() + "/" + year))) {
             return false;
         }
 
         String yearFilename = getYearFilename(year);
         LOG.info("Checking - {}", yearFilename);
-        if(!Files.exists(Paths.get(yearFilename))) {
+        if (!Files.exists(Paths.get(yearFilename))) {
             return false;
         }
 
-        for(int month = 0; month < 12; month++) {
+        for (int month = 0; month < 12; month++) {
             String monthFilename = getMonthFilename(year, month + 1);
             LOG.info("Checking - {}", monthFilename);
-            if(!Files.exists(Paths.get(monthFilename))) {
+            if (!Files.exists(Paths.get(monthFilename))) {
                 return false;
             }
         }

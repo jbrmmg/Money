@@ -4,15 +4,10 @@ import com.helger.css.ECSSVersion;
 import com.helger.css.decl.*;
 import com.helger.css.reader.CSSReader;
 import com.jbr.middletier.MiddleTier;
-import com.jbr.middletier.money.data.primary.Account;
-import com.jbr.middletier.money.data.primary.Category;
 import com.jbr.middletier.money.data.primary.LogoDefinition;
-import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.LogoDefinitionRepository;
 import com.jbr.middletier.money.manager.LogoManager;
 import com.jbr.middletier.money.utils.CssAssertHelper;
-import com.jbr.middletier.money.xml.svg.CategorySvg;
-import com.jbr.middletier.money.xml.svg.PieChartSvg;
 import com.jbr.middletier.money.xml.svg.ScalableVectorGraphics;
 import org.jdom2.*;
 import org.jdom2.input.DOMBuilder;
@@ -29,10 +24,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @SpringBootTest(classes = MiddleTier.class)
 class LogoTest {
@@ -207,130 +200,4 @@ class LogoTest {
         Assertions.assertEquals("Test", logoDefinition.getId());
     }
 
-    @Test
-    void testCategory() throws ParserConfigurationException, IOException, SAXException {
-        Category category = new Category();
-        category.setColour("564389");
-
-        ScalableVectorGraphics categorySvg = new CategorySvg(category);
-        Assertions.assertNotNull(categorySvg);
-
-        String xml = categorySvg.getSvgAsString();
-
-        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        InputSource is = new InputSource();
-        is.setCharacterStream(new StringReader(xml));
-        org.w3c.dom.Document  document = db.parse(is);
-
-        Document domDocument = new DOMBuilder().build(document);
-        Element root = domDocument.getRootElement();
-
-        Assertions.assertEquals("100%", root.getAttribute("height").getValue());
-        Assertions.assertEquals("100%", root.getAttribute("width").getValue());
-        Assertions.assertEquals("0 0 120 120", root.getAttribute("viewBox").getValue());
-
-        for(Element nextElement : root.getChildren()) {
-            Assertions.assertEquals("circle", nextElement.getName());
-
-            Assertions.assertEquals("60", nextElement.getAttribute("cx").getValue());
-            Assertions.assertEquals("52", nextElement.getAttribute("cy").getValue());
-            Assertions.assertEquals("44", nextElement.getAttribute("r").getValue());
-            Assertions.assertEquals("stroke:#006600; fill:#564389;", nextElement.getAttribute("style").getValue());
-        }
-    }
-
-    private String getAttributeValue(Element element, String attributeName) {
-        return element.getAttributeValue(attributeName);
-    }
-
-    private String getAttributesCheckString(Element element, String... attributes) {
-        return Arrays.stream(attributes)
-                .map(e -> getAttributeValue(element,e))
-                .collect(Collectors.joining("-"));
-    }
-
-    @Test
-    void testPieChart() throws ParserConfigurationException, IOException, SAXException {
-        Category categoryFDG = new Category();
-        categoryFDG.setId("FDG");
-        categoryFDG.setSystemUse(false);
-        categoryFDG.setColour("FFFF00");
-        categoryFDG.setExpense(true);
-
-        Category categoryHSE = new Category();
-        categoryHSE.setId("HSE");
-        categoryHSE.setSystemUse(false);
-        categoryHSE.setColour("9966FF");
-        categoryHSE.setExpense(true);
-
-        Account account = new Account();
-        account.setId("BANK");
-
-        Transaction transaction1 = new Transaction();
-        transaction1.setCategory(categoryHSE);
-        transaction1.setAccount(account);
-        transaction1.setAmount(BigDecimal.valueOf(-10.02));
-        transaction1.setDescription("Test");
-
-        Transaction transaction2 = new Transaction();
-        transaction2.setCategory(categoryHSE);
-        transaction2.setAccount(account);
-        transaction2.setAmount(BigDecimal.valueOf(-210.02));
-        transaction2.setDescription("Test");
-
-        Transaction transaction3 = new Transaction();
-        transaction3.setCategory(categoryFDG);
-        transaction3.setAccount(account);
-        transaction3.setAmount(BigDecimal.valueOf(-84.12));
-        transaction3.setDescription("Test");
-
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.add(transaction1);
-        transactions.add(transaction2);
-        transactions.add(transaction3);
-
-        ScalableVectorGraphics pieChartSvg = new PieChartSvg(transactions);
-        String pieChart = pieChartSvg.getSvgAsString();
-
-        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        InputSource is = new InputSource();
-        is.setCharacterStream(new StringReader(pieChart));
-        org.w3c.dom.Document  document = db.parse(is);
-
-        Document domDocument = new DOMBuilder().build(document);
-        Element root = domDocument.getRootElement();
-
-        Assertions.assertEquals("0 0 10000 10000", root.getAttribute("viewBox").getValue());
-
-        for(Element nextElement : root.getChildren()) {
-            if(nextElement.getName().equals("circle")) {
-                if(nextElement.getAttribute("id").getValue().equals("BCKG")) {
-                    Assertions.assertEquals("5000-5000-5000-white", getAttributesCheckString(nextElement,"cx","cy","r","fill"));
-                } else if (nextElement.getAttribute("id").getValue().equals("FDG")) {
-                    Assertions.assertEquals("5000-5000-2500-none-#FFFF00-5000-15707.963268 15707.963268-rotate(-90) translate(-10000)",
-                            getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
-                } else if (nextElement.getAttribute("id").getValue().equals("HSE")) {
-                    Assertions.assertEquals("5000-5000-2500-none-#9966FF-5000-11363.140628 15707.963268-rotate(-90) translate(-10000)",
-                            getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width","stroke-dasharray","transform"));
-                } else if (nextElement.getAttribute("id").getValue().equals("OUTL")) {
-                    Assertions.assertEquals("5000-5000-5000-none-black-20",
-                            getAttributesCheckString(nextElement,"cx","cy","r","fill","stroke","stroke-width"));
-                } else {
-                    Assertions.fail();
-                }
-            } else if (nextElement.getName().equals("text")) {
-                if (nextElement.getAttribute("id").getValue().equals("FDG-txt")) {
-                    Assertions.assertEquals("#000000-600px-start-1334.428028-1901.035315-rotate(40.212 1334.428028,1901.035315)",
-                            getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
-                } else if (nextElement.getAttribute("id").getValue().equals("HSE-txt")) {
-                    Assertions.assertEquals("#000000-1200px-end-8665.571972-8098.964685-rotate(40.212 8665.571972,8098.964685)",
-                            getAttributesCheckString(nextElement,"fill","font-size","text-anchor","x","y","transform"));
-                } else {
-                    Assertions.fail();
-                }
-            } else {
-                Assertions.fail();
-            }
-        }
-    }
 }

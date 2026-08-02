@@ -6,7 +6,6 @@ import com.jbr.middletier.money.manager.ArchiveManager;
 import com.jbr.middletier.money.reporting.ReportGenerator;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.apache.batik.transcoder.TranscoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +42,7 @@ public class ArchiveAndReportController {
     }
 
     @PostMapping(path="/transaction/annual-report")
-    public StatusDTO annualReport(@Valid @RequestBody ArchiveOrReportRequestDTO report) throws TranscoderException, IOException {
+    public StatusDTO annualReport(@Valid @RequestBody ArchiveOrReportRequestDTO report) throws IOException {
         LOG.info("Report Controller - request report (Annual).");
         reportGenerator.generateAnnualReport(report.getYear());
         return StatusDTO.OK;

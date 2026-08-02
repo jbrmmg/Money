@@ -19,7 +19,6 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -65,7 +64,7 @@ class AnnualReportTest extends Support {
         TransactionDTO transaction = new TransactionDTO();
         transaction.setAccountId("AMEX");
         transaction.setCategoryId("HSE");
-        transaction.setDate(utilityMapper.map(LocalDate.of(2010, Month.JANUARY,1),String.class));
+        transaction.setDate(utilityMapper.map(LocalDate.of(2010, 1, 1),String.class));
         transaction.setAmount(BigDecimal.valueOf(10.02));
         transaction.setDescription("Testing");
 
@@ -104,12 +103,7 @@ class AnnualReportTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        // Old pipeline still creates working-directory artefacts for the annual report.
-        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.png").toPath()));
-        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.svg").toPath()));
-        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.png").toPath()));
-        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.svg").toPath()));
-        // Annual HTML placeholder should be written to the archive.
+        // Annual HTML should be written to the archive.
         Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/annual.html").toPath()));
         Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/index.html").toPath()));
         Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/index.html").toPath()));

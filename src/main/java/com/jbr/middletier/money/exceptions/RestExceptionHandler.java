@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.exceptions;
 
-import org.apache.batik.transcoder.TranscoderException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -73,11 +72,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(EmailGenerationException.class)
     protected ResponseEntity<Object> handleEmailGenerationException(EmailGenerationException ex) {
         return buildResponseEntity(ex);
-    }
-
-    @ExceptionHandler(TranscoderException.class)
-    protected ResponseEntity<Object> handleTranscoderException(TranscoderException ex) {
-        return buildResponseEntity(new MoneyException(HttpStatus.FAILED_DEPENDENCY, ex));
     }
 
     @ExceptionHandler(IOException.class)

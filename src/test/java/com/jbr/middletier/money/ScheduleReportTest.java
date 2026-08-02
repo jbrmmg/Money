@@ -10,7 +10,6 @@ import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.reporting.ReportGenerator;
-import org.apache.batik.transcoder.TranscoderException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +37,7 @@ class ScheduleReportTest extends Support {
     private ApplicationProperties applicationProperties;
 
     @Test
-    void scheduleTest() throws TranscoderException, IOException {
+    void scheduleTest() throws IOException {
         deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${data.title}">Annual Report</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #333333;
+            background: #ffffff;
+            padding: 24px;
+        }
+
+        /* ── Header ── */
+        .report-header {
+            background-color: #1a237e;
+            color: #ffffff;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .report-header h1 {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .report-header .subtitle {
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        /* ── KPI strip ── */
+        .kpi-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 12px 0;
+            margin-bottom: 20px;
+        }
+        .kpi-cell {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 14px 16px;
+            text-align: center;
+            width: 25%;
+            background: #fafafa;
+        }
+        .kpi-label {
+            font-size: 10px;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .kpi-value   { font-size: 22px; font-weight: bold; }
+        .income      { color: #2e7d32; }
+        .spending    { color: #c62828; }
+        .net-pos     { color: #2e7d32; }
+        .net-neg     { color: #c62828; }
+        .vs-down     { color: #2e7d32; font-size: 20px; }
+        .vs-up       { color: #c62828; font-size: 20px; }
+        .vs-na       { color: #999999; font-size: 18px; }
+
+        /* ── Annual bar chart ── */
+        .annual-bar-chart {
+            margin-bottom: 20px;
+        }
+        .annual-bar-chart svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* ── Charts area (donut + comparison) ── */
+        .charts-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 12px 0;
+            margin-bottom: 20px;
+        }
+        .chart-left  { width: 60%; vertical-align: top; }
+        .chart-right { width: 40%; vertical-align: top; }
+        .chart-left  > div, .chart-right > div { width: 100%; }
+        .chart-left  svg { display: block; width: 65%;  height: auto; }
+        .chart-right svg { display: block; width: 100%; height: auto; }
+        .chart-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #555555;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        /* ── Month section heading ── */
+        .section-heading {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a237e;
+            border-bottom: 2px solid #1a237e;
+            padding-bottom: 6px;
+            margin-bottom: 14px;
+        }
+
+        /* ── Page break ── */
+        .page-break {
+            page-break-after: always;
+            border-top: 1px solid #e0e0e0;
+            margin: 24px 0;
+        }
+
+        /* ── Footer ── */
+        .report-footer {
+            margin-top: 24px;
+            text-align: right;
+            font-size: 9px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Annual Summary Header ── -->
+<div class="report-header">
+    <h1 th:text="${data.title}">2024 Annual Report</h1>
+    <div class="subtitle" th:text="${data.subtitle}">Annual Financial Report</div>
+</div>
+
+<!-- ── Annual KPI Summary Strip ── -->
+<table class="kpi-table">
+    <tr>
+        <td class="kpi-cell">
+            <div class="kpi-label">Total Income</div>
+            <div class="kpi-value income" th:text="${data.totalIncomeFormatted}">£0.00</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">Total Spending</div>
+            <div class="kpi-value spending" th:text="${data.totalSpendingFormatted}">£0.00</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">Net</div>
+            <div th:class="'kpi-value ' + (${data.netPositive} ? 'net-pos' : 'net-neg')"
+                 th:text="${(data.netPositive ? '+' : '-') + data.netFormatted}">£0.00</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">vs Last Year</div>
+            <div th:class="${data.vsLastPeriodCssClass}" th:text="${data.vsLastPeriodText}">N/A</div>
+        </td>
+    </tr>
+</table>
+
+<!-- ── Monthly Income vs Spending Bar Chart ── -->
+<div class="chart-title">Monthly Income vs Spending</div>
+<div class="annual-bar-chart" th:if="${data.monthlyBarSvg != null}"
+     th:utext="${data.monthlyBarSvg}"></div>
+
+<!-- ── Annual Donut + Category Comparison ── -->
+<table class="charts-table">
+    <tr>
+        <td class="chart-left">
+            <div class="chart-title">Annual Spending by Category</div>
+            <div th:if="${data.donutSvg != null}" th:utext="${data.donutSvg}"></div>
+        </td>
+        <td class="chart-right">
+            <div class="chart-title">Category Comparison vs Last Year</div>
+            <div th:if="${data.comparisonBarSvg != null}" th:utext="${data.comparisonBarSvg}"></div>
+        </td>
+    </tr>
+</table>
+
+<!-- ── Page Break before month sections ── -->
+<div class="page-break"></div>
+
+<!-- ── Per-Month Sections ── -->
+<div th:each="section, iterStat : ${data.monthSections}">
+
+    <div class="section-heading" th:text="${section.title}">January 2024</div>
+
+    <!-- Month KPI strip -->
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-cell">
+                <div class="kpi-label">Income</div>
+                <div class="kpi-value income" th:text="${section.totalIncomeFormatted}">£0.00</div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-label">Spending</div>
+                <div class="kpi-value spending" th:text="${section.totalSpendingFormatted}">£0.00</div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-label">Net</div>
+                <div th:class="'kpi-value ' + (${section.netPositive} ? 'net-pos' : 'net-neg')"
+                     th:text="${(section.netPositive ? '+' : '-') + section.netFormatted}">£0.00</div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-label">vs Last Month</div>
+                <div th:class="${section.vsLastPeriodCssClass}" th:text="${section.vsLastPeriodText}">N/A</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Month charts -->
+    <table class="charts-table">
+        <tr>
+            <td class="chart-left">
+                <div class="chart-title">Spending by Category</div>
+                <div th:if="${section.donutSvg != null}" th:utext="${section.donutSvg}"></div>
+            </td>
+            <td class="chart-right">
+                <div class="chart-title">Category Comparison vs Last Month</div>
+                <div th:if="${section.comparisonBarSvg != null}" th:utext="${section.comparisonBarSvg}"></div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Page break between month sections (not after the last one) -->
+    <div th:if="${!iterStat.last}" class="page-break"></div>
+
+</div>
+
+<!-- ── Footer ── -->
+<div class="report-footer">
+    Generated: <span th:text="${data.generatedAt}">01 January 2024 at 00:00</span>
+</div>
+
+</body>
+</html>

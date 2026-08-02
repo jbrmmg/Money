@@ -23,8 +23,11 @@ public class ReportPeriodData {
     private final String donutSvg;
     private final String comparisonBarSvg;
     private final List<TransactionRow> transactions;
+    private final String monthlyBarSvg;
+    private final List<ReportPeriodData> monthSections;
     private final String generatedAt;
 
+    // Constructor for monthly reports and for per-month sections within the annual report.
     public ReportPeriodData(String title,
                             String subtitle,
                             BigDecimal totalIncome,
@@ -38,29 +41,67 @@ public class ReportPeriodData {
         this.donutSvg = donutSvg;
         this.comparisonBarSvg = comparisonBarSvg;
         this.transactions = transactions;
+        this.monthlyBarSvg = null;
+        this.monthSections = null;
 
-        // Both totalIncome and totalSpending are positive values passed in
         BigDecimal net = totalIncome.subtract(totalSpending);
         this.netPositive = net.compareTo(BigDecimal.ZERO) >= 0;
-
         this.totalIncomeFormatted = formatAmount(totalIncome);
         this.totalSpendingFormatted = formatAmount(totalSpending);
         this.netFormatted = formatAmount(net.abs());
         this.totalCreditsFormatted = formatAmount(totalIncome);
         this.totalDebitsFormatted = formatAmount(totalSpending);
-        this.generatedAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' HH:mm"));
 
-        if (previousSpending.compareTo(BigDecimal.ZERO) == 0) {
-            this.vsLastPeriodText = "N/A";
-            this.vsLastPeriodCssClass = "kpi-value vs-na";
-        } else {
-            double pct = totalSpending.subtract(previousSpending)
-                    .divide(previousSpending, 4, RoundingMode.HALF_UP)
-                    .doubleValue() * 100.0;
-            boolean up = pct > 0;
-            this.vsLastPeriodText = String.format("%s %.0f%%", up ? "(+)" : "(-)", Math.abs(pct));
-            this.vsLastPeriodCssClass = up ? "kpi-value vs-up" : "kpi-value vs-down";
-        }
+        this.vsLastPeriodText = buildVsText(totalSpending, previousSpending);
+        this.vsLastPeriodCssClass = buildVsClass(totalSpending, previousSpending);
+        this.generatedAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' HH:mm"));
+    }
+
+    // Constructor for the annual summary — no transaction list; carries monthly bar chart and 12 month sub-sections.
+    public ReportPeriodData(String title,
+                            String subtitle,
+                            BigDecimal totalIncome,
+                            BigDecimal totalSpending,
+                            BigDecimal previousSpending,
+                            String donutSvg,
+                            String comparisonBarSvg,
+                            String monthlyBarSvg,
+                            List<ReportPeriodData> monthSections) {
+        this.title = title;
+        this.subtitle = subtitle;
+        this.donutSvg = donutSvg;
+        this.comparisonBarSvg = comparisonBarSvg;
+        this.monthlyBarSvg = monthlyBarSvg;
+        this.monthSections = monthSections;
+        this.transactions = null;
+
+        BigDecimal net = totalIncome.subtract(totalSpending);
+        this.netPositive = net.compareTo(BigDecimal.ZERO) >= 0;
+        this.totalIncomeFormatted = formatAmount(totalIncome);
+        this.totalSpendingFormatted = formatAmount(totalSpending);
+        this.netFormatted = formatAmount(net.abs());
+        this.totalCreditsFormatted = formatAmount(totalIncome);
+        this.totalDebitsFormatted = formatAmount(totalSpending);
+
+        this.vsLastPeriodText = buildVsText(totalSpending, previousSpending);
+        this.vsLastPeriodCssClass = buildVsClass(totalSpending, previousSpending);
+        this.generatedAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' HH:mm"));
+    }
+
+    private static String buildVsText(BigDecimal spending, BigDecimal previous) {
+        if (previous.compareTo(BigDecimal.ZERO) == 0) return "N/A";
+        double pct = spending.subtract(previous)
+                .divide(previous, 4, RoundingMode.HALF_UP)
+                .doubleValue() * 100.0;
+        return String.format("%s %.0f%%", pct > 0 ? "(+)" : "(-)", Math.abs(pct));
+    }
+
+    private static String buildVsClass(BigDecimal spending, BigDecimal previous) {
+        if (previous.compareTo(BigDecimal.ZERO) == 0) return "kpi-value vs-na";
+        double pct = spending.subtract(previous)
+                .divide(previous, 4, RoundingMode.HALF_UP)
+                .doubleValue();
+        return pct > 0 ? "kpi-value vs-up" : "kpi-value vs-down";
     }
 
     private static String formatAmount(BigDecimal amount) {
