@@ -352,7 +352,7 @@ The `reportShare` property is the root of the static archive (`share/` above).
 
 ---
 
-### Stage 3 — Static HTML Archive
+### Stage 3 — Static HTML Archive ✅ COMPLETE
 
 **Goal**: replace PDF output with a static HTML archive. Monthly reports are written as individual HTML
 files into a year-partitioned directory, with two levels of generated index pages.
@@ -382,7 +382,7 @@ Old PDF path removed.
 
 ---
 
-### Stage 4 — Annual HTML Report
+### Stage 4 — Annual HTML Report ✅ COMPLETE
 
 **Goal**: annual report using the same Thymeleaf pipeline, completing the removal of the old JDOM2 pipeline.
 
@@ -396,6 +396,91 @@ Tasks:
 - Remove `batik-transcoder` and `batik-codec` explicit declarations
 
 **Deliverable**: Annual HTML report generated end-to-end. Old JDOM2/Batik pipeline fully removed.
+
+---
+
+### Stage 5 — Date-Based Transactions and Revised Scheduling
+
+**Goal**: fix the report content and scheduling logic so that reports are based on transaction date
+rather than statement membership, and the scheduled job generates reports for exactly the months
+that have stable, complete data.
+
+#### Problem with statement-based grouping
+
+Currently `generateReport(year, month)` fetches transactions via
+`findByStatementIdYearAndStatementIdMonth(year, month)` — i.e. transactions that have been filed
+into that particular statement. This means a transaction dated 15 January but reconciled and placed
+in a February statement will appear in the February report rather than the January report. The reports
+are therefore misleading and not aligned with calendar months.
+
+#### Transaction query change
+
+Replace the two statement-based repository queries used in report generation with date-range queries:
+
+- Add to `TransactionRepository`:
+  ```java
+  List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
+  ```
+  Spring Data JPA derives this automatically from the method name.
+
+- In `generateReport(year, month)`:
+  ```java
+  LocalDate start = LocalDate.of(year, month, 1);
+  LocalDate end   = start.withDayOfMonth(start.lengthOfMonth());
+  List<Transaction> transactions = transactionRepository.findByDateBetween(start, end);
+
+  LocalDate prevStart = start.minusMonths(1);
+  LocalDate prevEnd   = prevStart.withDayOfMonth(prevStart.lengthOfMonth());
+  List<Transaction> previousTransactions = transactionRepository.findByDateBetween(prevStart, prevEnd);
+  ```
+
+- In `generateAnnualReport(year)`:
+  ```java
+  List<Transaction> transactions = transactionRepository.findByDateBetween(
+      LocalDate.of(year,     1, 1), LocalDate.of(year,     12, 31));
+  List<Transaction> previousTransactions = transactionRepository.findByDateBetween(
+      LocalDate.of(year - 1, 1, 1), LocalDate.of(year - 1, 12, 31));
+  ```
+
+The per-month grouping already done by `Collectors.groupingBy(t -> t.getDate().getMonthValue())`
+inside `generateAnnualReport` remains unchanged — it was already date-based.
+
+#### Scheduling algorithm change
+
+Replace the current `regularReport()` logic (which required every active account to have a locked
+statement for a month) with the following algorithm:
+
+1. Collect all locked statements from active (non-closed) accounts.
+2. If none exist, return — nothing to do.
+3. Sort them by `(year, month)`.
+4. **`startMonthYear`** = the earliest `(year, month)` in that list.
+5. **`endMonthYear`** = the latest `(year, month)` in that list.
+6. **`evaluationMonthYear`** = `endMonthYear` − 3 months (with year rollover).
+   - If `endMonth <= 3`, subtract from year: e.g. end = (2026, 2) → evaluation = (2025, 11).
+7. Iterate every calendar month from `startMonthYear` to `evaluationMonthYear` inclusive:
+   - If `share/<year>/<MonthName>.html` does **not** exist → call `generateReport(year, month)`.
+   - If the month is December and `share/<year>/annual.html` does **not** exist →
+     call `generateAnnualReport(year)`.
+
+The 3-month buffer prevents generating reports for months that are still close to the latest
+activity and may receive late-dated transactions from ongoing reconciliation.
+
+Remove `getMonthStatusMap()` and the `MonthStatus` helper class once they are no longer referenced
+(check whether any test still calls `getMonthStatusMap()` directly and update it accordingly).
+
+#### Tasks
+
+- Add `findByDateBetween(LocalDate, LocalDate)` to `TransactionRepository`
+- Update `generateReport()` to use date-based queries (see above)
+- Update `generateAnnualReport()` to use date-based queries (see above)
+- Replace `regularReport()` body with the new algorithm
+- Remove `getMonthStatusMap()` and `MonthStatus` if unused
+- Update unit tests to exercise date-based transaction selection
+- `ScheduleReportTest` and `AnnualReportTest` should continue to pass with transactions that
+  carry explicit dates matching the month under test
+
+**Deliverable**: Reports contain transactions by date; the scheduled job generates exactly the
+months with stable data, not just the months where every account has a locked statement.
 
 ---
 
