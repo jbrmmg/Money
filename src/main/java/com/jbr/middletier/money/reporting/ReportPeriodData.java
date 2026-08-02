@@ -4,6 +4,8 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Getter
@@ -21,6 +23,7 @@ public class ReportPeriodData {
     private final String donutSvg;
     private final String comparisonBarSvg;
     private final List<TransactionRow> transactions;
+    private final String generatedAt;
 
     public ReportPeriodData(String title,
                             String subtitle,
@@ -45,6 +48,7 @@ public class ReportPeriodData {
         this.netFormatted = formatAmount(net.abs());
         this.totalCreditsFormatted = formatAmount(totalIncome);
         this.totalDebitsFormatted = formatAmount(totalSpending);
+        this.generatedAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' HH:mm"));
 
         if (previousSpending.compareTo(BigDecimal.ZERO) == 0) {
             this.vsLastPeriodText = "N/A";
@@ -54,7 +58,7 @@ public class ReportPeriodData {
                     .divide(previousSpending, 4, RoundingMode.HALF_UP)
                     .doubleValue() * 100.0;
             boolean up = pct > 0;
-            this.vsLastPeriodText = String.format("%s %.0f%%", up ? "▲" : "▼", Math.abs(pct));
+            this.vsLastPeriodText = String.format("%s %.0f%%", up ? "(+)" : "(-)", Math.abs(pct));
             this.vsLastPeriodCssClass = up ? "kpi-value vs-up" : "kpi-value vs-down";
         }
     }

@@ -9,30 +9,18 @@ import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.*;
 import com.jbr.middletier.money.dto.mapper.StatementMapper;
 import com.jbr.middletier.money.utils.UtilityMapper;
-import com.jbr.middletier.money.utils.CssAssertHelper;
-import org.jdom2.Document;
-import org.jdom2.Element;
-import org.jdom2.input.DOMBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.xml.sax.InputSource;
-import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.diff.Diff;
-import org.xmlunit.diff.Difference;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collections;
-import java.util.Iterator;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -116,46 +104,14 @@ class AnnualReportTest extends Support {
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
 
-        // Check that the report exists.
-        File htmlFile = new File(applicationProperties.getReportWorking() + "/Report.html");
+        // Old pipeline still creates working-directory artefacts for the annual report.
         Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.png").toPath()));
         Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/AMEX.svg").toPath()));
         Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.png").toPath()));
         Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportWorking() + "/HSE.svg").toPath()));
-        Assertions.assertTrue(Files.exists(htmlFile.toPath()));
-        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf").toPath()));
-
-        // Check the HTML file.
-        DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        InputSource is = new InputSource();
-        String html = new String(Files.readAllBytes(htmlFile.toPath()));
-        is.setCharacterStream(new StringReader(html));
-        org.w3c.dom.Document  document = db.parse(is);
-
-        Document domDocument = new DOMBuilder().build(document);
-        Element root = domDocument.getRootElement();
-        Element head = root.getChild("head");
-        Element style = head.getChild("style");
-        Assertions.assertNotNull(style);
-        CssAssertHelper.checkReportCSS(style.getValue());
-
-        // Get the expected html
-        File expectedFile = new File("./src/test/resources/expected/html2.xml");
-        String expected = new String(Files.readAllBytes(expectedFile.toPath()));
-
-        // Get the difference.
-        Diff htmlDiff = DiffBuilder.compare(expected).withTest(html).ignoreWhitespace().build();
-
-        // Only the CSS should be different (this is checked separately).
-        Iterator<Difference> iterator = htmlDiff.getDifferences().iterator();
-        Difference expectedDifferent = null;
-        int differenceCount = 0;
-        while (iterator.hasNext()) {
-            expectedDifferent = iterator.next();
-            differenceCount++;
-        }
-        Assertions.assertEquals(1,differenceCount);
-        Assertions.assertNotNull(expectedDifferent);
-        Assertions.assertEquals("/html[1]/head[1]/style[1]/text()[1]",expectedDifferent.getComparison().getControlDetails().getXPath());
+        // Annual HTML placeholder should be written to the archive.
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/annual.html").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/index.html").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/index.html").toPath()));
     }
 }

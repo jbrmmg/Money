@@ -1,6 +1,5 @@
 package com.jbr.middletier.money.exceptions;
 
-import com.itextpdf.text.DocumentException;
 import org.apache.batik.transcoder.TranscoderException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -78,11 +77,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(TranscoderException.class)
     protected ResponseEntity<Object> handleTranscoderException(TranscoderException ex) {
-        return buildResponseEntity(new MoneyException(HttpStatus.FAILED_DEPENDENCY, ex));
-    }
-
-    @ExceptionHandler(DocumentException.class)
-    protected ResponseEntity<Object> handleDocumentException(DocumentException ex) {
         return buildResponseEntity(new MoneyException(HttpStatus.FAILED_DEPENDENCY, ex));
     }
 

@@ -4,6 +4,8 @@
     <meta charset="UTF-8"/>
     <title th:text="${data.title}">Monthly Report</title>
     <style>
+        @page { size: A4; margin: 15mm; }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
@@ -69,6 +71,7 @@
         /* ── Charts area ── */
         .charts-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: separate;
             border-spacing: 12px 0;
             margin-bottom: 20px;
@@ -155,6 +158,14 @@
         .debit  { color: #c62828; }
         .credit { color: #2e7d32; }
         .transfer-row td { color: #888888; font-style: italic; }
+
+        /* ── Footer ── */
+        .report-footer {
+            margin-top: 24px;
+            text-align: right;
+            font-size: 9px;
+            color: #aaaaaa;
+        }
 
         /* ── Totals row ── */
         .totals-row td {
@@ -260,6 +271,11 @@
         </tr>
     </tfoot>
 </table>
+
+<!-- ── Footer ── -->
+<div class="report-footer">
+    Generated: <span th:text="${data.generatedAt}">01 January 2024 at 00:00</span>
+</div>
 
 </body>
 </html>

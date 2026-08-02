@@ -110,31 +110,31 @@ class ArchiveTest extends Support {
 
         File directory = new File(applicationProperties.getReportShare() + "/2010/");
         directory.mkdirs();
-        File file = new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf");
+        File file = new File(applicationProperties.getReportShare() + "/2010/annual.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/January.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-February-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/February.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-March-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/March.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-April-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/April.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-May-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/May.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-June-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/June.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-July-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/July.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-August-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/August.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-September-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/September.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-October-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/October.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-November-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/November.html");
         Assertions.assertTrue(file.createNewFile());
-        file = new File(applicationProperties.getReportShare() + "/2010/Report-December-2010.pdf");
+        file = new File(applicationProperties.getReportShare() + "/2010/December.html");
         Assertions.assertTrue(file.createNewFile());
 
         archiveManager.scheduledArchive();
@@ -234,6 +234,6 @@ class ArchiveTest extends Support {
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isOk());
-        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-2010.pdf").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/annual.html").toPath()));
     }
 }

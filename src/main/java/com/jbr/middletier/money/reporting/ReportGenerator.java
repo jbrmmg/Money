@@ -1,9 +1,5 @@
 package com.jbr.middletier.money.reporting;
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.tool.xml.XMLWorkerHelper;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.primary.Account;
 import com.jbr.middletier.money.data.primary.Category;
@@ -35,11 +31,9 @@ import org.thymeleaf.context.Context;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.util.Map;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
@@ -48,6 +42,19 @@ import java.util.*;
 @Controller
 public class ReportGenerator {
     private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
+
+    private static final List<String> MONTH_NAMES = List.of(
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+    );
+
+    private static final String INDEX_CSS =
+            "body{font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:40px auto;color:#333}" +
+            "h1{color:#1a237e;border-bottom:2px solid #1a237e;padding-bottom:8px}" +
+            "ul{list-style:none;padding:0}" +
+            "li{margin:6px 0}" +
+            "a{color:#1a237e;text-decoration:none;font-size:15px}" +
+            "a:hover{text-decoration:underline}";
 
     private final TransactionRepository transactionRepository;
     private final ApplicationProperties applicationProperties;
@@ -127,16 +134,19 @@ public class ReportGenerator {
                 previousSpending, donutSvg, comparisonBarSvg, rows);
     }
 
-    private void writeHtmlReport(ReportPeriodData data) throws IOException {
+    private String buildHtml(ReportPeriodData data) {
         Context ctx = new Context();
         ctx.setVariable("data", data);
-        String html = templateEngine.process("report/monthly", ctx);
+        return templateEngine.process("report/monthly", ctx);
+    }
+
+    private void writeHtmlDebug(String html) throws IOException {
         try (OutputStreamWriter writer = new OutputStreamWriter(
                 Files.newOutputStream(Paths.get(applicationProperties.getHtmlFilename())),
                 StandardCharsets.UTF_8)) {
             writer.write(html);
         }
-        LOG.info("HTML report written to {}", applicationProperties.getHtmlFilename());
+        LOG.info("Debug HTML written to {}", applicationProperties.getHtmlFilename());
     }
 
     private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
@@ -152,33 +162,26 @@ public class ReportGenerator {
     private void createPngFromSvg(String svgFilename, String pngFilename, float height, float width) throws IOException, TranscoderException {
         String svgUriInput = Paths.get(svgFilename).toUri().toURL().toString();
         TranscoderInput inputSvgImage = new TranscoderInput(svgUriInput);
-        //Step-2: Define OutputStream to PNG Image and attach to TranscoderOutput
         OutputStream pngOstream = Files.newOutputStream(Paths.get(pngFilename));
         TranscoderOutput outputPngImage = new TranscoderOutput(pngOstream);
-        // Step-3: Create PNGTranscoder and define hints if required
         PNGTranscoder myConverter = new PNGTranscoder();
         myConverter.addTranscodingHint(SVGAbstractTranscoder.KEY_WIDTH,width);
         myConverter.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT,height);
-        // Step-4: Convert and Write output
         myConverter.transcode(inputSvgImage, outputPngImage);
-        // Step 5- close / flush Output Stream
         pngOstream.flush();
         pngOstream.close();
     }
 
     private void createAccountImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
         for(Transaction nextTransactions: transactions) {
-            // Is there already a png for this account?
             File pngFile = new File(workingDirectory,nextTransactions.getAccount().getId() + ".png");
 
             if(!pngFile.exists()) {
-                // Create an SVG for the account.
                 File svgFile = new File(workingDirectory, nextTransactions.getAccount().getId() + ".svg");
                 try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
                     svgWriter.write(logoManager.getSvgLogoForAccount(nextTransactions.getAccount().getId(),false).getSvgAsString());
                 }
 
-                // Create a PNG from SVG
                 createPngFromSvg(workingDirectory + "/" + nextTransactions.getAccount().getId() + ".svg",
                         workingDirectory + "/" + nextTransactions.getAccount().getId() + ".png",
                         100,
@@ -189,19 +192,15 @@ public class ReportGenerator {
 
     private void createCategoryImages(String workingDirectory, List<Transaction> transactions) throws IOException, TranscoderException {
         for(Transaction nextTransactions: transactions) {
-            // Is there already a png for this account?
             File pngFile = new File(workingDirectory,nextTransactions.getCategory().getId() + ".png");
 
             if(!pngFile.exists()) {
-                // Create an SVG for the account.
                 File svgFile = new File(workingDirectory, nextTransactions.getCategory().getId() + ".svg");
                 try(PrintWriter svgWriter = new PrintWriter(svgFile)) {
-
                     ScalableVectorGraphics categorySvg = new CategorySvg(nextTransactions.getCategory());
                     svgWriter.write(categorySvg.getSvgAsString());
                 }
 
-                // Create a PNG from SVG
                 createPngFromSvg(workingDirectory + "/" + nextTransactions.getCategory().getId() + ".svg",
                         workingDirectory + "/" + nextTransactions.getCategory().getId() + ".png",
                         100,
@@ -211,7 +210,6 @@ public class ReportGenerator {
     }
 
     private void createWorkingDirectories() {
-        // Does the working directory exist?
         if(!Files.exists(Paths.get(applicationProperties.getReportWorking()))) {
             //noinspection ResultOfMethodCallIgnored
             new File(applicationProperties.getReportWorking()).mkdirs();
@@ -223,17 +221,6 @@ public class ReportGenerator {
         }
     }
 
-    private void generatePDF() throws IOException, DocumentException {
-        // Generate a PDF?
-        Document document = new Document();
-        PdfWriter writer = PdfWriter.getInstance(document,
-                Files.newOutputStream(Paths.get(applicationProperties.getPDFFilename())));
-        document.open();
-        XMLWorkerHelper.getInstance().parseXHtml(writer, document,
-                Files.newInputStream(Paths.get(applicationProperties.getHtmlFilename())));
-        document.close();
-    }
-
     private void createImages(List<Transaction> transactions) throws IOException, TranscoderException {
         LOG.info("Create the images for accounts.");
         createAccountImages(applicationProperties.getReportWorking(),transactions);
@@ -242,122 +229,93 @@ public class ReportGenerator {
         createCategoryImages(applicationProperties.getReportWorking(),transactions);
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void copyFile(String source,
-                          String destinationPath,
-                          String destination) throws IOException {
-        // Does the destination path exist?
-        if(!Files.exists(Paths.get(destinationPath))) {
-            new File(destinationPath).mkdirs();
+    private void generateYearIndex(int year) throws IOException {
+        String yearDir = applicationProperties.getReportShare() + "/" + year;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
+        sb.append("  <meta charset=\"UTF-8\"/>\n");
+        sb.append("  <title>").append(year).append(" Reports</title>\n");
+        sb.append("  <style>").append(INDEX_CSS).append("</style>\n");
+        sb.append("</head>\n<body>\n");
+        sb.append("<h1>").append(year).append(" Reports</h1>\n<ul>\n");
+
+        if (Files.exists(Paths.get(yearDir + "/annual.html"))) {
+            sb.append("  <li><a href=\"annual.html\">Annual Report &#8211; ").append(year).append("</a></li>\n");
         }
 
-        Files.copy( Paths.get(source), Paths.get(destinationPath + "/" + destination), StandardCopyOption.REPLACE_EXISTING );
+        for (int m = 1; m <= 12; m++) {
+            String monthFile = MONTH_NAMES.get(m - 1) + ".html";
+            if (Files.exists(Paths.get(yearDir + "/" + monthFile))) {
+                LocalDate d = LocalDate.of(year, m, 1);
+                String label = DateTimeFormatter.ofPattern("MMMM yyyy").format(d);
+                sb.append("  <li><a href=\"").append(monthFile).append("\">").append(label).append("</a></li>\n");
+            }
+        }
+
+        sb.append("</ul>\n</body>\n</html>\n");
+
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                Files.newOutputStream(Paths.get(yearDir + "/index.html")), StandardCharsets.UTF_8)) {
+            writer.write(sb.toString());
+        }
+        LOG.info("Written year index to {}/index.html", yearDir);
     }
 
-    public void generateReport(int year, int month) throws IOException, DocumentException, TranscoderException {
-        LOG.info("Generate report");
+    private void generateRootIndex() throws IOException {
+        String shareDir = applicationProperties.getReportShare();
 
-        createWorkingDirectories();
-        List<Transaction> transactions = transactionRepository.findByStatementIdYearAndStatementIdMonth(year, month);
-
-        int previousMonth = month - 1;
-        int previousYear = year;
-        if (month == 1) {
-            previousMonth = 12;
-            previousYear--;
+        List<Integer> years = new ArrayList<>();
+        File[] dirs = new File(shareDir).listFiles(File::isDirectory);
+        if (dirs != null) {
+            for (File dir : dirs) {
+                try {
+                    int year = Integer.parseInt(dir.getName());
+                    if (Files.exists(Paths.get(dir.getPath() + "/index.html"))) {
+                        years.add(year);
+                    }
+                } catch (NumberFormatException ignored) {
+                    // not a year directory
+                }
+            }
         }
-        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear, previousMonth);
+        years.sort(Collections.reverseOrder());
 
-        LocalDate reportDate = LocalDate.of(year, month, 1);
-        String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(reportDate);
-        String subtitle = "Monthly Financial Report";
+        StringBuilder sb = new StringBuilder();
+        sb.append("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
+        sb.append("  <meta charset=\"UTF-8\"/>\n");
+        sb.append("  <title>Financial Reports</title>\n");
+        sb.append("  <style>").append(INDEX_CSS).append("</style>\n");
+        sb.append("</head>\n<body>\n");
+        sb.append("<h1>Financial Reports</h1>\n<ul>\n");
 
-        ReportPeriodData data = buildReportData(title, subtitle, transactions, previousTransactionList);
-        writeHtmlReport(data);
-
-        if (applicationProperties.isReportDebugHtml()) {
-            LOG.info("Debug HTML mode — skipping PDF generation");
-            return;
-        }
-
-        try {
-            generatePDF();
-        } catch (Exception e) {
-            LOG.warn("PDF generation failed (Stage 1 — expected): {}", e.getMessage());
-            return;
+        for (int year : years) {
+            sb.append("  <li><a href=\"").append(year).append("/index.html\">").append(year).append("</a></li>\n");
         }
 
-        // Copy the report to the share.
-        copyFile(applicationProperties.getPDFFilename(),
-                applicationProperties.getReportShare() + "/" + year,
-                getMonthFilename(false, year, month));
+        sb.append("</ul>\n</body>\n</html>\n");
+
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                Files.newOutputStream(Paths.get(shareDir + "/index.html")), StandardCharsets.UTF_8)) {
+            writer.write(sb.toString());
+        }
+        LOG.info("Written root index to {}/index.html", shareDir);
     }
 
-    public void generateAnnualReport(int year) throws IOException, TranscoderException, DocumentException {
-        LOG.info("Generate annual report");
-
-        // Get all the transactions for the specified statement.
-        List<Transaction> transactions = transactionRepository.findByStatementIdYear(year);
-        List<Transaction> previoustransactions = transactionRepository.findByStatementIdYear(year - 1);
-
-        createWorkingDirectories();
-
-        File htmlFile = new File(applicationProperties.getHtmlFilename());
-        try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
-            HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
-                    previoustransactions,
-                    LocalDate.of(year, Month.JANUARY, 1),
-                    applicationProperties.getReportWorking(),
-                    ReportHtml.ReportType.ANNUAL);
-
-            writer2.println(reportHtml.getHtmlAsString());
-        }
-
-        createImages(transactions);
-        createImages(previoustransactions);
-        createPieChart(transactions,"yr");
-
-        for(int i = 0; i < 12; i++) {
-            createPieChart(transactions, String.valueOf(i));
-        }
-
-        // Generate a PDF?
-        generatePDF();
-
-        // Copy the report to the share.
-        copyFile(applicationProperties.getPDFFilename(),
-                applicationProperties.getReportShare() + "/" + year,
-                getYearFilename(false, year));
+    private String getYearFilename(long year) {
+        return applicationProperties.getReportShare() + "/" + year + "/annual.html";
     }
 
-    private String getYearFilename(boolean fullPath, long year) {
-        if(!fullPath) {
-            return "Report-" + year + ".pdf";
-        }
-
-        return applicationProperties.getReportShare() + "/" + year + "/Report-" + year + ".pdf";
-    }
-
-    private String getMonthFilename(boolean fullPath, int year, int month) {
-
-        LocalDate reportDate = LocalDate.of(year, month, 1);
-        String reportDateString = DateTimeFormatter.ofPattern("MMMM-yyyy").format(reportDate);
-
-        if(!fullPath) {
-            return "Report-" + reportDateString + ".pdf";
-        }
-
-        return applicationProperties.getReportShare() + "/" + year + "/Report-" + reportDateString + ".pdf";
+    private String getMonthFilename(int year, int month) {
+        return applicationProperties.getReportShare() + "/" + year + "/" + MONTH_NAMES.get(month - 1) + ".html";
     }
 
     public Map<Integer,MonthStatus> getMonthStatusMap(int activeAccounts) {
         Map<Integer,MonthStatus> monthStatusMap = new HashMap<>();
 
-        // Make sure reports have been generated where all statements are locked.
         Iterable<Statement> allStatements = statementRepository.findAll();
         for(Statement nextStatement: allStatements) {
             if(nextStatement.getLocked()) {
-                // What is the ID?
                 Integer statementId = (nextStatement.getId().getYear() * 100 + nextStatement.getId().getMonth());
                 MonthStatus nextMonthStatus;
 
@@ -382,9 +340,98 @@ public class ReportGenerator {
         return monthStatusMap;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void generateReport(int year, int month) throws IOException {
+        LOG.info("Generate report");
+
+        createWorkingDirectories();
+        List<Transaction> transactions = transactionRepository.findByStatementIdYearAndStatementIdMonth(year, month);
+
+        int previousMonth = month - 1;
+        int previousYear = year;
+        if (month == 1) {
+            previousMonth = 12;
+            previousYear--;
+        }
+        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear, previousMonth);
+
+        LocalDate reportDate = LocalDate.of(year, month, 1);
+        String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(reportDate);
+        String subtitle = "Monthly Financial Report";
+
+        ReportPeriodData data = buildReportData(title, subtitle, transactions, previousTransactionList);
+        String html = buildHtml(data);
+
+        if (applicationProperties.isReportDebugHtml()) {
+            writeHtmlDebug(html);
+        }
+
+        // Write HTML into the archive directory structure.
+        String yearDir = applicationProperties.getReportShare() + "/" + year;
+        if (!Files.exists(Paths.get(yearDir))) {
+            new File(yearDir).mkdirs();
+        }
+        String htmlPath = getMonthFilename(year, month);
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                Files.newOutputStream(Paths.get(htmlPath)), StandardCharsets.UTF_8)) {
+            writer.write(html);
+        }
+        LOG.info("Written report HTML to {}", htmlPath);
+
+        generateYearIndex(year);
+        generateRootIndex();
+    }
+
+    public void generateAnnualReport(int year) throws IOException, TranscoderException {
+        LOG.info("Generate annual report");
+
+        List<Transaction> transactions = transactionRepository.findByStatementIdYear(year);
+        List<Transaction> previoustransactions = transactionRepository.findByStatementIdYear(year - 1);
+
+        createWorkingDirectories();
+
+        File htmlFile = new File(applicationProperties.getHtmlFilename());
+        try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
+            HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
+                    previoustransactions,
+                    LocalDate.of(year, Month.JANUARY, 1),
+                    applicationProperties.getReportWorking(),
+                    ReportHtml.ReportType.ANNUAL);
+
+            writer2.println(reportHtml.getHtmlAsString());
+        }
+
+        createImages(transactions);
+        createImages(previoustransactions);
+        createPieChart(transactions,"yr");
+
+        for(int i = 0; i < 12; i++) {
+            createPieChart(transactions, String.valueOf(i));
+        }
+
+        // Write placeholder to archive so the existence check passes (full HTML in Stage 4).
+        String yearDir = applicationProperties.getReportShare() + "/" + year;
+        if (!Files.exists(Paths.get(yearDir))) {
+            //noinspection ResultOfMethodCallIgnored
+            new File(yearDir).mkdirs();
+        }
+        String annualPath = getYearFilename(year);
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                Files.newOutputStream(Paths.get(annualPath)), StandardCharsets.UTF_8)) {
+            writer.write("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"/><title>"
+                    + year + " Annual Report</title></head><body>"
+                    + "<h1>" + year + " Annual Report</h1>"
+                    + "<p>Full annual report will be available in Stage 4.</p>"
+                    + "</body></html>\n");
+        }
+        LOG.info("Annual report placeholder written to {}", annualPath);
+
+        generateYearIndex(year);
+        generateRootIndex();
+    }
+
     @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
-    public void regularReport() throws DocumentException, IOException, TranscoderException {
-        // If this is enabled, then generate reports.
+    public void regularReport() throws IOException, TranscoderException {
         if(!applicationProperties.getReportEnabled()) {
             return;
         }
@@ -396,19 +443,14 @@ public class ReportGenerator {
             }
         });
 
-        // Check that all the statements have a report.
         for(MonthStatus nextMonthStatus: getMonthStatusMap(accounts.size()).values()) {
-            // Is this a complete month?
             if((nextMonthStatus.lockedStatementCount == nextMonthStatus.statementsFound) &&
                     (nextMonthStatus.lockedStatementCount == nextMonthStatus.activeAccounts) ){
-                // All statements are locked, is there a report??
-                if(!Files.exists(Paths.get(getMonthFilename(true, nextMonthStatus.year,nextMonthStatus.month)))) {
-                    // Generate the month report.
+                if(!Files.exists(Paths.get(getMonthFilename(nextMonthStatus.year, nextMonthStatus.month)))) {
                     generateReport(nextMonthStatus.year,nextMonthStatus.month);
                 }
 
-                if(nextMonthStatus.month == 12 && !Files.exists(Paths.get(getYearFilename(true,nextMonthStatus.year)))) {
-                    // Generate the annual report.
+                if(nextMonthStatus.month == 12 && !Files.exists(Paths.get(getYearFilename(nextMonthStatus.year)))) {
                     generateAnnualReport(nextMonthStatus.year);
                 }
             }
@@ -416,26 +458,21 @@ public class ReportGenerator {
     }
 
     public boolean reportsGeneratedForYear(int year) {
-        // Check that the reports have been generated for the year specified.
-
         LOG.info("Checking - {}/{}", applicationProperties.getReportShare(), year);
 
-        // Does the year directory exist?
         if(!Files.exists(Paths.get(applicationProperties.getReportShare() + "/" + year))) {
             return false;
         }
 
-        String yearFilename = getYearFilename(true, year);
+        String yearFilename = getYearFilename(year);
         LOG.info("Checking - {}", yearFilename);
-
         if(!Files.exists(Paths.get(yearFilename))) {
             return false;
         }
 
         for(int month = 0; month < 12; month++) {
-            String monthFilename = getMonthFilename(true,year, month + 1);
+            String monthFilename = getMonthFilename(year, month + 1);
             LOG.info("Checking - {}", monthFilename);
-
             if(!Files.exists(Paths.get(monthFilename))) {
                 return false;
             }

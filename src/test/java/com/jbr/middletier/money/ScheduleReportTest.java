@@ -1,6 +1,5 @@
 package com.jbr.middletier.money;
 
-import com.itextpdf.text.DocumentException;
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.primary.Account;
@@ -39,7 +38,7 @@ class ScheduleReportTest extends Support {
     private ApplicationProperties applicationProperties;
 
     @Test
-    void scheduleTest() throws TranscoderException, DocumentException, IOException {
+    void scheduleTest() throws TranscoderException, IOException {
         deleteDirectoryContents(new File(applicationProperties.getReportWorking()).toPath());
         deleteDirectoryContents(new File(applicationProperties.getReportShare()).toPath());
 
@@ -72,7 +71,9 @@ class ScheduleReportTest extends Support {
         }
 
         reportGenerator.regularReport();
-        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/Report-January-2010.pdf").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/January.html").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/2010/index.html").toPath()));
+        Assertions.assertTrue(Files.exists(new File(applicationProperties.getReportShare() + "/index.html").toPath()));
 
         applicationProperties.setReportEnabled(enabled);
         transactionRepository.deleteAll();

@@ -67,7 +67,9 @@ public class DonutChartSvg extends ScalableVectorGraphics {
         Namespace ns = Namespace.getNamespace(NAMESPACE);
 
         Element root = new Element("svg", ns)
-                .setAttribute(ATTRIBUTE_VIEW_BOX, "0 0 10000 10000");
+                .setAttribute(ATTRIBUTE_VIEW_BOX, "0 0 10000 10000")
+                .setAttribute(ATTRIBUTE_WIDTH, "500")
+                .setAttribute(ATTRIBUTE_HEIGHT, "500");
 
         root.addContent(new Element("circle", ns)
                 .setAttribute("id", "BCKG")

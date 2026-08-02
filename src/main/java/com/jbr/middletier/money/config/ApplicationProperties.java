@@ -65,8 +65,6 @@ public class ApplicationProperties {
 
     public boolean getArchiveEnabled() { return this.archiveEnabled; }
 
-    public String getPDFFilename() { return getReportWorking() + "/Report.pdf"; }
-
     public String getHtmlFilename() { return getReportWorking() + "/Report.html"; }
 
     public LocalDate getToday() {

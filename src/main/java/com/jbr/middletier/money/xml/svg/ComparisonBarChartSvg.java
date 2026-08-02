@@ -26,7 +26,9 @@ public class ComparisonBarChartSvg extends ScalableVectorGraphics {
 
         if (categories.isEmpty()) {
             this.svg.addContent(new Element("svg", ns)
-                    .setAttribute(ATTRIBUTE_VIEW_BOX, "0 0 " + TOTAL_WIDTH + " " + ROW_HEIGHT));
+                    .setAttribute(ATTRIBUTE_VIEW_BOX, "0 0 " + TOTAL_WIDTH + " " + ROW_HEIGHT)
+                    .setAttribute(ATTRIBUTE_WIDTH, "500")
+                    .setAttribute(ATTRIBUTE_HEIGHT, "25"));
             return;
         }
 
@@ -39,8 +41,11 @@ public class ComparisonBarChartSvg extends ScalableVectorGraphics {
         }
 
         int totalHeight = categories.size() * ROW_HEIGHT;
+        int displayHeight = 500 * totalHeight / TOTAL_WIDTH;
         Element root = new Element("svg", ns)
-                .setAttribute(ATTRIBUTE_VIEW_BOX, "0 0 " + TOTAL_WIDTH + " " + totalHeight);
+                .setAttribute(ATTRIBUTE_VIEW_BOX, "0 0 " + TOTAL_WIDTH + " " + totalHeight)
+                .setAttribute(ATTRIBUTE_WIDTH, "500")
+                .setAttribute(ATTRIBUTE_HEIGHT, String.valueOf(displayHeight));
 
         for (int i = 0; i < categories.size(); i++) {
             Category cat = categories.get(i);

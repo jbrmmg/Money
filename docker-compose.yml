@@ -16,7 +16,7 @@ services:
     volumes:
       - money-logs:/app/logs
       - money-working:/app/reports/working
-      - /media/Shared/Documents/PDF/MoneyReports:/app/reports/share
+      - /media/Shared/Documents/html/money-reports:/app/reports/share
       - /home/jason/Downloads:/app/reconcile
     networks:
       - jbr-network
