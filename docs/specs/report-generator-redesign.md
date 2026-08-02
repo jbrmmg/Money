@@ -2,7 +2,12 @@
 
 ## Objective
 
-Replace the current report generation pipeline with one that produces professional-looking PDF reports. The existing pipeline (JDOM2 HTML + iText 5 XMLWorker) is fragile and produces poor output due to XMLWorker's severely limited CSS support. The redesign uses Thymeleaf templates for HTML authoring and openhtmltopdf for PDF conversion, with SVG charts embedded inline in the HTML.
+Replace the current report generation pipeline with one that produces well-styled, self-contained HTML
+reports browsable as a static archive. The existing pipeline (JDOM2 HTML + iText 5 XMLWorker) is fragile
+and produces poor output. The redesign uses Thymeleaf templates with inline SVG charts, and copies the
+resulting HTML into a year-partitioned directory structure with generated index pages.
+
+PDF generation is intentionally removed. The browser's built-in Print → Save as PDF covers that use-case.
 
 ---
 
@@ -26,14 +31,57 @@ Problems:
 ```
 Java data → Thymeleaf template → HTML string
 Java (JDOM2 SVG) → inline SVG strings (embedded via th:utext)
-HTML string → openhtmltopdf → Report.pdf → share/
+HTML string → write to share/<year>/<MonthName>.html
+            → regenerate share/<year>/index.html
+            → regenerate share/index.html
 ```
 
 Key changes:
-- Thymeleaf templates replace JDOM2 HTML construction — templates are real HTML files readable/previewable in a browser
-- SVG charts are generated in Java and injected as **inline SVG** directly into the template — no PNG conversion, no file paths, no Batik transcoding
-- openhtmltopdf (Flying Saucer fork) replaces iText 5 + XMLWorker — much better CSS/table/page-break support
-- The HTML intermediary remains useful for development and debugging (controlled by a flag in production)
+- Thymeleaf templates replace JDOM2 HTML construction — templates are real HTML files
+  readable/previewable in a browser
+- SVG charts are generated in Java and injected as **inline SVG** directly into the template —
+  no PNG conversion, no file paths, no Batik transcoding
+- HTML replaces PDF as the output format. No openhtmltopdf dependency.
+- A two-level static index (root + per-year) makes historic reports navigable without a server
+
+---
+
+## Archive Directory Structure
+
+```
+share/
+  index.html                  ← root index; links to each year sub-directory
+  2024/
+    index.html                ← year index; links to each month + annual (if present)
+    January.html
+    February.html
+    ...
+    December.html
+    annual.html               ← annual summary (Stage 4)
+  2025/
+    index.html
+    January.html
+    ...
+```
+
+### Root `index.html`
+
+- Title: "Financial Reports"
+- One link per year that has at least one report, newest year first
+- Each link points to `<year>/index.html` and displays the year
+
+### Year `index.html`
+
+- Title: `"<year> Reports"`
+- If `annual.html` exists in the directory, show it first as "Annual Report – <year>"
+- Then one link per month that has a report, chronologically ordered (January → December)
+- Each link points to `<MonthName>.html`
+
+### Regeneration rule
+
+Both index files are regenerated from scratch (by scanning the directory) every time a new
+report is written. They are not append-only; a full scan ensures correctness after any manual
+file deletions.
 
 ---
 
@@ -55,7 +103,7 @@ Four equally-sized KPI boxes in a row:
 | Total Income | Sum of all credit transactions | Green text |
 | Total Spending | Sum of all debit transactions (absolute value) | Red text |
 | Net | Income − Spending | Green if positive, red if negative |
-| vs Last Month | Spending change as % with ▲/▼ arrow | Red if up, green if down |
+| vs Last Month | Spending change as % with (+)/(-) indicator | Red if up, green if down |
 
 **Charts — side by side**
 
@@ -79,7 +127,7 @@ Single-column table with one transaction per row, sorted chronologically.
 Columns:
 | Date | Account | Category | Description | Amount |
 |---|---|---|---|---|
-| dd-MMM-yyyy | Account name | Category name (coloured left border or dot) | Description text | Right-aligned, red if debit |
+| dd-MMM-yyyy | Account name | Category name (coloured dot) | Description text | Right-aligned, red if debit |
 
 - Totals row at the bottom: Total Credits | Total Debits
 - Transfers (transactions with an `oppositeId`) shown with a ⇄ indicator and grey text
@@ -122,7 +170,8 @@ No transaction list in the annual report — individual transactions are in the 
 
 ## SVG Charts (Server-Side Java)
 
-All charts are generated as SVG strings in Java and injected inline via `th:utext`. No PNG files are written; no Batik transcoding is needed for chart generation.
+All charts are generated as SVG strings in Java and injected inline via `th:utext`. No PNG files are
+written; no Batik transcoding is needed for chart generation.
 
 ### 1. `DonutChartSvg` — replaces `PieChartSvg`
 
@@ -136,14 +185,14 @@ Modify the existing `PieChartSvg` to:
 
 Horizontal bar chart.
 
-Inputs: `Map<Category, CategoryComparison>`, period label ("Previous Month" / "Previous Year")
+Inputs: `Map<Category, BigDecimal>` current and previous spending maps.
 
-Layout (10000 × N×300 SVG units, where N = number of categories):
+Layout (10000 × N×600 SVG units, where N = number of categories):
 - Left column (2500 units): category name, right-aligned
 - Bar area (6500 units): two horizontal bars per row
-  - Current bar: full category colour, height 100 units
-  - Previous bar: 40% opacity category colour, height 100 units, below the current bar
-- Right column (1000 units): current amount text
+  - Current bar: full category colour, y+100, height=160
+  - Previous bar: same colour at 40% opacity, y+340, height=130
+- Right column: current amount text
 
 ### 3. `MonthlyBarChartSvg` — new (annual report only)
 
@@ -152,7 +201,7 @@ Vertical grouped bar chart.
 Inputs: `List<MonthSummary>` for current year and previous year (12 entries each)
 
 Layout (12000 × 6000 SVG units):
-- X axis: 12 month labels
+- X axis: Jan–Dec
 - Y axis: £ values, auto-scaled to max(income, spending) across all months
 - Two bars per month: Income (green `#3cb44b`) and Spending (red `#e6194b`)
 - Gridlines at 25%, 50%, 75%, 100% of max
@@ -168,23 +217,19 @@ Location: `src/main/resources/templates/report/`
 ```
 templates/report/
   monthly.html          — full monthly report
-  annual.html           — full annual report
-  fragments/
-    head.html           — <head> with embedded CSS (th:fragment="head")
-    summary-strip.html  — 4 KPI boxes (th:fragment="summaryStrip(data)")
-    transaction-table.html — transaction list (th:fragment="transactionTable(rows)")
-    month-section.html  — single month section used in annual (th:fragment="monthSection(data)")
+  annual.html           — full annual report (Stage 4)
 ```
 
-CSS is embedded in the `<head>` as a `<style>` block (not an external file) so openhtmltopdf resolves it without a base URI.
+CSS is embedded in the `<head>` as a `<style>` block. Includes `@page { size: A4; margin: 15mm; }`
+so the file prints to A4 correctly from the browser.
 
-Fonts: use web-safe fonts only (`Arial, Helvetica, sans-serif`) to avoid font embedding complexity. Revisit in a future ticket if custom fonts are needed.
+Fonts: use web-safe fonts only (`Arial, Helvetica, sans-serif`).
 
 ---
 
 ## Data Model
 
-New classes in `com.jbr.middletier.money.reporting`:
+Classes in `com.jbr.middletier.money.reporting`:
 
 ```java
 public class ReportPeriodData {
@@ -197,7 +242,7 @@ public class ReportPeriodData {
     String donutSvg;           // inline SVG string
     String comparisonBarSvg;   // inline SVG string
     String monthlyBarSvg;      // inline SVG string (annual only, null for monthly)
-    List<TransactionRow> transactions; // null for annual sub-month sections
+    List<TransactionRow> transactions;
     List<ReportPeriodData> monthSections; // annual only: 12 month sub-sections
 }
 
@@ -212,8 +257,6 @@ public class TransactionRow {
 }
 ```
 
-`ReportGenerator` builds a `ReportPeriodData`, passes it to `TemplateEngine.process("report/monthly", context)`, and then passes the resulting HTML string to the PDF renderer.
-
 ---
 
 ## Dependencies
@@ -221,50 +264,45 @@ public class TransactionRow {
 ### Add to `pom.xml`
 
 ```xml
-<!-- Thymeleaf -->
+<!-- Thymeleaf (already added in Stage 1) -->
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-thymeleaf</artifactId>
-</dependency>
-
-<!-- openhtmltopdf -->
-<dependency>
-    <groupId>com.openhtmltopdf</groupId>
-    <artifactId>openhtmltopdf-core</artifactId>
-    <version>1.0.10</version>
-</dependency>
-<dependency>
-    <groupId>com.openhtmltopdf</groupId>
-    <artifactId>openhtmltopdf-pdfbox</artifactId>
-    <version>1.0.10</version>
-</dependency>
-<dependency>
-    <groupId>com.openhtmltopdf</groupId>
-    <artifactId>openhtmltopdf-svg-support</artifactId>
-    <version>1.0.10</version>
 </dependency>
 ```
 
 ### Remove from `pom.xml`
 
 ```xml
+<!-- PDF generation — no longer needed -->
+<dependency>
+    <groupId>com.openhtmltopdf</groupId>
+    <artifactId>openhtmltopdf-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.openhtmltopdf</groupId>
+    <artifactId>openhtmltopdf-pdfbox</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.openhtmltopdf</groupId>
+    <artifactId>openhtmltopdf-svg-support</artifactId>
+</dependency>
+
+<!-- Old pipeline -->
 <dependency>
     <groupId>com.itextpdf</groupId>
-    <artifactId>itextpdf</artifactId>          <!-- replaced by openhtmltopdf-pdfbox -->
+    <artifactId>itextpdf</artifactId>
 </dependency>
 <dependency>
     <groupId>com.itextpdf.tool</groupId>
-    <artifactId>xmlworker</artifactId>         <!-- replaced by openhtmltopdf-core -->
-</dependency>
-<dependency>
-    <groupId>com.helger</groupId>
-    <artifactId>ph-css</artifactId>            <!-- CSS now written directly in template -->
+    <artifactId>xmlworker</artifactId>
 </dependency>
 ```
 
-`jdom2` stays — it is still used for SVG generation (`ScalableVectorGraphics` hierarchy).
+`jdom2` stays — still used for SVG generation (`ScalableVectorGraphics` hierarchy).
 
-`batik-transcoder` and `batik-codec` explicit declarations can be removed — they become transitive dependencies via `openhtmltopdf-svg-support`.
+`batik-transcoder` and `batik-codec` are removed in Stage 4 once the old annual report
+pipeline is replaced and `createPngFromSvg` is deleted.
 
 ### Classes to delete (Stage 4, after all stages complete)
 
@@ -273,6 +311,7 @@ public class TransactionRow {
 | `xml/html/ReportHtml.java` | Replaced by `templates/report/monthly.html` and `annual.html` |
 | `xml/svg/PieChartSvg.java` | Replaced by `DonutChartSvg` |
 | `xml/svg/CategorySvg.java` | PNG embedding no longer used |
+| `reporting/PdfRenderer.java` | PDF generation removed |
 
 Do **not** delete:
 - `xml/html/HyperTextMarkupLanguage.java` — still used by `EmailHtml` / `EmailGenerator`
@@ -284,99 +323,79 @@ Do **not** delete:
 
 ## Application Properties
 
-Add:
 ```yaml
 money:
-  report-debug-html: false   # when true, writes Report.html to reportWorking for browser inspection
+  report-debug-html: false   # when true, also writes Report.html to reportWorking for browser inspection
 ```
 
-`reportWorking` is only needed when `report-debug-html: true` or during Stage 1–2 development. It can be removed from required config in Stage 4 if debug is false.
+The `reportShare` property is the root of the static archive (`share/` above).
 
 ---
 
 ## Development Stages
 
-The HTML file is the natural intermediary for staged development. Stages 1 and 2 produce an HTML file that can be opened directly in a browser to iterate on the layout before any PDF work begins.
-
 ---
 
-### Stage 1 — Thymeleaf HTML for Monthly Report
+### Stage 1 — Thymeleaf HTML for Monthly Report ✅ COMPLETE
 
 **Goal**: produce a browser-previewable HTML file for the monthly report. No PDF at this stage.
-
-Tasks:
-- Add `spring-boot-starter-thymeleaf` dependency
-- Create `ReportPeriodData` and `TransactionRow` model classes
-- Create `templates/report/monthly.html` with:
-  - Embedded CSS in `<head>`
-  - Header section
-  - Summary strip (4 KPI boxes) using static placeholder values initially, then wired to model
-  - Placeholder `<div>` where charts will go (Stage 2)
-  - Transaction table fragment
-- Modify `ReportGenerator.generateReport()` to:
-  - Build a `ReportPeriodData` from the transaction lists
-  - Process the Thymeleaf template
-  - Write HTML string to `reportWorking/Report.html`
-- PDF generation call remains unchanged (iText will likely fail on the new HTML — that is acceptable at this stage)
 
 **Deliverable**: `Report.html` viewable in a browser showing the monthly report layout with real data but no charts.
 
 ---
 
-### Stage 2 — SVG Charts in Monthly Report
+### Stage 2 — SVG Charts in Monthly Report ✅ COMPLETE
 
 **Goal**: complete the monthly report HTML with all charts.
-
-Tasks:
-- Implement `DonutChartSvg` (modify `PieChartSvg` — add white centre circle and centre text)
-- Implement `ComparisonBarChartSvg`
-- Add `donutSvg` and `comparisonBarSvg` strings to `ReportPeriodData`
-- Inject inline SVG into `monthly.html` using `th:utext`
-- Refine layout and CSS until the HTML looks correct in a browser
 
 **Deliverable**: `Report.html` viewable in a browser showing the complete monthly report — summary strip, donut chart, comparison bars, transaction list.
 
 ---
 
-### Stage 3 — openhtmltopdf PDF Generation (Monthly)
+### Stage 3 — Static HTML Archive
 
-**Goal**: produce a PDF from the HTML generated in Stage 2.
+**Goal**: replace PDF output with a static HTML archive. Monthly reports are written as individual HTML
+files into a year-partitioned directory, with two levels of generated index pages.
 
 Tasks:
-- Add `openhtmltopdf-*` dependencies, remove `itextpdf` and `xmlworker`
-- Implement `PdfRenderer` helper that accepts an HTML string and writes a PDF:
-  ```java
-  try (OutputStream out = Files.newOutputStream(Paths.get(pdfPath))) {
-      PdfRendererBuilder builder = new PdfRendererBuilder();
-      builder.withHtmlContent(html, null);
-      builder.toStream(out);
-      builder.run();
-  }
-  ```
-- Replace `generatePDF()` in `ReportGenerator` with a call to `PdfRenderer`
-- Adjust `monthly.html` CSS for PDF-specific concerns:
-  - `@page { size: A4; margin: 15mm; }`
-  - `page-break-after: always` between Page 1 and Page 2
-  - Ensure table widths are absolute (not percentage-based) if needed for openhtmltopdf
-- Add `money.report-debug-html` flag — when true, also write HTML to disk alongside PDF
+- Remove `openhtmltopdf-*` dependencies from `pom.xml`
+- Delete `PdfRenderer.java`
+- Modify `ReportGenerator.generateReport(year, month)`:
+  - Build `ReportPeriodData` and render HTML via Thymeleaf (unchanged from Stage 2)
+  - Write HTML to `share/<year>/<MonthName>.html` (e.g. `share/2024/January.html`)
+  - Regenerate `share/<year>/index.html` (scan year directory for present month files)
+  - Regenerate `share/index.html` (scan share directory for present year subdirectories)
+- Change `getMonthFilename(fullPath, year, month)` to return `.html` filenames
+- Update `regularReport()` existence-check to look for `.html` files
+- Update `reportsGeneratedForYear()` to check for `.html` files
+- Add `generateYearIndex(year)` — writes `share/<year>/index.html`
+- Add `generateRootIndex()` — writes `share/index.html`
+- Optionally: add `money.report-debug-html` flag — when true, also write to `reportWorking/Report.html`
 
-**Deliverable**: Monthly PDF report generated end-to-end, replacing the old pipeline.
+Index file format:
+- Plain HTML, `@page { size: A4; }` not needed (these are navigation pages, not printable reports)
+- Root index: table/list of years (newest first), each linking to `<year>/index.html`
+- Year index: link to `annual.html` if present, then January → December links for months present
+
+**Deliverable**: Monthly HTML reports written to the archive, both index files kept up-to-date.
+Old PDF path removed.
 
 ---
 
-### Stage 4 — Annual Report
+### Stage 4 — Annual HTML Report
 
-**Goal**: annual report using the same pipeline.
+**Goal**: annual report using the same Thymeleaf pipeline, completing the removal of the old JDOM2 pipeline.
 
 Tasks:
 - Implement `MonthlyBarChartSvg`
-- Create `templates/report/annual.html` (reusing fragments from monthly)
+- Create `templates/report/annual.html`
 - Add `monthSections` list to `ReportPeriodData`
-- Modify `ReportGenerator.generateAnnualReport()` to use new pipeline
-- Delete `ReportHtml.java`, `PieChartSvg.java`, `CategorySvg.java`
+- Modify `ReportGenerator.generateAnnualReport()` to use Thymeleaf pipeline and write to
+  `share/<year>/annual.html`; call `generateYearIndex(year)` afterwards
+- Delete `ReportHtml.java`, `PieChartSvg.java`, `CategorySvg.java`, all `createPng*` methods
 - Remove `batik-transcoder` and `batik-codec` explicit declarations
 
-**Deliverable**: Annual PDF report generated end-to-end. Old JDOM2/iText pipeline fully removed.
+**Deliverable**: Annual HTML report generated end-to-end. Old JDOM2/Batik pipeline fully removed.
 
 ---
 
@@ -385,7 +404,10 @@ Tasks:
 Unit tests: none required for the Thymeleaf templates themselves — visual output is verified by browser inspection.
 
 Integration tests: add to `MoneyReportIT` or a new `ReportGeneratorIT`:
-- Call `generateReport(year, month)` and assert the PDF file is created at the expected path
-- Call `generateAnnualReport(year)` and assert the annual PDF and all 12 monthly PDFs exist
-- `reportsGeneratedForYear()` returns true when all files are present
+- Call `generateReport(year, month)` and assert:
+  - HTML file exists at `share/<year>/<MonthName>.html`
+  - `share/<year>/index.html` exists and contains a link to the month file
+  - `share/index.html` exists and contains a link to the year
+- Call `generateAnnualReport(year)` and assert `share/<year>/annual.html` exists and year index links to it
+- `reportsGeneratedForYear()` returns true when all 12 month HTML files + annual HTML are present
 - Existing tests for `regularReport()` scheduling logic should continue to pass unchanged
