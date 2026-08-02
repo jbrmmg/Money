@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${data.title}">Monthly Report</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #333333;
+            background: #ffffff;
+            padding: 24px;
+        }
+
+        /* ── Header ── */
+        .report-header {
+            background-color: #1a237e;
+            color: #ffffff;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .report-header h1 {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .report-header .subtitle {
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        /* ── KPI strip ── */
+        .kpi-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 12px 0;
+            margin-bottom: 20px;
+        }
+        .kpi-cell {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 14px 16px;
+            text-align: center;
+            width: 25%;
+            background: #fafafa;
+        }
+        .kpi-label {
+            font-size: 10px;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .income      { color: #2e7d32; }
+        .spending    { color: #c62828; }
+        .net-pos     { color: #2e7d32; }
+        .net-neg     { color: #c62828; }
+        .vs-down     { color: #2e7d32; font-size: 20px; }
+        .vs-up       { color: #c62828; font-size: 20px; }
+        .vs-na       { color: #999999; font-size: 18px; }
+
+        /* ── Charts area ── */
+        .charts-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 12px 0;
+            margin-bottom: 20px;
+        }
+        .chart-left  { width: 60%; vertical-align: top; }
+        .chart-right { width: 40%; vertical-align: top; }
+        .chart-placeholder {
+            border: 2px dashed #cccccc;
+            border-radius: 4px;
+            height: 320px;
+            text-align: center;
+            color: #aaaaaa;
+            font-style: italic;
+            font-size: 13px;
+            display: table-cell;
+            vertical-align: middle;
+            width: 100%;
+        }
+        .chart-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #555555;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        /* ── Page break ── */
+        .page-break {
+            page-break-after: always;
+            border-top: 1px solid #e0e0e0;
+            margin: 24px 0;
+        }
+
+        /* ── Section heading ── */
+        .section-heading {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a237e;
+            border-bottom: 2px solid #1a237e;
+            padding-bottom: 6px;
+            margin-bottom: 14px;
+        }
+
+        /* ── Transaction table ── */
+        .trn-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .trn-table thead tr {
+            background-color: #1a237e;
+            color: #ffffff;
+        }
+        .trn-table th {
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .trn-table th.amount-col { text-align: right; }
+        .trn-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 11px;
+            vertical-align: middle;
+        }
+        .trn-table td.amount-col { text-align: right; font-family: monospace; font-size: 11px; }
+        .trn-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        .trn-table tbody tr:hover { background-color: #e8eaf6; }
+
+        .cat-dot {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .debit  { color: #c62828; }
+        .credit { color: #2e7d32; }
+        .transfer-row td { color: #888888; font-style: italic; }
+
+        /* ── Totals row ── */
+        .totals-row td {
+            font-weight: bold;
+            border-top: 2px solid #1a237e;
+            border-bottom: none;
+            padding-top: 10px;
+            font-size: 12px;
+            background: #f0f0ff;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="report-header">
+    <h1 th:text="${data.title}">Month Year</h1>
+    <div class="subtitle" th:text="${data.subtitle}">Monthly Financial Report</div>
+</div>
+
+<!-- ── KPI Summary Strip ── -->
+<table class="kpi-table">
+    <tr>
+        <td class="kpi-cell">
+            <div class="kpi-label">Total Income</div>
+            <div class="kpi-value income" th:text="${data.totalIncomeFormatted}">£0.00</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">Total Spending</div>
+            <div class="kpi-value spending" th:text="${data.totalSpendingFormatted}">£0.00</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">Net</div>
+            <div th:class="'kpi-value ' + (${data.netPositive} ? 'net-pos' : 'net-neg')"
+                 th:text="${(data.netPositive ? '+' : '-') + data.netFormatted}">£0.00</div>
+        </td>
+        <td class="kpi-cell">
+            <div class="kpi-label">vs Last Month</div>
+            <div th:class="${data.vsLastPeriodCssClass}" th:text="${data.vsLastPeriodText}">N/A</div>
+        </td>
+    </tr>
+</table>
+
+<!-- ── Charts ── -->
+<table class="charts-table">
+    <tr>
+        <td class="chart-left">
+            <div class="chart-title">Spending by Category</div>
+            <div th:if="${data.donutSvg == null}" class="chart-placeholder">
+                Donut chart — available from Stage 2
+            </div>
+            <div th:if="${data.donutSvg != null}" th:utext="${data.donutSvg}"></div>
+        </td>
+        <td class="chart-right">
+            <div class="chart-title">Category Comparison vs Last Month</div>
+            <div th:if="${data.comparisonBarSvg == null}" class="chart-placeholder">
+                Comparison bars — available from Stage 2
+            </div>
+            <div th:if="${data.comparisonBarSvg != null}" th:utext="${data.comparisonBarSvg}"></div>
+        </td>
+    </tr>
+</table>
+
+<!-- ── Page Break ── -->
+<div class="page-break"></div>
+
+<!-- ── Transaction List ── -->
+<div class="section-heading">Transactions</div>
+<table class="trn-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Account</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th class="amount-col">Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="row : ${data.transactions}"
+            th:class="${row.transfer} ? 'transfer-row' : ''">
+            <td th:text="${row.date}">01 Jan 2024</td>
+            <td th:text="${row.accountName}">Account</td>
+            <td>
+                <span class="cat-dot"
+                      th:style="|background-color: #${row.categoryColour};|"></span>
+                <span th:text="${row.categoryName}">Category</span>
+                <span th:if="${row.transfer}"> &#x21C4;</span>
+            </td>
+            <td th:text="${row.description}">Description</td>
+            <td class="amount-col"
+                th:class="${row.debit} ? 'amount-col debit' : 'amount-col credit'"
+                th:text="${row.amountFormatted}">£0.00</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr class="totals-row">
+            <td colspan="3"></td>
+            <td>Credits: <span th:text="${data.totalCreditsFormatted}">£0.00</span>
+                &nbsp;&nbsp; Debits: <span th:text="${data.totalDebitsFormatted}">£0.00</span>
+            </td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+
+</body>
+</html>

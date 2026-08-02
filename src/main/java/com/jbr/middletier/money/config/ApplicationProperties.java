@@ -28,6 +28,9 @@ public class ApplicationProperties {
     @Setter
     private String reportSchedule;
     private boolean reportEnabled;
+    @Setter
+    @Getter
+    private boolean reportDebugHtml;
     @Getter
     @Setter
     private String archiveSchedule;

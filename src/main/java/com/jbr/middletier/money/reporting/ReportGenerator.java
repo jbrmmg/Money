@@ -27,8 +27,12 @@ import org.springframework.stereotype.Controller;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.io.*;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -46,18 +50,69 @@ public class ReportGenerator {
     private final LogoManager logoManager;
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
+    private final TemplateEngine templateEngine;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
                            ApplicationProperties applicationProperties,
                            LogoManager logoManager,
                            StatementRepository statementRepository,
-                           AccountRepository accountRepository) {
+                           AccountRepository accountRepository,
+                           TemplateEngine templateEngine) {
         this.transactionRepository = transactionRepository;
         this.applicationProperties = applicationProperties;
         this.logoManager = logoManager;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
+        this.templateEngine = templateEngine;
+    }
+
+    private ReportPeriodData buildReportData(String title, String subtitle,
+                                              List<Transaction> transactions,
+                                              List<Transaction> previousTransactions) {
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalSpending = BigDecimal.ZERO;
+        BigDecimal previousSpending = BigDecimal.ZERO;
+
+        List<TransactionRow> rows = new ArrayList<>();
+        for (Transaction t : transactions) {
+            BigDecimal amount = t.getAmount().getValue();
+            if (amount.compareTo(BigDecimal.ZERO) > 0) {
+                totalIncome = totalIncome.add(amount);
+            } else {
+                totalSpending = totalSpending.add(amount.abs());
+            }
+            boolean transfer = t.getOppositeTransactionId() != null;
+            String categoryColour = t.getCategory() != null ? t.getCategory().getColour() : null;
+            String categoryName  = t.getCategory() != null ? t.getCategory().getName()   : "Uncategorised";
+            String accountName   = t.getAccount()  != null ? t.getAccount().getName()    : "";
+            rows.add(new TransactionRow(t.getDate(), accountName, categoryColour,
+                    categoryName, t.getDescription(), amount, transfer));
+        }
+
+        for (Transaction t : previousTransactions) {
+            BigDecimal amount = t.getAmount().getValue();
+            if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                previousSpending = previousSpending.add(amount.abs());
+            }
+        }
+
+        rows.sort(Comparator.comparing(TransactionRow::getDate));
+
+        return new ReportPeriodData(title, subtitle, totalIncome, totalSpending,
+                previousSpending, null, null, rows);
+    }
+
+    private void writeHtmlReport(ReportPeriodData data) throws IOException {
+        Context ctx = new Context();
+        ctx.setVariable("data", data);
+        String html = templateEngine.process("report/monthly", ctx);
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                Files.newOutputStream(Paths.get(applicationProperties.getHtmlFilename())),
+                StandardCharsets.UTF_8)) {
+            writer.write(html);
+        }
+        LOG.info("HTML report written to {}", applicationProperties.getHtmlFilename());
     }
 
     private void createPieChart(List<Transaction> transactions,String type) throws IOException, TranscoderException {
@@ -179,38 +234,39 @@ public class ReportGenerator {
         LOG.info("Generate report");
 
         createWorkingDirectories();
-        List<Transaction> transactions = transactionRepository.findByStatementIdYearAndStatementIdMonth(year,month);
+        List<Transaction> transactions = transactionRepository.findByStatementIdYearAndStatementIdMonth(year, month);
 
         int previousMonth = month - 1;
         int previousYear = year;
-
-        if(month == 1) {
+        if (month == 1) {
             previousMonth = 12;
             previousYear--;
         }
-        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear,previousMonth);
+        List<Transaction> previousTransactionList = transactionRepository.findByStatementIdYearAndStatementIdMonth(previousYear, previousMonth);
 
-        File htmlFile = new File(applicationProperties.getHtmlFilename());
-        try(PrintWriter writer2 = new PrintWriter(htmlFile)) {
-            HyperTextMarkupLanguage reportHtml = new ReportHtml(transactions,
-                    previousTransactionList,
-                    LocalDate.of(year,month,1),
-                    applicationProperties.getReportWorking(),
-                    ReportHtml.ReportType.MONTH);
+        LocalDate reportDate = LocalDate.of(year, month, 1);
+        String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(reportDate);
+        String subtitle = "Monthly Financial Report";
 
-            writer2.println(reportHtml.getHtmlAsString());
+        ReportPeriodData data = buildReportData(title, subtitle, transactions, previousTransactionList);
+        writeHtmlReport(data);
+
+        if (applicationProperties.isReportDebugHtml()) {
+            LOG.info("Debug HTML mode — skipping PDF generation");
+            return;
         }
 
-        createImages(transactions);
-        createImages(previousTransactionList);
-        createPieChart(transactions,"");
-
-        generatePDF();
+        try {
+            generatePDF();
+        } catch (Exception e) {
+            LOG.warn("PDF generation failed (Stage 1 — expected): {}", e.getMessage());
+            return;
+        }
 
         // Copy the report to the share.
         copyFile(applicationProperties.getPDFFilename(),
                 applicationProperties.getReportShare() + "/" + year,
-                getMonthFilename(false,year,month));
+                getMonthFilename(false, year, month));
     }
 
     public void generateAnnualReport(int year) throws IOException, TranscoderException, DocumentException {
