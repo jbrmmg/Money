@@ -1,7 +1,7 @@
 package com.jbr.middletier.money.control;
 
 import com.jbr.middletier.money.data.primary.OkStatus;
-import com.jbr.middletier.money.dto.EmailRequestDTO;
+import com.jbr.middletier.money.dto.ReportDefinitionDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.reporting.EmailGenerator;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -25,11 +27,17 @@ public class EmailController {
         this.emailGenerator = emailGenerator;
     }
 
-    @Operation(summary = "Generate and send a financial summary email")
-    @PostMapping(path="/email")
-    public OkStatus sendEmail(@Valid @RequestBody EmailRequestDTO request) throws EmailGenerationException {
-        LOG.info("sending email to (sanitized) {}", request);
-        this.emailGenerator.generateReport(request);
+    @Operation(summary = "List available generated reports")
+    @GetMapping(path = "/email/reports")
+    public List<ReportDefinitionDTO> getAvailableReports() {
+        return emailGenerator.getAvailableReports();
+    }
+
+    @Operation(summary = "Email a generated report to the configured recipient")
+    @PostMapping(path = "/email")
+    public OkStatus sendEmail(@Valid @RequestBody ReportDefinitionDTO request) throws EmailGenerationException {
+        LOG.info("Sending report email: {} {}/{}", request.getType(), request.getYear(), request.getMonth());
+        emailGenerator.sendReport(request);
         return OkStatus.getOkStatus();
     }
 }

@@ -51,6 +51,9 @@ public class ApplicationProperties {
     @Getter
     private String smtpFrom;
     @Setter
+    @Getter
+    private String smtpTo;
+    @Setter
     private LocalDate today;
 
     public void setRegularEnabled(Boolean regularEnabled) { this.regularEnabled = regularEnabled; }

@@ -7,6 +7,7 @@ import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
 import com.jbr.middletier.money.dto.EmailRequestDTO;
+import com.jbr.middletier.money.dto.ReportDefinitionDTO;
 import com.jbr.middletier.money.exceptions.EmailGenerationException;
 import com.jbr.middletier.money.manager.AccountManager;
 import com.jbr.middletier.money.manager.AccountTransactionManager;
@@ -65,26 +66,38 @@ class EmailTest extends Support {
 
     @Test
     void testEmail() throws Exception {
-        EmailRequestDTO request = new EmailRequestDTO();
-        request.setTo("throw@com");
+        // Request a report that doesn't exist — expect failure
+        ReportDefinitionDTO request = new ReportDefinitionDTO("monthly", 2099, 1);
         String error = Objects.requireNonNull(getMockMvc().perform(post("/api/v1/email")
                         .content(this.json(request))
                         .contentType(getContentType()))
                 .andExpect(status().isFailedDependency())
                 .andReturn().getResolvedException()).getMessage();
-        Assertions.assertEquals("Failed to send the message", error);
+        Assertions.assertEquals("Failed to read report file: 2099", error);
     }
 
     @Test
     void testEmail2() throws Exception {
-        EmailRequestDTO request = new EmailRequestDTO();
-        request.setTo("standard@com");
+        // Create a dummy report file so the send succeeds
+        File dir = new File(applicationProperties.getReportShare() + "/2010");
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        File reportFile = new File(dir, "January.html");
+        //noinspection ResultOfMethodCallIgnored
+        reportFile.createNewFile();
 
-        // - /api/v1/email?host=ignore.do.not.send&password=fake
-        getMockMvc().perform(post("/api/v1/email")
-                        .content(this.json(request))
-                        .contentType(getContentType()))
-                .andExpect(status().isOk());
+        try {
+            ReportDefinitionDTO request = new ReportDefinitionDTO("monthly", 2010, 1);
+            getMockMvc().perform(post("/api/v1/email")
+                            .content(this.json(request))
+                            .contentType(getContentType()))
+                    .andExpect(status().isOk());
+        } finally {
+            //noinspection ResultOfMethodCallIgnored
+            reportFile.delete();
+            //noinspection ResultOfMethodCallIgnored
+            dir.delete();
+        }
     }
 
     @Test

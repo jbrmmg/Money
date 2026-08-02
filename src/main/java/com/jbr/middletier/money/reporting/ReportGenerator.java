@@ -2,6 +2,7 @@ package com.jbr.middletier.money.reporting;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
 import com.jbr.middletier.money.data.primary.Category;
+import com.jbr.middletier.money.dto.ReportDefinitionDTO;
 import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.AccountRepository;
@@ -50,18 +51,21 @@ public class ReportGenerator {
     private final StatementRepository statementRepository;
     private final AccountRepository accountRepository;
     private final TemplateEngine templateEngine;
+    private final EmailGenerator emailGenerator;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
                            ApplicationProperties applicationProperties,
                            StatementRepository statementRepository,
                            AccountRepository accountRepository,
-                           TemplateEngine templateEngine) {
+                           TemplateEngine templateEngine,
+                           EmailGenerator emailGenerator) {
         this.transactionRepository = transactionRepository;
         this.applicationProperties = applicationProperties;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
         this.templateEngine = templateEngine;
+        this.emailGenerator = emailGenerator;
     }
 
     private Map<Category, BigDecimal> buildCategorySpendingMap(List<Transaction> transactions) {
@@ -415,12 +419,22 @@ public class ReportGenerator {
 
             if (!Files.exists(Paths.get(getMonthFilename(year, month)))) {
                 generateReport(year, month);
+                trySendReportEmail(new ReportDefinitionDTO("monthly", year, month));
             }
             if (month == 12 && !Files.exists(Paths.get(getYearFilename(year)))) {
                 generateAnnualReport(year);
+                trySendReportEmail(new ReportDefinitionDTO("annual", year, null));
             }
 
             current = current.plusMonths(1);
+        }
+    }
+
+    private void trySendReportEmail(ReportDefinitionDTO definition) {
+        try {
+            emailGenerator.sendReport(definition);
+        } catch (Exception e) {
+            LOG.error("Failed to send report email for {}/{}: {}", definition.getYear(), definition.getMonth(), e.getMessage());
         }
     }
 

@@ -58,6 +58,7 @@ money:
     smtp-port: 1025
     smtp-host: smtp.jbrmmg.me.uk
     smtp-from: system@jbrmmg.me.uk
+    smtp-to: jason@jbrmmg.me.uk
 
 server:
     forward-headers-strategy: framework

@@ -51,6 +51,7 @@ money:
     smtp-port: 1025
     smtp-host: ignore.do.not.send
     smtp-from: a@test.com
+    smtp-to: test@test.com
     today: 2023-05-24
 
 logging:
