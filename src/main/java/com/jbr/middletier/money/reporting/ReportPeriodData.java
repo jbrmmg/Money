@@ -93,7 +93,7 @@ public class ReportPeriodData {
         double pct = spending.subtract(previous)
                 .divide(previous, 4, RoundingMode.HALF_UP)
                 .doubleValue() * 100.0;
-        return String.format("%s %.0f%%", pct > 0 ? "(+)" : "(-)", Math.abs(pct));
+        return String.format("%s %.0f%%", pct > 0 ? "▲" : "▼", Math.abs(pct));
     }
 
     private static String buildVsClass(BigDecimal spending, BigDecimal previous) {
