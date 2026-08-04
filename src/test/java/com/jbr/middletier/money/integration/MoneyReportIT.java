@@ -672,7 +672,7 @@ class MoneyReportIT extends Support {
                 .andExpect(jsonPath("$.totalCount", is(63)))
                 .andExpect(jsonPath("$.pageNumber", is(1)))
                 .andExpect(jsonPath("$.maxPageSize", is(10)))
-                .andExpect(jsonPath("$.transactions", hasSize(13)))
+                .andExpect(jsonPath("$.transactions", hasSize(12)))
                 .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
                 .andExpect(jsonPath("$.transactions[0].balance.value", is(1029.0)))
                 .andDo(MockMvcResultHandlers.print());
@@ -691,9 +691,9 @@ class MoneyReportIT extends Support {
                 .andExpect(jsonPath("$.totalCount", is(63)))
                 .andExpect(jsonPath("$.pageNumber", is(7)))
                 .andExpect(jsonPath("$.maxPageSize", is(10)))
-                .andExpect(jsonPath("$.transactions", hasSize(6)))
+                .andExpect(jsonPath("$.transactions", hasSize(5)))
                 .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
-                .andExpect(jsonPath("$.transactions[5].type", is("FUTURE_BALANCE")))
+                .andExpect(jsonPath("$.transactions[4].type", is("FUTURE_BALANCE")))
                 .andDo(MockMvcResultHandlers.print());
     }
 
@@ -710,12 +710,11 @@ class MoneyReportIT extends Support {
                 .andExpect(jsonPath("$.totalCount", is(63)))
                 .andExpect(jsonPath("$.pageNumber", is(1)))
                 .andExpect(jsonPath("$.maxPageSize", is(10)))
-                .andExpect(jsonPath("$.transactions", hasSize(13)))
+                .andExpect(jsonPath("$.transactions", hasSize(12)))
                 .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
                 .andExpect(jsonPath("$.transactions[0].balance.value", is(1029.0)))
                 .andExpect(jsonPath("$.transactions[0].date", is("2023-04-06")))
-                .andExpect(jsonPath("$.transactions[11].type", is("TODAY_BALANCE")))
-                .andExpect(jsonPath("$.transactions[12].type", is("FUTURE_BALANCE")))
+                .andExpect(jsonPath("$.transactions[11].type", is("CARRIED_FORWARD_BALANCE")))
                 .andDo(MockMvcResultHandlers.print());
     }
 
@@ -753,7 +752,7 @@ class MoneyReportIT extends Support {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pageNumber", is(2)))
                 .andExpect(jsonPath("$.totalCount", is(63)))
-                .andExpect(jsonPath("$.transactions", hasSize(13)))
+                .andExpect(jsonPath("$.transactions", hasSize(12)))
                 .andExpect(jsonPath("$.transactions[0].type", is("OPEN_BALANCE")))
                 .andExpect(jsonPath("$.transactions[0].balance.value", is(closingBalance)))
                 .andDo(MockMvcResultHandlers.print());

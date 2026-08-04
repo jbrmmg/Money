@@ -94,6 +94,7 @@ public class TransactionSorting {
         //   Today balance is 2
         //   Transaction after today is 3;
         //   Future Balance is 4.
+        //   Carried Forward Balance is 5.
         if(t.getType() == TransactionReportTypeDTO.OPEN_BALANCE) {
             return 0;
         }
@@ -104,6 +105,10 @@ public class TransactionSorting {
 
         if(t.getType() == TransactionReportTypeDTO.TODAY_BALANCE) {
             return 2;
+        }
+
+        if(t.getType() == TransactionReportTypeDTO.CARRIED_FORWARD_BALANCE) {
+            return 5;
         }
 
         // If we get here, then the value is based on the date compared to today.

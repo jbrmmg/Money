@@ -479,14 +479,35 @@ public class TransactionReportManager {
         }
         pageResult.addAll(pageTransactions);
 
-        fullResult.stream()
-                .filter(t -> t.getType() == TransactionReportTypeDTO.TODAY_BALANCE)
-                .findFirst()
-                .ifPresent(pageResult::add);
-        fullResult.stream()
-                .filter(t -> t.getType() == TransactionReportTypeDTO.FUTURE_BALANCE)
-                .findFirst()
-                .ifPresent(pageResult::add);
+        boolean isLastPage = pageNumber == maxPages;
+        if(isLastPage) {
+            // Future balance is always on the last page.
+            fullResult.stream()
+                    .filter(t -> t.getType() == TransactionReportTypeDTO.FUTURE_BALANCE)
+                    .findFirst()
+                    .ifPresent(pageResult::add);
+
+            // Today balance only if the first transaction on this page is before today.
+            if(!pageTransactions.isEmpty()) {
+                LocalDate firstDate = LocalDate.parse(pageTransactions.get(0).getDate(), com.jbr.middletier.money.config.Constants.MONEY_DATE_FORMATTER);
+                if(firstDate.isBefore(applicationProperties.getToday())) {
+                    fullResult.stream()
+                            .filter(t -> t.getType() == TransactionReportTypeDTO.TODAY_BALANCE)
+                            .findFirst()
+                            .ifPresent(pageResult::add);
+                }
+            }
+        } else {
+            // Non-last page: add a carried-forward balance equal to the last transaction's balance on this page.
+            if(!pageTransactions.isEmpty()) {
+                TransactionReportDTO carriedForward = new TransactionReportDTO();
+                carriedForward.setType(TransactionReportTypeDTO.CARRIED_FORWARD_BALANCE);
+                TransactionReportDTO lastOnPage = pageTransactions.get(pageTransactions.size() - 1);
+                carriedForward.setBalance(lastOnPage.getBalance());
+                carriedForward.setDate(lastOnPage.getDate());
+                pageResult.add(carriedForward);
+            }
+        }
 
         // Sort the page result.
         pageResult.sort((t1, t2) -> TransactionSorting.compare(t1, t2, filter.getTransactionSorts(), applicationProperties.getToday()));

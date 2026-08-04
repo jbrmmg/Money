@@ -6,5 +6,6 @@ public enum TransactionReportTypeDTO {
     @JsonEnumDefaultValue TRANSACTION,
     OPEN_BALANCE,
     TODAY_BALANCE,
-    FUTURE_BALANCE
+    FUTURE_BALANCE,
+    CARRIED_FORWARD_BALANCE
 }
