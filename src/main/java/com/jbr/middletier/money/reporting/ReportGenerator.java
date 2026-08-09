@@ -1,13 +1,15 @@
 package com.jbr.middletier.money.reporting;
 
 import com.jbr.middletier.money.config.ApplicationProperties;
+import com.jbr.middletier.money.data.primary.ReportStatus;
+import com.jbr.middletier.money.data.primary.ReportStatusId;
+import com.jbr.middletier.money.data.primary.repository.ReportStatusRepository;
 import com.jbr.middletier.money.data.primary.Category;
-import com.jbr.middletier.money.dto.ReportDefinitionDTO;
-import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.AccountRepository;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
 import com.jbr.middletier.money.data.primary.repository.TransactionRepository;
+import com.jbr.middletier.money.dto.ReportDefinitionDTO;
 import com.jbr.middletier.money.xml.svg.ComparisonBarChartSvg;
 import com.jbr.middletier.money.xml.svg.DonutChartSvg;
 import com.jbr.middletier.money.xml.svg.MonthlyBarChartSvg;
@@ -21,9 +23,12 @@ import org.thymeleaf.context.Context;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -52,6 +57,7 @@ public class ReportGenerator {
     private final AccountRepository accountRepository;
     private final TemplateEngine templateEngine;
     private final EmailGenerator emailGenerator;
+    private final ReportStatusRepository reportStatusRepository;
 
     @Autowired
     public ReportGenerator(TransactionRepository transactionRepository,
@@ -59,14 +65,192 @@ public class ReportGenerator {
                            StatementRepository statementRepository,
                            AccountRepository accountRepository,
                            TemplateEngine templateEngine,
-                           EmailGenerator emailGenerator) {
+                           EmailGenerator emailGenerator,
+                           ReportStatusRepository reportStatusRepository) {
         this.transactionRepository = transactionRepository;
         this.applicationProperties = applicationProperties;
         this.statementRepository = statementRepository;
         this.accountRepository = accountRepository;
         this.templateEngine = templateEngine;
         this.emailGenerator = emailGenerator;
+        this.reportStatusRepository = reportStatusRepository;
     }
+
+    // --- Report metrics and MD5 ---
+
+    private static class ReportMetrics {
+        final int totalTransactions;
+        final int totalCategories;
+        final BigDecimal sumCredits;
+        final BigDecimal sumDebits;
+        final String md5;
+
+        ReportMetrics(List<Transaction> transactions) {
+            this.totalTransactions = transactions.size();
+
+            Set<String> categories = new HashSet<>();
+            BigDecimal credits = BigDecimal.ZERO;
+            BigDecimal debits = BigDecimal.ZERO;
+
+            for (Transaction t : transactions) {
+                BigDecimal amount = t.getAmount().getValue();
+                if (amount.compareTo(BigDecimal.ZERO) > 0) {
+                    credits = credits.add(amount);
+                } else {
+                    debits = debits.add(amount.abs());
+                }
+                if (t.getCategory() != null) {
+                    categories.add(t.getCategory().getId());
+                }
+            }
+
+            this.totalCategories = categories.size();
+            this.sumCredits = credits;
+            this.sumDebits = debits;
+            this.md5 = computeMd5(transactions);
+        }
+
+        private static String computeMd5(List<Transaction> transactions) {
+            List<Transaction> sorted = new ArrayList<>(transactions);
+            sorted.sort(Comparator.comparing(Transaction::getDate)
+                    .thenComparing((Transaction t) -> t.getAmount().getValue())
+                    .thenComparing((Transaction t) -> t.getAccount() != null ? t.getAccount().getId() : "")
+                    .thenComparing((Transaction t) -> t.getCategory() != null ? t.getCategory().getId() : "")
+                    .thenComparing((Transaction t) -> t.getDescription() != null ? t.getDescription() : ""));
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < sorted.size(); i++) {
+                Transaction t = sorted.get(i);
+                if (i > 0) sb.append('\n');
+                sb.append(t.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
+                sb.append('|');
+                sb.append(t.getAmount().getValue().setScale(2, RoundingMode.HALF_UP).toPlainString());
+                sb.append('|');
+                sb.append(t.getAccount() != null ? t.getAccount().getId() : "");
+                sb.append('|');
+                sb.append(t.getCategory() != null ? t.getCategory().getId() : "");
+                sb.append('|');
+                sb.append(t.getDescription() != null ? t.getDescription() : "");
+            }
+
+            try {
+                MessageDigest md = MessageDigest.getInstance("MD5");
+                byte[] hash = md.digest(sb.toString().getBytes(StandardCharsets.UTF_8));
+                StringBuilder hex = new StringBuilder();
+                for (byte b : hash) {
+                    hex.append(String.format("%02x", b));
+                }
+                return hex.toString();
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalStateException("MD5 not available", e);
+            }
+        }
+    }
+
+    private boolean metricsMatch(ReportStatus status, ReportMetrics metrics) {
+        return status.getMd5Checksum().equals(metrics.md5)
+                && status.getTotalTransactions() == metrics.totalTransactions
+                && status.getTotalCategories() == metrics.totalCategories
+                && status.getSumCredits().compareTo(metrics.sumCredits) == 0
+                && status.getSumDebits().compareTo(metrics.sumDebits) == 0;
+    }
+
+    private void saveStatus(ReportStatusId id, ReportMetrics metrics, boolean successful) {
+        ReportStatus status = new ReportStatus();
+        status.setId(id);
+        status.setTotalTransactions(metrics.totalTransactions);
+        status.setTotalCategories(metrics.totalCategories);
+        status.setSumCredits(metrics.sumCredits);
+        status.setSumDebits(metrics.sumDebits);
+        status.setMd5Checksum(metrics.md5);
+        status.setLastChecked(applicationProperties.getToday());
+        status.setSuccessful(successful);
+        reportStatusRepository.save(status);
+    }
+
+    // --- Change-detection process methods ---
+
+    private void processMonthlyReport(int year, int month) throws IOException {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+        List<Transaction> transactions = transactionRepository.findByDateBetween(start, end);
+
+        ReportMetrics metrics = new ReportMetrics(transactions);
+        ReportStatusId id = new ReportStatusId(year, month, "monthly");
+
+        Optional<ReportStatus> existing = reportStatusRepository.findById(id);
+        if (existing.isPresent() && existing.get().isSuccessful() && metricsMatch(existing.get(), metrics)) {
+            LOG.debug("Skipping monthly report {}/{} - data unchanged", year, month);
+            return;
+        }
+
+        saveStatus(id, metrics, false);
+        generateReportHtml(year, month);
+        saveStatus(id, metrics, true);
+        trySendReportEmail(new ReportDefinitionDTO("monthly", year, month));
+    }
+
+    private void processAnnualReport(int year) throws IOException {
+        List<Transaction> transactions = transactionRepository.findByDateBetween(
+                LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
+
+        ReportMetrics metrics = new ReportMetrics(transactions);
+        ReportStatusId id = new ReportStatusId(year, 0, "annual");
+
+        Optional<ReportStatus> existing = reportStatusRepository.findById(id);
+        if (existing.isPresent() && existing.get().isSuccessful() && metricsMatch(existing.get(), metrics)) {
+            LOG.debug("Skipping annual report {} - data unchanged", year);
+            return;
+        }
+
+        saveStatus(id, metrics, false);
+        generateAnnualReportHtml(year);
+        saveStatus(id, metrics, true);
+        trySendReportEmail(new ReportDefinitionDTO("annual", year, null));
+    }
+
+    private void checkAnnualReports() throws IOException {
+        for (int year : reportStatusRepository.findDistinctYearsWithMonthlyReports()) {
+            if (reportStatusRepository.countSuccessfulMonthlyReports(year) == 12) {
+                processAnnualReport(year);
+            }
+        }
+    }
+
+    // --- Public API methods (bypass window, apply change detection) ---
+
+    public void generateReport(int year, int month) throws IOException {
+        processMonthlyReport(year, month);
+    }
+
+    public void generateAnnualReport(int year) throws IOException {
+        processAnnualReport(year);
+    }
+
+    // --- Scheduler ---
+
+    @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
+    public void regularReport() throws IOException {
+        if (!applicationProperties.getReportEnabled()) {
+            return;
+        }
+
+        LocalDate today = applicationProperties.getToday();
+        LocalDate endMonth = today.getDayOfMonth() > 15
+                ? today.withDayOfMonth(1)
+                : today.minusMonths(1).withDayOfMonth(1);
+        LocalDate startMonth = endMonth.minusMonths(17); // 18 months inclusive
+
+        LocalDate current = startMonth;
+        while (!current.isAfter(endMonth)) {
+            processMonthlyReport(current.getYear(), current.getMonthValue());
+            current = current.plusMonths(1);
+        }
+
+        checkAnnualReports();
+    }
+
+    // --- HTML generation (private) ---
 
     private Map<Category, BigDecimal> buildCategorySpendingMap(List<Transaction> transactions) {
         Map<Category, BigDecimal> map = new HashMap<>();
@@ -261,8 +445,8 @@ public class ReportGenerator {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void generateReport(int year, int month) throws IOException {
-        LOG.info("Generate report");
+    private void generateReportHtml(int year, int month) throws IOException {
+        LOG.info("Generating monthly report {}/{}", year, month);
 
         createWorkingDirectories();
         LocalDate start = LocalDate.of(year, month, 1);
@@ -273,9 +457,7 @@ public class ReportGenerator {
         LocalDate prevEnd = prevStart.withDayOfMonth(prevStart.lengthOfMonth());
         List<Transaction> previousTransactionList = transactionRepository.findByDateBetween(prevStart, prevEnd);
 
-        LocalDate reportDate = LocalDate.of(year, month, 1);
-        String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(reportDate);
-
+        String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of(year, month, 1));
         ReportPeriodData data = buildReportData(title, "Monthly Financial Report", transactions, previousTransactionList);
         String html = buildHtml(data);
 
@@ -299,8 +481,8 @@ public class ReportGenerator {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void generateAnnualReport(int year) throws IOException {
-        LOG.info("Generate annual report for {}", year);
+    private void generateAnnualReportHtml(int year) throws IOException {
+        LOG.info("Generating annual report for {}", year);
 
         createWorkingDirectories();
 
@@ -309,7 +491,6 @@ public class ReportGenerator {
         List<Transaction> previousTransactions = transactionRepository.findByDateBetween(
                 LocalDate.of(year - 1, 1, 1), LocalDate.of(year - 1, 12, 31));
 
-        // Group by month for efficient per-section lookup.
         Map<Integer, List<Transaction>> byMonth = transactions.stream()
                 .collect(Collectors.groupingBy(t -> t.getDate().getMonthValue()));
         Map<Integer, List<Transaction>> prevByMonth = previousTransactions.stream()
@@ -381,53 +562,6 @@ public class ReportGenerator {
 
         generateYearIndex(year);
         generateRootIndex();
-    }
-
-    @Scheduled(cron = "#{@applicationProperties.reportSchedule}")
-    public void regularReport() throws IOException {
-        if (!applicationProperties.getReportEnabled()) {
-            return;
-        }
-
-        Set<String> activeAccountIds = new HashSet<>();
-        accountRepository.findAll().forEach(a -> {
-            if (!Boolean.TRUE.equals(a.getClosed())) {
-                activeAccountIds.add(a.getId());
-            }
-        });
-
-        List<LocalDate> lockedDates = new ArrayList<>();
-        for (Statement s : statementRepository.findAll()) {
-            if (Boolean.TRUE.equals(s.getLocked()) &&
-                    activeAccountIds.contains(s.getId().getAccount().getId())) {
-                lockedDates.add(LocalDate.of(s.getId().getYear(), s.getId().getMonth(), 1));
-            }
-        }
-
-        if (lockedDates.isEmpty()) {
-            return;
-        }
-
-        LocalDate startDate = Collections.min(lockedDates);
-        LocalDate endDate = Collections.max(lockedDates);
-        LocalDate evaluationDate = endDate.minusMonths(3);
-
-        LocalDate current = startDate;
-        while (!current.isAfter(evaluationDate)) {
-            int year = current.getYear();
-            int month = current.getMonthValue();
-
-            if (!Files.exists(Paths.get(getMonthFilename(year, month)))) {
-                generateReport(year, month);
-                trySendReportEmail(new ReportDefinitionDTO("monthly", year, month));
-            }
-            if (month == 12 && !Files.exists(Paths.get(getYearFilename(year)))) {
-                generateAnnualReport(year);
-                trySendReportEmail(new ReportDefinitionDTO("annual", year, null));
-            }
-
-            current = current.plusMonths(1);
-        }
     }
 
     private void trySendReportEmail(ReportDefinitionDTO definition) {

@@ -2,6 +2,7 @@ package com.jbr.middletier.money;
 
 import com.jbr.middletier.MiddleTier;
 import com.jbr.middletier.money.config.ApplicationProperties;
+import com.jbr.middletier.money.data.primary.repository.ReportStatusRepository;
 import com.jbr.middletier.money.data.primary.Statement;
 import com.jbr.middletier.money.data.primary.Transaction;
 import com.jbr.middletier.money.data.primary.repository.StatementRepository;
@@ -37,6 +38,9 @@ class AnnualReportTest extends Support {
     private StatementRepository statementRepository;
 
     @Autowired
+    private ReportStatusRepository reportStatusRepository;
+
+    @Autowired
     private UtilityMapper utilityMapper;
 
     @Autowired
@@ -44,6 +48,7 @@ class AnnualReportTest extends Support {
 
     private void cleanUp() {
         transactionRepository.deleteAll();
+        reportStatusRepository.deleteAll();
         for(Statement next : statementRepository.findAll()) {
             if(next.getLocked()) {
                 next.setLocked(false);

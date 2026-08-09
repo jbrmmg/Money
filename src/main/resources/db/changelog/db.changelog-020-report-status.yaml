@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20
+      author: jason
+      changes:
+        - createTable:
+            tableName: report_status
+            columns:
+              - column:
+                  name: report_year
+                  type: int(11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: report_month
+                  type: int(11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: report_type
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_transactions
+                  type: int(11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_categories
+                  type: int(11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sum_credits
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sum_debits
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: md5_checksum
+                  type: char(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_checked
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: successful
+                  type: boolean
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: report_status
+            columnNames: report_year, report_month, report_type
+            constraintName: pk_report_status

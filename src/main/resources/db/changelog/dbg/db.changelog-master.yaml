@@ -59,3 +59,6 @@ databaseChangeLog:
 
   - include:
       file: /db/changelog/db.changelog-019-statement-age.yaml
+
+  - include:
+      file: /db/changelog/db.changelog-020-report-status.yaml
