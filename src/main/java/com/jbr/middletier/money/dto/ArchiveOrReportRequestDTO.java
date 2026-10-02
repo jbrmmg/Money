@@ -15,6 +15,7 @@ public class ArchiveOrReportRequestDTO {
     @Max(12)
     @Min(1)
     private int month;
+    private boolean force;
 
     public ArchiveOrReportRequestDTO() {
 

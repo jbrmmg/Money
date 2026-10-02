@@ -37,7 +37,7 @@ public class ArchiveAndReportController {
     @PostMapping(path="/transaction/report")
     public StatusDTO report(@Valid @RequestBody ArchiveOrReportRequestDTO report) throws IOException {
         LOG.info("Report Controller - request report.");
-        reportGenerator.generateReport(report.getYear(),report.getMonth());
+        reportGenerator.generateReport(report.getYear(), report.getMonth(), report.isForce());
         return StatusDTO.OK;
     }
 

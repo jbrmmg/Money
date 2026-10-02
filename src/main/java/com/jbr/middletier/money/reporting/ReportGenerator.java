@@ -170,7 +170,7 @@ public class ReportGenerator {
 
     // --- Change-detection process methods ---
 
-    private void processMonthlyReport(int year, int month) throws IOException {
+    private void processMonthlyReport(int year, int month, boolean force) throws IOException {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
         List<Transaction> transactions = transactionRepository.findByDateBetween(start, end);
@@ -178,10 +178,12 @@ public class ReportGenerator {
         ReportMetrics metrics = new ReportMetrics(transactions);
         ReportStatusId id = new ReportStatusId(year, month, "monthly");
 
-        Optional<ReportStatus> existing = reportStatusRepository.findById(id);
-        if (existing.isPresent() && existing.get().isSuccessful() && metricsMatch(existing.get(), metrics)) {
-            LOG.debug("Skipping monthly report {}/{} - data unchanged", year, month);
-            return;
+        if (!force) {
+            Optional<ReportStatus> existing = reportStatusRepository.findById(id);
+            if (existing.isPresent() && existing.get().isSuccessful() && metricsMatch(existing.get(), metrics)) {
+                LOG.debug("Skipping monthly report {}/{} - data unchanged", year, month);
+                return;
+            }
         }
 
         saveStatus(id, metrics, false);
@@ -219,8 +221,8 @@ public class ReportGenerator {
 
     // --- Public API methods (bypass window, apply change detection) ---
 
-    public void generateReport(int year, int month) throws IOException {
-        processMonthlyReport(year, month);
+    public void generateReport(int year, int month, boolean force) throws IOException {
+        processMonthlyReport(year, month, force);
     }
 
     public void generateAnnualReport(int year) throws IOException {
@@ -243,7 +245,7 @@ public class ReportGenerator {
 
         LocalDate current = startMonth;
         while (!current.isAfter(endMonth)) {
-            processMonthlyReport(current.getYear(), current.getMonthValue());
+            processMonthlyReport(current.getYear(), current.getMonthValue(), false);
             current = current.plusMonths(1);
         }
 
