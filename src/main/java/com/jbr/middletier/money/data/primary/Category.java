@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by jason on 04/03/17.
@@ -57,4 +58,14 @@ public class Category implements Serializable {
     @Column(name="system_use")
     private Boolean systemUse;
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Category category)) return false;
+        return Objects.equals(id, category.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }
