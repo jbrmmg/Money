@@ -1,6 +1,11 @@
 logging:
     level:
         ROOT: INFO
+        org.hibernate: WARN
+        org.hibernate.SQL: WARN
+        org.hibernate.orm: WARN
+        com.zaxxer.hikari: WARN
+        liquibase: WARN
 
 spring:
     datasource:
