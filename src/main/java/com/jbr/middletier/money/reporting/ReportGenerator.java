@@ -459,6 +459,8 @@ public class ReportGenerator {
         LocalDate prevEnd = prevStart.withDayOfMonth(prevStart.lengthOfMonth());
         List<Transaction> previousTransactionList = transactionRepository.findByDateBetween(prevStart, prevEnd);
 
+        LOG.info("Monthly report {}/{}: {} transactions, {} previous transactions", year, month, transactions.size(), previousTransactionList.size());
+
         String title = DateTimeFormatter.ofPattern("MMMM yyyy").format(LocalDate.of(year, month, 1));
         ReportPeriodData data = buildReportData(title, "Monthly Financial Report", transactions, previousTransactionList);
         String html = buildHtml(data);
@@ -492,6 +494,8 @@ public class ReportGenerator {
                 LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
         List<Transaction> previousTransactions = transactionRepository.findByDateBetween(
                 LocalDate.of(year - 1, 1, 1), LocalDate.of(year - 1, 12, 31));
+
+        LOG.info("Annual report {}: {} transactions, {} previous transactions", year, transactions.size(), previousTransactions.size());
 
         Map<Integer, List<Transaction>> byMonth = transactions.stream()
                 .collect(Collectors.groupingBy(t -> t.getDate().getMonthValue()));

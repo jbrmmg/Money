@@ -17,8 +17,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
-    show-sql: true
+        format_sql: false
+    show-sql: false
 
 money:
   report-working: /home/jason/Working/DbgReport/
