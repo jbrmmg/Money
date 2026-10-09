@@ -51,7 +51,7 @@ public class ConfigDbPrimary extends ConfigDbCommon {
 
     @Value("${spring.jpa.properties.hibernate.dialect:#{null}}")
     private String hibernateDialect;
-    @Value("${spring.jpa.properties.hibernate.show-sql:true}")
+    @Value("${spring.jpa.properties.hibernate.show-sql:false}")
     private String hibernateShowSql;
     @Value("${spring.jpa.properties.hibernate.hbm2ddl.auto:none}")
     private String hibernateHbm2ddlAuto;

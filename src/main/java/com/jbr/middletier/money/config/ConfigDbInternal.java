@@ -45,7 +45,7 @@ public class ConfigDbInternal extends ConfigDbCommon {
 
     @Value("${spring.jpa.properties.internal.hibernate.dialect:#{null}}")
     private String hibernateDialect;
-    @Value("${spring.jpa.properties.internal.hibernate.show-sql:true}")
+    @Value("${spring.jpa.properties.internal.hibernate.show-sql:false}")
     private String hibernateShowSql;
     @Value("${spring.jpa.properties.internal.hibernate.hbm2ddl.auto:none}")
     private String hibernateHbm2ddlAuto;
